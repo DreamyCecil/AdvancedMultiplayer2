@@ -361,9 +361,7 @@ inline COLOR ChristmasBlood(INDEX iRandom, UBYTE ubFactor, UBYTE ubAlpha) {
 };
 
 // [Cecil] Get blood type
-inline INDEX GetBloodType(void) {
-  return _pShell->GetINDEX("amp_iBloodType");
-};
+DECL_DLL INDEX GetBloodType(void);
 
 // [Cecil] Seasonal events
 enum ESpecialEvent {
