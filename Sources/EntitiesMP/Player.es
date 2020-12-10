@@ -699,6 +699,8 @@ void CPlayer_Precache(void)
   pdec->PrecacheTexture(TEXTURE_FLESH);
   // [Cecil] Token sound
   pdec->PrecacheSound(SOUND_TOKEN);
+  // [Cecil] Powerup sound
+  pdec->PrecacheSound(SOUND_POWERUP);
 
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODSPILL);
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODSTAIN);
@@ -1339,6 +1341,8 @@ components:
 
 // [Cecil] Token sound
 260 sound SOUND_TOKEN "Sounds\\Player\\Token.wav",
+// [Cecil] Powerup sound
+261 sound SOUND_POWERUP "SoundsMP\\Items\\PowerUp.wav",
 
 functions:
   // [Cecil] Combo payout
@@ -4194,7 +4198,7 @@ functions:
     }
   }
 
-  void PlayPowerUpSound ( void ) {
+  void PlayPowerUpSound(void) {
     m_soPowerUpBeep.Set3DParameters(50.0f, 10.0f, 4.0f, 1.0f);
     PlaySound(m_soPowerUpBeep, SOUND_POWERUP_BEEP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
   }
@@ -4780,7 +4784,18 @@ functions:
 
     // [Cecil] Spend tokens
     if (ulNewButtons & PLACT_TOKENS) {
-      // TODO
+      if (m_iTokens >= 10) {
+        m_iTokens -= 10;
+        PlaySound(m_soMessage, SOUND_POWERUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
+
+        // random powerup
+        EPowerUp ePowerUp;
+        ePowerUp.puitType = PowerUpItemType(IRnd() % 3 + 1);
+        ReceiveItem(ePowerUp);
+
+      } else {
+        PrintCenterMessage(this, this, TRANS("Not enough tokens!"), 3.0f, MSS_INFO);
+      }
     }
 
     // if use is pressed

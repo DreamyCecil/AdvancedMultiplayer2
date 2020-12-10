@@ -1026,13 +1026,12 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // draw powerup(s) if needed
-  PrepareColorTransitions( colMax, colTop, colMid, C_RED, 0.66f, 0.33f, FALSE);
+  PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.66f, 0.33f, FALSE);
   TIME *ptmPowerups = (TIME*)&_penPlayer->m_tmInvisibility;
   TIME *ptmPowerupsMax = (TIME*)&_penPlayer->m_tmInvisibilityMax;
   fRow = pixBottomBound-fOneUnitS-fAdvUnitS;
   fCol = pixRightBound -fHalfUnitS;
-  for( i=0; i<MAX_POWERUPS; i++)
-  {
+  for (i = 0; i < MAX_POWERUPS; i++) {
     // skip if not active
     const TIME tmDelta = ptmPowerups[i] - _tmNow;
     if( tmDelta<=0) continue;
@@ -1044,8 +1043,10 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     HUD_DrawBorder( fCol,         fRow, fOneUnitS, fOneUnitS, colBorder);
     HUD_DrawIcon(   fCol,         fRow, _atoPowerups[i], C_WHITE, fNormValue, TRUE, 1.0f);
     HUD_DrawBar(    fCol+fBarPos, fRow, fOneUnitS/5, fOneUnitS-2, BO_DOWN, NONE, fNormValue);
+    
+    // [Cecil] Power Up Time Multiplier
     // play sound if icon is flashing
-    if(fNormValue<=(_cttHUD.ctt_fLowMedium/2)) {
+    if (fNormValue <= (_cttHUD.ctt_fLowMedium / 2) / GetSP()->sp_fPowerupTimeMul) {
       // activate blinking only if value is <= half the low edge
       INDEX iLastTime = (INDEX)(_tmLast*4);
       INDEX iCurrentTime = (INDEX)(_tmNow*4);

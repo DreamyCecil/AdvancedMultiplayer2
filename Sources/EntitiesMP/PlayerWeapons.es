@@ -791,6 +791,9 @@ functions:
 
   // [Cecil] Tesla gun burst
   void TeslaBurst(CEntity *penHit, FLOAT3D vTarget) {
+    // counter
+    INDEX iEnemy = 0;
+
     // go through entities
     FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
       CEntity *pen = iten;
@@ -830,6 +833,13 @@ functions:
       }
 
       InflictDirectDamage(pen, GetPlayer(), DMT_BURNING, 10.0f, vPos, FLOAT3D(0.0f, 1.0f, 0.0f));
+
+      iEnemy++;
+
+      // enough enemies damaged
+      if (iEnemy >= 30) {
+        break;
+      }
     }
   };
 
