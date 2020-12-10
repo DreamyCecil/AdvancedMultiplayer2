@@ -102,10 +102,187 @@ extern INDEX gam_iStartDifficulty = 1;
 extern INDEX gam_iStartMode = 0;
 extern CTString gam_strGameSpyExtras = "";
 
-extern INDEX gam_iBlood = 2;     // 0=none, 1=green, 2=red, 3=hippie
-extern INDEX gam_bGibs  = TRUE;   
+// [Cecil] New blood types
+// 0 none / 1 red / 2 green / 3 hippie / 4 valentine / 5 halloween / 6 christmas
+extern INDEX gam_iBlood = 1;
+extern INDEX gam_bGibs = TRUE;   
 
 extern INDEX gam_bUseExtraEnemies = TRUE;
+
+// [Cecil] World Options
+extern INDEX amp_bEnableOptions = TRUE;
+extern INDEX amp_bConversion = FALSE;
+
+extern FLOAT amp_fSpeedMultiplier = 1.0f;
+extern FLOAT amp_fJumpMultiplier = 1.0f;
+extern FLOAT amp_fStartHealth = 100.0f;
+extern FLOAT amp_fMaxHealth = 200.0f;
+extern FLOAT amp_fMaxArmor = 200.0f;
+
+extern INDEX amp_iEnemyMultiplier = 1;
+extern INDEX amp_bBalancedEnemies = FALSE;
+extern FLOAT amp_fFireSpeed = 1.0f;
+extern FLOAT amp_fAmmoMultiplier = 1.0f;
+extern FLOAT amp_fPowerupTimeMul = 1.0f;
+extern INDEX amp_bHeatDamage = TRUE;
+extern INDEX amp_bImpactDamage = TRUE;
+extern FLOAT amp_fEnemyDamage = 1.0f;
+extern FLOAT amp_fPlayerDamage = 1.0f;
+extern FLOAT amp_fSelfDamage = 1.0f;
+
+// [Cecil] Gameplay Options
+extern INDEX amp_bStartAmmo = FALSE;
+extern INDEX amp_bRocketDestruction = TRUE;
+
+extern INDEX amp_iAltFire = 0;
+extern INDEX amp_bShotgunAlt   = TRUE;
+extern INDEX amp_bDShotgunAlt  = TRUE;
+extern INDEX amp_bTommygunAlt  = TRUE;
+extern INDEX amp_bMinigunAlt   = TRUE;
+extern INDEX amp_bRLauncherAlt = TRUE;
+extern INDEX amp_bGLauncherAlt = TRUE;
+extern INDEX amp_bFlamerAlt    = TRUE;
+extern INDEX amp_bSniperAlt    = TRUE;
+extern INDEX amp_bLaserAlt     = TRUE;
+extern INDEX amp_bCannonAlt    = TRUE;
+
+extern FLOAT amp_fComboTime = 2.0f;
+extern INDEX amp_bUnlimitedCombos = FALSE;
+extern INDEX amp_bStrongerEnemies = FALSE;
+extern INDEX amp_bNoRocketJump = FALSE;
+
+extern INDEX amp_bKeepSecrets = FALSE;
+extern INDEX amp_iPlayerCollision = 0;
+extern INDEX amp_bAutosave = TRUE;
+
+// [Cecil] Weapon Giver
+extern INDEX amp_bKnifeEnable     = TRUE;
+extern INDEX amp_bChainsawEnable  = FALSE;
+extern INDEX amp_bColtEnable      = TRUE;
+extern INDEX amp_bDColtEnable     = FALSE;
+extern INDEX amp_bShotgunEnable   = FALSE;
+extern INDEX amp_bDShotgunEnable  = FALSE;
+extern INDEX amp_bTommygunEnable  = FALSE;
+extern INDEX amp_bMinigunEnable   = FALSE;
+extern INDEX amp_bRLauncherEnable = FALSE;
+extern INDEX amp_bGLauncherEnable = FALSE;
+extern INDEX amp_bFlamerEnable    = FALSE;
+extern INDEX amp_bSniperEnable    = FALSE;
+extern INDEX amp_bLaserEnable     = FALSE;
+extern INDEX amp_bCannonEnable    = FALSE;
+
+// [Cecil] Item Removal
+extern INDEX amp_iWeaponItems = 3;
+extern INDEX amp_iReplaceWeapons = 0;
+extern INDEX amp_bTakeWeapons = TRUE;
+
+extern INDEX amp_bKnifeItemEnable     = TRUE;
+extern INDEX amp_bChainsawItemEnable  = TRUE;
+extern INDEX amp_bColtItemEnable      = TRUE;
+extern INDEX amp_bShotgunItemEnable   = TRUE;
+extern INDEX amp_bDShotgunItemEnable  = TRUE;
+extern INDEX amp_bTommygunItemEnable  = TRUE;
+extern INDEX amp_bMinigunItemEnable   = TRUE;
+extern INDEX amp_bRLauncherItemEnable = TRUE;
+extern INDEX amp_bGLauncherItemEnable = TRUE;
+extern INDEX amp_bFlamerItemEnable    = TRUE;
+extern INDEX amp_bSniperItemEnable    = TRUE;
+extern INDEX amp_bLaserItemEnable     = TRUE;
+extern INDEX amp_bCannonItemEnable    = TRUE;
+
+extern INDEX amp_bInvulItem = TRUE;
+extern INDEX amp_bInvisItem = TRUE;
+extern INDEX amp_bDamageItem = TRUE;
+extern INDEX amp_bSpeedItem = TRUE;
+
+// [Cecil] Restore default game options
+static void RestoreDefaultOptions(void) {
+  // [Cecil] World Options
+  amp_bEnableOptions = TRUE;
+  amp_bConversion = FALSE;
+
+  amp_fSpeedMultiplier = 1.0f;
+  amp_fJumpMultiplier = 1.0f;
+  amp_fStartHealth = 100.0f;
+  amp_fMaxHealth = 200.0f;
+  amp_fMaxArmor = 200.0f;
+
+  amp_iEnemyMultiplier = 1;
+  amp_bBalancedEnemies = FALSE;
+  amp_fFireSpeed = 1.0f;
+  amp_fAmmoMultiplier = 1.0f;
+  amp_fPowerupTimeMul = 1.0f;
+  amp_bHeatDamage = TRUE;
+  amp_bImpactDamage = TRUE;
+  amp_fEnemyDamage = 1.0f;
+  amp_fPlayerDamage = 1.0f;
+  amp_fSelfDamage = 1.0f;
+
+  // [Cecil] Gameplay Options
+  amp_bStartAmmo = FALSE;
+  amp_bRocketDestruction = TRUE;
+
+  amp_iAltFire = 0;
+  amp_bShotgunAlt   = TRUE;
+  amp_bDShotgunAlt  = TRUE;
+  amp_bTommygunAlt  = TRUE;
+  amp_bMinigunAlt   = TRUE;
+  amp_bRLauncherAlt = TRUE;
+  amp_bGLauncherAlt = TRUE;
+  amp_bFlamerAlt    = TRUE;
+  amp_bSniperAlt    = TRUE;
+  amp_bLaserAlt     = TRUE;
+  amp_bCannonAlt    = TRUE;
+
+  amp_fComboTime = 2.0f;
+  amp_bUnlimitedCombos = FALSE;
+  amp_bStrongerEnemies = FALSE;
+  amp_bNoRocketJump = FALSE;
+
+  amp_bKeepSecrets = FALSE;
+  amp_iPlayerCollision = 0;
+  amp_bAutosave = TRUE;
+
+  // [Cecil] Weapon Giver
+  amp_bKnifeEnable     = TRUE;
+  amp_bChainsawEnable  = FALSE;
+  amp_bColtEnable      = TRUE;
+  amp_bDColtEnable     = FALSE;
+  amp_bShotgunEnable   = FALSE;
+  amp_bDShotgunEnable  = FALSE;
+  amp_bTommygunEnable  = FALSE;
+  amp_bMinigunEnable   = FALSE;
+  amp_bRLauncherEnable = FALSE;
+  amp_bGLauncherEnable = FALSE;
+  amp_bFlamerEnable    = FALSE;
+  amp_bSniperEnable    = FALSE;
+  amp_bLaserEnable     = FALSE;
+  amp_bCannonEnable    = FALSE;
+
+  // [Cecil] Item Removal
+  amp_iWeaponItems = 3;
+  amp_iReplaceWeapons = 0;
+  amp_bTakeWeapons = TRUE;
+
+  amp_bKnifeItemEnable     = TRUE;
+  amp_bChainsawItemEnable  = TRUE;
+  amp_bColtItemEnable      = TRUE;
+  amp_bShotgunItemEnable   = TRUE;
+  amp_bDShotgunItemEnable  = TRUE;
+  amp_bTommygunItemEnable  = TRUE;
+  amp_bMinigunItemEnable   = TRUE;
+  amp_bRLauncherItemEnable = TRUE;
+  amp_bGLauncherItemEnable = TRUE;
+  amp_bFlamerItemEnable    = TRUE;
+  amp_bSniperItemEnable    = TRUE;
+  amp_bLaserItemEnable     = TRUE;
+  amp_bCannonItemEnable    = TRUE;
+
+  amp_bInvulItem = TRUE;
+  amp_bInvisItem = TRUE;
+  amp_bDamageItem = TRUE;
+  amp_bSpeedItem = TRUE;
+};
 
 static INDEX hud_iEnableStats = 1;
 static FLOAT hud_fEnableFPS   = 1;
@@ -927,10 +1104,100 @@ void CGame::InitInternal( void)
   _pShell->DeclareSymbol("persistent user INDEX gam_iCredits;", &gam_iCredits);
   _pShell->DeclareSymbol("persistent user FLOAT gam_tmSpawnInvulnerability;", &gam_tmSpawnInvulnerability);
 
-  _pShell->DeclareSymbol("persistent user INDEX gam_iBlood;", &gam_iBlood);
+  // [Cecil] gam_iBlood -> amp_iBloodType
+  _pShell->DeclareSymbol("persistent user INDEX amp_iBloodType;", &gam_iBlood);
   _pShell->DeclareSymbol("persistent user INDEX gam_bGibs;",  &gam_bGibs);
 
   _pShell->DeclareSymbol("persistent user INDEX gam_bUseExtraEnemies;",  &gam_bUseExtraEnemies);
+
+  // [Cecil] World Options
+  _pShell->DeclareSymbol("persistent user INDEX amp_bEnableOptions;", &amp_bEnableOptions);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bConversion;", &amp_bConversion);
+
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fSpeedMultiplier;", &amp_fSpeedMultiplier);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fJumpMultiplier;", &amp_fJumpMultiplier);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fStartHealth;", &amp_fStartHealth);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fMaxHealth;", &amp_fMaxHealth);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fMaxArmor;", &amp_fMaxArmor);
+
+  _pShell->DeclareSymbol("persistent user INDEX amp_iEnemyMultiplier;", &amp_iEnemyMultiplier);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bBalancedEnemies;", &amp_bBalancedEnemies);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fFireSpeed;", &amp_fFireSpeed);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fAmmoMultiplier;", &amp_fAmmoMultiplier);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fPowerupTimeMul;", &amp_fPowerupTimeMul);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bHeatDamage;", &amp_bHeatDamage);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bImpactDamage;", &amp_bImpactDamage);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fEnemyDamage;", &amp_fEnemyDamage);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fPlayerDamage;", &amp_fPlayerDamage);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fSelfDamage;", &amp_fSelfDamage);
+
+  // [Cecil] Gameplay Options
+  _pShell->DeclareSymbol("persistent user INDEX amp_bStartAmmo;", &amp_bStartAmmo);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bRocketDestruction;", &amp_bRocketDestruction);
+
+  _pShell->DeclareSymbol("persistent user INDEX amp_iAltFire;", &amp_iAltFire);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bShotgunAlt;", &amp_bShotgunAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDShotgunAlt;", &amp_bDShotgunAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bTommygunAlt;", &amp_bTommygunAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bMinigunAlt;", &amp_bMinigunAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bRLauncherAlt;", &amp_bRLauncherAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bGLauncherAlt;", &amp_bGLauncherAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bFlamerAlt;", &amp_bFlamerAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bSniperAlt;", &amp_bSniperAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bLaserAlt;", &amp_bLaserAlt);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bCannonAlt;", &amp_bCannonAlt);
+
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fComboTime;", &amp_fComboTime);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bUnlimitedCombos;", &amp_bUnlimitedCombos);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bStrongerEnemies;", &amp_bStrongerEnemies);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bNoRocketJump;", &amp_bNoRocketJump);
+
+  _pShell->DeclareSymbol("persistent user INDEX amp_bKeepSecrets;", &amp_bKeepSecrets);
+  _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerCollision;", &amp_iPlayerCollision);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bAutosave;", &amp_bAutosave);
+
+  // [Cecil] Weapon Giver
+  _pShell->DeclareSymbol("persistent user INDEX amp_bKnifeEnable;", &amp_bKnifeEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bChainsawEnable;", &amp_bChainsawEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bColtEnable;", &amp_bColtEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDColtEnable;", &amp_bDColtEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bShotgunEnable;", &amp_bShotgunEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDShotgunEnable;", &amp_bDShotgunEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bTommygunEnable;", &amp_bTommygunEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bMinigunEnable;", &amp_bMinigunEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bRLauncherEnable;", &amp_bRLauncherEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bGLauncherEnable;", &amp_bGLauncherEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bFlamerEnable;", &amp_bFlamerEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bSniperEnable;", &amp_bSniperEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bLaserEnable;", &amp_bLaserEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bCannonEnable;", &amp_bCannonEnable);
+
+  // [Cecil] Item Removal
+  _pShell->DeclareSymbol("persistent user INDEX amp_iWeaponItems;", &amp_iWeaponItems);
+  _pShell->DeclareSymbol("persistent user INDEX amp_iReplaceWeapons;", &amp_iReplaceWeapons);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bTakeWeapons;", &amp_bTakeWeapons);
+
+  _pShell->DeclareSymbol("persistent user INDEX amp_bKnifeItemEnable;", &amp_bKnifeItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bChainsawItemEnable;", &amp_bChainsawItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bColtItemEnable;", &amp_bColtItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bShotgunItemEnable;", &amp_bShotgunItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDShotgunItemEnable;", &amp_bDShotgunItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bTommygunItemEnable;", &amp_bTommygunItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bMinigunItemEnable;", &amp_bMinigunItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bRLauncherItemEnable;", &amp_bRLauncherItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bGLauncherItemEnable;", &amp_bGLauncherItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bFlamerItemEnable;", &amp_bFlamerItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bSniperItemEnable;", &amp_bSniperItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bLaserItemEnable;", &amp_bLaserItemEnable);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bCannonItemEnable;", &amp_bCannonItemEnable);
+
+  _pShell->DeclareSymbol("persistent user INDEX amp_bInvulItem;", &amp_bInvulItem);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bInvisItem;", &amp_bInvisItem);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDamageItem;", &amp_bDamageItem);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bSpeedItem;", &amp_bSpeedItem);
+
+  // [Cecil] Restore default game options
+  _pShell->DeclareSymbol("user void amp_RestoreDefaults(void);", &RestoreDefaultOptions);
 
   _pShell->DeclareSymbol("user INDEX gam_bQuickLoad;", &gam_bQuickLoad);
   _pShell->DeclareSymbol("user INDEX gam_bQuickSave;", &gam_bQuickSave);
@@ -2413,15 +2680,17 @@ void CGame::RecordHighScore(void)
 
   // get its score
   INDEX ctScore = penpl->m_psGameStats.ps_iScore;
+  INDEX iLess = 0;
 
   // find entry with lower score
-  for(INDEX iLess=0; iLess<HIGHSCORE_COUNT; iLess++) {
+  for(iLess = 0; iLess<HIGHSCORE_COUNT; iLess++) {
     if (gm_ahseHighScores[iLess].hse_ctScore<ctScore) {
       break;
     }
   }
+
   // if none
-  if (iLess>=HIGHSCORE_COUNT) {
+  if (iLess >= HIGHSCORE_COUNT) {
     // do nothing more
     return;
   }

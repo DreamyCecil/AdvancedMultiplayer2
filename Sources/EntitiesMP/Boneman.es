@@ -52,6 +52,11 @@ components:
  57 sound   SOUND_RUN       "Models\\Enemies\\Boneman\\Sounds\\Run.wav",
 
 functions:
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return 5;
+  };
+
   void Precache(void) {
     CEnemyBase::Precache();
     PrecacheSound(SOUND_IDLE );

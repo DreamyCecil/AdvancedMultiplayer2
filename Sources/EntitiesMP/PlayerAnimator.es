@@ -1312,7 +1312,8 @@ functions:
 
   // stand
   void BodyStillAnimation() {
-    BodyAnimationTemplate(BODY_ANIM_WAIT, 
+    // [Cecil] Default animation instead of wait animation
+    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
       BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
   };
@@ -1321,7 +1322,8 @@ functions:
   void BodyPushAnimation() {
     m_bAttacking = FALSE;
     m_bChangeWeapon = FALSE;
-    BodyAnimationTemplate(BODY_ANIM_WAIT, 
+    // [Cecil] Default animation instead of wait animation
+    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
       BODY_ANIM_COLT_REDRAW, BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, 0);
     m_bChangeWeapon = TRUE;
   };
@@ -1403,7 +1405,8 @@ functions:
 
     // pull weapon
     m_bChangeWeapon = FALSE;
-    BodyAnimationTemplate(BODY_ANIM_WAIT, 
+    // [Cecil] Default animation instead of wait animation
+    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
       BODY_ANIM_COLT_DRAW, BODY_ANIM_SHOTGUN_DRAW, BODY_ANIM_MINIGUN_DRAW, 0);
     INDEX iWeapon = ((CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons)).m_iCurrentWeapon;
     if (iWeapon!=WEAPON_NONE) {

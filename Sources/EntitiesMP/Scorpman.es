@@ -84,6 +84,15 @@ components:
  55 sound   SOUND_DEATH     "Models\\Enemies\\Scorpman\\Sounds\\Death.wav",
 
 functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    if (m_smtType == SMT_GENERAL) {
+      return ceil(FLOAT(iMul) / 2.0f);
+    }
+
+    return iMul;
+  };
+
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {

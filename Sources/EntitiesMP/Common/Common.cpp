@@ -1413,3 +1413,7 @@ class CWorldSettingsController *GetWSC(CEntity *pen)
   return pwsc;
 }
 
+// [Cecil] Seasonal events
+DECL_DLL ESpecialEvent GetCurrentEvent(void) {
+  return ESE_NONE;
+};

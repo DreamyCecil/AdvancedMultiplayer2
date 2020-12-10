@@ -35,11 +35,9 @@ components:
 
 // ********* INVISIBILITY *********
   1 model   MODEL_INVISIB   "ModelsMP\\Items\\PowerUps\\Invisibility\\Invisibility.mdl",
-// 2 texture TEXTURE_INVISIB "ModelsMP\\Items\\PowerUps\\Invisibility\\Invisibility.tex",
 
 // ********* INVULNERABILITY *********
  10 model   MODEL_INVULNER  "ModelsMP\\Items\\PowerUps\\Invulnerability\\Invulnerability.mdl",
-// 11 texture TEXTURE_INVULNER  "ModelsMP\\Items\\PowerUps\\Invulnerability\\Invulnerability.tex",
 
 // ********* SERIOUS DAMAGE *********
  20 model   MODEL_DAMAGE    "ModelsMP\\Items\\PowerUps\\SeriousDamage\\SeriousDamage.mdl",
@@ -62,27 +60,33 @@ components:
  55 texture TEXTURE_FLARE "Models\\Items\\Flares\\Flare.tex",
  56 model   MODEL_FLARE   "Models\\Items\\Flares\\Flare.mdl",
 
+ // [Cecil] Trigger model
+ 60 model   MODEL_TRIGGER   "Models\\Editor\\Trigger.mdl",
+ 61 texture TEXTURE_TRIGGER "Models\\Editor\\Camera.tex",
+
 // ************** SOUNDS **************
-//301 sound   SOUND_INVISIB  "SoundsMP\\Items\\Invisibility.wav",
-//302 sound   SOUND_INVULNER "SoundsMP\\Items\\Invulnerability.wav",
-//303 sound   SOUND_DAMAGE   "SoundsMP\\Items\\SeriousDamage.wav",
-//304 sound   SOUND_SPEED    "SoundsMP\\Items\\SeriousSpeed.wav",
 301 sound   SOUND_PICKUP   "SoundsMP\\Items\\PowerUp.wav",
 305 sound   SOUND_BOMB     "SoundsMP\\Items\\SeriousBomb.wav",
 
 functions:
+  void Precache(void) {
+    switch (m_puitType) {
+      case PUIT_INVISIB:
+      case PUIT_INVULNER:
+      case PUIT_DAMAGE:
+      case PUIT_SPEED:
+        PrecacheSound(SOUND_PICKUP);
+        break;
 
-  void Precache(void)
-  {
-    switch( m_puitType) {
-    case PUIT_INVISIB :  /*PrecacheSound(SOUND_INVISIB );  break;*/
-    case PUIT_INVULNER:  /*PrecacheSound(SOUND_INVULNER);  break; */                                    
-    case PUIT_DAMAGE  :  /*PrecacheSound(SOUND_DAMAGE  );  break;*/
-    case PUIT_SPEED   :  /*PrecacheSound(SOUND_SPEED   );  break;*/
-                         PrecacheSound(SOUND_PICKUP  );  break;
-    case PUIT_BOMB    :  PrecacheSound(SOUND_BOMB    );  break;
+      case PUIT_BOMB:
+        PrecacheSound(SOUND_BOMB);
+        break;
     }
-  }
+
+    // [Cecil] Trigger model
+    PrecacheModel(MODEL_TRIGGER);
+    PrecacheTexture(TEXTURE_TRIGGER);
+  };
 
   /* Fill in entity statistics - for AI purposes only */
   BOOL FillEntityStatistics(EntityStats *pes)
@@ -106,11 +110,13 @@ functions:
   // render particles
   void RenderParticles(void)
   {
+    // [Cecil] Adjusted for singleplayer maps in coop
     // no particles when not existing or in DM modes
-    if( GetRenderType()!=CEntity::RT_MODEL || GetSP()->sp_gmGameMode>CSessionProperties::GM_COOPERATIVE
+    if (GetRenderType() != CEntity::RT_MODEL || GetSP()->sp_gmGameMode > CSessionProperties::GM_SINGLEPLAYER
       || !ShowItemParticles()) {
       return;
     }
+
     switch( m_puitType) {
       case PUIT_INVISIB:
         Particles_Stardust( this, 2.0f*0.75f, 1.00f*0.75f, PT_STAR08, 320);
@@ -183,6 +189,33 @@ functions:
     }
   };
 
+  // [Cecil] Disable powerups
+  void AdjustDifficulty(void) {
+    BOOL bDisabled = FALSE;
+
+    switch (m_puitType) {
+      case PUIT_INVISIB:  bDisabled = !(GetSP()->sp_iItemRemoval & IRF_INVIS); break;
+      case PUIT_INVULNER: bDisabled = !(GetSP()->sp_iItemRemoval & IRF_INVUL); break;
+      case PUIT_DAMAGE:   bDisabled = !(GetSP()->sp_iItemRemoval & IRF_DAMAGE); break;
+      case PUIT_SPEED:    bDisabled = !(GetSP()->sp_iItemRemoval & IRF_SPEED); break;
+    }
+
+    if (bDisabled) {
+      // remove
+      if (m_penTarget == NULL) {
+        Destroy();
+
+      // replace with the trigger model
+      } else {
+        ItemModel();
+        StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
+        ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_BIG);
+
+        AddItem(MODEL_TRIGGER, TEXTURE_TRIGGER, 0, 0, 0);
+        StretchItem(FLOAT3D(0.75f, 0.75f, 0.75f));
+      }
+    }
+  };
  
 procedures:
 

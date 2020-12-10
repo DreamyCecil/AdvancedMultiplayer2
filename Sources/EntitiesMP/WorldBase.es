@@ -921,10 +921,7 @@ features  "HasName", "HasDescription",
   "ImplementsOnWorldRender", "ImplementsOnWorldInit",
   "ImplementsOnInitClass", "ImplementsOnEndClass";
 
-
 properties:
-
-
   1 CTString m_strName "Name" 'N' ="World Base",
   3 CTString m_strDescription = "",
   2 BOOL m_bZoning     "Zoning"     'Z' =FALSE,
@@ -991,12 +988,12 @@ properties:
 
   99 FLOAT m_fOpacity "Opacity" = 1.0f,
 
+ // [Cecil] TFE -> TSE conversion (only for the first brush)
+ 100 BOOL m_bReinit = FALSE,
 
 components:
 
-
 functions:
-
   // get visibility tweaking bits
   ULONG GetVisTweaks(void)
   {

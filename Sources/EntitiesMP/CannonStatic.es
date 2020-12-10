@@ -74,9 +74,13 @@ components:
  // ************** SOUNDS **************
  50 sound   SOUND_FIRE         "ModelsMP\\Enemies\\CannonStatic\\Sounds\\Fire.wav",
 
-functions:                                        
+functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    return 1;
+  };
 
-virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
+  virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {
     CTString str;
     str.PrintF(TRANS("A Cannon killed %s"), strPlayerName);
@@ -323,9 +327,13 @@ procedures:
       // give him score
       EReceiveScore eScore;
       eScore.iPoints = m_iScore;
+
+      // [Cecil] Mark as an enemy
+      eScore.bEnemy = TRUE;
+
       penKiller->SendEvent(eScore);
-      if( CountAsKill())
-      {
+
+      if (CountAsKill()) {
         penKiller->SendEvent(EKilledEnemy());
       }
       // send computer message

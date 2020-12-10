@@ -68,7 +68,6 @@ enum BasicEffectType {
  55 BET_BULLETSTAINSNOWNOSOUND  "Bullet stain snow", 
 };
 
-
 // input parameter for spwaning a basic effect
 event ESpawnEffect {
   enum BasicEffectType betType,   // type of effect
@@ -195,6 +194,16 @@ void CBasicEffect_OnPrecache(CDLLEntityClass *pdec, INDEX iUser)
     pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER1);
     pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER2);
     pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER3);
+
+    // [Cecil] Blood textures for coloring
+    pdec->PrecacheTexture(TEX_BLOOD_EXPLODE);
+    pdec->PrecacheTexture(TEX_BLOOD_STAIN1);
+    pdec->PrecacheTexture(TEX_BLOOD_STAIN2);
+    pdec->PrecacheTexture(TEX_BLOOD_STAIN3);
+    pdec->PrecacheTexture(TEX_BLOOD_STAIN4);
+    pdec->PrecacheTexture(TEX_BLOOD_SPILL1);
+    pdec->PrecacheTexture(TEX_BLOOD_SPILL2);
+    pdec->PrecacheTexture(TEX_BLOOD_SPILL3);
     break;
   case BET_TELEPORT:
     pdec->PrecacheModel(MODEL_TELEPORT_EFFECT);
@@ -319,7 +328,17 @@ components:
  80 sound   SOUND_GIZMO_SPLASH           "Models\\Enemies\\Gizmo\\Sounds\\Death.wav",
 
 // ********** Water shockwave texture **********
- 100 texture TEXTURE_WATER_WAVE          "Models\\Effects\\ShockWave01\\Textures\\WaterWave.tex",
+100 texture TEXTURE_WATER_WAVE          "Models\\Effects\\ShockWave01\\Textures\\WaterWave.tex",
+
+// [Cecil] Blood textures for coloring
+150 texture TEX_BLOOD_EXPLODE "Textures\\Blood\\Explode.tex",
+151 texture TEX_BLOOD_STAIN1  "Textures\\Blood\\Stain1.tex",
+152 texture TEX_BLOOD_STAIN2  "Textures\\Blood\\Stain2.tex",
+153 texture TEX_BLOOD_STAIN3  "Textures\\Blood\\Stain3.tex",
+154 texture TEX_BLOOD_STAIN4  "Textures\\Blood\\Stain4.tex",
+155 texture TEX_BLOOD_SPILL1  "Textures\\Blood\\Spill1.tex",
+156 texture TEX_BLOOD_SPILL2  "Textures\\Blood\\Spill2.tex",
+157 texture TEX_BLOOD_SPILL3  "Textures\\Blood\\Spill3.tex",
 
 functions:
 
@@ -1149,68 +1168,86 @@ functions:
  *                  BLOOD SPILL / STAIN                     *
  ************************************************************/
 
-
   // bullet hitpoint wound
-  void BloodExplode(void)
-  {
+  void BloodExplode(void) {
     // readout blood type
-    const INDEX iBloodType = GetSP()->sp_iBlood;
-    if( iBloodType<1) { return; }
+    const INDEX iBloodType = GetBloodType();
+    if (iBloodType <= 0) {
+      return;
+    }
 
     SetPredictable(TRUE);
     Stretch();
     SetModel(MODEL_BLOOD_EXPLODE);
-    if( iBloodType==3) {
-      // flower mode! :)
-      SetModelColor( RGBAToColor( 255,255,255,255));
-      switch( IRnd()&3) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER2);  break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER3);  break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      }
+
+    if (iBloodType == 3) {
+      SetModelColor(0xFFFFFFFF);
+      // [Cecil] IRnd() -> rand()
+      SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
+
     } else {
       SetModelMainTexture(TEXTURE_BLOOD_EXPLODE);
-      if( iBloodType==2) { SetModelColor( RGBAToColor( 250,20,20,255)); }
-      else               { SetModelColor( RGBAToColor( 0,250,0,255)); }
+
+      // [Cecil] New types
+      switch (iBloodType) {
+        // Green
+        case 2: SetModelColor(0x00FA00FF); break;
+        // Valentine
+        case 4: SetModelColor(0xFF00AAFF); break;
+        // Halloween
+        case 5: SetModelColor(0xFF7F00FF); break;
+        // Christmas
+        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        // Red
+        default: SetModelColor(0xFA1414FF);
+      }
     }
-    //RandomBanking();
+
     m_soEffect.Set3DParameters(7.5f, 5.0f, 1.0f, 1.0f);
     PlaySound(m_soEffect, SOUND_BULLET_FLESH, SOF_3D);
     m_fSoundTime = GetSoundLength(SOUND_BULLET_FLESH);
     m_fWaitTime = 0.25f;
     m_fFadeTime = 0.75f;
     m_bLightSource = FALSE;
-  }
-
+  };
 
   // blood stain on wall/floor
-  void BloodStain(void)
-  {
+  void BloodStain(void) {
     // readout blood type
-    const INDEX iBloodType = GetSP()->sp_iBlood;
-    if( iBloodType<1) { return; }
+    const INDEX iBloodType = GetBloodType();
+    if (iBloodType <= 0) {
+      return;
+    }
 
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
-    if( iBloodType==3) {
-      // flower mode! :)
-      SetModelColor( RGBAToColor( 255,255,255,255));
-      switch( IRnd()&3) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER2);  break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER3);  break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      }
+
+    if (iBloodType == 3) {
+      SetModelColor(0xFFFFFFFF);
+      // [Cecil] IRnd() -> rand()
+      SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
+
     } else {
-      switch( IRnd()&3) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_STAIN1);   break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_STAIN2);   break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_STAIN3);   break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_STAIN4);   break; }
+      // [Cecil] New textures
+      switch (iBloodType) {
+        // [Cecil] IRnd() -> rand()
+        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_STAIN1 + rand() % 4); break;
+        default: SetModelMainTexture(TEX_BLOOD_STAIN1 + rand() % 4);
       }
-      if( iBloodType==2) { SetModelColor( RGBAToColor( 250,20,20,255)); }
-      else               { SetModelColor( RGBAToColor( 0,250,0,255)); }
+
+      // [Cecil] New types
+      switch (iBloodType) {
+        // Green
+        case 2: SetModelColor(0x00FA00FF); break;
+        // Valentine
+        case 4: SetModelColor(0xFF00AAFF); break;
+        // Halloween
+        case 5: SetModelColor(0xFF7F00FF); break;
+        // Christmas
+        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        // Red
+        default: SetModelColor(0xFA1414FF);
+      }
     }
 
     SetNormalAndDirection();
@@ -1223,29 +1260,44 @@ functions:
 
 
   // blood stain on wall/floor that grows
-  void BloodStainGrow(void)
-  {
+  void BloodStainGrow(void) {
     // readout blood type
-    const INDEX iBloodType = GetSP()->sp_iBlood;
-    if( iBloodType<1) { return; }
+    const INDEX iBloodType = GetBloodType();
+    if (iBloodType <= 0) {
+      return;
+    }
 
     SetPredictable(TRUE);
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
-    if( iBloodType==3) {
-      // flower mode! :)
-      SetModelColor( RGBAToColor( 255,255,255,255));
-      switch( IRnd()&3) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER2);  break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER3);  break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      }
+
+    if (iBloodType == 3) {
+      SetModelColor(0xFFFFFFFF);
+      // [Cecil] IRnd() -> rand()
+      SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
+
     } else {
-      SetModelMainTexture(TEXTURE_BLOOD_STAIN4);
-      if( iBloodType==2) { SetModelColor( RGBAToColor( 250,20,20,255)); }
-      else               { SetModelColor( RGBAToColor( 0,250,0,255)); }
+      // [Cecil] New textures
+      switch (iBloodType) {
+        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_STAIN4); break;
+        default: SetModelMainTexture(TEX_BLOOD_STAIN4);
+      }
+
+      // [Cecil] New types
+      switch (iBloodType) {
+        // Green
+        case 2: SetModelColor(0x00FA00FF); break;
+        // Valentine
+        case 4: SetModelColor(0xFF00AAFF); break;
+        // Halloween
+        case 5: SetModelColor(0xFF7F00FF); break;
+        // Christmas
+        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        // Red
+        default: SetModelColor(0xFA1414FF);
+      }
     }
+
     SetNormalAndDirection();
     m_bLightSource = FALSE;
     m_fDepthSortOffset = -0.1f;
@@ -1260,30 +1312,39 @@ functions:
 
 
   // gizmo stain on wall/floor
-  void GizmoStain(void)
-  {
+  void GizmoStain(void) {
     // readout blood type
-    const INDEX iBloodType = GetSP()->sp_iBlood;
-    if( iBloodType<1) { return; }
+    const INDEX iBloodType = GetBloodType();
+    if (iBloodType <= 0) {
+      return;
+    }
 
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
-    if( iBloodType==3) {
-      // flower mode! :)
-      SetModelColor( RGBAToColor( 255,255,255,255));
-      switch( IRnd()&3) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER2);  break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER3);  break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      }
+
+    if (iBloodType == 3) {
+      SetModelColor(RGBAToColor(255, 255, 255, 255));
+      // [Cecil] IRnd() -> rand()
+      SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
+
     } else {
-      SetModelColor( RGBAToColor( 0,250,0,255));
-      switch( IRnd()&3) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_STAIN1);   break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_STAIN2);   break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_STAIN3);   break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_STAIN4);   break; }
+      // [Cecil] New textures
+      switch (iBloodType) {
+        // [Cecil] IRnd() -> rand()
+        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_STAIN1 + rand() % 4); break;
+        default: SetModelMainTexture(TEX_BLOOD_STAIN1 + rand() % 4);
+      }
+
+      // [Cecil] New types
+      switch (iBloodType) {
+        // Valentine
+        case 4: SetModelColor(0xFF00AAFF); break;
+        // Halloween
+        case 5: SetModelColor(0xFF7F00FF); break;
+        // Christmas
+        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        // Green
+        default: SetModelColor(0x00FA00FF);
       }
     }
     SetNormalAndDirection();
@@ -1296,36 +1357,42 @@ functions:
 
 
   // bullet exit wound blood on wall/floor
-  void BloodSpill(COLOR colBloodSpillColor)
-  {
+  void BloodSpill(COLOR colBloodSpillColor) {
     // readout blood type
-    const INDEX iBloodType = GetSP()->sp_iBlood;
-    if( iBloodType<1) { return; }
+    const INDEX iBloodType = GetBloodType();
+    if (iBloodType <= 0) {
+      return;
+    }
 
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
-    if( iBloodType==3) {
-      // flower mode! :)
-      SetModelColor( RGBAToColor( 255,255,255,255));
-      switch( IRnd()&3) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER2);  break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_FLOWER3);  break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_FLOWER1);  break; }
-      }
+
+    if (iBloodType == 3) {
+      SetModelColor(0xFFFFFFFF);
+      // [Cecil] IRnd() -> rand()
+      SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
+
     } else {
-      switch( IRnd()%5) {
-      case 1:  { SetModelMainTexture(TEXTURE_BLOOD_SPILL1); break; }
-      case 2:  { SetModelMainTexture(TEXTURE_BLOOD_SPILL2); break; }
-      case 3:  { SetModelMainTexture(TEXTURE_BLOOD_SPILL1); break; }
-      case 4:  { SetModelMainTexture(TEXTURE_BLOOD_SPILL2); break; }
-      default: { SetModelMainTexture(TEXTURE_BLOOD_SPILL3); break; }
+      // [Cecil] New textures
+      switch (iBloodType) {
+        // [Cecil] IRnd() -> rand()
+        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_SPILL1 + rand() % 3); break;
+        default: SetModelMainTexture(TEX_BLOOD_SPILL1 + rand() % 3);
       }
-      if( iBloodType==2)
-      {
-        SetModelColor( colBloodSpillColor);
+
+      // [Cecil] New types
+      switch (iBloodType) {
+        // Green
+        case 2: SetModelColor(0x00FA00FF); break;
+        // Valentine
+        case 4: SetModelColor(0xFF00AAFF); break;
+        // Halloween
+        case 5: SetModelColor(0xFF7F00FF); break;
+        // Christmas
+        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        // Red or other
+        default: SetModelColor(colBloodSpillColor);
       }
-      else               { SetModelColor( RGBAToColor( 0,250,0,255)); }
     }
     SetNormalAndDirection();
     m_fWaitTime = 15.0f + FRnd()*2.0f;

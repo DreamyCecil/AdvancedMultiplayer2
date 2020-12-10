@@ -41,6 +41,11 @@ components:
  53 sound   SOUND_SIGHT           "Models\\Enemies\\Gizmo\\Sounds\\Sight.wav",
 
 functions:
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return 10;
+  };
+
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {

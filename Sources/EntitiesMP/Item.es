@@ -160,11 +160,14 @@ functions:
     en_fDeceleration = 60.0f;
 
     // set appearance
-    SetModel(MODEL_ITEM);
+    ItemModel();
     SetDesiredTranslation(FLOAT3D(0,0,0));  // just to add to movers
   };
 
-
+  // [Cecil] Set item model
+  void ItemModel(void) {
+    SetModel(MODEL_ITEM);
+  };
 
 /************************************************************
  *                   SET MODEL AND ATTACHMENT               *

@@ -1464,21 +1464,26 @@ void DECL_DLL Particles_Waterfall(CEntity *pen, INDEX ctCount, FLOAT fStretchAll
 }
 
 #define BLOOD01_TRAIL_POSITIONS 15
-void Particles_BloodTrail(CEntity *pen)
-{
+void Particles_BloodTrail(CEntity *pen) {
   // get blood type
-  const INDEX iBloodType = GetSP()->sp_iBlood;
-  if( iBloodType<1) return;
+  const INDEX iBloodType = GetBloodType();
+  if (iBloodType <= 0) {
+    return;
+  }
+
   COLOR col;
-  if( iBloodType==3) Particle_PrepareTexture( &_toFlowerSprayTexture, PBT_BLEND);
-  else               Particle_PrepareTexture( &_toBloodSprayTexture,  PBT_BLEND);
+
+  if (iBloodType == 3) {
+    Particle_PrepareTexture(&_toFlowerSprayTexture, PBT_BLEND);
+  } else {
+    Particle_PrepareTexture(&_toBloodSprayTexture, PBT_BLEND);
+  }
 
   CLastPositions *plp = pen->GetLastPositions(BLOOD01_TRAIL_POSITIONS);
   FLOAT fGA = ((CMovableEntity *)pen)->en_fGravityA;
   FLOAT3D vGDir = ((CMovableEntity *)pen)->en_vGravityDir;
 
-  for( INDEX iPos=0; iPos<plp->lp_ctUsed; iPos++)
-  {
+  for (INDEX iPos=0; iPos<plp->lp_ctUsed; iPos++) {
     Particle_SetTexturePart( 256, 256, iPos%8, 0);
     FLOAT3D vPos = plp->GetPosition(iPos);
     FLOAT fRand  = rand()/FLOAT(RAND_MAX);
@@ -1488,15 +1493,31 @@ void Particles_BloodTrail(CEntity *pen)
     vPos += vGDir*fGA*fT*fT/8.0f;
     FLOAT fSize = 0.2f-iPos*0.15f/BLOOD01_TRAIL_POSITIONS;
     UBYTE ub = 255-iPos*255/BLOOD01_TRAIL_POSITIONS;
-         if( iBloodType==3) col = C_WHITE|ub;
-    else if( iBloodType==2) col = RGBAToColor(ub,20,20,ub);
-    else                    col = RGBAToColor(0,ub,0,ub);
-    Particle_RenderSquare( vPos, fSize, fAngle, col);
+
+    if (iBloodType == 3) {
+      col = C_WHITE|ub;
+
+    } else {
+      // [Cecil] New types
+      switch (iBloodType) {
+        // Green
+        case 2: col = RGBAToColor(0, ub, 0, ub); break;
+        // Valentine
+        case 4: col = RGBAToColor(ub, 0, FLOAT(ub) / 1.5f, ub); break;
+        // Halloween
+        case 5: col = RGBAToColor(ub, FLOAT(ub) * 0.5f, 0, ub); break;
+        // Christmas
+        case 6: col = ChristmasBlood(pen->en_ulID, ub, ub); break;
+        // Red
+        default: col = RGBAToColor(ub, 20, 20, ub);
+      }
+    }
+
+    Particle_RenderSquare(vPos, fSize, fAngle, col);
   }
   // all done
   Particle_Flush();
-}
-
+};
 
 INDEX Particles_FireBreath(CEntity *pen, FLOAT3D vSource, FLOAT3D vTarget, FLOAT tmStart, FLOAT tmStop)
 {
@@ -1837,10 +1858,11 @@ void Particles_Stardust( CEntity *pen, FLOAT fSize, FLOAT fHeight,
     const FLOAT3D vPos = vCenter+FLOAT3D( afStarsPositions[iMemeber][0], 
                                           afStarsPositions[iMemeber][1],
                                           afStarsPositions[iMemeber][2])*fSize;
-    COLOR colStar = RGBToColor( auStarsColors[iMemeber][0]*fFade,
-                                auStarsColors[iMemeber][1]*fFade,
-                                auStarsColors[iMemeber][2]*fFade);
-    Particle_RenderSquare( vPos, 0.15f, 0, colStar|0xFF);
+    COLOR colStar = RGBToColor(auStarsColors[iMemeber][0]*fFade,
+                               auStarsColors[iMemeber][1]*fFade,
+                               auStarsColors[iMemeber][2]*fFade);
+
+    Particle_RenderSquare(vPos, 0.15f, 0, colStar|0xFF);
   }
   // all done
   Particle_Flush();
@@ -2503,6 +2525,56 @@ void Particles_Ghostbuster(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRay
   // all done
   Particle_Flush();
 }
+
+// [Cecil] Ghost Buster replacement particles
+void Particles_Ghostbuster2(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRays, FLOAT fSize, FLOAT fPower) {
+  Particle_PrepareTexture(&_toGhostbusterBeam, PBT_ADD);
+  Particle_SetTexturePart(512, 512, 0, 0);
+
+  // get direction vector
+  FLOAT3D vZ = vDst-vSrc;
+  FLOAT fLen = vZ.Length();
+  vZ.Normalize();
+
+  // get two normal vectors
+  FLOAT3D vX;
+  if (Abs(vZ(2)) > 0.5) {
+    vX = FLOAT3D(1.0f, 0.0f, 0.0f)*vZ;
+  } else {
+    vX = FLOAT3D(0.0f, 1.0f, 0.0f)*vZ;
+  }
+
+  FLOAT3D vY = vZ*vX;
+
+  // [Cecil] Static size
+  const FLOAT fStep = 1.0f;
+
+  for (INDEX iRay = 0; iRay < ctRays; iRay++) {
+    FLOAT3D v0 = vSrc;
+    FLOAT fT = FLOAT(iRay) / ctRays + _pTimer->GetLerpedCurrentTick() / 1.5f;
+    FLOAT fDT = fT-INDEX(fT);
+    FLOAT fFade = 1-fDT*4.0f;
+
+    if (fFade > 1 || fFade <= 0) {
+      continue;
+    }
+
+    UBYTE ubFade = NormFloatToByte(fFade*fPower);
+    COLOR colFade = RGBToColor(ubFade, ubFade, ubFade);
+
+    // [Cecil] Don't go over the length
+    for (FLOAT fPos = fStep; fPos < fLen + fStep/2.0f; fPos = ClampUp(fPos + fStep, fLen + fStep/2.0f)) {
+      INDEX iOffset = ULONG(fPos * 1234.5678f + iRay*103) % 32;
+      FLOAT3D v1 = vSrc+(vZ*fPos + vX*(0.5f*afStarsPositions[iOffset][0]*fSize) +
+                                   vY*(0.5f*afStarsPositions[iOffset][1]*fSize));
+
+      Particle_RenderLine(v0, v1, 0.125f*fSize * 3.0f, colFade|0xFF);
+      v0 = v1;
+    }
+  }
+  // all done
+  Particle_Flush();
+};
 
 // growth - one for each drawport
 
@@ -3237,80 +3309,87 @@ void Particles_Snow(CEntity *pen, FLOAT fGridSize, INDEX ctGrids, FLOAT fFactor,
 #define LIGHTNING_SPEED 2000000.0f
 #define LIGHTNING_LIFE_TIME 0.4f
 #define LIGHTNING_DEATH_START 0.200f
-void RenderOneLightningBranch( FLOAT3D vSrc, FLOAT3D vDst, FLOAT fPath,
-                              FLOAT fTimeStart, FLOAT fTimeNow, FLOAT fPower,
-                              INDEX iRnd)
-{
+
+// [Cecil] Custom size, knee length and random position factor
+void RenderOneLightningBranch(FLOAT3D vSrc, FLOAT3D vDst, FLOAT fPath, FLOAT fTimeStart, FLOAT fTimeNow, FLOAT fPower, INDEX iRnd,
+                              FLOAT fSize, FLOAT fKneeLen, FLOAT fPosFactor) {
   // calculate time dependent random factor
   FLOAT fRandomDivider = 1.0f;
   FLOAT3D vZ = vDst-vSrc;
   FLOAT fLen = vZ.Length();
-  FLOAT fKneeLen = fLen/10.0f;
+
+  // [Cecil] Set defaults
+  if (fKneeLen < 0.0f) {
+    fKneeLen = fLen/10.0f;
+  }
+  if (fPosFactor < 0.0f) {
+    fPosFactor = 4.0f;
+  }
+
+  // [Cecil] Actual length
+  FLOAT fKneeLenZ = fLen/10.0f;
+
   FLOAT3D vRenderDest;
   BOOL bRenderInProgress = TRUE;
   FLOAT fPassedTime = fTimeNow-fTimeStart;
-  INDEX ctBranches=0.0f;
+  INDEX ctBranches = 0.0f;
   INDEX ctMaxBranches = 3.0f;
-  INDEX ctKnees=0.0f;
+  INDEX ctKnees = 0.0f;
   
-  FLOAT fTimeKiller = Clamp( 
-    (-1.0f/(LIGHTNING_LIFE_TIME-LIGHTNING_DEATH_START)*(fPassedTime-LIGHTNING_DEATH_START)+1), 0.0f, 1.0f);
+  FLOAT fTimeKiller = Clamp(-1.0f / (LIGHTNING_LIFE_TIME - LIGHTNING_DEATH_START) * (fPassedTime - LIGHTNING_DEATH_START) + 1, 0.0f, 1.0f);
 
-  while(bRenderInProgress)
-  {
+  while (bRenderInProgress) {
     // get direction vector
     vZ = vDst-vSrc;
     fLen = vZ.Length();
     ctKnees++;
-    if( fLen < fKneeLen)
-    {
+
+    if (fLen < fKneeLenZ) {
       vRenderDest = vDst;
       bRenderInProgress = FALSE;
-    }
-    else
-    {
+    } else {
       vZ.Normalize();
       // get two normal vectors
       FLOAT3D vX;
-      if (Abs(vZ(2))>0.5)
-      {
+
+      if (Abs(vZ(2)) > 0.5) {
         vX = FLOAT3D(1.0f, 0.0f, 0.0f)*vZ;
-      }
-      else
-      {
+      } else {
         vX = FLOAT3D(0.0f, 1.0f, 0.0f)*vZ;
       }
+
       // we found ortonormal vectors
       FLOAT3D vY  = vZ*vX;
     
-      FLOAT fAllowRnd = 4.0f/fRandomDivider;
-      fRandomDivider+=1.0f;
+      FLOAT fAllowRnd = fPosFactor/fRandomDivider;
+      fRandomDivider += 1.0f;
       vRenderDest = vSrc+
-        vZ*fKneeLen +
-        vX*(fAllowRnd*afStarsPositions[iRnd][0]*fKneeLen) +
-        vY*(fAllowRnd*afStarsPositions[iRnd][1]*fKneeLen);
+        vZ*fKneeLenZ +
+        vX*(fAllowRnd * afStarsPositions[iRnd][0] * fKneeLen) +
+        vY*(fAllowRnd * afStarsPositions[iRnd][1] * fKneeLen);
+
       // get new rnd index
       iRnd = (iRnd+1) % CT_MAX_PARTICLES_TABLE;
       // see if we will spawn new branch of lightning
-      FLOAT fRnd = ((1-ctBranches/ctMaxBranches)*ctKnees)*afStarsPositions[iRnd][0];
-      if( (fRnd < 2.0f) && (fPower>0.25f) )
-      {
+      FLOAT fRnd = ((1-ctBranches/ctMaxBranches)*ctKnees) * afStarsPositions[iRnd][0];
+
+      if (fRnd < 2.0f && fPower > 0.25f) {
         ctBranches++;
         FLOAT3D vNewDirection = (vRenderDest-vSrc).Normalize();
         FLOAT3D vNewDst = vSrc + vNewDirection*fLen;
         // recurse into new branch
-        RenderOneLightningBranch( vSrc, vNewDst, fPath, fTimeStart, fTimeNow, fPower/3.0f, iRnd);
+        RenderOneLightningBranch(vSrc, vNewDst, fPath, fTimeStart, fTimeNow, fPower/3.0f, iRnd, fSize, fKneeLen, fPosFactor);
       }
     }
 
     // calculate color
     UBYTE ubA = UBYTE(fPower*255*fTimeKiller);
     // render line
-    Particle_RenderLine( vSrc, vRenderDest, fPower*2, C_WHITE|ubA);
+    Particle_RenderLine(vSrc, vRenderDest, fPower*2.0f * fSize, C_WHITE|ubA);
     // add traveled path
     fPath += (vRenderDest-vSrc).Length();
-    if( fPath/LIGHTNING_SPEED > fPassedTime)
-    {
+
+    if (fPath/LIGHTNING_SPEED > fPassedTime) {
       bRenderInProgress = FALSE;
     }
     vSrc = vRenderDest;
@@ -3325,11 +3404,25 @@ void Particles_Lightning( FLOAT3D vSrc, FLOAT3D vDst, FLOAT fTimeStart)
   FLOAT fTimeNow = _pTimer->GetLerpedCurrentTick();
   // get rnd index
   INDEX iRnd = (INDEX( fTimeStart*100))%CT_MAX_PARTICLES_TABLE;
-  RenderOneLightningBranch( vSrc, vDst, 0, fTimeStart, fTimeNow, 1.0f, iRnd);
+  RenderOneLightningBranch( vSrc, vDst, 0, fTimeStart, fTimeNow, 1.0f, iRnd, 1.0f, -1.0f, -1.0f);
   
   // all done
   Particle_Flush();
 }
+
+// [Cecil] Tesla lightning particles
+void Particles_TeslaLightning(FLOAT3D vSrc, FLOAT3D vDst, FLOAT fTimeStart, FLOAT fSize, FLOAT fKneeLen, FLOAT fPosFactor) {
+  Particle_PrepareTexture(&_toLightning, PBT_ADDALPHA);
+  Particle_SetTexturePart(512, 512, 0, 0);
+
+  FLOAT fTimeNow = _pTimer->GetLerpedCurrentTick();
+  // get rnd index
+  INDEX iRnd = (INDEX(fTimeStart*100)) % CT_MAX_PARTICLES_TABLE;
+  RenderOneLightningBranch(vSrc, vDst, 0, fTimeStart, fTimeNow, 1.0f, iRnd, fSize, fKneeLen, fPosFactor);
+  
+  // all done
+  Particle_Flush();
+};
 
 #define CT_SANDFLOW_TRAIL 3
 #define SANDFLOW_FADE_OUT 0.25f
@@ -4221,7 +4314,7 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
   FLOAT fRotation = 0.0f;
 
   // readout blood type
-  const INDEX iBloodType = GetSP()->sp_iBlood;
+  const INDEX iBloodType = GetBloodType();
 
   // determine time difference
   FLOAT fNow = _pTimer->GetLerpedCurrentTick();
@@ -4233,102 +4326,100 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
     case SPT_BLOOD:
     case SPT_SLIME:
     case SPT_GOO:
-    {
-      if( iBloodType<1) return;
-      if( iBloodType==3) Particle_PrepareTexture( &_toFlowerSprayTexture, PBT_BLEND);
-      else               Particle_PrepareTexture( &_toBloodSprayTexture,  PBT_BLEND);
+      if (iBloodType <= 0) {
+        return;
+      }
+
+      if (iBloodType == 3) {
+        Particle_PrepareTexture(&_toFlowerSprayTexture, PBT_BLEND);
+      } else {
+        Particle_PrepareTexture(&_toBloodSprayTexture,  PBT_BLEND);
+      }
       break;
-    }
+
     case SPT_BONES:
-    {
-      Particle_PrepareTexture( &_toBonesSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toBonesSprayTexture, PBT_BLEND);
       break;
-    }
+
     case SPT_FEATHER:
-    {
-      Particle_PrepareTexture( &_toFeatherSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toFeatherSprayTexture, PBT_BLEND);
       fDamagePower*=2.0f;
       break;
-    }
+
     case SPT_STONES:
-    {
-      Particle_PrepareTexture( &_toStonesSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toStonesSprayTexture, PBT_BLEND);
       fDamagePower*=3.0f;
       break;
-    }
+
     case SPT_COLOREDSTONE:
-    {
-      Particle_PrepareTexture( &_toStonesSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toStonesSprayTexture, PBT_BLEND);
       fDamagePower*=2.0f;
       fGA*=2.0f;
       break;
-    }
+
     case SPT_WOOD:
-    {
-      Particle_PrepareTexture( &_toWoodSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toWoodSprayTexture, PBT_BLEND);
       fDamagePower*=6.0f;
       fGA*=3.0f;
       break;
-    }
+
     case SPT_TREE01:
-    {
       ctSprays*=1;
-      Particle_PrepareTexture( &_toWoodSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toWoodSprayTexture, PBT_BLEND);
       fDamagePower*=1;
       fSpeedModifier+=20;
       fRotation = fT*1000.0f;
       fGA*=4.0f;
       break;
-    }
+
     case SPT_SMALL_LAVA_STONES:
-    {
-      Particle_PrepareTexture( &_toLavaSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toLavaSprayTexture, PBT_BLEND);
       fDamagePower *= 0.75f;
       break;
-    }
+
     case SPT_LAVA_STONES:
-    {
-      Particle_PrepareTexture( &_toLavaSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toLavaSprayTexture, PBT_BLEND);
       fDamagePower *=3.0f;
       break;
-    }
+
     case SPT_BEAST_PROJECTILE_SPRAY:
-    {
-      Particle_PrepareTexture( &_toBeastProjectileSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toBeastProjectileSprayTexture, PBT_BLEND);
       fDamagePower*=3.0f;
       break;
-    }
+
     case SPT_ELECTRICITY_SPARKS:
-    {
-      Particle_PrepareTexture( &_toMetalSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toMetalSprayTexture, PBT_BLEND);
       break;
-    }
+
     case SPT_AIRSPOUTS:
-    {
-      Particle_PrepareTexture( &_toAirSprayTexture, PBT_BLEND);
+      Particle_PrepareTexture(&_toAirSprayTexture, PBT_BLEND);
       break;
-    }
+
     case SPT_PLASMA:
-    {
-      Particle_PrepareTexture( &_toLarvaProjectileSpray, PBT_BLEND);
+      Particle_PrepareTexture(&_toLarvaProjectileSpray, PBT_BLEND);
       fDamagePower*=2.0f;
       break;
-    }
+
     case SPT_NONE:
-    {
       return;
-    }
-    default: ASSERT(FALSE);
+
+    default:
+      ASSERT(FALSE);
       return;
-    }
+  }
 
   for( INDEX iSpray=0; iSpray<ctSprays; iSpray++)
   {
     if( (sptType==SPT_FEATHER) && (iSpray==ctSprays/2) )
     {
       Particle_Flush();
-      if( iBloodType==3) Particle_PrepareTexture( &_toFlowerSprayTexture, PBT_BLEND);
-      else               Particle_PrepareTexture( &_toBloodSprayTexture,  PBT_BLEND);
+
+      if (iBloodType == 3) {
+        Particle_PrepareTexture(&_toFlowerSprayTexture, PBT_BLEND);
+      } else {
+        Particle_PrepareTexture(&_toBloodSprayTexture,  PBT_BLEND);
+      }
+
       fDamagePower/=2.0f;
     }
 
@@ -4382,24 +4473,64 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
     case SPT_BLOOD:
     {
       UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
-      if( iBloodType==2) col = RGBAToColor( ubRndCol, 0, 0, ubAlpha);
-      if( iBloodType==1) col = RGBAToColor( 0, ubRndCol, 0, ubAlpha);
+
+      // [Cecil] New types
+      switch (iBloodType) {
+        // Green
+        case 2: col = RGBAToColor(0, ubRndCol, 0, ubAlpha); break;
+        // Hippie
+        case 3: col = RGBAToColor(ubRndCol, ubRndCol, ubRndCol, ubAlpha); break;
+        // Valentine
+        case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+        // Halloween
+        case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+        // Christmas
+        case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+        // Red
+        default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha);
+      }
       break;
     }
-    case SPT_SLIME:
-    {
+
+    case SPT_SLIME: {
       UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
-      if( iBloodType!=3) col = RGBAToColor(0, ubRndCol, 0, ubAlpha);
+
+      if (iBloodType != 3) {
+        // [Cecil] New types
+        switch (iBloodType) {
+          // Valentine
+          case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+          // Halloween
+          case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+          // Christmas
+          case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          // Green
+          default: col = RGBAToColor(0, ubRndCol, 0, ubAlpha);
+        }
+      }
       break;
     }
-    case SPT_GOO:
-    {
+
+    case SPT_GOO: {
       UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
-      if( iBloodType!=3) col = RGBAToColor(ubRndCol, 128, 12, ubAlpha);
+
+      if (iBloodType != 3) {
+        // [Cecil] New types
+        switch (iBloodType) {
+          // Valentine
+          case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+          // Halloween
+          case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+          // Christmas
+          case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          // Goo
+          default: col = RGBAToColor(ubRndCol, 128, 12, ubAlpha);
+        }
+      }
       break;
     }
-    case SPT_BONES:
-    {
+
+    case SPT_BONES: {
       UBYTE ubRndH = UBYTE( 8+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*16);
       UBYTE ubRndS = UBYTE( 96+(afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][1]+0.5)*64);
       UBYTE ubRndV = UBYTE( 64+(afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][2])*64);
@@ -4407,16 +4538,28 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
       fSize/=1.5f;
       break;
     }
-    case SPT_FEATHER:
-    {
-      if(iSpray>=ctSprays/2)
-      {
+
+    case SPT_FEATHER: {
+      if (iSpray >= ctSprays/2) {
         UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
-        if( iBloodType==2) col = RGBAToColor( ubRndCol, 0, 0, ubAlpha);
-        if( iBloodType==1) col = RGBAToColor( 0, ubRndCol, 0, ubAlpha);
-      }
-      else
-      {
+
+        // [Cecil] New types
+        switch (iBloodType) {
+          // Green
+          case 2: col = RGBAToColor(0, ubRndCol, 0, ubAlpha); break;
+          // Hippie
+          case 3: col = RGBAToColor(ubRndCol, ubRndCol, ubRndCol, ubAlpha); break;
+          // Valentine
+          case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+          // Halloween
+          case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+          // Christmas
+          case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          // Red
+          default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha);
+        }
+
+      } else {
         UBYTE ubRndH = UBYTE( 32+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*16);
         UBYTE ubRndS = UBYTE( 127+(afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][1]+0.5)*128);
         UBYTE ubRndV = UBYTE( 159+(afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][2])*192);
@@ -4426,8 +4569,8 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
       }
       break;
     }
-    case SPT_STONES:
-    {
+
+    case SPT_STONES: {
       UBYTE ubRndH = UBYTE( 24+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*16);
       UBYTE ubRndS = UBYTE( 32+(afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][1]+0.5)*64);
       UBYTE ubRndV = UBYTE( 196+(afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][2])*128);
@@ -5849,6 +5992,7 @@ void Particles_ModelGlow( CEntity *pen, FLOAT tmEnd, enum ParticleTexture ptText
   // all done
   Particle_Flush();
 }
+
 void Particles_ModelGlow2( CModelObject *mo, CPlacement3D pl, FLOAT tmEnd, enum ParticleTexture ptTexture, FLOAT fSize, FLOAT iVtxStep, FLOAT fAnimSpd, COLOR iCol)
 {
   FLOAT tmNow = _pTimer->GetLerpedCurrentTick();
@@ -5869,15 +6013,13 @@ void Particles_ModelGlow2( CModelObject *mo, CPlacement3D pl, FLOAT tmEnd, enum 
   FLOAT3D vZ( m(1,3), m(2,3), m(3,3));
   FLOAT3D vCenter = plPlacement.pl_PositionVector;
   
-  UBYTE ubCol=255;
-  if((tmEnd-tmNow)<5.0f)
-  {
+  UBYTE ubCol = 255;
+  if (tmEnd-tmNow < 5.0f) {
     ubCol = FloatToInt(255.0f*(0.5f-0.5f*cos((tmEnd-tmNow)*(9.0f*3.1415927f/5.0f))));
   }
   
   INDEX ctVtx = avVertices.Count();
-  for( INDEX iVtx=0; iVtx<ctVtx-1; iVtx+=iVtxStep)
-  {
+  for (INDEX iVtx=0; iVtx<ctVtx-1; iVtx+=iVtxStep) {
     INDEX iRnd=iVtx%CT_MAX_PARTICLES_TABLE;
     FLOAT fRndSize=afStarsPositions[iRnd][3];
 

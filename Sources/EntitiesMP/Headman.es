@@ -73,13 +73,34 @@ components:
  57 sound   SOUND_ATTACKKAMIKAZE    "Models\\Enemies\\Headman\\Sounds\\AttackKamikaze.wav",
  58 sound   SOUND_DEATH             "Models\\Enemies\\Headman\\Sounds\\Death.wav",
 
- /*
- 60 model     MODEL_HEADMAN_BODY   "Models\\Enemies\\Headman\\Debris\\Torso.mdl",
- 61 model     MODEL_HEADMAN_HAND   "Models\\Enemies\\Headman\\Debris\\Arm.mdl",
- 62 model     MODEL_HEADMAN_LEGS   "Models\\Enemies\\Headman\\Debris\\Leg.mdl",
- */
-
 functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    if (m_hdtType == HDT_KAMIKAZE) {
+      return ceil(FLOAT(iMul) / 3.0f);
+    }
+
+    return iMul;
+  };
+
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    if (m_hdtType == HDT_KAMIKAZE) {
+      return 2;
+    }
+
+    return 10;
+  };
+
+  // [Cecil] Stronger enemies settings
+  void StrongerSettings(void) {
+    if (m_hdtType == HDT_KAMIKAZE) {
+      m_fWalkSpeed *= 3.0f;
+      m_fAttackRunSpeed *= 3.0f;
+      m_fCloseRunSpeed *= 3.0f;
+    }
+  };
+
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {

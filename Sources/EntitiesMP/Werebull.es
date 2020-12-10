@@ -51,6 +51,11 @@ components:
  56 sound   SOUND_RUN       "Models\\Enemies\\Werebull\\Sounds\\Run.wav",
 
 functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    return ceil(FLOAT(iMul) / 1.5f);
+  };
+
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {

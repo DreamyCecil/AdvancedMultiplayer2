@@ -463,11 +463,36 @@ procedures:
     m_bMoving = FALSE;
     ECameraStart eStart;
     eStart.penCamera = this;
-    m_penPlayer->SendEvent(eStart);
+
+    // [Cecil] Start camera for everyone
+    if (SPWorld(this)) {
+      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+        CEntity *pen = GetPlayerEntity(i);
+
+        if (ASSERT_ENTITY(pen)) {
+          pen->SendEvent(eStart);
+        }
+      }
+    } else {
+      m_penPlayer->SendEvent(eStart);
+    }
+
     autowait(m_tmTime);
     ECameraStop eStop;
-    eStop.penCamera=this;
-    m_penPlayer->SendEvent(eStop);
+    eStop.penCamera = this;
+
+    // [Cecil] Stop camera for everyone
+    if (SPWorld(this)) {
+      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+        CEntity *pen = GetPlayerEntity(i);
+
+        if (ASSERT_ENTITY(pen)) {
+          pen->SendEvent(eStop);
+        }
+      }
+    } else {
+      m_penPlayer->SendEvent(eStop);
+    }
     return;
   }
 
@@ -479,15 +504,40 @@ procedures:
     m_bMoving = TRUE;
     ECameraStart eStart;
     eStart.penCamera = this;
-    m_penPlayer->SendEvent(eStart);
+    
+    // [Cecil] Start camera for everyone
+    if (SPWorld(this) || m_penTarget == NULL) {
+      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+        CEntity *pen = GetPlayerEntity(i);
+
+        if (ASSERT_ENTITY(pen)) {
+          pen->SendEvent(eStart);
+        }
+      }
+    } else {
+      m_penPlayer->SendEvent(eStart);
+    }
+
     // roll, baby, roll ...
     wait() {
       on( EStop) : {
         ECameraStop eStop;
-        eStop.penCamera=this;
-        m_penPlayer->SendEvent(eStop);
-        if( m_penAutoCameraEndTarget!=NULL)
-        {
+        eStop.penCamera = this;
+        
+        // [Cecil] Stop camera for everyone
+        if (SPWorld(this) || m_penTarget == NULL) {
+          for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+            CEntity *pen = GetPlayerEntity(i);
+
+            if (ASSERT_ENTITY(pen)) {
+              pen->SendEvent(eStop);
+            }
+          }
+        } else {
+          m_penPlayer->SendEvent(eStop);
+        }
+
+        if (m_penAutoCameraEndTarget != NULL) {
           SendToTarget(m_penAutoCameraEndTarget, m_eetAutoCameraEndEvent, m_penPlayer);
         }
         return;
@@ -505,7 +555,19 @@ procedures:
     // init camera
     ECameraStart eStart;
     eStart.penCamera = this;
-    m_penPlayer->SendEvent(eStart);
+    
+    // [Cecil] Start camera for everyone
+    if (SPWorld(this) || m_penTarget == NULL) {
+      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+        CEntity *pen = GetPlayerEntity(i);
+
+        if (ASSERT_ENTITY(pen)) {
+          pen->SendEvent(eStart);
+        }
+      }
+    } else {
+      m_penPlayer->SendEvent(eStart);
+    }
 
     // check all markers for correct type and numbers
     INDEX ctMarkers=1;
@@ -567,8 +629,20 @@ procedures:
     wait() {
       on( EStop) : {
         ECameraStop eStop;
-        eStop.penCamera=this;
-        m_penPlayer->SendEvent(eStop);
+        eStop.penCamera = this;
+    
+        // [Cecil] Start camera for everyone
+        if (SPWorld(this) || m_penTarget == NULL) {
+          for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+            CEntity *pen = GetPlayerEntity(i);
+
+            if (ASSERT_ENTITY(pen)) {
+              pen->SendEvent(eStop);
+            }
+          }
+        } else {
+          m_penPlayer->SendEvent(eStop);
+        }
         return;
       }
       otherwise() : {

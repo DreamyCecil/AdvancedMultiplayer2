@@ -58,6 +58,10 @@ components:
  45 sound   SOUND_DEATH         "ModelsMP\\Enemies\\Guffy\\Sounds\\Death.wav",
 
 functions:
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return 2;
+  };
 
 // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)

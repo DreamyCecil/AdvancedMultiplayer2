@@ -6,6 +6,9 @@
 #include "EntitiesMP/TacticsHolder.h"
 extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
 extern INDEX ent_bReportBrokenChains;
+
+// [Cecil] Enemy counter
+extern INDEX _iAliveEnemies = 0;
 %}
 
 uses "EntitiesMP/Watcher";
@@ -169,12 +172,9 @@ properties:
 
 181 BOOL  m_bResizeAttachments "Stretch attachments" = FALSE, // for small enemies with big guns
 
-//171 INDEX m_iTacticsRetried = 0,
-
-  {
-    TIME m_tmPredict;  // time to predict the entity to
-  }
-
+{
+  TIME m_tmPredict;  // time to predict the entity to
+}
 
 components:
 
@@ -204,13 +204,26 @@ components:
  31 model   MODEL_MACHINE        "Models\\Effects\\Debris\\Stone\\Stone.mdl",
  32 texture TEXTURE_MACHINE      "Models\\Effects\\Debris\\Stone\\Stone.tex",
 
+ // [Cecil] Flesh texture for coloring
+ 50 texture TEXTURE_FLESH "Textures\\Blood\\Flesh.tex",
 
 functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    return iMul;
+  };
 
-  void CEnemyBase(void)
-  {
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return 1;
+  };
+
+  // [Cecil] Stronger enemies settings
+  void StrongerSettings(void) {};
+
+  void CEnemyBase(void) {
     m_tmPredict = 0;
-  }
+  };
 
   // called by other entities to set time prediction parameter
   void SetPredictionTime(TIME tmAdvance)   // give time interval in advance to set
@@ -295,8 +308,7 @@ functions:
     CEnemyBase *penOther = (CEnemyBase *)(&enOther);
   }
 
-  void Precache(void)
-  {
+  void Precache(void) {
     PrecacheModel(MODEL_FLESH);
     PrecacheModel(MODEL_FLESH_APPLE);
     PrecacheModel(MODEL_FLESH_BANANA);
@@ -317,7 +329,10 @@ functions:
     PrecacheClass(CLASS_BASIC_EFFECT, BET_BOMB);
     PrecacheClass(CLASS_BASIC_EFFECT, BET_EXPLOSIONSTAIN);
     PrecacheClass(CLASS_DEBRIS);
-  }
+
+    // [Cecil] Flesh texture for coloring
+    PrecacheTexture(TEXTURE_FLESH);
+  };
 
   // get position you would like to go to when following player
   virtual FLOAT3D PlayerDestinationPos(void)
@@ -618,6 +633,11 @@ functions:
     if (m_bTemplate) {
       // do nothing
       return;
+    }
+
+    // [Cecil] Decrease damage from allies
+    if (StrongerEnemies() && IsDerivedFromClass(penInflictor, "Enemy Base")) {
+      fDamageAmmount *= 0.1f;
     }
 
     FLOAT fNewDamage = fDamageAmmount;
@@ -1751,29 +1771,57 @@ functions:
     FLOAT3D vBodySpeed = en_vCurrentTranslationAbsolute-en_vGravityDir*(en_vGravityDir%en_vCurrentTranslationAbsolute);
 
     // if allowed and fleshy
-    if( bGibs && !m_bRobotBlowup)
-    {
+    if (bGibs && !m_bRobotBlowup) {
       // readout blood type
-      const INDEX iBloodType = GetSP()->sp_iBlood;
+      const INDEX iBloodType = GetBloodType();
+
       // determine debris texture (color)
       ULONG ulFleshTexture = TEXTURE_FLESH_GREEN;
-      ULONG ulFleshModel   = MODEL_FLESH;
-      if( iBloodType==2) { ulFleshTexture = TEXTURE_FLESH_RED; }
+      ULONG ulFleshModel = MODEL_FLESH;
+
+      // [Cecil] 2 -> 1
+      if (iBloodType == 1) {
+        ulFleshTexture = TEXTURE_FLESH_RED;
+      }
+
+      // [Cecil] Colorful type
+      if (iBloodType > 3) {
+        ulFleshTexture = TEXTURE_FLESH;
+      }
+
       // spawn debris
-      Debris_Begin(EIBT_FLESH, DPT_BLOODTRAIL, BET_BLOODSTAIN, m_fBlowUpSize, vNormalizedDamage, vBodySpeed, 1.0f, 0.0f);
-      for( INDEX iDebris = 0; iDebris<m_fBodyParts; iDebris++) {
+      //Debris_Begin(EIBT_FLESH, DPT_BLOODTRAIL, BET_BLOODSTAIN, m_fBlowUpSize, vNormalizedDamage, vBodySpeed, 1.0f, 0.0f, colDebris);
+
+      for (INDEX iDebris = 0; iDebris < m_fBodyParts; iDebris++) {
         // flowerpower mode?
-        if( iBloodType==3) {
-          switch( IRnd()%5) {
-          case 1:  { ulFleshModel = MODEL_FLESH_APPLE;   ulFleshTexture = TEXTURE_FLESH_APPLE;   break; }
-          case 2:  { ulFleshModel = MODEL_FLESH_BANANA;  ulFleshTexture = TEXTURE_FLESH_BANANA;  break; }
-          case 3:  { ulFleshModel = MODEL_FLESH_BURGER;  ulFleshTexture = TEXTURE_FLESH_BURGER;  break; }
-          case 4:  { ulFleshModel = MODEL_FLESH_LOLLY;   ulFleshTexture = TEXTURE_FLESH_LOLLY;   break; }
-          default: { ulFleshModel = MODEL_FLESH_ORANGE;  ulFleshTexture = TEXTURE_FLESH_ORANGE;  break; }
+        if (iBloodType == 3) {
+          // [Cecil] IRnd() -> rand()
+          switch (rand() % 5) {
+            case 1:  ulFleshModel = MODEL_FLESH_APPLE;  ulFleshTexture = TEXTURE_FLESH_APPLE;  break;
+            case 2:  ulFleshModel = MODEL_FLESH_BANANA; ulFleshTexture = TEXTURE_FLESH_BANANA; break;
+            case 3:  ulFleshModel = MODEL_FLESH_BURGER; ulFleshTexture = TEXTURE_FLESH_BURGER; break;
+            case 4:  ulFleshModel = MODEL_FLESH_LOLLY;  ulFleshTexture = TEXTURE_FLESH_LOLLY;  break;
+            default: ulFleshModel = MODEL_FLESH_ORANGE; ulFleshTexture = TEXTURE_FLESH_ORANGE; break;
           }
         }
-        Debris_Spawn( this, this, ulFleshModel, ulFleshTexture, 0, 0, 0, IRnd()%4, 0.5f,
-                      FLOAT3D(FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f));
+
+        // [Cecil] Debris color
+        COLOR colDebris = 0xFFFFFFFF;
+
+        switch (iBloodType) {
+          // Valentine
+          case 4: colDebris = 0xFF00AAFF; break;
+          // Halloween
+          case 5: colDebris = 0xFF7F00FF; break;
+          // Christmas
+          case 6: colDebris = ChristmasBlood(rand(), 0xFF, 0xFF); break;
+        }
+
+        // [Cecil] Moved from above for random colors
+        Debris_Begin(EIBT_FLESH, DPT_BLOODTRAIL, BET_BLOODSTAIN, m_fBlowUpSize, vNormalizedDamage, vBodySpeed, 1.0f, 0.0f, colDebris);
+
+        Debris_Spawn(this, this, ulFleshModel, ulFleshTexture, 0, 0, 0, IRnd()%4, 0.5f,
+                     FLOAT3D(FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f));
       }
       // leave a stain beneath
       LeaveStain(FALSE);
@@ -1846,34 +1894,16 @@ functions:
     }
   };
 
-  virtual void AdjustDifficulty(void)
-  {
+  virtual void AdjustDifficulty(void) {
     FLOAT fMoveSpeed = GetSP()->sp_fEnemyMovementSpeed;
     FLOAT fAttackSpeed = GetSP()->sp_fEnemyMovementSpeed;
-//    m_fWalkSpeed *= fMoveSpeed;
-//    m_aWalkRotateSpeed *= fMoveSpeed;
     m_fAttackRunSpeed *= fMoveSpeed;
     m_aAttackRotateSpeed *= fMoveSpeed;
     m_fCloseRunSpeed *= fMoveSpeed;
     m_aCloseRotateSpeed *= fMoveSpeed;
     m_fAttackFireTime *= 1/fAttackSpeed;
     m_fCloseFireTime *= 1/fAttackSpeed;
-/*
-    CSessionProperties::GameDificulty gd = GetSP()->sp_gdGameDificulty;
-
-    switch(gd) {
-    case CSessionProperties::GD_EASY: {
-                                      } break;
-    case CSessionProperties::GD_NORMAL: {
-                                      } break;
-    case CSessionProperties::GD_HARD: {
-                                      } break;
-    case CSessionProperties::GD_SERIOUS: {
-                                      } break;
-    }
-    */
-  }
-
+  };
 
 /************************************************************
  *                SOUND VIRTUAL FUNCTIONS                   *
@@ -2765,9 +2795,13 @@ procedures:
       // give him score
       EReceiveScore eScore;
       eScore.iPoints = m_iScore;
+
+      // [Cecil] Mark as an enemy
+      eScore.bEnemy = TRUE;
+
       penKiller->SendEvent(eScore);
-      if( CountAsKill())
-      {
+
+      if (CountAsKill()) {
         penKiller->SendEvent(EKilledEnemy());
       }
       // send computer message if in coop
@@ -2780,10 +2814,12 @@ procedures:
       }
     }
 
-
     // destroy watcher class
     GetWatcher()->SendEvent(EStop());
     GetWatcher()->SendEvent(EEnd());
+
+    // [Cecil] Remove from the counter
+    _iAliveEnemies = ClampDn(INDEX(_iAliveEnemies-1), (INDEX)0);
 
     // send event to death target
     SendToTarget(m_penDeathTarget, m_eetDeathType, penKiller);
@@ -3169,12 +3205,14 @@ procedures:
     eInitWatcher.penOwner = this;
     GetWatcher()->Initialize(eInitWatcher);
 
+    // [Cecil] Count the enemy
+    _iAliveEnemies++;
+
     // switch to next marker (enemies usually point to the marker they stand on)
     if (m_penMarker!=NULL && IsOfClass(m_penMarker, "Enemy Marker")) {
       CEnemyMarker *pem = (CEnemyMarker *)&*m_penMarker;
       m_penMarker = pem->m_penTarget;
     }
-
 
     // store starting position
     m_vStartPosition = GetPlacement().pl_PositionVector;
@@ -3191,6 +3229,11 @@ procedures:
 
     // adjust your difficulty
     AdjustDifficulty();
+
+    // [Cecil] Stronger enemies settings
+    if (StrongerEnemies()) {
+      StrongerSettings();
+    }
 
     // check enemy params
     ASSERT(m_fStopDistance>=0);

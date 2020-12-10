@@ -102,12 +102,13 @@ functions:
 
   // render particles
   void RenderParticles(void) {
+    // [Cecil] Adjusted for singleplayer maps in coop
     // no particles when not existing or in DM modes
-    if (GetRenderType()!=CEntity::RT_MODEL || GetSP()->sp_gmGameMode>CSessionProperties::GM_COOPERATIVE
-      || !ShowItemParticles())
-    {
+    if (GetRenderType() != CEntity::RT_MODEL || GetSP()->sp_gmGameMode > CSessionProperties::GM_SINGLEPLAYER
+      || !ShowItemParticles()) {
       return;
     }
+
     switch (m_EhitType) {
       case HIT_PILL:
         Particles_Stardust(this, 0.9f*0.75f, 0.70f*0.75f, PT_STAR08, 32);

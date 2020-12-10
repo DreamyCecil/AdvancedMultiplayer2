@@ -11,6 +11,9 @@
 #include "Models/Items/Ammo/Cannonball/Cannonball.h"
 #include "Models/Items/Ammo/Cannonball/CannonballQuad.h"
 #include "ModelsMP/Items/Ammo/SniperBullets/SniperBullets.h"
+
+// [Cecil] Weapon item types
+#include "EntitiesMP/WeaponItem.h"
 %}
 
 uses "EntitiesMP/Item";
@@ -36,12 +39,29 @@ event EAmmoItem {
   INDEX iQuantity,                // ammo quantity
 };
 
+%{
+// [Cecil] Random type table
+static const AmmoItemType _aeRandomAmmoTypes[8] = {
+  AIT_SHELLS,
+  AIT_BULLETS,
+  AIT_ROCKETS,
+  AIT_GRENADES,
+  AIT_ELECTRICITY,
+  AIT_IRONBALLS,
+  AIT_NAPALM,
+  AIT_SNIPERBULLETS,
+};
+%}
+
 class CAmmoItem : CItem {
 name      "Ammo Item";
 thumbnail "Thumbnails\\AmmoItem.tbn";
 
 properties:
   1 enum AmmoItemType  m_EaitType    "Type" 'Y' = AIT_SHELLS,     // health type
+
+ // [Cecil] Type replacement
+ 10 BOOL m_bReplaced = FALSE,
 
 components:
   0 class   CLASS_BASE        "Classes\\Item.ecl",
@@ -119,16 +139,49 @@ components:
 functions:
   void Precache(void) {
     PrecacheSound(SOUND_PICK);
-  }
+
+    // [Cecil] Precache models for the randomizer
+    PrecacheModel(MODEL_SHELLS);
+    PrecacheTexture(TEXTURE_SHELLS);
+
+    PrecacheModel(MODEL_BULLETS);
+    PrecacheTexture(TEXTURE_BULLETS);
+
+    PrecacheModel(MODEL_ROCKETS);
+    PrecacheModel(MODEL_RC_ROCKET);
+    PrecacheTexture(TEXTURE_ROCKET);
+
+    PrecacheModel(MODEL_GRENADES);
+    PrecacheModel(MODEL_GR_GRENADE);
+    PrecacheTexture(TEXTURE_GRENADES);
+    PrecacheTexture(TEXTURE_GR_GRENADE);
+
+    PrecacheModel(MODEL_ELECTRICITY);
+    PrecacheModel(MODEL_EL_EFFECT);
+    PrecacheModel(MODEL_EL_EFFECT2);
+    PrecacheTexture(TEXTURE_ELECTRICITY);
+    PrecacheTexture(TEXTURE_EL_EFFECT);
+
+    PrecacheModel(MODEL_CANNONBALL);
+    PrecacheModel(MODEL_CANNONBALLS);
+    PrecacheTexture(TEXTURE_IRONBALL);
+
+    PrecacheModel(MODEL_FL_RESERVOIR);
+    PrecacheTexture(TEXTURE_FL_FUELRESERVOIR);
+
+    PrecacheModel(MODEL_SNIPER_BULLETS);
+    PrecacheTexture(TEXTURE_SNIPER_BULLETS);
+  };
 
   // render particles
   void RenderParticles(void) {
+    // [Cecil] Adjusted for singleplayer maps in coop
     // no particles when not existing or in DM modes
-    if (GetRenderType()!=CEntity::RT_MODEL || GetSP()->sp_gmGameMode>CSessionProperties::GM_COOPERATIVE
-      || !ShowItemParticles())
-    {
+    if (GetRenderType() != CEntity::RT_MODEL || GetSP()->sp_gmGameMode > CSessionProperties::GM_SINGLEPLAYER
+      || !ShowItemParticles()) {
       return;
     }
+
     switch (m_EaitType) {
       case AIT_SHELLS:
         Particles_Spiral(this, 1.0f*0.75, 1.0f*0.75, PT_STAR04, 4);
@@ -154,17 +207,17 @@ functions:
       case AIT_BACKPACK:
         Particles_Spiral(this, 3.0f*0.5, 2.5f*0.5, PT_STAR04, 10);
         break;
-       case AIT_SERIOUSPACK:
+      case AIT_SERIOUSPACK:
         Particles_Spiral(this, 3.0f*0.5, 2.5f*0.5, PT_STAR04, 10);
         break;
-       case AIT_NAPALM:
+      case AIT_NAPALM:
         Particles_Spiral(this, 3.0f*0.5, 2.5f*0.5, PT_STAR04, 10);
         break;
-       case AIT_SNIPERBULLETS:
+      case AIT_SNIPERBULLETS:
         Particles_Spiral(this, 1.5f*0.75, 1.25f*0.75, PT_STAR04, 6);
         break;
     }
-  }
+  };
 
   /* Fill in entity statistics - for AI purposes only */
   BOOL FillEntityStatistics(EntityStats *pes)
@@ -192,12 +245,6 @@ functions:
         pes->es_strName = "Electricity"; 
         pes->es_fValue = m_fValue*AV_ELECTRICITY;
         break;
-/*
-      case AIT_NUKEBALL:  
-        pes->es_strName = "Nukeballs"; 
-        pes->es_fValue = m_fValue*AV_NUKEBALLS;
-        break;
-        */
       case AIT_IRONBALLS: 
         pes->es_strName = "Ironballs"; 
         pes->es_fValue = m_fValue*AV_IRONBALLS;
@@ -286,17 +333,6 @@ functions:
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.6f,0), FLOAT3D(3,3,0.8f) );
         StretchItem(FLOAT3D(0.75f, 0.75f, 0.75f));
         break;
-/*
-      case AIT_NUKEBALL:
-        m_fValue = 1.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Nuke ball: %d", (int) m_fValue);
-        // set appearance
-        AddItem(MODEL_CANNONBALL, TEXTURE_NUKEBALL, TEX_REFL_BWRIPLES01, TEX_SPEC_MEDIUM, 0);
-        AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.5f,0), FLOAT3D(2,2,0.5f) );
-        StretchItem(FLOAT3D(0.75f, 0.75f, 0.75f));
-        break;
-        */
       case AIT_IRONBALLS:
         m_fValue = 4.0f;
         m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
@@ -346,14 +382,49 @@ functions:
     }
   };
 
-  void AdjustDifficulty(void)
-  {
+  void AdjustDifficulty(void) {
     m_fValue = ceil(m_fValue*GetSP()->sp_fAmmoQuantity);
 
     if (GetSP()->sp_bInfiniteAmmo && m_penTarget==NULL) {
       Destroy();
+      return;
     }
-  }
+    
+    // [Cecil] Change type
+	  switch (GetSP()->sp_iWeaponItems) {
+      // based on the replaced weapon
+      case 1:
+        if (!m_bReplaced) {
+          switch (GetSP()->sp_iReplaceWeapons) {
+            case WIT_SINGLESHOTGUN:
+            case WIT_DOUBLESHOTGUN: m_EaitType = AIT_SHELLS; break;
+
+            case WIT_TOMMYGUN:
+            case WIT_MINIGUN: m_EaitType = AIT_BULLETS; break;
+
+            case WIT_ROCKETLAUNCHER: m_EaitType = AIT_ROCKETS; break;
+            case WIT_GRENADELAUNCHER: m_EaitType = AIT_GRENADES; break;
+            case WIT_FLAMER: m_EaitType = AIT_GRENADES; break;
+            case WIT_SNIPER: m_EaitType = AIT_SNIPERBULLETS; break;
+            case WIT_LASER: m_EaitType = AIT_ELECTRICITY; break;
+            case WIT_CANNON: m_EaitType = AIT_IRONBALLS; break;
+          }
+
+			    m_bReplaced = TRUE;
+			    Reinitialize();
+        }
+        break;
+
+      // randomize
+      case 2:
+        if (!m_bReplaced) {
+          m_EaitType = _aeRandomAmmoTypes[IRnd() % 8];
+			    m_bReplaced = TRUE;
+			    Reinitialize();
+        }
+        break;
+    }
+  };
 
 procedures:
   ItemCollected(EPass epass) : CItem::ItemCollected {

@@ -52,8 +52,6 @@ properties:
  60 CEntityPointer m_penTacticsHolder  "Tactics Holder",
  61 BOOL m_bTacticsAutostart           "Tactics autostart" = TRUE,
 
- 
-
 components:
 
   1 model   MODEL_ENEMYSPAWNER     "Models\\Editor\\EnemySpawner.mdl",
@@ -479,6 +477,53 @@ procedures:
     if (m_estType==EST_MAINTAINGROUP) {
       m_iEnemiesTriggered = m_ctGroupSize;
     }
+
+    // [Cecil] Enemy multiplier
+    INDEX iMul = GetSP()->sp_iEnemyMultiplier;
+    BOOL bGizmo = FALSE;
+
+    if (m_penTarget != NULL) {
+      CEnemyBase &penEnemy = (CEnemyBase&)*m_penTarget;
+      bGizmo = IsOfClass(m_penTarget, "Gizmo");
+
+      // [Cecil] Legion multiplication
+      if (iMul == -1) {
+        iMul = penEnemy.LegionMulFactor();
+      
+      // [Cecil] Balanced multiplication based on type
+      } else if (GetSP()->sp_iAMPOptions & AMP_BALANCED) {
+        iMul = penEnemy.EnemyMulFactor(iMul);
+      }
+    }
+
+    // [Cecil] Spread enemies around so they don't get stuck
+    if (iMul > 1) {
+      m_fOuterCircle = ClampDn(m_fOuterCircle, 3.0f);
+    }
+
+    // [Cecil] Decrease delay for Gizmo
+    if (bGizmo) {
+      m_tmSingleWait = ClampDn(m_tmSingleWait / FLOAT(iMul), 0.05f);
+	    m_tmGroupWait = ClampDn(m_tmGroupWait / FLOAT(iMul), 0.05f);
+
+    // [Cecil] Increase delay for single enemies
+    } else if (m_ctGroupSize <= 1) {
+      m_tmSingleWait = ClampDn(m_tmSingleWait, 0.2f);
+	    m_tmGroupWait = ClampDn(m_tmGroupWait, 0.2f);
+
+    // [Cecil] Decrease delay if needed
+    } else {
+      if (m_tmSingleWait > 0.2f) {
+        m_tmSingleWait = ClampDn(m_tmSingleWait / FLOAT(iMul), 0.2f);
+      }
+      if (m_tmGroupWait > 0.2f) {
+	      m_tmGroupWait = ClampDn(m_tmGroupWait / FLOAT(iMul), 0.2f);
+      }
+    }
+
+    // [Cecil] Multiply enemies
+    m_ctTotal = ClampDn(m_ctTotal * iMul, (INDEX)1);
+    m_ctGroupSize = ClampDn(m_ctGroupSize * iMul, (INDEX)1);
 
     m_bFirstPass = TRUE;
 

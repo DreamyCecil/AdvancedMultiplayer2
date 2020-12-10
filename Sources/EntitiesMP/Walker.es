@@ -6,6 +6,8 @@
 
 uses "EntitiesMP/EnemyBase";
 uses "EntitiesMP/Projectile";
+// [Cecil] Stronger enemies
+uses "EntitiesMP/CannonBall";
 
 enum WalkerChar {
   0 WLC_SOLDIER   "Soldier",    // soldier
@@ -18,6 +20,13 @@ static EntityInfo eiWalker = {
   EIBT_FLESH, 1000.0f,
   0.0f, 5.4f, 0.0f,
   0.0f, 4.5f, 0.0f,
+};
+
+// [Cecil] Small walker info
+static EntityInfo eiWalkerSmall = {
+  EIBT_FLESH, 1000.0f,
+  0.0f, 4.5f, 0.0f,
+  0.0f, 3.0f, 0.0f,
 };
 
 #define SIZE_SOLDIER   (0.5f)
@@ -52,6 +61,9 @@ components:
   0 class   CLASS_BASE          "Classes\\EnemyBase.ecl",
   1 class   CLASS_PROJECTILE    "Classes\\Projectile.ecl",
   2 class   CLASS_BASIC_EFFECT  "Classes\\BasicEffect.ecl",
+  
+  // [Cecil] Stronger enemies
+  3 class CLASS_CANNONBALL "Classes\\CannonBall.ecl",
 
  10 model   MODEL_WALKER              "Models\\Enemies\\Walker\\Walker.mdl",
  11 texture TEXTURE_WALKER_SOLDIER    "Models\\Enemies\\Walker\\Walker02.tex",
@@ -74,13 +86,58 @@ components:
  64 sound   SOUND_SERGEANT_DEATH       "Models\\Enemies\\Walker\\Sounds\\Sergeant\\Death.wav",
  65 sound   SOUND_SERGEANT_WALK        "Models\\Enemies\\Walker\\Sounds\\Sergeant\\Walk.wav",
 
- /*
- 70 model   MODEL_WALKER_HEAD1   "Models\\Enemies\\Walker\\Debris\\Head.mdl",
- 71 model   MODEL_WALKER_HEAD2   "Models\\Enemies\\Walker\\Debris\\Head2.mdl",
- 72 model   MODEL_WALKER_LEG     "Models\\Enemies\\Walker\\Debris\\Leg.mdl",
- */
+ // [Cecil] Cannon sound
+ 70 sound SOUND_CANNON "Models\\Weapons\\Cannon\\Sounds\\Fire.wav",
 
 functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    if (m_EwcChar == WLC_SERGEANT) {
+      return ceil(FLOAT(iMul) / 2.5f);
+    }
+
+    return ceil(FLOAT(iMul) / 1.5f);
+  };
+
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return (m_EwcChar == WLC_SOLDIER ? 2 : 1);
+  };
+
+  // [Cecil] Fire cannon ball
+  void FireCannon(FLOAT3D vPos) {
+    FLOAT3D vShooting = GetPlacement().pl_PositionVector + vPos;
+    FLOAT3D vSpeedDest = FLOAT3D(0.0f, 0.0f, 0.0f);
+    FLOAT fLaunchSpeed;
+    FLOAT fRelativeHdg;
+  
+    // calculate parameters for predicted angular launch curve
+    EntityInfo *peiTarget = (EntityInfo*)(m_penEnemy->GetEntityInfo());
+    CalculateAngularLaunchParams(vShooting, peiTarget->vTargetCenter[1] - 6.0f / 3.0f, m_penEnemy->GetPlacement().pl_PositionVector,
+                                 vSpeedDest, 0.0f, fLaunchSpeed, fRelativeHdg);
+
+    // target enemy body
+    FLOAT3D vShootTarget;
+    GetEntityInfoPosition(m_penEnemy, peiTarget->vTargetCenter, vShootTarget);
+
+    // launch
+    CPlacement3D pl;
+    PrepareFreeFlyingProjectile(pl, vShootTarget, vPos, ANGLE3D(fRelativeHdg, 0.0f, 0.0f));
+
+    SpawnCannonBall(pl, fLaunchSpeed);
+  };
+
+  // [Cecil] Spawn cannon ball
+  void SpawnCannonBall(const CPlacement3D &pl, FLOAT fLaunchSpeed) {
+    CEntityPointer penBall = CreateEntity(pl, CLASS_CANNONBALL);
+    ELaunchCannonBall eLaunch;
+    eLaunch.penLauncher = this;
+    eLaunch.fLaunchPower = Min(fLaunchSpeed, 150.0f);
+    eLaunch.cbtType = CBT_IRON;
+    eLaunch.fSize = 3.0f;
+    penBall->Initialize(eLaunch);
+  };
+
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {
@@ -117,8 +174,7 @@ functions:
 
     PrecacheModel(MODEL_WALKER);
 
-    if (m_EwcChar==WLC_SOLDIER)
-    {
+    if (m_EwcChar==WLC_SOLDIER) {
       // sounds
       PrecacheSound(SOUND_SOLDIER_IDLE );
       PrecacheSound(SOUND_SOLDIER_SIGHT);
@@ -132,9 +188,7 @@ functions:
       PrecacheTexture(TEXTURE_LASER);
       // projectile
       PrecacheClass(CLASS_PROJECTILE, PRT_CYBORG_LASER);
-    }
-    else
-    {
+    } else {
       // sounds
       PrecacheSound(SOUND_SERGEANT_IDLE);
       PrecacheSound(SOUND_SERGEANT_SIGHT);
@@ -148,10 +202,18 @@ functions:
       PrecacheTexture(TEXTURE_ROCKETLAUNCHER);
       // projectile
       PrecacheClass(CLASS_PROJECTILE, PRT_WALKER_ROCKET);
+
+      // [Cecil] Stronger enemies
+      PrecacheClass(CLASS_CANNONBALL);
     }
   };
   /* Entity info */
   void *GetEntityInfo(void) {
+    // [Cecil] Small walker info
+    if (m_EwcChar == WLC_SOLDIER) {
+      return &eiWalkerSmall;
+    }
+
     return &eiWalker;
   };
 
@@ -238,12 +300,20 @@ functions:
     plRocket.pl_PositionVector = vPos;
     plRocket.pl_OrientationAngle = ANGLE3D(0, -5.0f-FRnd()*10.0f, 0);
     plRocket.RelativeToAbsolute(GetPlacement());
+
+    // [Cecil] Stronger enemies
+    if (StrongerEnemies()) {
+      SpawnCannonBall(plRocket, 50.0f);
+      return;
+    }
+
     CEntityPointer penProjectile = CreateEntity(plRocket, CLASS_PROJECTILE);
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = this;
     eLaunch.prtType = PRT_WALKER_ROCKET;
     penProjectile->Initialize(eLaunch);
   };
+
   // fire death laser
   void FireDeathLaser(FLOAT3D &vPos) {
     CPlacement3D plLaser;
@@ -257,8 +327,6 @@ functions:
     penProjectile->Initialize(eLaunch);
   };
 
-
-
   // adjust sound and watcher parameters here if needed
   void EnemyPostInit(void) 
   {
@@ -270,40 +338,6 @@ functions:
     m_soFire3.Set3DParameters(160.0f, 50.0f, 1.0f, 1.0f);
     m_soFire4.Set3DParameters(160.0f, 50.0f, 1.0f, 1.0f);
   };
-
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
-  // spawn body parts
-/*  void BlowUp(void)
-  {
-    // get your size
-    FLOATaabbox3D box;
-    GetBoundingBox(box);
-    FLOAT fEntitySize = box.Size().MaxNorm();
-
-    FLOAT3D vNormalizedDamage = m_vDamage-m_vDamage*(m_fBlowUpAmount/m_vDamage.Length());
-    vNormalizedDamage /= Sqrt(vNormalizedDamage.Length());
-
-    vNormalizedDamage *= 0.75f;
-    FLOAT3D vBodySpeed = en_vCurrentTranslationAbsolute-en_vGravityDir*(en_vGravityDir%en_vCurrentTranslationAbsolute);
-
-    // spawn debris
-    Debris_Begin(EIBT_FLESH, DPT_NONE, BET_NONE, fEntitySize, vNormalizedDamage, vBodySpeed, 5.0f, 2.0f);
-    Debris_Spawn(this, this, MODEL_WALKER_HEAD1, TEXTURE_WALKER_SOLDIER, 0, 0, 0, 0, 0.1250f,
-      FLOAT3D(FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f));
-    Debris_Spawn(this, this, MODEL_WALKER_HEAD2, TEXTURE_WALKER_SOLDIER, 0, 0, 0, 0, 0.125f,
-      FLOAT3D(FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f));
-    Debris_Spawn(this, this, MODEL_WALKER_LEG, TEXTURE_WALKER_SOLDIER, 0, 0, 0, 0, 0.125f,
-      FLOAT3D(FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f));
-    Debris_Spawn(this, this, MODEL_WALKER_LEG, TEXTURE_WALKER_SOLDIER, 0, 0, 0, 0, 0.125f,
-      FLOAT3D(FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f, FRnd()*0.6f+0.2f));
-
-    // hide yourself (must do this after spawning debris)
-    SwitchToEditorModel();
-    SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
-    SetCollisionFlags(ECF_IMMATERIAL);
-  };*/
 
 procedures:
 /************************************************************
@@ -317,23 +351,39 @@ procedures:
     autocall CEnemyBase::LockOnEnemy() EReturn;
 
     // sergeant 4 rockets
-    if (m_EwcChar==WLC_SERGEANT) {
+    if (m_EwcChar == WLC_SERGEANT) {
       StartModelAnim(WALKER_ANIM_FIRERIGHT, AOF_LOOPING);
-      ShootProjectile(PRT_WALKER_ROCKET, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0, 0, 0));
-      PlaySound(m_soFire1, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
+
+      // [Cecil] Stronger enemies
+      if (StrongerEnemies()) {
+        FireCannon(FIRE_RIGHT_ARM*m_fSize);
+        PlaySound(m_soFire1, SOUND_CANNON, SOF_3D);
+
+      } else {
+        ShootProjectile(PRT_WALKER_ROCKET, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+        PlaySound(m_soFire1, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
+      }
+
       if (GetSP()->sp_gdGameDifficulty<=CSessionProperties::GD_EASY) {
         m_fLockOnEnemyTime = 1.0f;
       } else {
         m_fLockOnEnemyTime = 0.5f;
       }
+
       autocall CEnemyBase::LockOnEnemy() EReturn;
       StartModelAnim(WALKER_ANIM_FIRELEFT, AOF_LOOPING);
-      ShootProjectile(PRT_WALKER_ROCKET, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0, 0, 0));
-      PlaySound(m_soFire2, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
 
-//      m_fLockOnEnemyTime = 0.25f;
-//      autocall CEnemyBase::LockOnEnemy() EReturn;
-    } 
+      // [Cecil] Stronger enemies
+      if (StrongerEnemies()) {
+        FireCannon(FIRE_LEFT_ARM*m_fSize);
+        PlaySound(m_soFire2, SOUND_CANNON, SOF_3D);
+
+      } else {
+        ShootProjectile(PRT_WALKER_ROCKET, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+        PlaySound(m_soFire2, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
+      }
+    }
+
     if (m_EwcChar==WLC_SOLDIER) {
       if (GetSP()->sp_gdGameDifficulty<=CSessionProperties::GD_EASY) {
         m_iLoopCounter = 4;
@@ -413,7 +463,13 @@ procedures:
       } else {
         FireDeathRocket(FIRE_DEATH_LEFT*m_fSize);
       }
-      PlaySound(m_soSound, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
+
+      // [Cecil] Stronger enemies
+      if (StrongerEnemies()) {
+        PlaySound(m_soSound, SOUND_CANNON, SOF_3D);
+      } else {
+        PlaySound(m_soSound, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
+      }
     }
     if (m_EwcChar==WLC_SOLDIER) {
       if (IRnd()&1) {

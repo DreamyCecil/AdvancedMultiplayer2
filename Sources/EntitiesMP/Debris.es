@@ -242,10 +242,11 @@ procedures:
 
     // set appearance
     m_dptParticles = eSpawn.dptParticles;
-    if(m_dptParticles==DPT_AFTERBURNER)
-    {
+
+    if (m_dptParticles==DPT_AFTERBURNER) {
       Particles_AfterBurner_Prepare(this);
     }
+
     m_betStain = eSpawn.betStain;
     m_iBodyType = (INDEX)eSpawn.Eeibt;
     GetModelObject()->SetData(eSpawn.pmd);
@@ -262,8 +263,7 @@ procedures:
     // adjust color
     GetModelObject()->mo_colBlendColor = eSpawn.colDebris|CT_OPAQUE;
     m_bCustomShading = eSpawn.bCustomShading;
-    if( m_bCustomShading)
-    {
+    if (m_bCustomShading) {
       en_ulFlags|=ENF_NOSHADINGINFO;
     }
     m_aShadingDirection = eSpawn.aShadingDirection;

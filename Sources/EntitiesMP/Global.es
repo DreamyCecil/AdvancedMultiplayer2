@@ -41,7 +41,10 @@ event EStopBlindness {  // make enemy not blind any more
 event EStopDeafness {  // make enemy not blind any more
 };
 event EReceiveScore { // sent to player when enemy is killed
-  INDEX iPoints
+  INDEX iPoints,
+
+  // [Cecil] Check if it's the enemy that sent the score
+  BOOL bEnemy,
 };
 event EKilledEnemy { // sent to player when enemy is killed
 };

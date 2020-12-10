@@ -50,6 +50,10 @@ components:
  57 sound   SOUND_CAST      "ModelsMP\\Enemies\\Demon\\Sounds\\Cast.wav",
 
 functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    return ceil(FLOAT(iMul) / 2.5f);
+  };
  
   BOOL HandleEvent(const CEntityEvent &ee)
   {

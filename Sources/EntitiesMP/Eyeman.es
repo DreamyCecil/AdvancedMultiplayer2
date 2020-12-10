@@ -63,13 +63,12 @@ components:
  55 sound   SOUND_DEATH     "Models\\Enemies\\Eyeman\\Sounds\\Death.wav",
  56 sound   SOUND_MUMBLE    "Models\\Enemies\\Eyeman\\Sounds\\Mumble.wav",
 
- /*
- 60 model   MODEL_EYEMAN_BODY   "Models\\Enemies\\Eyeman\\Debris\\Torso.mdl",
- 61 model   MODEL_EYEMAN_HAND   "Models\\Enemies\\Eyeman\\Debris\\Arm.mdl",
- 62 model   MODEL_EYEMAN_LEGS   "Models\\Enemies\\Eyeman\\Debris\\Leg.mdl",
- */
-
 functions:
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return 10;
+  };
+
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {

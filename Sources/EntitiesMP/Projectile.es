@@ -19,6 +19,10 @@
 #include "EntitiesMP/PlayerWeapons.h"
 #include "EntitiesMP/Shooter.h"
 
+// [Cecil] Chainsaw rocket
+#include "ModelsMP/Weapons/Chainsaw/Blade.h"
+#include "ModelsMP/Weapons/Chainsaw/Teeth.h"
+
 #define DEVIL_LASER_SPEED 100.0f
 #define DEVIL_ROCKET_SPEED 60.0f
 %}
@@ -87,6 +91,10 @@ enum ProjectileType {
  75 PRT_AIRELEMENTAL_WIND     "Air Elemental Wind Blast", //air elemental wind blast
  76 PRT_AFTERBURNER_DEBRIS    "Afterburner debris",
  77 PRT_METEOR                "Meteor",
+
+ // [Cecil] New types
+ 78 PRT_CHAINSAW_ROCKET "Chainsaw Rocket",
+ 79 PRT_FIRE_GRENADE    "Hellfire Grenade",
 };
 
 enum ProjectileMovingType {
@@ -138,18 +146,30 @@ void CProjectile_OnPrecache(CDLLEntityClass *pdec, INDEX iUser)
   pdec->PrecacheTexture(TEX_SPEC_STRONG);
 
   switch ((ProjectileType)iUser) {
-  case PRT_ROCKET                :
-  case PRT_WALKER_ROCKET         :
-  case PRT_DEVIL_ROCKET          :
-    pdec->PrecacheModel(MODEL_ROCKET  );
+  case PRT_ROCKET:
+  case PRT_WALKER_ROCKET:
+  case PRT_DEVIL_ROCKET:
+  // [Cecil] Chainsaw rocket
+  case PRT_CHAINSAW_ROCKET:
+    pdec->PrecacheModel(MODEL_ROCKET);
     pdec->PrecacheTexture(TEXTURE_ROCKET);
-    pdec->PrecacheSound(SOUND_FLYING  );
+    pdec->PrecacheSound(SOUND_FLYING);
     pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_ROCKET);
     pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_EXPLOSIONSTAIN);
     pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_SHOCKWAVE);
     pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_ROCKET_PLANE);
+    
+    // [Cecil] Chainsaw rocket
+    pdec->PrecacheModel(MODEL_CHAINSAW);
+    pdec->PrecacheTexture(TEXTURE_CHAINSAW);
+    pdec->PrecacheModel(MODEL_CHAINSAW_CHAIN);
+    pdec->PrecacheTexture(TEXTURE_CHAINSAW_CHAIN);
+    pdec->PrecacheSound(SOUND_CHAINSAW);
     break;
+
   case PRT_GRENADE:
+  // [Cecil] Hellfire grenade
+  case PRT_FIRE_GRENADE:
     pdec->PrecacheModel(MODEL_GRENADE);
     pdec->PrecacheTexture(TEXTURE_GRENADE);
     pdec->PrecacheSound(SOUND_GRENADE_BOUNCE);
@@ -243,8 +263,8 @@ void CProjectile_OnPrecache(CDLLEntityClass *pdec, INDEX iUser)
     pdec->PrecacheClass(CLASS_BLOOD_SPRAY);
     break;
   case PRT_METEOR:
-    pdec->PrecacheSound(SOUND_FLYING  );
-    pdec->PrecacheSound(SOUND_METEOR_BLAST  );
+    pdec->PrecacheSound(SOUND_FLYING);
+    pdec->PrecacheSound(SOUND_METEOR_BLAST);
     pdec->PrecacheModel(MODEL_ELEM_LAVA_BOMB);
     pdec->PrecacheTexture(TEXTURE_ELEM_LAVA_BOMB); 
     pdec->PrecacheClass(CLASS_BLOOD_SPRAY);
@@ -255,45 +275,44 @@ void CProjectile_OnPrecache(CDLLEntityClass *pdec, INDEX iUser)
   case PRT_ICEMAN_FIRE:
   case PRT_ICEMAN_BIG_FIRE:
   case PRT_ICEMAN_LARGE_FIRE:
-    pdec->PrecacheModel(MODEL_ELEM_ICE          );  
-    pdec->PrecacheModel(MODEL_ELEM_ICE_FLARE    );  
-    pdec->PrecacheTexture(TEXTURE_ELEM_ICE      );    
-  //pdec->PrecacheTexture(TEXTURE_ELEM_ICE_FLARE);    
+    pdec->PrecacheModel(MODEL_ELEM_ICE);
+    pdec->PrecacheModel(MODEL_ELEM_ICE_FLARE);
+    pdec->PrecacheTexture(TEXTURE_ELEM_ICE);
     break;
 
   case PRT_HUANMAN_FIRE:
-    pdec->PrecacheModel(MODEL_HUANMAN_FIRE      );
-    pdec->PrecacheTexture(TEXTURE_HUANMAN_FIRE  );
-    pdec->PrecacheModel(MODEL_HUANMAN_FLARE     );
-    pdec->PrecacheTexture(TEXTURE_HUANMAN_FLARE );
+    pdec->PrecacheModel(MODEL_HUANMAN_FIRE);
+    pdec->PrecacheTexture(TEXTURE_HUANMAN_FIRE);
+    pdec->PrecacheModel(MODEL_HUANMAN_FLARE);
+    pdec->PrecacheTexture(TEXTURE_HUANMAN_FLARE);
     break;
 
   case PRT_FISHMAN_FIRE:
-    pdec->PrecacheModel(MODEL_FISHMAN_FIRE      );
-    pdec->PrecacheTexture(TEXTURE_FISHMAN_FIRE  );
+    pdec->PrecacheModel(MODEL_FISHMAN_FIRE);
+    pdec->PrecacheTexture(TEXTURE_FISHMAN_FIRE);
     break;
 
   case PRT_MANTAMAN_FIRE:
-    pdec->PrecacheModel(MODEL_MANTAMAN_FIRE     );
-    pdec->PrecacheTexture(TEXTURE_MANTAMAN_FIRE );
+    pdec->PrecacheModel(MODEL_MANTAMAN_FIRE);
+    pdec->PrecacheTexture(TEXTURE_MANTAMAN_FIRE);
     break;
 
   case PRT_DEVIL_LASER:         
-    /*
-    pdec->PrecacheModel(MODEL_DEVIL_LASER      );
-    pdec->PrecacheTexture(TEXTURE_DEVIL_LASER  ); 
-    break;
-    */
-
-  case PRT_CYBORG_LASER:         
+  case PRT_CYBORG_LASER:
   case PRT_CYBORG_BOMB:
-    pdec->PrecacheModel(MODEL_CYBORG_LASER      );
-    pdec->PrecacheTexture(TEXTURE_CYBORG_LASER  ); 
-    pdec->PrecacheModel(MODEL_CYBORG_BOMB       );
-    pdec->PrecacheTexture(TEXTURE_CYBORG_BOMB   ); 
+    pdec->PrecacheModel(MODEL_CYBORG_LASER);
+    pdec->PrecacheTexture(TEXTURE_CYBORG_LASER); 
+    pdec->PrecacheModel(MODEL_CYBORG_BOMB);
+    pdec->PrecacheTexture(TEXTURE_CYBORG_BOMB); 
     pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BOMB);
     pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_EXPLOSIONSTAIN);
     pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_GRENADE_PLANE);
+
+    // [Cecil] Explosive laser
+    pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_ROCKET);
+    pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_EXPLOSIONSTAIN);
+    pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_SHOCKWAVE);
+    pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_ROCKET_PLANE);
     break;
 
   case PRT_LAVA_COMET:
@@ -429,8 +448,8 @@ components:
   4 class   CLASS_BLOOD_SPRAY   "Classes\\BloodSpray.ecl",
 
 // ********* PLAYER ROCKET *********
-  5 model   MODEL_ROCKET        "Models\\Weapons\\RocketLauncher\\Projectile\\Rocket.mdl",
-  6 texture TEXTURE_ROCKET      "Models\\Weapons\\RocketLauncher\\Projectile\\Rocket.tex",
+  6 model   MODEL_ROCKET        "Models\\Weapons\\RocketLauncher\\Projectile\\Rocket.mdl",
+  7 texture TEXTURE_ROCKET      "Models\\Weapons\\RocketLauncher\\Projectile\\Rocket.tex",
   8 sound   SOUND_FLYING        "Sounds\\Weapons\\RocketFly.wav",
   9 sound   SOUND_BEAST_FLYING  "Sounds\\Weapons\\ProjectileFly.wav",
 
@@ -523,12 +542,6 @@ components:
 136 texture TEXTURE_GRUNT_PROJECTILE_01 "ModelsMP\\Enemies\\Grunt\\Projectile\\GruntProjectileSoldier.tex",
 137 texture TEXTURE_GRUNT_PROJECTILE_02 "ModelsMP\\Enemies\\Grunt\\Projectile\\GruntProjectileCommander.tex",
 
-// ********* DEVIL FIRE *********
-/*
-135 model   MODEL_DEVIL_LASER       "Models\\Enemies\\Devil\\Weapons\\DevilLaserProjectile.mdl",
-136 texture TEXTURE_DEVIL_LASER     "Models\\Enemies\\Devil\\Weapons\\DevilLaserProjectile.tex",
-*/
-
 // ********* BEAST FIRE *********
 140 model   MODEL_BEAST_FIRE       "Models\\Enemies\\Beast\\Projectile\\Projectile.mdl",
 141 texture TEXTURE_BEAST_FIRE     "Models\\Enemies\\Beast\\Projectile\\Projectile.tex",
@@ -578,7 +591,17 @@ components:
 212 texture TEX_SPEC_STRONG             "Models\\SpecularTextures\\Strong.tex",
 
 220 model   MODEL_MARKER     "Models\\Editor\\Axis.mdl",
-221 texture TEXTURE_MARKER   "Models\\Editor\\Vector.tex"
+221 texture TEXTURE_MARKER   "Models\\Editor\\Vector.tex",
+
+// [Cecil] Chainsaw rocket
+250 model   MODEL_CHAINSAW         "Models\\ChainsawRocket.mdl",
+251 model   MODEL_CHAINSAW_CHAIN   "ModelsMP\\Weapons\\Chainsaw\\Teeth.mdl",
+252 texture TEXTURE_CHAINSAW       "ModelsMP\\Weapons\\Chainsaw\\Blade.tex",
+253 texture TEXTURE_CHAINSAW_CHAIN "ModelsMP\\Weapons\\Chainsaw\\Teeth.tex",
+254 sound   SOUND_CHAINSAW         "ModelsMP\\Weapons\\Chainsaw\\Sounds\\Fire.wav",
+
+// [Cecil] Hellfire grenade
+260 class CLASS_HELLFIRECLOUD "Classes\\HellfireCloud.ecl",
 
 functions:
   // premoving
@@ -684,12 +707,11 @@ functions:
       case PRT_ROCKET:
       case PRT_WALKER_ROCKET:
       case PRT_DEVIL_ROCKET:
-        if( bLive)
-        {
+      // [Cecil] Chainsaw rocket
+      case PRT_CHAINSAW_ROCKET:
+        if (bLive) {
           lsNew.ls_colColor = 0xA0A080FF;
-        }
-        else
-        {
+        } else {
           lsNew.ls_colColor = C_BLACK|CT_OPAQUE;
         }
         lsNew.ls_rFallOff = 5.0f;
@@ -705,6 +727,15 @@ functions:
         lsNew.ls_rHotSpot = 0.2f;
         lsNew.ls_plftLensFlare = &_lftYellowStarRedRingFar;
         break;
+
+      // [Cecil] Hellfire grenade
+      case PRT_FIRE_GRENADE:
+        lsNew.ls_colColor = 0x7F3F00FF;
+        lsNew.ls_rFallOff = 2.0f;
+        lsNew.ls_rHotSpot = 0.2f;
+        lsNew.ls_plftLensFlare = NULL;
+        break;
+
       case PRT_FLAME:
         lsNew.ls_colColor = C_dORANGE;
         lsNew.ls_rFallOff = 1.0f;
@@ -816,8 +847,14 @@ functions:
         //Particles_GrenadeTrail(this);
         FLOAT fSpeedRatio = en_vCurrentTranslationAbsolute.Length()/140.0f;
         Particles_CannonBall(this, fSpeedRatio);
-        break;
-                        }
+      } break;
+
+      // [Cecil] Chainsaw rocket
+      case PRT_CHAINSAW_ROCKET: Particles_RocketTrail(this, 0.5f); break;
+
+      // [Cecil] Hellfire grenade
+      case PRT_FIRE_GRENADE: Particles_LavaBombTrail(this, 1.0f); break;
+
       case PRT_FLAME: {
         // elapsed time
         FLOAT fLeaderLiving, fFollowerLiving, fInFrontLiving;
@@ -872,12 +909,6 @@ functions:
             FLOAT3D vViewDir;
             AnglesToDirectionVector( plPipe.pl_OrientationAngle, vViewDir);
             FLOAT3D vDirFollower = vViewDir.Normalize();
-            
-            /*
-            Particles_FlameThrower(GetLerpedPlacement(), plPipe,
-              vDirLeader, vDirFollower,
-              fLeaderLiving, 0.0f, en_ulID, TRUE);
-              */
             
             Particles_FlameThrower(plInFrontOfPipe, plPipe,
               vDirPipeFront, vDirFollower,
@@ -940,9 +971,6 @@ functions:
     }
   }
 
-
-
-
 /************************************************************
  *              PLAYER ROCKET / GRENADE                     *
  ************************************************************/
@@ -960,28 +988,72 @@ void PlayerRocket(void) {
   m_soEffect.Set3DParameters(20.0f, 2.0f, 1.0f, 1.0f);
   PlaySound(m_soEffect, SOUND_FLYING, SOF_3D|SOF_LOOP);
   m_fFlyTime = 30.0f;
-  if( GetSP()->sp_bCooperative)
-  {
+
+  if (GetSP()->sp_bCooperative) {
     m_fDamageAmount = 100.0f;
     m_fRangeDamageAmount = 50.0f;
-  }
-  else
-  {
+  } else {
     m_fDamageAmount = 75.0f;
     m_fRangeDamageAmount = 75.0f;
   }
+
   m_fDamageHotSpotRange = 4.0f;
   m_fDamageFallOffRange = 8.0f;
   m_fSoundRange = 50.0f;
   m_bExplode = TRUE;
   m_bLightSource = TRUE;
-  m_bCanHitHimself = TRUE;
-  m_bCanBeDestroyed = TRUE;
+
+  // [Cecil] Destructable rockets
+  m_bCanHitHimself = (GetSP()->sp_iAMPOptions & AMP_ROCKETS);
+  m_bCanBeDestroyed = (GetSP()->sp_iAMPOptions & AMP_ROCKETS);
+
   m_fWaitAfterDeath = 1.125f;
   m_tmExpandBox = 0.1f;
   m_tmInvisibility = 0.05f;
   SetHealth(5.0f);
   m_pmtMove = PMT_FLYING;
+};
+
+// [Cecil] Chainsaw rocket
+void ChainsawRocket(void) {
+  // set appearance
+  InitAsModel();
+  SetPhysicsFlags(EPF_PROJECTILE_FLYING);
+  SetCollisionFlags(ECF_PROJECTILE_SOLID);
+
+  SetModel(MODEL_CHAINSAW);
+  SetModelMainTexture(TEXTURE_CHAINSAW);
+
+  AddAttachmentToModel(this, *GetModelObject(), BLADE_ATTACHMENT_TEETH, MODEL_CHAINSAW_CHAIN, TEXTURE_CHAINSAW_CHAIN, 0, 0, 0);
+
+  CModelObject *pmo = &(GetModelObject()->GetAttachmentModel(BLADE_ATTACHMENT_TEETH)->amo_moModelObject);
+  pmo->PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING);
+
+  // start moving
+  LaunchAsPropelledProjectile(FLOAT3D(0.0f, 0.0f, -60.0f), (CMovableEntity*)(CEntity*)m_penLauncher);
+  SetDesiredRotation(ANGLE3D(0, 0, 0));
+
+  // play the flying sound
+  m_soEffect.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
+  PlaySound(m_soEffect, SOUND_CHAINSAW, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);
+  m_fFlyTime = 30.0f;
+
+  m_fDamageAmount = 60.0f;
+  m_fRangeDamageAmount = 0.0f;
+  m_fDamageHotSpotRange = 0.0f;
+  m_fDamageFallOffRange = 0.0f;
+
+  m_fSoundRange = 50.0f;
+  m_bExplode = FALSE;
+  m_bLightSource = TRUE;
+  m_bCanHitHimself = FALSE;
+  m_bCanBeDestroyed = FALSE;
+
+  m_fWaitAfterDeath = 1.125f;
+  m_tmExpandBox = 0.1f;
+  m_tmInvisibility = 0.05f;
+  SetHealth(5.0f);
+  m_pmtMove = PMT_SLIDING;
 };
 
 void WalkerRocket(void) {
@@ -1066,7 +1138,6 @@ void PlayerRocketExplosion(void) {
   }
 };
 
-
 void PlayerGrenade(void) {
   // set appearance
   InitAsModel();
@@ -1135,7 +1206,80 @@ void PlayerGrenadeExplosion(void) {
   }
 };
 
+// [Cecil] Hellfire grenade
+void FireGrenade(void) {
+  // set appearance
+  InitAsModel();
+  SetPhysicsFlags(EPF_MODEL_BOUNCING);
+  SetCollisionFlags(ECF_PROJECTILE_SOLID);
+  SetModel(MODEL_GRENADE);
+  SetModelMainTexture(TEXTURE_GRENADE);
 
+  // start moving
+  LaunchAsFreeProjectile(FLOAT3D(0.0f, 5.0f, -m_fSpeed), (CMovableEntity*)&*m_penLauncher);
+  SetDesiredRotation(ANGLE3D(0, FRnd()*120.0f+120.0f, FRnd()*250.0f-125.0f));
+
+  en_fBounceDampNormal   = 0.75f;
+  en_fBounceDampParallel = 0.6f;
+  en_fJumpControlMultiplier = 0.0f;
+  en_fCollisionSpeedLimit = 45.0f;
+  en_fCollisionDamageFactor = 10.0f;
+  m_fFlyTime = 3.0f;
+  m_fDamageAmount = 10.0f;
+  m_fRangeDamageAmount = 0.0f;
+  m_fDamageHotSpotRange = 0.0f;
+  m_fDamageFallOffRange = 0.0f;
+  m_fSoundRange = 50.0f;
+  m_bExplode = FALSE;
+  en_fDeceleration = 25.0f;
+  m_bLightSource = TRUE;
+  m_bCanHitHimself = TRUE;
+  m_bCanBeDestroyed = TRUE;
+  m_fWaitAfterDeath = 0.0f;
+  SetHealth(20.0f);
+  m_pmtMove = PMT_SLIDING;
+  m_tmInvisibility = 0.05f;
+  m_tmExpandBox = 0.1f;
+};
+
+// [Cecil] Hellfire grenade
+void FireGrenadeExplosion(void) {
+  FLOAT3D vPoint;
+  FLOATplane3D vPlaneNormal;
+  FLOAT fDistanceToEdge;
+
+  // on plane
+  if (GetNearestPolygon(vPoint, vPlaneNormal, fDistanceToEdge)) {
+    if ((vPoint-GetPlacement().pl_PositionVector).Length() < 3.5f) {
+      // wall stain
+      ESpawnEffect ese;
+      ese.colMuliplier = C_WHITE|CT_OPAQUE;
+      ese.betType = BET_EXPLOSIONSTAIN;
+      ese.vNormal = FLOAT3D(vPlaneNormal);
+      SpawnEffect(CPlacement3D(vPoint, ANGLE3D(0, 0, 0)), ese);
+    }
+  }
+
+  // [Cecil] Gravity vector into an angle
+  ANGLE3D aPlane;
+  DirectionVectorToAngles(en_vGravityDir, aPlane);
+
+  // [Cecil] Face forward
+  aPlane(2) += 90.0f;
+  FLOATmatrix3D mGravity;
+  MakeRotationMatrixFast(mGravity, aPlane);
+
+  // [Cecil] Spawn hellfire cloud
+  CPlacement3D pl = GetPlacement();
+  pl.pl_PositionVector += FLOAT3D(0.0f, 0.1f, 0.0f) * mGravity;
+  pl.pl_OrientationAngle = ANGLE3D(FRnd() * 360.0f, FRnd() * 360.0f, FRnd() * 360.0f);
+
+  CEntity *pen = CreateEntity(pl, CLASS_HELLFIRECLOUD);
+
+  EStart eStart;
+  eStart.penCaused = m_penLauncher;
+  pen->Initialize(eStart);
+};
 
 /************************************************************
  *                    PLAYER FLAME                          *
@@ -1171,8 +1315,6 @@ void PlayerFlame(void) {
   m_pmtMove = PMT_SLIDING;
 };
 
-
-
 /************************************************************
  *                    PLAYER LASER                          *
  ************************************************************/
@@ -1193,7 +1335,10 @@ void PlayerLaserRay(void) {
   LaunchAsPropelledProjectile(FLOAT3D(0.0f, 0.0f, -120.0f), (CMovableEntity*)(CEntity*)m_penLauncher);
   SetDesiredRotation(ANGLE3D(0, 0, 0));
   m_fFlyTime = 3.0f;
-  m_fDamageAmount = 20.0f;
+
+  // [Cecil] Multiply damage
+  m_fDamageAmount = 20.0f * FireSpeed();
+
   m_fSoundRange = 0.0f;
   m_bExplode = FALSE;
   m_bLightSource = TRUE;
@@ -2283,22 +2428,52 @@ void CyborgLaser(void) {
   SetFlags(GetFlags() | ENF_SEETHROUGH);
   SetComponents(this, *GetModelObject(), MODEL_CYBORG_LASER, TEXTURE_CYBORG_LASER, 0, 0, 0);
   ModelChangeNotify();
+
+  // [Cecil] Faster laser for stronger enemies
+  FLOAT fSpeed = (StrongerEnemies() ? 100.0f : 60.0f);
+
   // start moving
-  LaunchAsPropelledProjectile(FLOAT3D(0.0f, 0.0f, -60.0f), (CMovableEntity*)(CEntity*)m_penLauncher);
+  LaunchAsPropelledProjectile(FLOAT3D(0.0f, 0.0f, -fSpeed), (CMovableEntity*)(CEntity*)m_penLauncher);
   SetDesiredRotation(ANGLE3D(0, 0, 0));
   m_fFlyTime = 4.0f;
-  m_fDamageAmount = 5.0f;
   m_fSoundRange = 0.0f;
-  m_bExplode = FALSE;
   m_bLightSource = TRUE;
   m_bCanHitHimself = FALSE;
   m_bCanBeDestroyed = FALSE;
   m_fWaitAfterDeath = 0.0f;
   m_pmtMove = PMT_FLYING;
+
+  // [Cecil] Explosive laser
+  if (StrongerEnemies()) {
+    m_fDamageAmount = 20.0f;
+    m_fRangeDamageAmount = 15.0f;
+    m_fDamageHotSpotRange = 4.0f;
+    m_fDamageFallOffRange = 6.0f;
+    m_bExplode = TRUE;
+
+  } else {
+    // [Cecil] Moved from above
+    m_fDamageAmount = 5.0f;
+    m_bExplode = FALSE;
+  }
 };
 
-void CyborgBomb(void)
-{
+// [Cecil] Laser explosion
+void CyborgLaserExplosion(void) {
+  ESpawnEffect ese;
+
+  // explosion
+  ese.colMuliplier = C_WHITE|CT_OPAQUE;
+  ese.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
+  ese.betType = BET_BOMB;
+  SpawnEffect(GetPlacement(), ese);
+
+  // explosion debris
+  ese.betType = BET_EXPLOSION_DEBRIS;
+  SpawnEffect(GetPlacement(), ese);
+};
+
+void CyborgBomb(void) {
   // set appearance
   InitAsModel();
   SetPhysicsFlags(EPF_MODEL_BOUNCING);
@@ -2323,8 +2498,6 @@ void CyborgBomb(void)
   SetHealth(5.0f);
   m_pmtMove = PMT_FLYING;
 };
-
-
 
 /************************************************************
  *                        LAVA BALL                         *
@@ -3043,6 +3216,8 @@ void SpawnEffect(const CPlacement3D &plEffect, const ESpawnEffect &eSpawnEffect)
 void BounceSound(void) {
   switch (m_prtType) {
     case PRT_GRENADE:
+    // [Cecil] Hellfire grenade
+    case PRT_FIRE_GRENADE:
       if (en_vCurrentTranslationAbsolute.Length() > 3.0f) {
         m_soEffect.Set3DParameters(20.0f, 2.0f, 1.0f, 1.0f);
         PlaySound(m_soEffect, SOUND_GRENADE_BOUNCE, SOF_3D);
@@ -3050,8 +3225,6 @@ void BounceSound(void) {
       break;
   }
 };
-
-
 
 // Calculate current rotation speed to rich given orientation in future
 ANGLE GetRotationSpeed(ANGLE aWantedAngle, ANGLE aRotateSpeed, FLOAT fWaitFrequency)
@@ -3082,20 +3255,17 @@ ANGLE GetRotationSpeed(ANGLE aWantedAngle, ANGLE aRotateSpeed, FLOAT fWaitFreque
 void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
                    FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) 
 {
- 
   // cannonball immediately destroys demons fireball
-  if (m_prtType==PRT_DEMON_FIREBALL && dmtType==DMT_CANNONBALL)
-  {
+  if (m_prtType == PRT_DEMON_FIREBALL && dmtType == DMT_CANNONBALL) {
     fDamageAmmount*=10001.0f;
   }
-  if (m_prtType==PRT_FLAME && IsOfClass(penInflictor, "Moving Brush"))
-  {
+
+  if (m_prtType == PRT_FLAME && IsOfClass(penInflictor, "Moving Brush")) {
     Destroy();    
   }
 
-  CMovableModelEntity::ReceiveDamage(penInflictor, 
-    dmtType, fDamageAmmount, vHitPoint, vDirection);
-}
+  CMovableModelEntity::ReceiveDamage(penInflictor, dmtType, fDamageAmmount, vHitPoint, vDirection);
+};
 
 /************************************************************
  *                   P R O C E D U R E S                    *
@@ -3108,10 +3278,6 @@ procedures:
     if (CheckForCollisionNow(0, &penObstacle)) {
       // explode now
       ProjectileTouch(penObstacle);
-      // if flame, continue existing
-      /*if (m_prtType==PRT_FLAME && ((CEntity &)*&penObstacle).en_RenderType==RT_MODEL) {
-        resume;
-      }*/
       return EEnd();
     }
     // fly loop
@@ -3128,8 +3294,6 @@ procedures:
         bHit &= !IsOfClass(epass.penOther, "Twister");
         if (bHit) {
           ProjectileTouch(epass.penOther);
-          // player flame passes through enemies
-          //if (m_prtType==PRT_FLAME && IsDerivedFromClass((CEntity *)&*(epass.penOther), "Enemy Base")) { resume; }
           stop;
         }
         resume;
@@ -3504,7 +3668,7 @@ procedures:
       return EEnd();
     }
     // fly loop
-    wait(m_fFlyTime) {
+    wait (m_fFlyTime) {
       on (EBegin) : { resume; }
       on (EPass epass) : {
         BOOL bHit;
@@ -3516,14 +3680,21 @@ procedures:
         // ignore twister
         bHit &= !IsOfClass(epass.penOther, "Twister");
         if (epass.penOther!=m_penLauncher) {
-   bHit = bHit ;
+          bHit = bHit;
         }
+
         if (bHit) {
           ProjectileTouch(epass.penOther);
           // player flame passes through enemies
           if (m_prtType==PRT_FLAME && IsDerivedFromClass((CEntity *)&*(epass.penOther), "Enemy Base")) {
             resume;
           }
+
+          // [Cecil] Chainsaw rockets pass through
+          if (m_prtType == PRT_CHAINSAW_ROCKET && IsDerivedFromClass((CEntity *)&*(epass.penOther), "Enemy Base")) {
+            resume;
+          }
+
           // wind blast passes through movable entities
           if (m_prtType==PRT_AIRELEMENTAL_WIND && IsDerivedFromClass((CEntity *)&*(epass.penOther), "MovableEntity")) {
             resume;
@@ -3660,12 +3831,22 @@ procedures:
       case PRT_WALKER_ROCKET:
       case PRT_ROCKET:
       case PRT_SHOOTER_WOODEN_DART:
-        {
-          Particles_RocketTrail_Prepare(this);
-          break;
-        }
+      // [Cecil] Chainsaw rocket
+      case PRT_CHAINSAW_ROCKET:
+        Particles_RocketTrail_Prepare(this);
+        break;
+
       case PRT_GUFFY_PROJECTILE: break; //Particles_RocketTrail_Prepare(this); break;
-      case PRT_GRENADE: Particles_GrenadeTrail_Prepare(this); break;
+
+      case PRT_GRENADE:
+        Particles_GrenadeTrail_Prepare(this);
+        break;
+
+      // [Cecil] Hellfire grenade
+      case PRT_FIRE_GRENADE:
+        Particles_LavaBombTrail_Prepare(this);
+        break;
+
       case PRT_CATMAN_FIRE: Particles_RocketTrail_Prepare(this); break;
       case PRT_HEADMAN_FIRECRACKER: Particles_FirecrackerTrail_Prepare(this); break;
       case PRT_HEADMAN_ROCKETMAN: Particles_Fireball01Trail_Prepare(this); break;
@@ -3673,7 +3854,11 @@ procedures:
       case PRT_LAVA_COMET: Particles_LavaTrail_Prepare(this); break;
       case PRT_LAVAMAN_BIG_BOMB: Particles_LavaBombTrail_Prepare(this); break;
       case PRT_LAVAMAN_BOMB: Particles_LavaBombTrail_Prepare(this); break;
-      case PRT_BEAST_PROJECTILE: Particles_Fireball01Trail_Prepare(this); break;
+
+      case PRT_BEAST_PROJECTILE:
+        Particles_Fireball01Trail_Prepare(this);
+        break;
+
       case PRT_BEAST_BIG_PROJECTILE:
       case PRT_DEVIL_GUIDED_PROJECTILE:
       case PRT_DEMON_FIREBALL:
@@ -3687,7 +3872,15 @@ procedures:
     {
       case PRT_WALKER_ROCKET: WalkerRocket(); break;
       case PRT_ROCKET: PlayerRocket(); break;
+
+      // [Cecil] Chainsaw rocket
+      case PRT_CHAINSAW_ROCKET: ChainsawRocket(); break;
+
       case PRT_GRENADE: PlayerGrenade(); break;
+
+      // [Cecil] Hellfire grenade
+      case PRT_FIRE_GRENADE: FireGrenade(); break;
+
       case PRT_FLAME: PlayerFlame(); break;
       case PRT_LASER_RAY: PlayerLaserRay(); break;
       case PRT_CATMAN_FIRE: CatmanProjectile(); break;
@@ -3779,6 +3972,19 @@ procedures:
       case PRT_SHOOTER_WOODEN_DART: ShooterWoodenDartExplosion(); break;
       case PRT_SHOOTER_FIREBALL: ShooterFireballExplosion(); break;
       case PRT_METEOR: MeteorExplosion(); break;
+
+      // [Cecil] Explosive laser
+      case PRT_CYBORG_LASER:
+        if (StrongerEnemies()) {
+          CyborgLaserExplosion();
+        }
+        break;
+
+      // [Cecil] Chainsaw rocket
+      case PRT_CHAINSAW_ROCKET: PlayerRocketExplosion(); break;
+
+      // [Cecil] Hellfire grenade
+      case PRT_FIRE_GRENADE: FireGrenadeExplosion(); break;
     }
 
     // wait after death
@@ -3786,6 +3992,10 @@ procedures:
       SwitchToEditorModel();
       ForceFullStop();
       SetCollisionFlags(ECF_IMMATERIAL);
+
+      // [Cecil] Stop the sound
+      m_soEffect.Stop();
+
       // kill light source
       if (m_bLightSource) { SetupLightSource(FALSE); }
       autowait(m_fWaitAfterDeath);

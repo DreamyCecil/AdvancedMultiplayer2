@@ -54,6 +54,10 @@ components:
  57 sound   SOUND_SIGHT      "ModelsMP\\Enemies\\ChainsawFreak\\Sounds\\Sight.wav",
 
 functions:
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return 2;
+  };
   
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)

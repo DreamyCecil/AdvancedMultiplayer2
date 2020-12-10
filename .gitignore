@@ -72,3 +72,12 @@ Sources/EntitiesMP/*.h
 Sources/EntitiesMP/*.cpp
 !Sources/EntitiesMP/Common/*
 !Sources/EntitiesMP/StdH/*
+
+# AMP2 files
+*.rpt
+*.lnk
+Demos/*
+!Demos/empty
+Models/*
+Sounds/*
+Textures/*

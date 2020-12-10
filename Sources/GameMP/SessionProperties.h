@@ -1,3 +1,51 @@
+// [Cecil] World & Gameplay Options Flags
+#define AMP_ENABLE       (1 << 0)
+#define AMP_HEAT         (1 << 1)
+#define AMP_IMPACT       (1 << 2)
+#define AMP_STARTAMMO    (1 << 3)
+#define AMP_ROCKETS      (1 << 4)
+#define AMP_UNLIMITCOMBO (1 << 5)
+#define AMP_ENEMIES      (1 << 6)
+#define AMP_KEEPSECRETS  (1 << 7)
+#define AMP_AUTOSAVE     (1 << 8)
+#define AMP_BALANCED     (1 << 9)
+#define AMP_TAKEWEAPONS  (1 << 10)
+#define AMP_NOROCKETJUMP (1 << 11)
+#define AMP_CONVERSION   (1 << 12)
+
+// [Cecil] Weapon Giver & Item Removal Flags
+#define IRF_KNIFE     (1 << 0)
+#define IRF_COLT      (1 << 1)
+#define IRF_DCOLT     (1 << 2)
+#define IRF_SHOTGUN   (1 << 3)
+#define IRF_DSHOTGUN  (1 << 4)
+#define IRF_TOMMYGUN  (1 << 5)
+#define IRF_MINIGUN   (1 << 6)
+#define IRF_RLAUNCHER (1 << 7)
+#define IRF_GLAUNCHER (1 << 8)
+#define IRF_CHAINSAW  (1 << 9)
+#define IRF_FLAMER    (1 << 10)
+#define IRF_LASER     (1 << 11)
+#define IRF_SNIPER    (1 << 12)
+#define IRF_CANNON    (1 << 13)
+
+#define IRF_INVUL  (1 << 14)
+#define IRF_INVIS  (1 << 15)
+#define IRF_DAMAGE (1 << 16)
+#define IRF_SPEED  (1 << 17)
+
+// [Cecil] Weapon alt fire flags
+#define WAF_SHOTGUN   (1 << 3)
+#define WAF_DSHOTGUN  (1 << 4)
+#define WAF_TOMMYGUN  (1 << 5)
+#define WAF_MINIGUN   (1 << 6)
+#define WAF_RLAUNCHER (1 << 7)
+#define WAF_GLAUNCHER (1 << 8)
+#define WAF_FLAMER    (1 << 10)
+#define WAF_LASER     (1 << 11)
+#define WAF_SNIPER    (1 << 12)
+#define WAF_CANNON    (1 << 13)
+
 /*
  * Class responsible for describing game session
  */
@@ -6,6 +54,7 @@ public:
   enum GameMode {
     GM_FLYOVER = -1,
     GM_COOPERATIVE = 0,
+    GM_SINGLEPLAYER, // [Cecil] SP maps in cooperative
     GM_SCOREMATCH,
     GM_FRAGMATCH,
   };
@@ -58,14 +107,42 @@ public:
   INDEX sp_ctCreditsLeft;       // number of credits left on this level
   FLOAT sp_tmSpawnInvulnerability;   // how many seconds players are invunerable after respawning
 
-  INDEX sp_iBlood;         // blood/gibs type (0=none, 1=green, 2=red, 3=hippie)
-  BOOL  sp_bGibs;          // enable/disable gibbing
+  // [Cecil] Doesn't depend on the game
+  //INDEX sp_iBlood; // blood/gibs type (0=none, 1=green, 2=red, 3=hippie)
 
-  BOOL  sp_bEndOfGame;     // marked when dm game is finished (any of the limits reached)
+  BOOL  sp_bGibs; // enable/disable gibbing
+  BOOL  sp_bEndOfGame; // marked when dm game is finished (any of the limits reached)
+  ULONG sp_ulLevelsMask; // mask of visited levels so far
+  BOOL  sp_bUseExtraEnemies; // spawn extra multiplayer enemies
 
-  ULONG sp_ulLevelsMask;    // mask of visited levels so far
+  // [Cecil] Advanced Multiplayer Options
+  INDEX sp_iAMPOptions; // main gameplay flags
+  FLOAT sp_fSpeedMultiplier;
+  FLOAT sp_fJumpMultiplier;
+  FLOAT sp_fStartHealth;
+  FLOAT sp_fMaxHealth;
+  FLOAT sp_fMaxArmor;
+  INDEX sp_iEnemyMultiplier;
+  FLOAT sp_fFireSpeed;
+  FLOAT sp_fAmmoMultiplier;
+  FLOAT sp_fPowerupTimeMul;
+  FLOAT sp_fEnemyDamage;
+  FLOAT sp_fPlayerDamage;
+  FLOAT sp_fSelfDamage;
 
-  BOOL  sp_bUseExtraEnemies;  // spawn extra multiplayer enemies
+  FLOAT sp_fComboTime;
+  INDEX sp_iAltFire;
+  INDEX sp_iPlayerCollision;
+  INDEX sp_iWeaponItems;
+  INDEX sp_iReplaceWeapons;
+  INDEX sp_iWeaponGiver; // weapon giver flags
+  INDEX sp_iItemRemoval; // item removal flags
+
+  // [Cecil] Get alt fire mode
+  INDEX AltMode(void) const {
+    // two bits for modes
+    return (sp_iAltFire & 0x3);
+  };
 };
 
 // NOTE: never instantiate CSessionProperties, as its size is not fixed to the size defined in engine

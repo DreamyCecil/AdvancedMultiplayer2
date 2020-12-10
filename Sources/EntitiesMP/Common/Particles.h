@@ -47,7 +47,6 @@ void DECL_DLL Particles_FlameThrowerStart(const CPlacement3D &plPipe, FLOAT fSta
 void DECL_DLL Particles_Twister( CEntity *pen, FLOAT fStretch, FLOAT fStartTime, FLOAT fFadeOutStartTime, FLOAT fParticleStretch);
 INDEX DECL_DLL Particles_FireBreath(CEntity *pen, FLOAT3D vSource, FLOAT3D vTarget, FLOAT tmStart, FLOAT tmStop);
 INDEX DECL_DLL Particles_Regeneration(CEntity *pen, FLOAT tmStart, FLOAT tmStop, FLOAT fYFactor, BOOL bDeath);
-
 void DECL_DLL Particles_Stardust(CEntity *pen, FLOAT fSize, FLOAT fHeight, enum ParticleTexture ptTexture, INDEX ctParticles);
 void DECL_DLL Particles_Rising(CEntity *pen, FLOAT m_fActivateTime, FLOAT m_fDeactivateTime, FLOAT fStretchAll, FLOAT fStretchX, FLOAT fStretchY, FLOAT fStretchZ, FLOAT fSize,
                       enum ParticleTexture ptTexture, INDEX ctParticles);
@@ -157,3 +156,8 @@ void DECL_DLL Particles_RunAfterBurner(CEntity *pen, FLOAT tmEnd, FLOAT fStretch
 void DECL_DLL Particles_Fireworks01(CEmiter &em);
 void DECL_DLL Particles_ModelGlow2( CModelObject *mo,  CPlacement3D pl, FLOAT tmEnd, enum ParticleTexture ptTexture, FLOAT fSize, FLOAT iVtxStep, FLOAT fAnimSpd, COLOR iCol);
 void DECL_DLL Particles_RunAfterBurner(CEntity *pen, FLOAT tmEnd, FLOAT fStretch, INDEX iGradientType);
+
+// [Cecil] Tesla lightning particles
+void DECL_DLL Particles_TeslaLightning(FLOAT3D vSrc, FLOAT3D vDst, FLOAT fTimeStart, FLOAT fPower, FLOAT fKneeLen, FLOAT fPosFactor);
+// [Cecil] Ghost Buster replacement particles
+void DECL_DLL Particles_Ghostbuster2(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRays, FLOAT fSize, FLOAT fPower);

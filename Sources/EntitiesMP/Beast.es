@@ -70,6 +70,17 @@ components:
  57 sound   SOUND_ANGER     "Models\\Enemies\\Beast\\Sounds\\Anger.wav",
 
 functions:
+  // [Cecil] Enemy multiplication factor
+  virtual INDEX EnemyMulFactor(INDEX iMul) {
+    switch (m_bcType) {
+      case BT_NORMAL: return ceil(FLOAT(iMul) / 1.5f);
+      case BT_BIG: return ceil(FLOAT(iMul) / 2.5f);
+      case BT_HUGE: return ceil(FLOAT(iMul) / 5.0f);
+    }
+
+    return iMul;
+  };
+
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
   {
@@ -553,8 +564,9 @@ procedures:
       m_fBodyParts = 6;
       m_fDamageWounded = 1650.0f;//500
       m_iScore = 40000; //1000
-      m_fStopDistance = 75;
-      m_fCloseDistance = 80;
+      // [Cecil] Adjusted distance
+      m_fStopDistance = 20;
+      m_fCloseDistance = 30;
       m_fAttackDistance = 1000.0f;
       m_fIgnoreRange = 1200.0f;
       // set stretch factor

@@ -1,6 +1,9 @@
 502
 %{
 #include "StdH.h"
+
+// [Cecil] Force wound event
+#include "EntitiesMP/EnemyBase.h"
 %}
 
 uses "EntitiesMP/BasicEffects";
@@ -42,7 +45,10 @@ properties:
   6 FLOAT3D m_vHitPoint = FLOAT3D(0,0,0),     // hit point
   8 INDEX m_iBullet = 0,                // bullet for lerped launch
   9 enum DamageType m_EdtDamage = DMT_BULLET,   // damage type
-  10 FLOAT m_fBulletSize = 0.0f,      // bullet can have radius, for hitting models only
+ 10 FLOAT m_fBulletSize = 0.0f, // bullet can have radius, for hitting models only
+
+ // [Cecil] Bullet punch
+ 11 FLOAT m_fPunch = 0.0f,
 
 components:
   1 class   CLASS_BASIC_EFFECT "Classes\\BasicEffect.ecl"
@@ -83,16 +89,8 @@ functions:
   // calc jitter target - !!! must call CalcTarget first !!!
   void CalcJitterTarget(FLOAT fR) {
     FLOAT3D vJitter;
-/* My Sphere
-    FLOAT fXZ = FRnd()*360.0f;
-    FLOAT fXY = FRnd()*360.0f;
 
-    // sphere
-    fR *= FRnd();
-    vJitter(1) = CosFast(fXZ)*CosFast(fXY)*fR;
-    vJitter(2) = CosFast(fXZ)*SinFast(fXY)*fR;
-    vJitter(3) = SinFast(fXZ)*fR;*/
-// comp graphics algorithms sphere
+    // comp graphics algorithms sphere
     FLOAT fZ = FRnd()*2.0f - 1.0f;
     FLOAT fA = FRnd()*360.0f;
     FLOAT fT = Sqrt(1-(fZ*fZ));
@@ -150,10 +148,20 @@ functions:
       {
         break;
       }
+
       // apply damage
       const FLOAT fDamageMul = GetSeriousDamageMultiplier(m_penOwner);
-      InflictDirectDamage(crRay.cr_penHit, m_penOwner, m_EdtDamage, m_fDamage*fDamageMul,
-                            crRay.cr_vHit, vHitDirection);
+      InflictDirectDamage(crRay.cr_penHit, m_penOwner, m_EdtDamage, m_fDamage*fDamageMul, crRay.cr_vHit, vHitDirection);
+
+      // [Cecil] Apply bullet punch
+      if (m_fPunch != 0.0f) {
+        KickEntity(crRay.cr_penHit, vHitDirection * m_fPunch);
+
+        // stun enemies
+        if (IsDerivedFromClass(crRay.cr_penHit, "Enemy Base")) {
+          crRay.cr_penHit->SendEvent(EForceWound());
+        }
+      }
 
       m_vHitPoint = crRay.cr_vHit;
 
@@ -188,12 +196,16 @@ functions:
         }
         // spawn hit effect
         BOOL bPassable = pbpo->bpo_ulFlags & (BPOF_PASSABLE|BPOF_SHOOTTHRU);
-        if (!bPassable || iSurfaceType==SURFACE_WATER) {
+
+        // [Cecil] bHitFX hasn't been used before
+        if ((!bPassable || iSurfaceType == SURFACE_WATER) && bHitFX) {
           SpawnHitTypeEffect(this, bhtType, bSound, vHitNormal, crRay.cr_vHit, vHitDirection, FLOAT3D(0.0f, 0.0f, 0.0f));
         }
+
         if(!bPassable) {
           break;
         }
+
       // if not brush
       } else {
 

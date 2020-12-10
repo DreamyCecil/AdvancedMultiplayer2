@@ -122,6 +122,10 @@ procedures:
         // send the score
         EReceiveScore eScore;
         eScore.iPoints = m_fScore;
+            
+        // [Cecil] Don't mark as an enemy
+        eScore.bEnemy = FALSE;
+
         penCaused->SendEvent(eScore);
         penCaused->SendEvent(ESecretFound());
       }
@@ -129,10 +133,19 @@ procedures:
       // kill score to never be reported again
       m_fScore = 0;
     }
-    if (m_strMessage!="") {
-      PrintCenterMessage(this, m_penCaused, 
-        TranslateConst(m_strMessage), 
-        m_fMessageTime, m_mssMessageSound);
+    if (m_strMessage != "") {
+      // [Cecil] Send message to everyone
+      if (SPWorld(this)) {
+        for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+          CEntity *pen = GetPlayerEntity(i);
+
+          if (ASSERT_ENTITY(pen)) {
+            PrintCenterMessage(this, pen, TranslateConst(m_strMessage), m_fMessageTime, m_mssMessageSound);
+          }
+        }
+      } else {
+        PrintCenterMessage(this, m_penCaused, TranslateConst(m_strMessage), m_fMessageTime, m_mssMessageSound);
+      }
     }
 
     // if max trig count is used for counting

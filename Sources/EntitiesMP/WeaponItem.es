@@ -18,26 +18,28 @@
 #include "Models/Weapons/Cannon/Cannon.h"
 
 #include "EntitiesMP/PlayerWeapons.h"
-
 %}
 
 uses "EntitiesMP/Item";
 
 // weapon type 
 enum WeaponItemType {
-  1 WIT_COLT              "Colt",
-  2 WIT_SINGLESHOTGUN     "Single shotgun",
-  3 WIT_DOUBLESHOTGUN     "Double shotgun",
-  4 WIT_TOMMYGUN          "Tommygun",
-  5 WIT_MINIGUN           "Minigun",
-  6 WIT_ROCKETLAUNCHER    "Rocket launcher",
-  7 WIT_GRENADELAUNCHER   "Grenade launcher",
-  8 WIT_SNIPER            "Sniper",
-  9 WIT_FLAMER            "Flamer",
- 10 WIT_LASER             "Laser",
- 11 WIT_CHAINSAW          "Chainsaw",
- 12 WIT_CANNON            "Cannon",
- 13 WIT_GHOSTBUSTER       "obsolete",
+ // [Cecil] Knife item
+  0 WIT_KNIFE           "Knife",
+  1 WIT_COLT            "Colt",
+  2 WIT_SINGLESHOTGUN   "Single shotgun",
+  3 WIT_DOUBLESHOTGUN   "Double shotgun",
+  4 WIT_TOMMYGUN        "Tommygun",
+  5 WIT_MINIGUN         "Minigun",
+  6 WIT_ROCKETLAUNCHER  "Rocket launcher",
+  7 WIT_GRENADELAUNCHER "Grenade launcher",
+  8 WIT_SNIPER          "Sniper",
+  9 WIT_FLAMER          "Flamer",
+ 10 WIT_LASER           "Laser",
+ 11 WIT_CHAINSAW        "Chainsaw",
+ 12 WIT_CANNON          "Cannon",
+ // [Cecil] Random weapon
+ 13 WIT_RANDOM          "Random",
 };
 
 // event for sending through receive item
@@ -51,7 +53,6 @@ event EWeaponItem {
 extern void CPlayerWeapons_Precache(ULONG ulAvailable);
 %}
 
-
 class CWeaponItem : CItem {
 name      "Weapon Item";
 thumbnail "Thumbnails\\WeaponItem.tbn";
@@ -59,8 +60,20 @@ thumbnail "Thumbnails\\WeaponItem.tbn";
 properties:
   1 enum WeaponItemType m_EwitType    "Type" 'Y' = WIT_COLT,     // weapon
 
+ // [Cecil] Weapon replacement
+ 10 BOOL m_bReplaced = FALSE,
+
 components:
   0 class   CLASS_BASE        "Classes\\Item.ecl",
+
+ // [Cecil] New models
+ 10 model   MODEL_KNIFE   "Models\\Weapons\\Knife\\KnifeItem.mdl",
+ 11 texture TEXTURE_KNIFE "Models\\Weapons\\Knife\\KnifeItem.tex",
+
+ 20 model   MODEL_CRATE   "Models\\Crate.mdl",
+ 21 texture TEXTURE_CRATE "Models\\Crate.tex",
+ 22 model   MODEL_TRIGGER   "Models\\Editor\\Trigger.mdl",
+ 23 texture TEXTURE_TRIGGER "Models\\Editor\\Camera.tex",
 
 // ************** COLT **************
  30 model   MODEL_COLT                  "Models\\Weapons\\Colt\\ColtItem.mdl",
@@ -177,7 +190,15 @@ components:
 functions:
   void Precache(void) {
     PrecacheSound(SOUND_PICK);
+
+    // [Cecil] New models
+    PrecacheModel(MODEL_CRATE);
+    PrecacheTexture(TEXTURE_CRATE);
+    PrecacheModel(MODEL_TRIGGER);
+    PrecacheTexture(TEXTURE_TRIGGER);
+
     switch (m_EwitType) {
+      case WIT_KNIFE:           CPlayerWeapons_Precache(1<<(INDEX(WEAPON_KNIFE          )-1)); break;
       case WIT_COLT:            CPlayerWeapons_Precache(1<<(INDEX(WEAPON_COLT           )-1)); break;
       case WIT_SINGLESHOTGUN:   CPlayerWeapons_Precache(1<<(INDEX(WEAPON_SINGLESHOTGUN  )-1)); break;
       case WIT_DOUBLESHOTGUN:   CPlayerWeapons_Precache(1<<(INDEX(WEAPON_DOUBLESHOTGUN  )-1)); break;
@@ -191,51 +212,49 @@ functions:
       case WIT_LASER:           CPlayerWeapons_Precache(1<<(INDEX(WEAPON_LASER          )-1)); break;
       case WIT_CANNON:          CPlayerWeapons_Precache(1<<(INDEX(WEAPON_IRONCANNON     )-1)); break;
     }
-  }
+  };
+
   /* Fill in entity statistics - for AI purposes only */
-  BOOL FillEntityStatistics(EntityStats *pes)
-  {
+  BOOL FillEntityStatistics(EntityStats *pes) {
     pes->es_strName = m_strDescription; 
     pes->es_ctCount = 1;
     pes->es_ctAmmount = 1;
     pes->es_fValue = 1;
     pes->es_iScore = 0;//m_iScore;
     return TRUE;
-  }
+  };
 
   // render particles
   void RenderParticles(void) {
+    // [Cecil] Adjusted for singleplayer maps in coop
     // no particles when not existing or in DM modes
-    if (GetRenderType()!=CEntity::RT_MODEL || GetSP()->sp_gmGameMode>CSessionProperties::GM_COOPERATIVE
-      || !ShowItemParticles())
-    {
+    if (GetRenderType() != CEntity::RT_MODEL || GetSP()->sp_gmGameMode > CSessionProperties::GM_SINGLEPLAYER
+      || !ShowItemParticles()) {
       return;
     }
-    switch (m_EwitType) {
-      case WIT_COLT:             Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_SINGLESHOTGUN:    Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_DOUBLESHOTGUN:    Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_TOMMYGUN:         Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_MINIGUN:          Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_ROCKETLAUNCHER:   Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_GRENADELAUNCHER:  Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_SNIPER:           Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_FLAMER:           Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_CHAINSAW:         Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_LASER:            Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_GHOSTBUSTER:      Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-      case WIT_CANNON:           Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);  break;
-    }
-  }
 
+    Particles_Atomic(this, 1.5f, 1.5f, PT_STAR07, 12);
+  };
 
   // set weapon properties depending on weapon type
-  void SetProperties(void)
-  {
-    BOOL bDM = FALSE;//m_bRespawn || m_bDropped;
-    FLOAT3D vDMStretch = FLOAT3D( 2.0f, 2.0f, 2.0f);
-    
+  void SetProperties(void) {
     switch (m_EwitType) {
+      // [Cecil] Random crate
+	    case WIT_RANDOM:
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
+        m_strDescription.PrintF("Random");
+        AddItem(MODEL_CRATE, TEXTURE_CRATE, 0, 0, 0);
+        StretchItem(FLOAT3D(1.5f, 1.5f, 1.5f));
+        break;
+
+      // [Cecil] Knife item
+	    case WIT_KNIFE:
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
+        m_strDescription.PrintF("Knife");
+        AddItem(MODEL_KNIFE, TEXTURE_KNIFE, 0, 0, 0);
+        StretchItem(FLOAT3D(4.0f, 4.0f, 4.0f));
+        break;
+
     // *********** COLT ***********
       case WIT_COLT:
         m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 10.0f; 
@@ -244,7 +263,7 @@ functions:
         AddItemAttachment(COLTITEM_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(COLTITEM_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(COLTITEM_ATTACHMENT_BODY, MODEL_COLTMAIN, TEXTURE_COLTMAIN, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ?  vDMStretch : FLOAT3D(4.5f, 4.5f, 4.5f));
+        StretchItem(FLOAT3D(4.5f, 4.5f, 4.5f));
         break;
 
     // *********** SINGLE SHOTGUN ***********
@@ -255,7 +274,7 @@ functions:
         AddItemAttachment(SINGLESHOTGUNITEM_ATTACHMENT_BARRELS, MODEL_SS_BARRELS, TEXTURE_SS_BARRELS, TEX_REFL_DARKMETAL, TEX_SPEC_WEAK, 0);
         AddItemAttachment(SINGLESHOTGUNITEM_ATTACHMENT_HANDLE, MODEL_SS_HANDLE, TEXTURE_SS_HANDLE, TEX_REFL_DARKMETAL, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(SINGLESHOTGUNITEM_ATTACHMENT_SLIDER, MODEL_SS_SLIDER, TEXTURE_SS_BARRELS, TEX_REFL_DARKMETAL, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(3.5f, 3.5f, 3.5f)) );
+        StretchItem(FLOAT3D(3.5f, 3.5f, 3.5f));
         break;
 
     // *********** DOUBLE SHOTGUN ***********
@@ -266,7 +285,7 @@ functions:
         AddItemAttachment(DOUBLESHOTGUNITEM_ATTACHMENT_BARRELS, MODEL_DS_BARRELS, TEXTURE_DS_BARRELS, TEX_REFL_BWRIPLES01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(DOUBLESHOTGUNITEM_ATTACHMENT_HANDLE, MODEL_DS_HANDLE, TEXTURE_DS_HANDLE, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(DOUBLESHOTGUNITEM_ATTACHMENT_SWITCH, MODEL_DS_SWITCH, TEXTURE_DS_SWITCH, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(3.0f, 3.0f, 3.0f)));
+        StretchItem(FLOAT3D(3.0f, 3.0f, 3.0f));
         break;
 
 
@@ -277,7 +296,7 @@ functions:
         AddItem(MODEL_TOMMYGUN, TEXTURE_TG_BODY, 0, 0, 0);
         AddItemAttachment(TOMMYGUNITEM_ATTACHMENT_BODY, MODEL_TG_BODY, TEXTURE_TG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(TOMMYGUNITEM_ATTACHMENT_SLIDER, MODEL_TG_SLIDER, TEXTURE_TG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(3.0f, 3.0f, 3.0f)));
+        StretchItem(FLOAT3D(3.0f, 3.0f, 3.0f));
         break;
 
     // *********** MINIGUN ***********
@@ -288,7 +307,7 @@ functions:
         AddItemAttachment(MINIGUNITEM_ATTACHMENT_BARRELS, MODEL_MG_BARRELS, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(MINIGUNITEM_ATTACHMENT_BODY, MODEL_MG_BODY, TEXTURE_MG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(MINIGUNITEM_ATTACHMENT_ENGINE, MODEL_MG_ENGINE, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(1.75f, 1.75f, 1.75f)));
+        StretchItem(FLOAT3D(1.75f, 1.75f, 1.75f));
         break;
 
     // *********** ROCKET LAUNCHER ***********
@@ -302,7 +321,7 @@ functions:
         AddItemAttachment(ROCKETLAUNCHERITEM_ATTACHMENT_ROCKET2, MODEL_RL_ROCKET, TEXTURE_RL_ROCKET, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(ROCKETLAUNCHERITEM_ATTACHMENT_ROCKET3, MODEL_RL_ROCKET, TEXTURE_RL_ROCKET, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(ROCKETLAUNCHERITEM_ATTACHMENT_ROCKET4, MODEL_RL_ROCKET, TEXTURE_RL_ROCKET, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(2.5f, 2.5f, 2.5f)));
+        StretchItem(FLOAT3D(2.5f, 2.5f, 2.5f));
         break;
 
     // *********** GRENADE LAUNCHER ***********
@@ -313,7 +332,7 @@ functions:
         AddItemAttachment(GRENADELAUNCHERITEM_ATTACHMENT_BODY, MODEL_GL_BODY, TEXTURE_GL_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);                   
         AddItemAttachment(GRENADELAUNCHERITEM_ATTACHMENT_MOVING_PART, MODEL_GL_MOVINGPART, TEXTURE_GL_MOVINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(GRENADELAUNCHERITEM_ATTACHMENT_GRENADE, MODEL_GL_GRENADE, TEXTURE_GL_MOVINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);       
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(2.5f, 2.5f, 2.5f)));
+        StretchItem(FLOAT3D(2.5f, 2.5f, 2.5f));
         break;
 
     // *********** SNIPER ***********
@@ -323,7 +342,7 @@ functions:
         AddItem(MODEL_SNIPER, TEXTURE_SNIPER_BODY, 0, 0, 0);
         AddItemAttachment(SNIPERITEM_ATTACHMENT_BODY, MODEL_SNIPER_BODY, TEXTURE_SNIPER_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         SetItemAttachmentAnim(SNIPERITEM_ATTACHMENT_BODY, BODY_ANIM_FORITEM1);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(3.0f, 3.0f, 3.0f)));
+        StretchItem(FLOAT3D(3.0f, 3.0f, 3.0f));
         break;
 
     // *********** FLAMER ***********
@@ -337,7 +356,7 @@ functions:
                           TEXTURE_FL_FUELRESERVOIR, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(FLAMERITEM_ATTACHMENT_FLAME, MODEL_FL_FLAME,
                           TEXTURE_FL_FLAME, 0, 0, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(2.5f, 2.5f, 2.5f)));
+        StretchItem(FLOAT3D(2.5f, 2.5f, 2.5f));
         break;
 
     // *********** CHAINSAW ***********
@@ -352,7 +371,7 @@ functions:
         pmo = &(pmoMain->GetAttachmentModel(CHAINSAWITEM_ATTACHMENT_BLADE)->amo_moModelObject);
         AddAttachmentToModel(this, *pmo, BLADEFORPLAYER_ATTACHMENT_TEETH, MODEL_CS_TEETH, TEXTURE_CS_TEETH, 0, 0, 0);
         
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(2.0f, 2.0f, 2.0f)));
+        StretchItem(FLOAT3D(2.0f, 2.0f, 2.0f));
         break; }
         
     // *********** LASER ***********
@@ -365,7 +384,7 @@ functions:
         AddItemAttachment(LASERITEM_ATTACHMENT_LEFTDOWN,  MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(LASERITEM_ATTACHMENT_RIGHTUP,   MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddItemAttachment(LASERITEM_ATTACHMENT_RIGHTDOWN, MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(2.5f, 2.5f, 2.5f)));
+        StretchItem(FLOAT3D(2.5f, 2.5f, 2.5f));
         break;
 
     // *********** CANNON ***********
@@ -374,14 +393,69 @@ functions:
         m_strDescription.PrintF("Cannon");
         AddItem(MODEL_CANNON, TEXTURE_CANNON, 0, 0, 0);
         AddItemAttachment(CANNON_ATTACHMENT_BODY, MODEL_CN_BODY, TEXTURE_CANNON, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-//        AddItemAttachment(CANNON_ATTACHMENT_NUKEBOX, MODEL_CN_NUKEBOX, TEXTURE_CANNON, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-//        AddItemAttachment(CANNON_ATTACHMENT_LIGHT, MODEL_CN_LIGHT, TEXTURE_CANNON, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        StretchItem( bDM ? vDMStretch : (FLOAT3D(3.0f, 3.0f, 3.0f)));
+        StretchItem(FLOAT3D(3.0f, 3.0f, 3.0f));
         break;
     }
-      // add flare
+    // add flare
     AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.6f,0), FLOAT3D(3,3,0.3f) );
-};
+  };
+
+  // [Cecil] Remove weapons
+  BOOL RemoveWeapons(void) {
+    // check if weapon is disabled
+    BOOL bEnabled = (GetSP()->sp_iItemRemoval & _aiWeaponItemFlags[m_EwitType]);
+
+    // if it wasn't enabled or should be removed altogether
+    if (GetSP()->sp_iWeaponItems == 0 || !bEnabled) {
+      if (m_penTarget == NULL) {
+		    Destroy();
+
+      // replace with the trigger model
+		  } else {
+        ItemModel();
+        StartModelAnim(ITEMHOLDER_ANIM_BIGOSCILATION, AOF_LOOPING|AOF_NORESTART);
+        ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_BIG);
+
+        AddItem(MODEL_TRIGGER, TEXTURE_TRIGGER, 0, 0, 0);
+        StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
+      }
+      return TRUE;
+    }
+
+    // wasn't removed
+    return FALSE;
+  };
+
+  // [Cecil] Different weapon items
+  void AdjustDifficulty(void) {
+    // when not randomizing
+    if (GetSP()->sp_iWeaponItems != 2) {
+      // remove unneeded weapons
+      if (RemoveWeapons()) {
+        return;
+      }
+    }
+
+	  switch (GetSP()->sp_iWeaponItems) {
+	    // replace with a specific type
+	    case 1:
+		    if (!m_bReplaced && m_EwitType != (WeaponItemType)GetSP()->sp_iReplaceWeapons) {
+			    m_EwitType = (WeaponItemType)GetSP()->sp_iReplaceWeapons;
+          m_bReplaced = TRUE;
+			    Reinitialize();
+		    }
+		    break;
+
+	    // randomize
+	    case 2:
+		    if (!m_bReplaced) {
+			    m_EwitType = WIT_RANDOM;
+			    m_bReplaced = TRUE;
+			    Reinitialize();
+		    }
+		    break;
+	  }
+  };
 
 procedures:
   ItemCollected(EPass epass) : CItem::ItemCollected {
@@ -416,25 +490,22 @@ procedures:
     return;
   };
 
-  Main()
-  {
-    if ( m_EwitType==WIT_GHOSTBUSTER) {
-      m_EwitType=WIT_LASER;
-    }
-
-    Initialize();     // initialize base class
+  Main() {
+    Initialize(); // initialize base class
     StartModelAnim(ITEMHOLDER_ANIM_BIGOSCILATION, AOF_LOOPING|AOF_NORESTART);
     ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_BIG);
-    SetProperties();  // set properties
+    SetProperties(); // set properties
 
     if (!m_bDropped) {
       jump CItem::ItemLoop();
+
     } else if (TRUE) {
       wait() {
         on (EBegin) : {
           SpawnReminder(this, m_fRespawnTime, 0);
           call CItem::ItemLoop();
         }
+
         on (EReminder) : {
           SendEvent(EEnd()); 
           resume;

@@ -108,12 +108,13 @@ functions:
 
   // render particles
   void RenderParticles(void) {
+    // [Cecil] Adjusted for singleplayer maps in coop
     // no particles when not existing or in DM modes
-    if (GetRenderType()!=CEntity::RT_MODEL || GetSP()->sp_gmGameMode>CSessionProperties::GM_COOPERATIVE
-      || !ShowItemParticles())
-    {
+    if (GetRenderType() != CEntity::RT_MODEL || GetSP()->sp_gmGameMode > CSessionProperties::GM_SINGLEPLAYER
+      || !ShowItemParticles()) {
       return;
     }
+
     switch (m_EaitType) {
       case ARIT_SHARD:
         Particles_Emanate(this, 0.75f*0.75, 0.75f*0.75, PT_STAR04, 8, 7.0f);

@@ -11,14 +11,13 @@
 #define SURFACE_SNOW 21
 
 // Max ammo
-#define MAX_BULLETS INDEX(500)
-#define MAX_SHELLS INDEX(100)
-#define MAX_ROCKETS INDEX(50)
-#define MAX_GRENADES INDEX(50)
-#define MAX_NAPALM INDEX(500)
-#define MAX_ELECTRICITY INDEX(400)
-#define MAX_IRONBALLS INDEX(30)
-//#define MAX_NUKEBALLS INDEX(3)
+#define MAX_BULLETS       INDEX(500)
+#define MAX_SHELLS        INDEX(100)
+#define MAX_ROCKETS       INDEX(50)
+#define MAX_GRENADES      INDEX(50)
+#define MAX_NAPALM        INDEX(500)
+#define MAX_ELECTRICITY   INDEX(400)
+#define MAX_IRONBALLS     INDEX(30)
 #define MAX_SNIPERBULLETS INDEX(50)
 
 // Bit shifters for ammo
@@ -36,15 +35,14 @@
 #define BLOOD_SPILL_GREEN RGBAToColor(0,250,0,255)
 
 // Ammo mana Value
-#define AV_SHELLS         INDEX(70)
-#define AV_BULLETS        INDEX(10)
-#define AV_ROCKETS        INDEX(150)
-#define AV_GRENADES       INDEX(150)
-#define AV_ELECTRICITY    INDEX(250)
-#define AV_IRONBALLS      INDEX(700)
-//#define AV_NUKEBALLS      INDEX(1800)
-#define AV_NAPALM         INDEX(200)
-#define AV_SNIPERBULLETS  INDEX(200)
+#define AV_SHELLS        INDEX(70)
+#define AV_BULLETS       INDEX(10)
+#define AV_ROCKETS       INDEX(150)
+#define AV_GRENADES      INDEX(150)
+#define AV_ELECTRICITY   INDEX(250)
+#define AV_IRONBALLS     INDEX(700)
+#define AV_NAPALM        INDEX(200)
+#define AV_SNIPERBULLETS INDEX(200)
 
 // used for invisibility powerup
 #define INVISIBILITY_ALPHA_LOCAL  0x55
@@ -301,3 +299,79 @@ void SpawnHitTypeEffect(CEntity *pen, enum BulletHitType bhtType, BOOL bSound, F
   FLOAT3D vIncommingBulletDir, FLOAT3D vDistance);
 
 #define FRndIn(a, b) (a + FRnd()*(b - a))
+
+// [Cecil] Check for a singleplayer world in multiplayer
+inline BOOL SPWorld(CEntity *pen) {
+  const ULONG ulFlags = pen->GetWorld()->GetSpawnFlags();
+  //BOOL bMultiplayer = (ulFlags & SPF_DEATHMATCH);
+
+  return (ulFlags & SPF_SINGLEPLAYER && !GetSP()->sp_bSinglePlayer && GetSP()->sp_gmGameMode == CSessionProperties::GM_SINGLEPLAYER /*&& !bMultiplayer*/);
+};
+
+// [Cecil] Fire speed multiplier
+inline FLOAT FireSpeedMul(void) {
+	return (1.0f / GetSP()->sp_fFireSpeed);
+};
+
+// [Cecil] Ammo multiplier
+inline FLOAT AmmoMul(void) {
+  return GetSP()->sp_fAmmoMultiplier;
+};
+
+// [Cecil] Pure fire speed
+inline FLOAT FireSpeed(void) {
+	return GetSP()->sp_fFireSpeed;
+};
+
+// [Cecil] Stronger enemies
+inline BOOL StrongerEnemies(void) {
+  return GetSP()->sp_iAMPOptions & AMP_ENEMIES;
+};
+
+// [Cecil] Item type to item removal flag table
+static const INDEX _aiWeaponItemFlags[13] = {
+  IRF_KNIFE,
+  IRF_COLT,
+  IRF_SHOTGUN,
+  IRF_DSHOTGUN,
+  IRF_TOMMYGUN,
+  IRF_MINIGUN,
+  IRF_RLAUNCHER,
+  IRF_GLAUNCHER,
+  IRF_SNIPER,
+  IRF_FLAMER,
+  IRF_LASER,
+  IRF_CHAINSAW,
+  IRF_CANNON,
+};
+
+// [Cecil] Assert entity existence
+#define ASSERT_ENTITY(_Entity) (_Entity != NULL && !(_Entity->GetFlags() & ENF_DELETED))
+
+// [Cecil] Christmas blood color
+inline COLOR ChristmasBlood(INDEX iRandom, UBYTE ubFactor, UBYTE ubAlpha) {
+  COLOR colWhite = RGBAToColor(ubFactor, ubFactor, ubFactor, ubAlpha);
+
+  switch (iRandom % 3) {
+    case 0: return RGBAToColor(ubFactor, FLOAT(ubFactor) * 0.15f, FLOAT(ubFactor) * 0.15f, ubAlpha); // red
+    case 1: return RGBAToColor(FLOAT(ubFactor) * 0.15f, ubFactor, FLOAT(ubFactor) * 0.15f, ubAlpha); // green
+    case 2: return colWhite; // white
+  }
+  return colWhite;
+};
+
+// [Cecil] Get blood type
+inline INDEX GetBloodType(void) {
+  return _pShell->GetINDEX("amp_iBloodType");
+};
+
+// [Cecil] Seasonal events
+enum ESpecialEvent {
+  ESE_NONE,
+  ESE_VALENTINE, // 14th of February / a week with 14th on the 4th day
+  ESE_BIRTHDAY,  // 21st of March / the whole of March
+  ESE_HALLOWEEN, // the whole of october
+  ESE_CHRISTMAS, // from 15th of December to 15th of January
+};
+
+DECL_DLL ESpecialEvent GetCurrentEvent(void);

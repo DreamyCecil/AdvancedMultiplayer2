@@ -68,6 +68,10 @@ components:
  58 sound   SOUND_DEATH           "ModelsMP\\Enemies\\Grunt\\Sounds\\Death.wav",
 
 functions:
+  // [Cecil] Legion multiplication factor
+  virtual INDEX LegionMulFactor(void) {
+    return 8;
+  };
     
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
@@ -317,10 +321,10 @@ procedures:
         m_fAttackFireTime = 2.0f;
         m_fCloseFireTime = 1.0f;
         m_fIgnoreRange = 200.0f;
-        //m_fBlowUpAmount = 65.0f;
         m_fBlowUpAmount = 80.0f;
         m_fBodyParts = 4;
-        m_fDamageWounded = 0.0f;
+        // [Cecil] 0 -> 20
+        m_fDamageWounded = 20.0f;
         m_iScore = 500;
         SetHealth(40.0f);
         m_fMaxHealth = 40.0f;
@@ -345,11 +349,13 @@ procedures:
         m_fStopDistance = 15.0f;
         m_fAttackFireTime = 4.0f;
         m_fCloseFireTime = 2.0f;
-        //m_fBlowUpAmount = 180.0f;
+        // [Cecil] Added blow up amount
+        m_fBlowUpAmount = 100.0f;
         m_fIgnoreRange = 200.0f;
         // damage/explode properties
         m_fBodyParts = 5;
-        m_fDamageWounded = 0.0f;
+        // [Cecil] 0 -> 30
+        m_fDamageWounded = 30.0f;
         m_iScore = 800;
         SetHealth(60.0f);
         m_fMaxHealth = 60.0f;

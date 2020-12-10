@@ -6,7 +6,6 @@
 uses "EntitiesMP/Light";
 uses "EntitiesMP/Bullet";
 uses "EntitiesMP/PlayerWeapons";
-uses "Engine/Classes/MovableEntity";
 
 // input parameter for ghost buster ray
 event EGhostBusterRay {
@@ -14,8 +13,7 @@ event EGhostBusterRay {
 };
 
 %{
-#define HIT_DISTANCE 50.0f      // ray hit distance
-#define HIT_DAMAGE 15.0f         // hit damage for every lerping bullet
+#define HIT_DISTANCE 100.0f // ray hit distance
 
 void CGhostBusterRay_OnPrecache(CDLLEntityClass *pdec, INDEX iUser) 
 {
@@ -24,7 +22,6 @@ void CGhostBusterRay_OnPrecache(CDLLEntityClass *pdec, INDEX iUser)
   pdec->PrecacheTexture(TEXTURE_RAY);
 }
 %}
-
 
 class CGhostBusterRay : CMovableModelEntity {
 name      "GhostBusterRay";
@@ -49,32 +46,34 @@ properties:
 }
 
 components:
-  1 class   CLASS_LIGHT         "Classes\\Light.ecl",
-  2 class   CLASS_BULLET        "Classes\\Bullet.ecl",
+  1 class   CLASS_LIGHT  "Classes\\Light.ecl",
+  2 class   CLASS_BULLET "Classes\\Bullet.ecl",
 
-// ********* RAY *********
- 10 model   MODEL_RAY           "Models\\Weapons\\GhostBuster\\Projectile\\Ray.mdl",
- 11 texture TEXTURE_RAY         "Models\\Weapons\\GhostBuster\\Projectile\\Ray.tex",
+ // [Cecil] Dummy model
+ 10 model   MODEL_RAY   "Models\\Editor\\Axis.mdl",
+ 11 texture TEXTURE_RAY "Models\\Editor\\Vector.tex",
 
 functions:
   // add to prediction any entities that this entity depends on
-  void AddDependentsToPrediction(void)
-  {
+  void AddDependentsToPrediction(void) {
     m_penOwner->AddToPrediction();
   }
+
   // render particles
-  void RenderParticles(void)
-  {
-    if (m_ctPasses<2) {
+  void RenderParticles(void) {
+    if (m_ctPasses < 2) {
       return;
     }
+
     FLOAT3D vLerpedSrc = Lerp(m_vSrcOld, m_vSrc, _pTimer->GetLerpFactor());
     FLOAT3D vLerpedDst = Lerp(m_vDstOld, m_vDst, _pTimer->GetLerpFactor());
-    Particles_Ghostbuster(vLerpedSrc, vLerpedDst, 32, 1.0f);
+
+    // [Cecil] New particles
+    Particles_Ghostbuster2(vLerpedSrc, vLerpedDst, 32, 0.25f, 1.0f);
   };
 
   /* Read from stream. */
-  void Read_t( CTStream *istr) // throw char *
+  void Read_t(CTStream *istr) // throw char *
   {
     CMovableModelEntity::Read_t(istr);
     SetupLightSource();
@@ -107,8 +106,6 @@ functions:
     m_lsLightSource.SetLightSource(lsNew);
   };
 
-
-
 /************************************************************
  *                        DO MOVING                         *
  ************************************************************/
@@ -136,7 +133,7 @@ functions:
     GetWorld()->CastRay(crRay);
 
     // if hit anything set new position
-    if (crRay.cr_penHit!=NULL) {
+    if (crRay.cr_penHit != NULL) {
       vDesired = crRay.cr_vHit;
     }
     vDesired -= vDirection/10.0f;
@@ -156,33 +153,36 @@ functions:
     m_ctPasses++;
   };
 
-
-
 /************************************************************
  *                      FIRE FUNCTIONS                      *
  ************************************************************/
-  // prepare Bullet
-  void PrepareBullet(const CPlacement3D &plBullet) {
+  // [Cecil] Ray power
+  void PrepareBullet(const CPlacement3D &plBullet, FLOAT fPower) {
     // create bullet
     penBullet = CreateEntity(plBullet, CLASS_BULLET);
     // init bullet
     EBulletInit eInit;
     eInit.penOwner = ((CPlayerWeapons&)*m_penOwner).m_penPlayer;
-    eInit.fDamage = HIT_DAMAGE;
+
+    // [Cecil] Multiply damage
+    eInit.fDamage = 100.0f*fPower * FireSpeed();
+
     penBullet->Initialize(eInit);
     ((CBullet&)*penBullet).m_EdtDamage = DMT_BULLET;
   };
 
-  // fire
-  void Fire(const CPlacement3D &plSource) {
+  // [Cecil] Ray power
+  void Fire(const CPlacement3D &plSource, FLOAT fPower) {
     if (!IsOfClass(m_penOwner, "Player Weapons")) { return; }
 
     // fire lerped bullets
-    PrepareBullet(plSource);
+    PrepareBullet(plSource, fPower);
+
     ((CBullet&)*penBullet).CalcTarget(HIT_DISTANCE);
     ((CBullet&)*penBullet).m_fBulletSize = 0.5f;
     ((CBullet&)*penBullet).CalcJitterTarget(0.02f*HIT_DISTANCE);
-    ((CBullet&)*penBullet).LaunchBullet(TRUE, FALSE, TRUE);
+    // [Cecil] Disabled sound and effect
+    ((CBullet&)*penBullet).LaunchBullet(FALSE, FALSE, FALSE);
     ((CBullet&)*penBullet).DestroyBullet();
   };
 
@@ -190,8 +190,6 @@ functions:
   void DestroyGhostBusterRay(void) {
     Destroy();
   };
-
-
 
 /************************************************************
  *                   P R O C E D U R E S                    *
@@ -203,19 +201,21 @@ procedures:
     ASSERT(egbr.penOwner!=NULL);
     m_penOwner = egbr.penOwner;
 
+    // [Cecil] InitAsModel() -> InitAsEditorModel()
     // initialization
-    InitAsModel();
+    InitAsEditorModel();
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
     SetModel(MODEL_RAY);
     SetModelMainTexture(TEXTURE_RAY);
 
-    try {
+    // [Cecil] Not needed
+    /*try {
       m_aoLightAnim.SetData_t(CTFILENAME("Animations\\GhostbusterLightning.ani"));
       m_aoLightAnim.PlayAnim(0,AOF_LOOPING);
     } catch (char *strError) {
       CPrintF("%s", strError);
-    }
+    }*/
 
     // setup light source
     SetupLightSource();

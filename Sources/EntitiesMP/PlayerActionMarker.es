@@ -83,7 +83,19 @@ functions:
         // send it event to start auto actions from here
         EAutoAction eAutoAction;
         eAutoAction.penFirstMarker = this;
-        eTrigger.penCaused->SendEvent(eAutoAction);
+
+        // [Cecil] Send actions to everyone
+        if (SPWorld(this)) {
+          for (INDEX i = 0; i < GetMaxPlayers(); i++) {
+            CEntity *pen = GetPlayerEntity(i);
+
+            if (ASSERT_ENTITY(pen)) {
+              pen->SendEvent(eAutoAction);
+            }
+          }
+        } else {
+          eTrigger.penCaused->SendEvent(eAutoAction);
+        }
       }
       return TRUE;
     }
