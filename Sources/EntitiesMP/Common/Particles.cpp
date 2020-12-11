@@ -2756,9 +2756,9 @@ BOOL UpdateGrowthCache(CEntity *pen, CTextureData *ptdGrowthMap, FLOATaabbox3D &
         FLOAT fDX = texX - ulX1;
         FLOAT fDY = texY - ulY1;
         fRawHeight = ulUL*(1-fDX)*(1-fDY) +
-						         ulUR*(fDX - fDX*fDY) +
-						         ulBL*(fDY - fDX*fDY) +
-						         ulBR*(fDX*fDY);
+                     ulUR*(fDX - fDX*fDY) +
+                     ulBL*(fDY - fDX*fDY) +
+                     ulBR*(fDX*fDY);
 
         // calculate maximum slope per meter on each axis
         FLOAT fSlopeMul = 1.0f;
@@ -3026,9 +3026,9 @@ void Particles_Growth(CEntity *pen, CTextureData *ptdGrowthMap, FLOATaabbox3D &b
         FLOAT fDX = texX - ulX1;
         FLOAT fDY = texY - ulY1;
         fRawHeight = ulUL*(1-fDX)*(1-fDY) +
-						         ulUR*(fDX - fDX*fDY) +
-						         ulBL*(fDY - fDX*fDY) +
-						         ulBR*(fDX*fDY);
+                     ulUR*(fDX - fDX*fDY) +
+                     ulBL*(fDY - fDX*fDY) +
+                     ulBR*(fDX*fDY);
                 
         // clamp to terrain height  
         FLOAT fHeight;

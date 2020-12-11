@@ -468,7 +468,7 @@ CTString GetCurrentGameTypeName() {
 
 CTString GetGameSpyRulesInfo(void) {
   CTString strOut;
-	CTString strKey;
+  CTString strKey;
   const CSessionProperties &sp = *GetSP();
 
 
@@ -497,44 +497,44 @@ CTString GetGameSpyRulesInfo(void) {
     }
   }
 
-	strKey.PrintF("\\difficulty\\%s", (const char*)strDifficulty);
-	strOut+=strKey;
+  strKey.PrintF("\\difficulty\\%s", (const char*)strDifficulty);
+  strOut+=strKey;
 
   strKey.PrintF("\\friendlyfire\\%d", sp.sp_bFriendlyFire?0:1);
-	strOut+=strKey;
+  strOut+=strKey;
   
   strKey.PrintF("\\weaponsstay\\%d", sp.sp_bWeaponsStay?0:1);
-	strOut+=strKey;
+  strOut+=strKey;
 
-  strKey.PrintF("\\ammostays\\%d", sp.sp_bAmmoStays                   ?0:1);	strOut+=strKey;
-  strKey.PrintF("\\healthandarmorstays\\%d", sp.sp_bHealthArmorStays  ?0:1);	strOut+=strKey;
-  strKey.PrintF("\\allowhealth\\%d", sp.sp_bAllowHealth               ?0:1);	strOut+=strKey;
-  strKey.PrintF("\\allowarmor\\%d", sp.sp_bAllowArmor                 ?0:1);	strOut+=strKey;
-  strKey.PrintF("\\infiniteammo\\%d", sp.sp_bInfiniteAmmo             ?0:1);	strOut+=strKey;
-  strKey.PrintF("\\respawninplace\\%d", sp.sp_bRespawnInPlace         ?0:1);	strOut+=strKey;
+  strKey.PrintF("\\ammostays\\%d", sp.sp_bAmmoStays                   ?0:1); strOut+=strKey;
+  strKey.PrintF("\\healthandarmorstays\\%d", sp.sp_bHealthArmorStays  ?0:1); strOut+=strKey;
+  strKey.PrintF("\\allowhealth\\%d", sp.sp_bAllowHealth               ?0:1); strOut+=strKey;
+  strKey.PrintF("\\allowarmor\\%d", sp.sp_bAllowArmor                 ?0:1); strOut+=strKey;
+  strKey.PrintF("\\infiniteammo\\%d", sp.sp_bInfiniteAmmo             ?0:1); strOut+=strKey;
+  strKey.PrintF("\\respawninplace\\%d", sp.sp_bRespawnInPlace         ?0:1); strOut+=strKey;
 
   if (sp.sp_bCooperative) {
     if (sp.sp_ctCredits<0) {
       strKey.PrintF("\\credits\\infinite");
-  	  strOut+=strKey;
+      strOut+=strKey;
     } else if (sp.sp_ctCredits>0) {
       strKey.PrintF("\\credits\\%d", sp.sp_ctCredits);
-  	  strOut+=strKey;
+      strOut+=strKey;
       strKey.PrintF("\\credits_left\\%d", sp.sp_ctCreditsLeft);
-  	  strOut+=strKey;
+      strOut+=strKey;
     }
   } else {
     if (sp.sp_bUseFrags && sp.sp_iFragLimit>0) {
       strKey.PrintF("\\fraglimit\\%d", sp.sp_iFragLimit);
-  	  strOut+=strKey;
+      strOut+=strKey;
     }
     if (!sp.sp_bUseFrags && sp.sp_iScoreLimit>0) {
       strKey.PrintF("\\fraglimit\\%d", sp.sp_iScoreLimit);
-  	  strOut+=strKey;
+      strOut+=strKey;
     }
     if (sp.sp_iTimeLimit>0) {
       strKey.PrintF("\\timelimit\\%d", sp.sp_iTimeLimit);
-  	  strOut+=strKey;
+      strOut+=strKey;
     }
   }
 

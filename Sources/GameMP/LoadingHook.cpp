@@ -16,26 +16,24 @@ extern BOOL _bUserBreakEnabled;
 
 #define REFRESHTIME (0.2f)
 
-void RemapLevelNames(INDEX &iLevel)
-{
+void RemapLevelNames(INDEX &iLevel) {
   switch( iLevel) {
-  case 10:  iLevel =  1;  break;
-  case 11:  iLevel =  2;  break;
-  case 12:  iLevel =  3;  break;
-  case 13:  iLevel =  4;  break;
-  case 14:  iLevel =  5;  break;
-  case 15:  iLevel =  6;  break;
-  case 21:  iLevel =  7;  break;
-  case 22:  iLevel =  8;  break;
-  case 23:  iLevel =  9;  break;
-  case 24:  iLevel = 10;  break;
-  case 31:  iLevel = 11;  break;
-  case 32:  iLevel = 12;  break;
-  case 33:  iLevel = 13;  break;
-  default:  iLevel = -1;	break;
+    case 10: iLevel =  1; break;
+    case 11: iLevel =  2; break;
+    case 12: iLevel =  3; break;
+    case 13: iLevel =  4; break;
+    case 14: iLevel =  5; break;
+    case 15: iLevel =  6; break;
+    case 21: iLevel =  7; break;
+    case 22: iLevel =  8; break;
+    case 23: iLevel =  9; break;
+    case 24: iLevel = 10; break;
+    case 31: iLevel = 11; break;
+    case 32: iLevel = 12; break;
+    case 33: iLevel = 13; break;
+    default: iLevel = -1; break;
   }
 }
-
 
 static void LoadingHook_t(CProgressHookInfo *pphi)
 {

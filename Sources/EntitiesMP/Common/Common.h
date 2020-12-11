@@ -310,7 +310,7 @@ inline BOOL SPWorld(CEntity *pen) {
 
 // [Cecil] Fire speed multiplier
 inline FLOAT FireSpeedMul(void) {
-	return (1.0f / GetSP()->sp_fFireSpeed);
+  return (1.0f / GetSP()->sp_fFireSpeed);
 };
 
 // [Cecil] Ammo multiplier
@@ -320,7 +320,7 @@ inline FLOAT AmmoMul(void) {
 
 // [Cecil] Pure fire speed
 inline FLOAT FireSpeed(void) {
-	return GetSP()->sp_fFireSpeed;
+  return GetSP()->sp_fFireSpeed;
 };
 
 // [Cecil] Stronger enemies

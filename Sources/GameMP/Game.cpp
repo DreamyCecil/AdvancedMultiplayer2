@@ -2601,11 +2601,10 @@ void CGame::GameRedrawView( CDrawPort *pdpDrawPort, ULONG ulFlags)
   }
 
   // if no game is active
-  else
-  {
+  else {
     // clear background
     if( pdpDrawPort->Lock()) {
- 	    pdpDrawPort->Fill( SE_COL_BLUE_DARK|CT_OPAQUE);
+      pdpDrawPort->Fill( SE_COL_BLUE_DARK|CT_OPAQUE);
       pdpDrawPort->FillZBuffer( ZBUF_BACK);
       pdpDrawPort->Unlock();
     }

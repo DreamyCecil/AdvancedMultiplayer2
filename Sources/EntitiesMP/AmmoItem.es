@@ -391,7 +391,7 @@ functions:
     }
     
     // [Cecil] Change type
-	  switch (GetSP()->sp_iWeaponItems) {
+    switch (GetSP()->sp_iWeaponItems) {
       // based on the replaced weapon
       case 1:
         if (!m_bReplaced) {
@@ -410,8 +410,8 @@ functions:
             case WIT_CANNON: m_EaitType = AIT_IRONBALLS; break;
           }
 
-			    m_bReplaced = TRUE;
-			    Reinitialize();
+          m_bReplaced = TRUE;
+          Reinitialize();
         }
         break;
 
@@ -419,8 +419,8 @@ functions:
       case 2:
         if (!m_bReplaced) {
           m_EaitType = _aeRandomAmmoTypes[IRnd() % 8];
-			    m_bReplaced = TRUE;
-			    Reinitialize();
+          m_bReplaced = TRUE;
+          Reinitialize();
         }
         break;
     }

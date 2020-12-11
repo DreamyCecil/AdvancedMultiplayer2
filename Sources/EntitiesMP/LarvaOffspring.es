@@ -70,13 +70,12 @@ functions:
     CMovableModelEntity::PreMoving();
   }
 
-  void Precache() 
-  {
-	PrecacheSound(SOUND_LARVETTE);
+  void Precache() {
+    PrecacheSound(SOUND_LARVETTE);
     PrecacheModel(MODEL_LARVA_TAIL);
     PrecacheTexture(TEXTURE_LARVA_TAIL);
     PrecacheClass(CLASS_BASIC_EFFECT, BET_ROCKET);    
-	PrecacheClass(CLASS_BASIC_EFFECT, BET_SHOCKWAVE);    
+    PrecacheClass(CLASS_BASIC_EFFECT, BET_SHOCKWAVE);    
   }
 
 void InitializeProjectile(void) {
@@ -335,7 +334,7 @@ procedures:
     m_fStartTime = _pTimer->CurrentTick();
     autocall LarvaOffspringGuidedSlide() EEnd;
   
-	LarvaTailExplosion();
+    LarvaTailExplosion();
         
     Destroy();
 

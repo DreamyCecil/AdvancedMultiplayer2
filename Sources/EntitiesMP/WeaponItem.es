@@ -240,7 +240,7 @@ functions:
   void SetProperties(void) {
     switch (m_EwitType) {
       // [Cecil] Random crate
-	    case WIT_RANDOM:
+      case WIT_RANDOM:
         m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Random");
         AddItem(MODEL_CRATE, TEXTURE_CRATE, 0, 0, 0);
@@ -248,7 +248,7 @@ functions:
         break;
 
       // [Cecil] Knife item
-	    case WIT_KNIFE:
+      case WIT_KNIFE:
         m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Knife");
         AddItem(MODEL_KNIFE, TEXTURE_KNIFE, 0, 0, 0);
@@ -408,10 +408,10 @@ functions:
     // if it wasn't enabled or should be removed altogether
     if (GetSP()->sp_iWeaponItems == 0 || !bEnabled) {
       if (m_penTarget == NULL) {
-		    Destroy();
+        Destroy();
 
       // replace with the trigger model
-		  } else {
+      } else {
         ItemModel();
         StartModelAnim(ITEMHOLDER_ANIM_BIGOSCILATION, AOF_LOOPING|AOF_NORESTART);
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_BIG);
@@ -436,25 +436,25 @@ functions:
       }
     }
 
-	  switch (GetSP()->sp_iWeaponItems) {
-	    // replace with a specific type
-	    case 1:
-		    if (!m_bReplaced && m_EwitType != (WeaponItemType)GetSP()->sp_iReplaceWeapons) {
-			    m_EwitType = (WeaponItemType)GetSP()->sp_iReplaceWeapons;
+    switch (GetSP()->sp_iWeaponItems) {
+      // replace with a specific type
+      case 1:
+        if (!m_bReplaced && m_EwitType != (WeaponItemType)GetSP()->sp_iReplaceWeapons) {
+          m_EwitType = (WeaponItemType)GetSP()->sp_iReplaceWeapons;
           m_bReplaced = TRUE;
-			    Reinitialize();
-		    }
-		    break;
-
-	    // randomize
-	    case 2:
-		    if (!m_bReplaced) {
-			    m_EwitType = WIT_RANDOM;
-			    m_bReplaced = TRUE;
-			    Reinitialize();
-		    }
-		    break;
-	  }
+          Reinitialize();
+        }
+        break;
+        
+      // randomize
+      case 2:
+        if (!m_bReplaced) {
+          m_EwitType = WIT_RANDOM;
+          m_bReplaced = TRUE;
+          Reinitialize();
+        }
+        break;
+    }
   };
 
 procedures:

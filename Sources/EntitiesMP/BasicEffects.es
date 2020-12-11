@@ -61,7 +61,7 @@ enum BasicEffectType {
  48 BET_SUMMONERSTAREXPLOSION   "Summoner star explosion",     // magic explosion of starts for summoner
  49 BET_COLLECT_ENERGY          "Collect energy",
  50 BET_GROWING_SWIRL           "Growing swirl",
-// 51 BET_SNIPER_RESIDUE          "Sniper Residue",		// smoke left after firing sniper
+// 51 BET_SNIPER_RESIDUE          "Sniper Residue", // smoke left after firing sniper
  52 BET_DISAPPEAR_DUST          "Disappear dust",
  53 BET_DUST_FALL               "Dust fall",
  54 BET_BULLETSTAINSNOW         "Bullet stain snow", 
@@ -459,7 +459,7 @@ functions:
     {
       Particles_SniperResidue(this, m_tmSpawn, m_tmSpawn+m_fWaitTime, m_vNormal, m_vDirection);
     }*/
-	  if(m_betType==BET_EXPLOSION_SMOKE && _pTimer->GetLerpedCurrentTick()>(m_tmSpawn+m_fWaitTime) )
+    if(m_betType==BET_EXPLOSION_SMOKE && _pTimer->GetLerpedCurrentTick()>(m_tmSpawn+m_fWaitTime))
     {
       Particles_ExplosionSmoke(this, m_tmSpawn+m_fWaitTime, m_vStretch, m_colMultiplyColor);
     }
@@ -778,8 +778,8 @@ functions:
 
   void SniperResidue(void)
   {
-	// NOTE: m_vNormal and m_vDirection here represent the starting and the
-	// ending point of this effect!!!
+  // NOTE: m_vNormal and m_vDirection here represent the starting and the
+  // ending point of this effect!!!
     SetPredictable(TRUE);
     SetModel(MODEL_BULLET_HIT);
     SetModelMainTexture(TEXTURE_BULLET_HIT);
@@ -1417,7 +1417,7 @@ procedures:
        eSpawn.betType==BET_COLLECT_ENERGY ||
        eSpawn.betType==BET_GROWING_SWIRL||
        eSpawn.betType==BET_DISAPPEAR_DUST||
-	     /*eSpawn.betType==BET_SNIPER_RESIDUE ||*/
+       /*eSpawn.betType==BET_SNIPER_RESIDUE ||*/
        eSpawn.betType==BET_DUST_FALL)
     {
       InitAsEditorModel();

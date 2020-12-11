@@ -8,21 +8,20 @@ static CTextureObject _toMapBcgLU;
 static CTextureObject _toMapBcgRD;
 static CTextureObject _toMapBcgRU;
 
-PIX aIconCoords[][2] =
-{
-  {0, 0},      // 00: Last Episode
-  {168, 351},  // 01: Palenque 01 
-  {42, 345},   // 02: Palenque 02 
-  {41, 263},   // 03: Teotihuacan 01      
-  {113, 300},  // 04: Teotihuacan 02      
-  {334, 328},  // 05: Teotihuacan 03      
-  {371, 187},  // 06: Ziggurat	 
-  {265, 111},  // 07: Atrium		 
-  {119, 172},  // 08: Gilgamesh	 
-  {0, 145},    // 09: Babel		   
-  {90, 30},    // 10: Citadel		 
-  {171, 11},   // 11: Land of Damned		     
-  {376, 0},    // 12: Cathedral	 
+PIX aIconCoords[][2] = {
+  {0, 0},     // 00: Last Episode
+  {168, 351}, // 01: Palenque 01
+  {42, 345},  // 02: Palenque 02
+  {41, 263},  // 03: Teotihuacan 01
+  {113, 300}, // 04: Teotihuacan 02
+  {334, 328}, // 05: Teotihuacan 03
+  {371, 187}, // 06: Ziggurat
+  {265, 111}, // 07: Atrium
+  {119, 172}, // 08: Gilgamesh
+  {0, 145},   // 09: Babel
+  {90, 30},   // 10: Citadel
+  {171, 11},  // 11: Land of Damned
+  {376, 0},   // 12: Cathedral
 };
 
 #define LASTEPISODE_BIT 0

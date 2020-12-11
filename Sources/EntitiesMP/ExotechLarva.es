@@ -305,7 +305,7 @@ functions:
   }
 
   void ShootTailProjectile(void) {
-	//ShootProjectile(PRT_LARVA_TAIL_PROJECTILE, m_vFirePosTailRel, ANGLE3D(0, -10, 0));
+  //ShootProjectile(PRT_LARVA_TAIL_PROJECTILE, m_vFirePosTailRel, ANGLE3D(0, -10, 0));
     if (m_penEnemy == NULL) { return; }
 
     // target enemy body
@@ -1315,7 +1315,7 @@ procedures:
           if (AnyPlayerCloserThen(9.0f) && GetHealth()>0.1f*m_fMaxHealth) {
             UpdateFiringPos();
             PlaySound(m_soFire3, SOUND_FIRE_TAIL, SOF_3D);
-				    ShootTailProjectile();
+            ShootTailProjectile();
           }
           else if (m_penEnemy && GetHealth()>0.1f*m_fMaxHealth) {
             if (!IsVisible(m_penEnemy)) {
@@ -1323,7 +1323,7 @@ procedures:
               if (iRnd>4) {
                 UpdateFiringPos();
                 PlaySound(m_soFire3, SOUND_FIRE_TAIL, SOF_3D);
-				        ShootTailProjectile();
+                ShootTailProjectile();
               }
             }
           }

@@ -126,10 +126,10 @@ functions:
         if (!penEnemy->m_bTemplate) {
           // count one
           m_ctEnemiesInWorld++;
-		      // if this is a woman kamikaze carrier, add another one to count
-		      if (IsOfClass(pen, "Woman")) {
-			      if (((CWoman *)&*pen)->m_bKamikazeCarrier) { m_ctEnemiesInWorld++; }
-		      }
+          // if this is a woman kamikaze carrier, add another one to count
+          if (IsOfClass(pen, "Woman")) {
+            if (((CWoman *)&*pen)->m_bKamikazeCarrier) { m_ctEnemiesInWorld++; }
+          }
         }
       // if spawner
       } else if (IsDerivedFromClass(pen, "Enemy Spawner")) {

@@ -169,15 +169,14 @@ void CControls::Load_t( CTFileName fnFile)
   
   // open script file for reading
   CTFileStream strmFile;
-  strmFile.Open_t( fnFile);				
+  strmFile.Open_t(fnFile);
 
   // if file can be opened for reading remove old button actions
   {FORDELETELIST(CButtonAction, ba_lnNode, ctrl_lhButtonActions, itButtonAction) {
     delete &*itButtonAction;
   }}
 
-	do
-  {
+  do {
     achrLine[0] = 0;
     achrID[0] = 0;
     strmFile.GetLine_t( achrLine, 1024);
@@ -254,8 +253,7 @@ void CControls::Load_t( CTFileName fnFile)
     } else if( CTString( achrID) == "GlobalSensitivity") {
       sscanf( achrLine, "GlobalSensitivity %g", &ctrl_fSensitivity);
     }
-  }
-	while( !strmFile.AtEOF());
+  } while(!strmFile.AtEOF());
 
 /*
   // search for talk button

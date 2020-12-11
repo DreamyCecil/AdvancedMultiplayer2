@@ -527,7 +527,7 @@ extern void SetupCompModel_t(const CTString &strName)
     _fFOV = 70.0f;
 
     _aRotation = ANGLE3D( 10.0f, 0, 0 );
-	  _vLightDir = FLOAT3D( -0.1f, -0.2f, -0.2f);
+    _vLightDir = FLOAT3D( -0.1f, -0.2f, -0.2f);
     
     pmo->StretchModelRelative(FLOAT3D(2.5f, 2.5f, 2.5f));
     //pmo->StretchModel(FLOAT3D(2.5f, 2.5f, 2.5f));

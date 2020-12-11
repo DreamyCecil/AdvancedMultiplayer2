@@ -504,12 +504,12 @@ procedures:
     // [Cecil] Decrease delay for Gizmo
     if (bGizmo) {
       m_tmSingleWait = ClampDn(m_tmSingleWait / FLOAT(iMul), 0.05f);
-	    m_tmGroupWait = ClampDn(m_tmGroupWait / FLOAT(iMul), 0.05f);
+      m_tmGroupWait = ClampDn(m_tmGroupWait / FLOAT(iMul), 0.05f);
 
     // [Cecil] Increase delay for single enemies
     } else if (m_ctGroupSize <= 1) {
       m_tmSingleWait = ClampDn(m_tmSingleWait, 0.2f);
-	    m_tmGroupWait = ClampDn(m_tmGroupWait, 0.2f);
+      m_tmGroupWait = ClampDn(m_tmGroupWait, 0.2f);
 
     // [Cecil] Decrease delay if needed
     } else {
@@ -517,7 +517,7 @@ procedures:
         m_tmSingleWait = ClampDn(m_tmSingleWait / FLOAT(iMul), 0.2f);
       }
       if (m_tmGroupWait > 0.2f) {
-	      m_tmGroupWait = ClampDn(m_tmGroupWait / FLOAT(iMul), 0.2f);
+        m_tmGroupWait = ClampDn(m_tmGroupWait / FLOAT(iMul), 0.2f);
       }
     }
 

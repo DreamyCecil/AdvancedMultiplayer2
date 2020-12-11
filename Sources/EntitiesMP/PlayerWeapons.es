@@ -767,10 +767,10 @@ components:
 functions:
   // [Cecil] Destroy ghostbuster ray
   void DestroyRay(void) {
-	  if (m_penGhostBusterRay!=NULL) {
-		  ((CGhostBusterRay*)&*m_penGhostBusterRay)->DestroyGhostBusterRay();
-		  m_penGhostBusterRay = NULL;
-	  }
+    if (m_penGhostBusterRay!=NULL) {
+      ((CGhostBusterRay*)&*m_penGhostBusterRay)->DestroyGhostBusterRay();
+      m_penGhostBusterRay = NULL;
+    }
   };
 
   // [Cecil] Create tesla gun lightning
@@ -1079,7 +1079,7 @@ functions:
         if (tmSeriousDamage > tmNow && tmInvulnerability > tmNow) {
           Particle_PrepareSystem(pdp, apr);
           Particle_PrepareEntity( 1, 0, 0, NULL);
-	        Particles_ModelGlow2(&m_moWeaponSecond, plWeaponMirror, Max(tmSeriousDamage, tmInvulnerability), PT_STAR08, 0.025f, 2, 0.01f, 0xff00ff00);
+          Particles_ModelGlow2(&m_moWeaponSecond, plWeaponMirror, Max(tmSeriousDamage, tmInvulnerability), PT_STAR08, 0.025f, 2, 0.01f, 0xff00ff00);
           Particle_EndSystem();
         } else if (tmInvulnerability > tmNow) {
           Particle_PrepareSystem(pdp, apr);
@@ -2259,7 +2259,7 @@ functions:
     // create bullet
     penBullet = CreateEntity(plBullet, CLASS_BULLET);
     m_vBulletSource = plBullet.pl_PositionVector;
-	// init bullet
+    // init bullet
     EBulletInit eInit;
     eInit.penOwner = m_penPlayer;
     eInit.fDamage = fDamage;
@@ -2305,8 +2305,8 @@ functions:
     CEntityPointer penFX = CreateEntity(pl, CLASS_BASIC_EFFECT);
     penFX->Initialize(ese);*/
     
-	  // bullet no longer needed
-	  ((CBullet&)*penBullet).DestroyBullet();
+    // bullet no longer needed
+    ((CBullet&)*penBullet).DestroyBullet();
   };
 
   // fire one bullet
@@ -2444,7 +2444,7 @@ functions:
   // [Cecil] Ghost Buster hit
   void GhostBusterHit(FLOAT fPower) {
     if (m_fRayHitDistance <= 100.0f) {
-			FireGhostBusterRay(fPower);
+      FireGhostBusterRay(fPower);
       
       // ignite enemies within distance
       /*if (IsDerivedFromClass(m_penRayHit, "Enemy Base") || IsOfClass(m_penRayHit, "Player") || IsOfClass(m_penRayHit, "ModelHolder2")) {
@@ -2453,7 +2453,7 @@ functions:
           SpawnFlame(GetPlayer(), m_penRayHit, m_penRayHit->GetPlacement().pl_PositionVector);
         }
       }*/
-		}
+    }
   };
   
   // fire laser ray
@@ -5649,7 +5649,7 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("FlamethrowerFire");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerStop");}
     
-		FireFlame();
+    FireFlame();
 
     // link last flame with nothing (if not NULL or deleted)
     if (m_penFlame != NULL && !(m_penFlame->GetFlags() & ENF_DELETED)) {
@@ -5866,9 +5866,9 @@ procedures:
   FireDeathRay() {
     if (m_iElectricity > 0) {
       m_penGhostBusterRay = CreateEntity(GetPlacement(), CLASS_GHOSTBUSTERRAY);
-			EGhostBusterRay egbr;
-			egbr.penOwner = this;
-			m_penGhostBusterRay->Initialize(egbr);
+      EGhostBusterRay egbr;
+      egbr.penOwner = this;
+      m_penGhostBusterRay->Initialize(egbr);
 
       m_moWeapon.PlayAnim(LASER_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
       PlaySound(GetPlayer()->m_soWeapon0, SOUND_DEATHRAY, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);

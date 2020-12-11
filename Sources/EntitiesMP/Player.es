@@ -345,7 +345,7 @@ extern FLOAT cht_fTranslationMultiplier = 1.0f;
 extern INDEX cht_bEnable     = 0;   
 
 // interface control
-static INDEX hud_bShowAll	    = TRUE; // used internaly in menu/console
+static INDEX hud_bShowAll     = TRUE; // used internaly in menu/console
 extern INDEX hud_bShowWeapon  = TRUE;
 extern INDEX hud_bShowMessages = TRUE;
 extern INDEX hud_bShowInfo    = TRUE;
@@ -891,33 +891,33 @@ CTString GetDifficultyString(void)
 FLOAT MaxArmor(void) {
   BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
 
-	if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-		return GetSP()->sp_fMaxArmor * (bEasy ? 1.5f : 1.0f);
-	}
-	return (bEasy ? 300.0f : 200.0f);
+  if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
+    return GetSP()->sp_fMaxArmor * (bEasy ? 1.5f : 1.0f);
+  }
+  return (bEasy ? 300.0f : 200.0f);
 };
 
 FLOAT TopArmor(void) {
   BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
-
-	if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-		return GetSP()->sp_fMaxArmor * (bEasy ? 1.0f : 0.5f);
-	}
-	return (bEasy ? 200.0f : 100.0f);
+  
+  if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
+    return GetSP()->sp_fMaxArmor * (bEasy ? 1.0f : 0.5f);
+  }
+  return (bEasy ? 200.0f : 100.0f);
 };
 
 FLOAT MaxHealth(void) {
-	if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fMaxHealth != 200.0f) {
-		return GetSP()->sp_fMaxHealth;
-	}
-	return (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY) ? 300.0f : 200.0f;
+  if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fMaxHealth != 200.0f) {
+    return GetSP()->sp_fMaxHealth;
+  }
+  return (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY) ? 300.0f : 200.0f;
 };
 
 FLOAT TopHealth(void) {
-	if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fStartHealth != 100.0f) {
-		return GetSP()->sp_fStartHealth;
-	}
-	return (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY) ? 200.0f : 100.0f;
+  if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fStartHealth != 100.0f) {
+    return GetSP()->sp_fStartHealth;
+  }
+  return (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY) ? 200.0f : 100.0f;
 };
 
 // info structure
@@ -1356,26 +1356,26 @@ functions:
 
   // [Cecil] Count alive enemies
   INDEX CountAliveEnemies(void) {
-	  INDEX iEnemies = 0;
-
-	  {FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
-	    CEntity *pen = iten;
-
+    INDEX iEnemies = 0;
+    
+    {FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
+      CEntity *pen = iten;
+      
       // skip cannons and non-enemies
-	    if (IsOfClass(pen, "CannonStatic") || IsOfClass(pen, "CannonRotating") || !IsDerivedFromClass(pen, "Enemy Base")) {
+      if (IsOfClass(pen, "CannonStatic") || IsOfClass(pen, "CannonRotating") || !IsDerivedFromClass(pen, "Enemy Base")) {
         continue;
       }
-
+      
       CEnemyBase &penEnemy = (CEnemyBase&)*pen;
-
+      
       // skip templates and dead enemies
-		  if (penEnemy.m_bTemplate || !(pen->GetFlags() & ENF_ALIVE)) {
+      if (penEnemy.m_bTemplate || !(pen->GetFlags() & ENF_ALIVE)) {
         continue;
-		  }
-
-		  iEnemies++;
-	  }}
-	  return iEnemies;
+      }
+      
+      iEnemies++;
+    }}
+    return iEnemies;
   };
 
   INDEX GenderSound(INDEX iSound)
@@ -2007,13 +2007,13 @@ functions:
   {
     CTString strKey;
     strKey.PrintF("\\player_%d\\%s", iPlayer, (const char*)GetPlayerName());
-	  strOut+=strKey;
+    strOut+=strKey;
     if (GetSP()->sp_bUseFrags) {
       strKey.PrintF("\\frags_%d\\%d", iPlayer, m_psLevelStats.ps_iKills);
-	    strOut+=strKey;
+      strOut+=strKey;
     } else {
       strKey.PrintF("\\frags_%d\\%d", iPlayer, m_psLevelStats.ps_iScore);
-	    strOut+=strKey;
+      strOut+=strKey;
     }
     strKey.PrintF("\\ping_%d\\%d", iPlayer, INDEX(ceil(en_tmPing*1000.0f)));
     strOut+=strKey;
@@ -3560,34 +3560,34 @@ functions:
       switch (((EPowerUp&)ee).puitType) {
         case PUIT_INVISIB:
           // [Cecil] Power Up removal and time multiplier
-		      if (GetSP()->sp_iItemRemoval & IRF_INVIS) {
-			      m_tmInvisibility = tmNow + m_tmInvisibilityMax * GetSP()->sp_fPowerupTimeMul;
+          if (GetSP()->sp_iItemRemoval & IRF_INVIS) {
+            m_tmInvisibility = tmNow + m_tmInvisibilityMax * GetSP()->sp_fPowerupTimeMul;
             ItemPicked(TRANS("^cABE3FFInvisibility"), 0);
-		      }
+          }
           return TRUE;
 
         case PUIT_INVULNER:
           // [Cecil] Power Up removal and time multiplier
-		      if (GetSP()->sp_iItemRemoval & IRF_INVUL) {
-			      m_tmInvulnerability = tmNow + m_tmInvulnerabilityMax * GetSP()->sp_fPowerupTimeMul;
+          if (GetSP()->sp_iItemRemoval & IRF_INVUL) {
+            m_tmInvulnerability = tmNow + m_tmInvulnerabilityMax * GetSP()->sp_fPowerupTimeMul;
             ItemPicked(TRANS("^c00B440Invulnerability"), 0);
-		      }
+          }
           return TRUE;
 
         case PUIT_DAMAGE:
           // [Cecil] Power Up removal and time multiplier
-		      if (GetSP()->sp_iItemRemoval & IRF_DAMAGE) {
-			      m_tmSeriousDamage = tmNow + m_tmSeriousDamageMax * GetSP()->sp_fPowerupTimeMul;
+          if (GetSP()->sp_iItemRemoval & IRF_DAMAGE) {
+            m_tmSeriousDamage = tmNow + m_tmSeriousDamageMax * GetSP()->sp_fPowerupTimeMul;
             ItemPicked(TRANS("^cFF0000Serious Damage!"), 0);
-		      }
+          }
           return TRUE;
 
         case PUIT_SPEED:
           // [Cecil] Power Up removal and time multiplier
-		      if (GetSP()->sp_iItemRemoval & IRF_SPEED) {
-			      m_tmSeriousSpeed = tmNow + m_tmSeriousSpeedMax * GetSP()->sp_fPowerupTimeMul;
+          if (GetSP()->sp_iItemRemoval & IRF_SPEED) {
+            m_tmSeriousSpeed = tmNow + m_tmSeriousSpeedMax * GetSP()->sp_fPowerupTimeMul;
             ItemPicked(TRANS("^cFF9400Serious Speed"), 0);
-		      }
+          }
           return TRUE;
 
         case PUIT_BOMB:
@@ -3955,26 +3955,26 @@ functions:
     if (GetSP()->sp_fComboTime > 0.0f) {
       if (fComboDiff <= 0.0f) {
         // receive combo payout score
-			  if (GetSP()->sp_bCooperative) {
-				  EReceiveScore eScore;
-				  eScore.iPoints = GetComboPayout();
+        if (GetSP()->sp_bCooperative) {
+          EReceiveScore eScore;
+          eScore.iPoints = GetComboPayout();
           eScore.bEnemy = FALSE;
-				  SendEvent(eScore);
-
+          SendEvent(eScore);
+        
           INDEX iAddTokens = Floor(GetComboPayout() / 2000);
-
+        
           if (iAddTokens > 0) {
             m_iTokens += iAddTokens;
             PlaySound(m_soMessage, SOUND_TOKEN, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
-
+        
             ItemPicked(TRANS("Combo Tokens"), iAddTokens);
           }
-			  }
-
-			  m_iCombo = 0;
+        }
+        
+        m_iCombo = 0;
         m_iComboScore = 0;
-		  }
-	  }
+      }
+    }
   };
 
   // Called when player is disconnected
@@ -4220,10 +4220,10 @@ functions:
 
     // [Cecil] Speed multipliers
     if (GetSP()->sp_iAMPOptions & AMP_ENABLE && m_fAutoSpeed == 0.0f) {
-	    vTranslation(1) *= GetSP()->sp_fSpeedMultiplier;
-	    vTranslation(2) *= GetSP()->sp_fJumpMultiplier;
-	    vTranslation(3) *= GetSP()->sp_fSpeedMultiplier;
-	  }
+      vTranslation(1) *= GetSP()->sp_fSpeedMultiplier;
+      vTranslation(2) *= GetSP()->sp_fJumpMultiplier;
+      vTranslation(3) *= GetSP()->sp_fSpeedMultiplier;
+    }
 
     // enable faster moving (but not higher jumping!) if having SerousSpeed powerup
     const TIME tmDelta = m_tmSeriousSpeed - _pTimer->CurrentTick();
@@ -5291,9 +5291,9 @@ functions:
     
     // [Cecil] Turn off collision if needed
     if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 0) {
-	    SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
+      SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     } else {
-	    SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
+      SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
     }
 
     SetFlags(GetFlags() | ENF_ALIVE);
@@ -5327,52 +5327,51 @@ functions:
     return vOffsetRel;
   };
 
-  void RemapLevelNames(INDEX &iLevel)
-  {
-	  switch(iLevel) {
-    case 10:
-      iLevel = 1;
-      break;
-    case 11:
-		  iLevel = 2;
-		  break;
-	  case 12:
-		  iLevel = 3;
-		  break;
-	  case 13:
-		  iLevel = 4;
-		  break;
-	  case 14:
-		  iLevel = 5;
-		  break;
-	  case 15:
-		  iLevel = 6;
-		  break;
-	  case 21:
-		  iLevel = 7;
-		  break;
-	  case 22:
-		  iLevel = 8;
-		  break;
-	  case 23:
-		  iLevel = 9;
-		  break;
-	  case 24:
-		  iLevel = 10;
-		  break;
-	  case 31:
-		  iLevel = 11;
-		  break;
-	  case 32:
-		  iLevel = 12;
-		  break;
-	  case 33:
-		  iLevel = 13;
-		  break;
-	  default:
-		  iLevel = -1;
-		  break;
-	  }
+  void RemapLevelNames(INDEX &iLevel) {
+    switch (iLevel) {
+      case 10:
+        iLevel = 1;
+        break;
+      case 11:
+        iLevel = 2;
+        break;
+      case 12:
+        iLevel = 3;
+        break;
+      case 13:
+        iLevel = 4;
+        break;
+      case 14:
+        iLevel = 5;
+        break;
+      case 15:
+        iLevel = 6;
+        break;
+      case 21:
+        iLevel = 7;
+        break;
+      case 22:
+        iLevel = 8;
+        break;
+      case 23:
+        iLevel = 9;
+        break;
+      case 24:
+        iLevel = 10;
+        break;
+      case 31:
+        iLevel = 11;
+        break;
+      case 32:
+        iLevel = 12;
+        break;
+      case 33:
+        iLevel = 13;
+        break;
+      default:
+        iLevel = -1;
+        break;
+    }
   }
   
   
@@ -5387,7 +5386,7 @@ functions:
     strLevelName.ScanF("%01d_%01d_", &u, &v);
     iLevel = u*10+v;
     
-	  RemapLevelNames(iLevel);
+    RemapLevelNames(iLevel);
             
     if (iLevel>0) {
       ((CSessionProperties*)GetSP())->sp_ulLevelsMask|=1<<(iLevel-1);
@@ -5487,10 +5486,10 @@ functions:
       // [Cecil] Set health
       // set default params
       if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-		    SetHealth(GetSP()->sp_fStartHealth);
-	    } else {
-		    SetHealth(TopHealth());
-	    }
+        SetHealth(GetSP()->sp_fStartHealth);
+      } else {
+        SetHealth(TopHealth());
+      }
 
       m_iMana  = GetSP()->sp_iInitialMana;
       m_fArmor = 0.0f;
@@ -5587,10 +5586,10 @@ functions:
       // [Cecil] Set health
       // set player characteristics
       if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-		    SetHealth(GetSP()->sp_fStartHealth);
-	    } else {
-		    SetHealth(TopHealth());
-	    }
+        SetHealth(GetSP()->sp_fStartHealth);
+      } else {
+        SetHealth(TopHealth());
+      }
 
       m_iMana = GetSP()->sp_iInitialMana;
       m_fArmor = 0.0f;
@@ -5871,9 +5870,9 @@ procedures:
     penWeapon->m_bSniping=FALSE;
     m_ulFlags&=~PLF_ISZOOMING;
 
-	  // turn off possible chainsaw engine sound
-	  PlaySound(m_soWeaponAmbient, SOUND_SILENCE, SOF_3D);
-	
+    // turn off possible chainsaw engine sound
+    PlaySound(m_soWeaponAmbient, SOUND_SILENCE, SOF_3D);
+
     // update per-level stats
     UpdateLevelStats();
     m_ulFlags |= PLF_INITIALIZED;
@@ -5935,11 +5934,11 @@ procedures:
     PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
     PlaySound(m_soWeaponAmbient, SOUND_SILENCE, SOF_3D);
 
-	  // stop rotating minigun
-	  penWeapon->m_aMiniGunLast = penWeapon->m_aMiniGun;
+    // stop rotating minigun
+    penWeapon->m_aMiniGunLast = penWeapon->m_aMiniGun;
 
     // [Cecil] Destroy death ray
-		penWeapon->DestroyRay();
+    penWeapon->DestroyRay();
     
     // if in single player, or if this is a predictor entity
     if (GetSP()->sp_bSinglePlayer || IsPredictor()) {
@@ -6682,7 +6681,7 @@ procedures:
 
     // [Cecil] Disable collision
     if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 2) {
-	    SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
+      SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     }
 
     m_bActionTeleportBack = FALSE;
@@ -6944,7 +6943,7 @@ procedures:
 
     // [Cecil] Enable collision
     if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 2) {
-	    SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
+      SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
     }
 
     // return to main loop
@@ -7129,26 +7128,26 @@ procedures:
         // [Cecil] Combo mode
         if (eScore.bEnemy && GetSP()->sp_fComboTime > 0.0f) {
           // enemy combos
-			    if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
-				    if (m_iCombo < 100 || GetSP()->sp_iAMPOptions & AMP_UNLIMITCOMBO) {
-					    m_iCombo++;
-					    m_fComboTime = _pTimer->CurrentTick() + GetSP()->sp_fComboTime;
-
+          if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
+            if (m_iCombo < 100 || GetSP()->sp_iAMPOptions & AMP_UNLIMITCOMBO) {
+              m_iCombo++;
+              m_fComboTime = _pTimer->CurrentTick() + GetSP()->sp_fComboTime;
+              
               m_iComboScore += eScore.iPoints;
               m_iComboScore = Clamp(m_iComboScore, (INDEX)0, (INDEX)100000);
-				    }
+            }
 
           // player combos
-			    } else {
-				    if (m_iCombo < 15) {
-					    m_iCombo++;
-					    m_fComboTime = _pTimer->CurrentTick() + GetSP()->sp_fComboTime;
-
+          } else {
+            if (m_iCombo < 15) {
+              m_iCombo++;
+              m_fComboTime = _pTimer->CurrentTick() + GetSP()->sp_fComboTime;
+              
               m_iComboScore += eScore.iPoints;
               m_iComboScore = Clamp(m_iComboScore, (INDEX)0, (INDEX)100000);
-				    }
-			    }
-		    }
+            }
+          }
+        }
         resume;
       }
 
