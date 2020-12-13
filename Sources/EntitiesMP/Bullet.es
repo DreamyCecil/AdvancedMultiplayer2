@@ -159,7 +159,9 @@ functions:
 
         // stun enemies
         if (IsDerivedFromClass(crRay.cr_penHit, "Enemy Base")) {
-          crRay.cr_penHit->SendEvent(EForceWound());
+          EForceWound eWound;
+          eWound.bPlayer = TRUE;
+          crRay.cr_penHit->SendEvent(eWound);
         }
       }
 

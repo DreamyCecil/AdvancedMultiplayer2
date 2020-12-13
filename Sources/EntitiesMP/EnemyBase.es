@@ -28,6 +28,7 @@ event EReconsiderBehavior {
 
 // force wound
 event EForceWound {
+  BOOL bPlayer, // [Cecil] Forced by a player
 };
 
 enum TargetType {
@@ -3054,11 +3055,17 @@ procedures:
         }
         resume;
       }
-      on (EForceWound) :
-      {
+
+      // [Cecil] Bosses ignore forced wounds
+      on (EForceWound eWound) : {
+        if (m_bBoss && eWound.bPlayer) {
+          resume;
+        }
+
         call BeWounded(EDamage());
         resume;
       }
+
       // if you hear something
       on (ESound eSound) : {
         // if deaf

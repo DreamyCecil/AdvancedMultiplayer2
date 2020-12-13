@@ -2620,24 +2620,30 @@ functions:
     // find which weapons are new
     ULONG ulNewWeapons = m_iAvailableWeapons & ~ulOldWeapons;
 
+    // [Cecil] Starting ammo
+    const BOOL bStartAmmo = (GetSP()->sp_iAMPOptions & AMP_STARTAMMO);
+
     // for each new weapon
     for (INDEX iWeapon = WEAPON_KNIFE; iWeapon < WEAPON_LAST; iWeapon++) {
       if (ulNewWeapons & (1<<(iWeapon-1)) ) {
         // [Cecil] Give all ammo
         // add default amount of ammo
-        AddDefaultAmmoForWeapon(iWeapon, (GetSP()->sp_iAMPOptions & AMP_STARTAMMO ? 1.0f : fMaxAmmoRatio));
+        AddDefaultAmmoForWeapon(iWeapon, (bStartAmmo ? 1.0f : fMaxAmmoRatio));
       }
     }
 
-    // take away ammo
-    if (iTakeAmmo & (1<<AMMO_BULLETS))       {m_iBullets    = 0;}
-    if (iTakeAmmo & (1<<AMMO_SHELLS))        {m_iShells     = 0;}
-    if (iTakeAmmo & (1<<AMMO_ROCKETS))       {m_iRockets    = 0;}
-    if (iTakeAmmo & (1<<AMMO_GRENADES))      {m_iGrenades   = 0;}
-    if (iTakeAmmo & (1<<AMMO_NAPALM))        {m_iNapalm     = 0;}
-    if (iTakeAmmo & (1<<AMMO_ELECTRICITY))   {m_iElectricity= 0;}
-    if (iTakeAmmo & (1<<AMMO_IRONBALLS))     {m_iIronBalls  = 0;}
-    if (iTakeAmmo & (1<<AMMO_SNIPERBULLETS)) {m_iSniperBullets = 0;}
+    // [Cecil] Don't take starting ammo
+    if (!bStartAmmo) {
+      // take away ammo
+      if (iTakeAmmo & (1<<AMMO_BULLETS))       { m_iBullets       = 0; }
+      if (iTakeAmmo & (1<<AMMO_SHELLS))        { m_iShells        = 0; }
+      if (iTakeAmmo & (1<<AMMO_ROCKETS))       { m_iRockets       = 0; }
+      if (iTakeAmmo & (1<<AMMO_GRENADES))      { m_iGrenades      = 0; }
+      if (iTakeAmmo & (1<<AMMO_NAPALM))        { m_iNapalm        = 0; }
+      if (iTakeAmmo & (1<<AMMO_ELECTRICITY))   { m_iElectricity   = 0; }
+      if (iTakeAmmo & (1<<AMMO_IRONBALLS))     { m_iIronBalls     = 0; }
+      if (iTakeAmmo & (1<<AMMO_SNIPERBULLETS)) { m_iSniperBullets = 0; }
+    }
 
     // precache eventual new weapons
     Precache();

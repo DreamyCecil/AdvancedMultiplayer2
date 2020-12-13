@@ -396,9 +396,12 @@ functions:
     if (m_bSpawnEnabled && m_bSpawnWhenHarmed && (m_EecChar==ELC_LARGE || m_EecChar==ELC_BIG))
     {
       INDEX ctShouldSpawn = Clamp( INDEX((m_fMaxHealth-GetHealth())/m_fSpawnDamage), INDEX(0), INDEX(10));
-      if(m_ctSpawned<ctShouldSpawn)
-      {
-        SendEvent( EForceWound() );
+
+      if (m_ctSpawned < ctShouldSpawn) {
+        // [Cecil] Not a player
+        EForceWound eWound;
+        eWound.bPlayer = FALSE;
+        SendEvent(eWound);
       }
     }
 
