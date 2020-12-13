@@ -303,9 +303,9 @@ void SpawnHitTypeEffect(CEntity *pen, enum BulletHitType bhtType, BOOL bSound, F
 // [Cecil] Check for a singleplayer world in multiplayer
 inline BOOL SPWorld(CEntity *pen) {
   const ULONG ulFlags = pen->GetWorld()->GetSpawnFlags();
-  //BOOL bMultiplayer = (ulFlags & SPF_DEATHMATCH);
+  BOOL bSinglePlayer = (GetSP()->sp_gmGameMode == CSessionProperties::GM_SINGLEPLAYER);
 
-  return (ulFlags & SPF_SINGLEPLAYER && !GetSP()->sp_bSinglePlayer && GetSP()->sp_gmGameMode == CSessionProperties::GM_SINGLEPLAYER /*&& !bMultiplayer*/);
+  return (ulFlags & SPF_SINGLEPLAYER && !GetSP()->sp_bSinglePlayer && bSinglePlayer);
 };
 
 // [Cecil] Fire speed multiplier

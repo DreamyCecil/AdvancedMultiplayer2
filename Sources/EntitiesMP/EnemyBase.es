@@ -640,6 +640,11 @@ functions:
       fDamageAmmount *= 0.1f;
     }
 
+    // [Cecil] Boss damage resistance
+    if (m_bBoss && GetSP()->sp_fBossResistance != 1.0f) {
+      fDamageAmmount /= ClampDn(GetSP()->sp_fBossResistance, 0.001f);
+    }
+
     FLOAT fNewDamage = fDamageAmmount;
 
     // adjust damage

@@ -137,6 +137,7 @@ public:
   INDEX sp_iReplaceWeapons;
   INDEX sp_iWeaponGiver; // weapon giver flags
   INDEX sp_iItemRemoval; // item removal flags
+  FLOAT sp_fBossResistance;
 
   // [Cecil] Get alt fire mode
   INDEX AltMode(void) const {
