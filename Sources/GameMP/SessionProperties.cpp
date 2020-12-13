@@ -74,6 +74,7 @@ extern INDEX amp_bCannonAlt;
 
 extern FLOAT amp_fComboTime;
 extern INDEX amp_bUnlimitedCombos;
+extern FLOAT amp_fTokenPayout;
 extern INDEX amp_bStrongerEnemies;
 extern FLOAT amp_fBossResistance;
 extern INDEX amp_bNoRocketJump;
@@ -145,6 +146,7 @@ static void SetAdvancedParameters(CSessionProperties &sp) {
   sp.sp_iReplaceWeapons = amp_iReplaceWeapons;
 
   sp.sp_fComboTime = amp_fComboTime;
+  sp.sp_fTokenPayout = amp_fTokenPayout;
   sp.sp_fBossResistance = amp_fBossResistance;
 
   // main options

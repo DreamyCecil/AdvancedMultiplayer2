@@ -1361,7 +1361,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   // [Cecil] Token counter
   BOOL bShiftTokens = (bRenderDeaths + !!amp_bEnemyCounter);
 
-  if (GetSP()->sp_fComboTime > 0.0f) {
+  if (GetSP()->sp_fComboTime > 0.0f && GetSP()->sp_fTokenPayout > 0.0f) {
     strValue.PrintF("%d", _penPlayer->m_iTokens);
     fRow = pixTopBound  + fNextUnit*(1 + bShiftTokens) + fHalfUnit;
     fCol = pixLeftBound + fHalfUnit;

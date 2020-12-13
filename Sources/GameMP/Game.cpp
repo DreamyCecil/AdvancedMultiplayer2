@@ -148,6 +148,7 @@ extern INDEX amp_bCannonAlt    = TRUE;
 
 extern FLOAT amp_fComboTime = 2.0f;
 extern INDEX amp_bUnlimitedCombos = FALSE;
+extern FLOAT amp_fTokenPayout = 1.0f;
 extern INDEX amp_bStrongerEnemies = FALSE;
 extern FLOAT amp_fBossResistance = 1.0f;
 extern INDEX amp_bNoRocketJump = FALSE;
@@ -237,6 +238,7 @@ static void RestoreDefaultOptions(void) {
 
   amp_fComboTime = 2.0f;
   amp_bUnlimitedCombos = FALSE;
+  amp_fTokenPayout = 1.0f;
   amp_bStrongerEnemies = FALSE;
   amp_fBossResistance = 1.0f;
   amp_bNoRocketJump = FALSE;
@@ -1151,6 +1153,7 @@ void CGame::InitInternal( void)
 
   _pShell->DeclareSymbol("persistent user FLOAT amp_fComboTime;", &amp_fComboTime);
   _pShell->DeclareSymbol("persistent user INDEX amp_bUnlimitedCombos;", &amp_bUnlimitedCombos);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fTokenPayout;", &amp_fTokenPayout);
   _pShell->DeclareSymbol("persistent user INDEX amp_bStrongerEnemies;", &amp_bStrongerEnemies);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fBossResistance;", &amp_fBossResistance);
   _pShell->DeclareSymbol("persistent user INDEX amp_bNoRocketJump;", &amp_bNoRocketJump);

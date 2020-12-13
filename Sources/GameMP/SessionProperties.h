@@ -131,6 +131,7 @@ public:
   FLOAT sp_fSelfDamage;
 
   FLOAT sp_fComboTime;
+  FLOAT sp_fTokenPayout;
   INDEX sp_iAltFire;
   INDEX sp_iPlayerCollision;
   INDEX sp_iWeaponItems;

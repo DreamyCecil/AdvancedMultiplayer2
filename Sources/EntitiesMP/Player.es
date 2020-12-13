@@ -2649,8 +2649,8 @@ functions:
         pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*1.5f, 0xCCCCCCFF);
       }
 
-      if (amp_iComboText > 1) {
-        strCombo = CTString(0, "Tokens: ^cee9c00%d", GetComboPayout()/2000);
+      if (amp_iComboText > 1 && GetSP()->sp_fTokenPayout > 0.0f) {
+        strCombo = CTString(0, "Tokens: ^cee9c00%d", Floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout));
         pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*2.5f, 0xCCCCCCFF);
       }
     }
@@ -3961,13 +3961,15 @@ functions:
           eScore.bEnemy = FALSE;
           SendEvent(eScore);
         
-          INDEX iAddTokens = Floor(GetComboPayout() / 2000);
+          if (GetSP()->sp_fTokenPayout > 0.0f) {
+            INDEX iAddTokens = Floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout);
         
-          if (iAddTokens > 0) {
-            m_iTokens += iAddTokens;
-            PlaySound(m_soMessage, SOUND_TOKEN, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
+            if (iAddTokens > 0) {
+              m_iTokens += iAddTokens;
+              PlaySound(m_soMessage, SOUND_TOKEN, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
         
-            ItemPicked(TRANS("Combo Tokens"), iAddTokens);
+              ItemPicked(TRANS("Combo Tokens"), iAddTokens);
+            }
           }
         }
         
@@ -4783,7 +4785,7 @@ functions:
     }
 
     // [Cecil] Spend tokens
-    if (ulNewButtons & PLACT_TOKENS) {
+    if (ulNewButtons & PLACT_TOKENS && GetSP()->sp_fComboTime > 0.0f && GetSP()->sp_fTokenPayout > 0.0f) {
       if (m_iTokens >= 10) {
         m_iTokens -= 10;
         PlaySound(m_soMessage, SOUND_POWERUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
