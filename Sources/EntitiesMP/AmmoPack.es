@@ -142,9 +142,14 @@ functions:
     if( m_iSniperBullets != 0) {m_strDescription.PrintF("%s: Sniper bullets (%d)", m_strDescription, m_iSniperBullets);}
   }
 
-  void AdjustDifficulty(void)
-  {
+  void AdjustDifficulty(void) {
     //m_fValue = ceil(m_fValue*GetSP()->sp_fAmmoQuantity);
+
+    // [Cecil] Remove Napalm and Sniper Bullets in TFE
+    if (GetSP()->sp_iAMPOptions & AMP_CONVERSION) {
+      m_iNapalm = 0;
+      m_iSniperBullets = 0;
+    }
 
     if (GetSP()->sp_bInfiniteAmmo && m_penTarget==NULL) {
       Destroy();

@@ -1069,7 +1069,7 @@ functions:
       rmMain.rm_ulFlags |= RMF_WEAPON; // TEMP: for Truform
       if (tmInvisibility>tmNow) {
         rmMain.rm_colBlend = (rmMain.rm_colBlend&0xffffff00)|ubBlend;
-      }      
+      }
       
       m_moWeaponSecond.SetupModelRendering(rmMain);
       m_moWeaponSecond.RenderModel(rmMain);
@@ -2760,6 +2760,7 @@ functions:
   void AddDefaultAmmoForWeapon(INDEX iWeapon, FLOAT fMaxAmmoRatio) {
     // [Cecil] Multiply ammo
     FLOAT fMul = AmmoMul();
+
     // [Cecil] Define ammo amounts here
     FLOAT iShotgun   = Max((FLOAT)ceil( 10.0f * fMul), m_iMaxShells        * fMaxAmmoRatio);
     FLOAT iDShotgun  = Max((FLOAT)ceil( 20.0f * fMul), m_iMaxShells        * fMaxAmmoRatio);
@@ -3199,15 +3200,19 @@ functions:
         (eapi.iIronBalls>0 && m_iIronBalls<m_iMaxIronBalls) ||
         (eapi.iSniperBullets>0 && m_iSniperBullets<m_iMaxSniperBullets))
     {
+      // [Cecil] Multiply given ammo
+      FLOAT fAmmoMul = AmmoMul();
+
       // add ammo from back pack
-      m_iShells+=eapi.iShells;
-      m_iBullets+=eapi.iBullets;
-      m_iRockets+=eapi.iRockets;
-      m_iGrenades+=eapi.iGrenades;
-      m_iNapalm+=eapi.iNapalm;
-      m_iElectricity+=eapi.iElectricity;
-      m_iIronBalls+=eapi.iIronBalls;
-      m_iSniperBullets+=eapi.iSniperBullets;
+      m_iShells        += ceil(fAmmoMul * FLOAT(eapi.iShells));
+      m_iBullets       += ceil(fAmmoMul * FLOAT(eapi.iBullets));
+      m_iRockets       += ceil(fAmmoMul * FLOAT(eapi.iRockets));
+      m_iGrenades      += ceil(fAmmoMul * FLOAT(eapi.iGrenades));
+      m_iNapalm        += ceil(fAmmoMul * FLOAT(eapi.iNapalm));
+      m_iElectricity   += ceil(fAmmoMul * FLOAT(eapi.iElectricity));
+      m_iIronBalls     += ceil(fAmmoMul * FLOAT(eapi.iIronBalls));
+      m_iSniperBullets += ceil(fAmmoMul * FLOAT(eapi.iSniperBullets));
+
       // make sure we don't have more ammo than maximum
       ClampAllAmmo();
 
