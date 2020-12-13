@@ -2,6 +2,8 @@
 This is the source code of a mod for classic Serious Sam: The Second Encounter v1.07 that adds a lot of options for multiplayer games including coop mode support for singleplayer maps.
 Based on Serious Sam SDK v1.07 for Visual Studio 2013 ( https://github.com/DreamyCecil/SeriousSam_SDK107 )
 
+Download Advanced Multiplayer Mod v1.9: https://dreamycecil.github.io/sam/files/advanced-mp
+
 Building
 --------
 

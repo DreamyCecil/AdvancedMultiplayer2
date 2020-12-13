@@ -946,7 +946,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.30f, 0.15f, FALSE);
 
       // draw ammo, value and weapon
-      fRow = pixBottomBound-fHalfUnit - fAdvUnit;
+      fRow = pixBottomBound-fHalfUnit - fNextUnit;
       fCol = 320.0f - fAdvUnit - fChrUnit*(fWidth/2.0f) - fHalfUnit;
     
       HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
