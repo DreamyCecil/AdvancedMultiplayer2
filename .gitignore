@@ -79,5 +79,7 @@ Sources/EntitiesMP/*.cpp
 Demos/*
 !Demos/empty
 Models/*
+Players/*
+!Players/empty
 Sounds/*
 Textures/*
