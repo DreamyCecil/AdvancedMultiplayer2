@@ -172,3 +172,49 @@ extern void ConvertWorld(CEntity *penWorld) {
 
   CPrintF(" - Reinitialized %i entities. Conversion end -\n", iReinit);
 };
+
+// [Cecil] Properly remove decorations from the string
+extern void ProperUndecorate(CTString &str) {
+  // make a copy of the string to hold the result - we will rewrite it without the codes
+  CTString strResult = str;
+
+  // start at the beginning of both strings
+  const char *pchSrc = str.str_String;
+  char *pchDst = strResult.str_String;
+
+  // while the source is not finished
+  while (pchSrc[0] != 0) {
+    // if the source char is not escape char
+    if (pchSrc[0] != '^') {
+      // copy it over
+      *pchDst++ = *pchSrc++;
+      continue;
+    }
+    
+    // check the next char
+    switch (pchSrc[1]) {
+      // if one of the control codes, skip corresponding number of characters
+      case 'c': pchSrc += 2 + FindZero((UBYTE*)pchSrc+2, 6); break;
+      case 'a': pchSrc += 2 + FindZero((UBYTE*)pchSrc+2, 2); break;
+      case 'f': pchSrc += 2 + FindZero((UBYTE*)pchSrc+2, 1); break;
+      
+      case 'b': case 'i': case 'r': case 'o':
+      case 'C': case 'A': case 'F': case 'B': case 'I':
+        pchSrc += 2;
+        break;
+
+      case '^':
+        pchSrc++;
+        *pchDst++ = *pchSrc++;
+        break;
+
+      // something else
+      default:
+        *pchDst++ = *pchSrc++;
+        break;
+    }
+  }
+  
+  *pchDst++ = 0;
+  str = strResult;
+};

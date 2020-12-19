@@ -57,6 +57,12 @@ extern void ConvertWorld(CEntity *);
 
 // [Cecil] Enemy counter
 extern INDEX _iAliveEnemies;
+
+// [Cecil] Player tags
+static CTextureObject _toPlayerMarker;
+static INDEX amp_iPlayerTags = 2; // 0 - no tag, 1 - only marker, 2 - with name, 3 - with distance
+
+extern void ProperUndecorate(CTString &str);
 %}
 
 enum PlayerViewType {
@@ -806,6 +812,7 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("persistent user INDEX amp_bPowerUpParticles;", &amp_bPowerUpParticles);
   _pShell->DeclareSymbol("persistent user INDEX amp_bEnemyCounter;", &amp_bEnemyCounter);
   _pShell->DeclareSymbol("persistent user INDEX amp_iComboText;", &amp_iComboText);
+  _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerTags;", &amp_iPlayerTags);
 
   // cheats
   _pShell->DeclareSymbol("user INDEX cht_bGod;",       &cht_bGod);
@@ -1381,6 +1388,88 @@ functions:
     return iEnemies;
   };
 
+  // [Cecil] Render player tags
+  void RenderPlayerTags(CPerspectiveProjection3D &prProjection, CDrawPort *pdp, CPlacement3D &plView) {
+    // only in coop
+    if (!GetSP()->sp_bCooperative) {
+      return;
+    }
+
+    prProjection.ViewerPlacementL() = plView;
+    prProjection.ObjectPlacementL() = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0, 0, 0));
+    prProjection.Prepare();
+
+    const FLOAT fScalingX = pdp->GetWidth() / 640.0f;
+    const FLOAT fScalingY = pdp->GetHeight() / 480.0f;
+
+    pdp->SetFont(_pfdDisplayFont);
+    pdp->SetTextScaling(fScalingX);
+
+    // render player tags
+    if (amp_iPlayerTags > 0) {
+	    for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
+		    if (iPlayer == GetMyPlayerIndex()) {
+			    continue;
+		    }
+		    
+		    CPlayer *penTarget = (CPlayer*)GetPlayerEntity(iPlayer);
+
+		    if (penTarget == NULL) {
+			    continue;
+		    }
+
+        // tag color
+        COLOR colTag = (penTarget->GetFlags() & ENF_ALIVE ? 0x6097CC00 : 0xFF000000);
+
+        FLOAT3D vSource = GetLerpedPlacement().pl_PositionVector;
+        FLOAT3D vTarget = penTarget->GetLerpedPlacement().pl_PositionVector;
+
+        // player render position
+        FLOAT3D vRenderPos = vTarget + FLOAT3D(0.0f, 1.0f, 0.0f) * penTarget->GetRotationMatrix();
+        FLOAT3D vRelativeToScreen(0.0f, 0.0f, 0.0f);
+
+        const FLOAT fDist = (vTarget - vSource).Length();
+        const FLOAT fSize = 6.0f;
+        UBYTE ubAlpha = 127 + UBYTE(Clamp((16.0f - fDist) * 8.0f, 0.0f, 128.0f));
+
+        if (penTarget->GetFlags() & ENF_ALIVE) {
+          EntityInfo *peiPlayer = (EntityInfo*)penTarget->GetEntityInfo();
+
+          FLOAT3D vCenter = FLOAT3D(peiPlayer->vTargetCenter[0], peiPlayer->vTargetCenter[1], peiPlayer->vTargetCenter[2]) * penTarget->GetRotationMatrix();
+          FLOAT3D vOffset = FLOAT3D(0.0f, peiPlayer->vTargetCenter[1] + 0.25f, 0.0f) * GetRotationMatrix();
+
+          vRenderPos = vTarget + vCenter + vOffset;
+        }
+
+        prProjection.ProjectCoordinate(vRenderPos, vRelativeToScreen);
+
+        if (vRelativeToScreen(3) >= 0.0f) {
+          continue;
+        }
+
+        FLOAT2D vOnScreen(vRelativeToScreen(1), -vRelativeToScreen(2) + pdp->GetHeight());
+
+        pdp->InitTexture(&_toPlayerMarker);
+        pdp->AddTexture(vOnScreen(1) - fSize, vOnScreen(2) - fSize*2.0f, vOnScreen(1) + fSize, vOnScreen(2), colTag|ubAlpha);
+        pdp->FlushRenderingQueue();
+
+        // player name
+        CTString strPlayerName = penTarget->GetName();
+        ProperUndecorate(strPlayerName);
+
+        // distance to the player
+        if (amp_iPlayerTags >= 3) {
+          strPlayerName.PrintF("%s (%dm)", strPlayerName, (INDEX)fDist);
+        }
+
+        // render player name with the distance
+        if (amp_iPlayerTags >= 2) {
+          pdp->PutTextC(strPlayerName, vOnScreen(1), vOnScreen(2) - fSize*4.0f, colTag|ubAlpha);
+        }
+	    }
+    }
+  };
+
   INDEX GenderSound(INDEX iSound)
   {
     return iSound+m_iGender*GENDEROFFSET;
@@ -1467,6 +1556,10 @@ functions:
     ClearBulletSprayLaunchData();
     ClearGoreSprayLaunchData();
     m_tmPredict = 0;
+
+    // [Cecil] Load player marker texture
+    _toPlayerMarker.SetData_t(CTFILENAME("Textures\\Interface\\PlayerMarker.tex"));
+    ((CTextureData*)_toPlayerMarker.GetData())->Force(TEX_CONSTANT);
   }
 
   class CPlayerWeapons *GetPlayerWeapons(void)
@@ -2578,7 +2671,9 @@ functions:
         plLight.AbsoluteToRelative(plViewer);
         RenderHUD( *(CPerspectiveProjection3D *)(CProjection3D *)apr, pdp, 
           plLight.pl_PositionVector, _colViewerLight, _colViewerAmbient, 
-          penViewer==this && (GetFlags()&ENF_ALIVE), iEye);
+          penViewer==this && (GetFlags()&ENF_ALIVE), iEye,
+          // [Cecil] Pass it here
+          plViewer);
       }
     }
     Stereo_SetBuffer(STEREO_BOTH);
@@ -5075,9 +5170,11 @@ functions:
   }
 
   // Draw player interface on screen.
-  void RenderHUD( CPerspectiveProjection3D &prProjection, CDrawPort *pdp,
-                  FLOAT3D vViewerLightDirection, COLOR colViewerLight, COLOR colViewerAmbient,
-                  BOOL bRenderWeapon, INDEX iEye)
+  void RenderHUD(CPerspectiveProjection3D &prProjection, CDrawPort *pdp,
+                 FLOAT3D vViewerLightDirection, COLOR colViewerLight, COLOR colViewerAmbient,
+                 BOOL bRenderWeapon, INDEX iEye,
+                 // [Cecil] Pass it here
+                 CPlacement3D &plAbsoluteLerpedView)
   {
     CPlacement3D plViewOld = prProjection.ViewerPlacementR();
     BOOL bSniping = ((CPlayerWeapons&)*m_penWeapons).m_bSniping;
@@ -5091,8 +5188,7 @@ functions:
     }
 
     // if is first person
-    if (m_iViewState == PVT_PLAYEREYES)
-    {
+    if (m_iViewState == PVT_PLAYEREYES) {
       prProjection.ViewerPlacementL() = plViewOld;
       prProjection.Prepare();
       CAnyProjection3D apr;
@@ -5103,6 +5199,9 @@ functions:
       RenderChainsawParticles(FALSE);
       Particle_EndSystem();
     }
+
+    // [Cecil] Render player tags
+    RenderPlayerTags(prProjection, pdp, plAbsoluteLerpedView);
 
     // render crosshair if sniper zoom not active
     CPlacement3D plView;
@@ -5311,7 +5410,7 @@ functions:
     //FLOAT3D vOffsetRel = FLOAT3D(0.0f, fOffsetY, 0.0f);
 
     // [Cecil] No offset on singleplayer maps or if ignoring collision
-    if (GetSP()->sp_bSinglePlayer || GetSP()->sp_iPlayerCollision != 0) {
+    if (GetSP()->sp_bSinglePlayer || (SPWorld(this) && GetSP()->sp_iPlayerCollision != 0)) {
       return FLOAT3D(0.0f, fOffsetY, 0.0f);
     }
 
