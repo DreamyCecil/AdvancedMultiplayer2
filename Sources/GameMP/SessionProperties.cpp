@@ -152,17 +152,17 @@ static void SetAdvancedParameters(CSessionProperties &sp) {
   // main options
   sp.sp_iAMPOptions = (amp_bEnableOptions ? AMP_ENABLE : 0)
                     | (amp_bConversion    ? AMP_CONVERSION : 0)
-                    | ((bOpt && amp_bHeatDamage)        ? AMP_HEAT : 0)
-                    | ((bOpt && amp_bImpactDamage)      ? AMP_IMPACT : 0)
-                    | ((bOpt && amp_bStartAmmo)         ? AMP_STARTAMMO : 0)
-                    | ((bOpt && amp_bRocketDestruction) ? AMP_ROCKETS : 0)
-                    | ((bOpt && amp_bUnlimitedCombos)   ? AMP_UNLIMITCOMBO : 0)
-                    | ((bOpt && amp_bStrongerEnemies)   ? AMP_ENEMIES : 0)
-                    | ((bOpt && amp_bKeepSecrets)       ? AMP_KEEPSECRETS : 0)
-                    | ((bOpt && amp_bAutosave)          ? AMP_AUTOSAVE : 0)
-                    | ((bOpt && amp_bBalancedEnemies)   ? AMP_BALANCED : 0)
-                    | ((bOpt && amp_bTakeWeapons)       ? AMP_TAKEWEAPONS : 0)
-                    | ((bOpt && amp_bNoRocketJump)      ? AMP_NOROCKETJUMP : 0);
+                    | ((bOpt && amp_bHeatDamage)      ? AMP_HEAT : 0)
+                    | ((bOpt && amp_bImpactDamage)    ? AMP_IMPACT : 0)
+                    | ((bOpt && amp_bBalancedEnemies) ? AMP_BALANCED : 0)
+                    | (amp_bStartAmmo         ? AMP_STARTAMMO : 0)
+                    | (amp_bRocketDestruction ? AMP_ROCKETS : 0)
+                    | (amp_bUnlimitedCombos   ? AMP_UNLIMITCOMBO : 0)
+                    | (amp_bStrongerEnemies   ? AMP_ENEMIES : 0)
+                    | (amp_bKeepSecrets       ? AMP_KEEPSECRETS : 0)
+                    | (amp_bAutosave          ? AMP_AUTOSAVE : 0)
+                    | (amp_bTakeWeapons       ? AMP_TAKEWEAPONS : 0)
+                    | (amp_bNoRocketJump      ? AMP_NOROCKETJUMP : 0);
 
   // weapon alt fire
   sp.sp_iAltFire = (amp_bShotgunAlt   ? WAF_SHOTGUN : 0)

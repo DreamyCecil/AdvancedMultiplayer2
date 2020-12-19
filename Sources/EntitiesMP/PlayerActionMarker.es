@@ -73,19 +73,19 @@ functions:
   }
 
   /* Handle an event, return false if the event is not handled. */
-  BOOL HandleEvent(const CEntityEvent &ee)
-  {
+  BOOL HandleEvent(const CEntityEvent &ee) {
     // if triggered
-    if (ee.ee_slEvent==EVENTCODE_ETrigger) {
-      ETrigger &eTrigger = (ETrigger &)ee;
+    if (ee.ee_slEvent == EVENTCODE_ETrigger) {
+      ETrigger &eTrigger = (ETrigger&)ee;
       // if triggered by a player
-      if( IsDerivedFromClass(eTrigger.penCaused, "Player")) {
+      if (IsDerivedFromClass(eTrigger.penCaused, "Player")) {
         // send it event to start auto actions from here
         EAutoAction eAutoAction;
         eAutoAction.penFirstMarker = this;
 
         // [Cecil] Send actions to everyone
         if (SPWorld(this)) {
+          // [Cecil] NOTE: Might not send to all players and cause desync, not sure.
           for (INDEX i = 0; i < GetMaxPlayers(); i++) {
             CEntity *pen = GetPlayerEntity(i);
 

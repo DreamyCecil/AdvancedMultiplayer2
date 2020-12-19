@@ -305,7 +305,10 @@ inline BOOL SPWorld(CEntity *pen) {
   const ULONG ulFlags = pen->GetWorld()->GetSpawnFlags();
   BOOL bSinglePlayer = (GetSP()->sp_gmGameMode == CSessionProperties::GM_SINGLEPLAYER);
 
-  return (ulFlags & SPF_SINGLEPLAYER && !GetSP()->sp_bSinglePlayer && bSinglePlayer);
+  // workaround for hidden levels
+  BOOL bFlags = !(ulFlags & SPF_COOPERATIVE);
+
+  return (bFlags && !GetSP()->sp_bSinglePlayer && bSinglePlayer);
 };
 
 // [Cecil] Fire speed multiplier

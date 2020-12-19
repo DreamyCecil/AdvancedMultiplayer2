@@ -98,6 +98,10 @@ event EAutoAction {
   CEntityPointer penFirstMarker,
 };
 
+// [Cecil] Stop auto actions for other players on singleplayer maps
+/*event EStopActions {
+};*/
+
 %{
 extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOOL bSnooping, const CPlayer *penPlayerOwner);
 extern void InitHUD(void);
@@ -1189,9 +1193,8 @@ properties:
  202 INDEX m_iComboScore = 0,
  203 INDEX m_iTokens = 0,
 
- 210 BOOL m_bActionTeleportBack = FALSE,
- 211 BOOL m_bExitActionLoop = FALSE,
- 212 FLOAT3D m_vSpawnPoint = FLOAT3D(0,0,0),
+ 210 CEntityPointer m_penLastAction,
+ 211 FLOAT3D m_vSpawnPoint = FLOAT3D(0.0f, 0.0f, 0.0f),
 
 {
   ShellLaunchData ShellLaunchData_array;  // array of data describing flying empty shells
@@ -3890,9 +3893,10 @@ functions:
     // if alive
     if (GetFlags() & ENF_ALIVE) {
       // if not in auto-action mode
-      if (m_penActionMarker==NULL) {
+      if (m_penActionMarker == NULL) {
         // apply actions
         AliveActions(paAction);
+
       // if in auto-action mode
       } else {
         // do automatic actions
@@ -4085,9 +4089,10 @@ functions:
   {
     // if fire, use or computer is pressed
     if (ulNewButtons&(PLACT_FIRE|PLACT_USE|PLACT_COMPUTER)) {
-      if (m_penCamera!=NULL) {
+      if (m_penCamera != NULL) {
         CEntity *penOnBreak = ((CCamera&)*m_penCamera).m_penOnBreak;
-        if (penOnBreak!=NULL) {
+
+        if (penOnBreak != NULL) {
           SendToTarget(penOnBreak, EET_TRIGGER, this);
         }
       }
@@ -4100,38 +4105,30 @@ functions:
     paAction.pa_aViewRotation = ANGLE3D(0,0,0);
 
     // if moving towards the marker is enabled
-    if (m_fAutoSpeed>0) {
+    if (m_fAutoSpeed > 0) {
       FLOAT3D vDelta = 
         m_penActionMarker->GetPlacement().pl_PositionVector-
         GetPlacement().pl_PositionVector;
       FLOAT fDistance = vDelta.Length();
-      if (fDistance>0.1f) {
+      if (fDistance > 0.1f) {
         vDelta/=fDistance;
         ANGLE aDH = GetRelativeHeading(vDelta);
 
         // if should hit the marker exactly
         FLOAT fSpeed = m_fAutoSpeed;
-        if (GetActionMarker()->m_paaAction==PAA_RUNANDSTOP) {
+        if (GetActionMarker()->m_paaAction == PAA_RUNANDSTOP) {
           // adjust speed
           fSpeed = Min(fSpeed, fDistance/_pTimer->TickQuantum);
         }
         // adjust rotation
-        if (Abs(aDH)>5.0f) {
+        if (Abs(aDH) > 5.0f) {
           if (fSpeed>m_fAutoSpeed-0.1f) {
             aDH = Clamp(aDH, -30.0f, 30.0f);
           }
           paAction.pa_aRotation = ANGLE3D(aDH/_pTimer->TickQuantum,0,0);
         }
         // set forward speed
-        paAction.pa_vTranslation = FLOAT3D(0,0,-fSpeed);
-      }
-
-      // [Cecil] Teleport away if it's a cutscene
-      if (!m_bActionTeleportBack) {
-        if (m_penCamera != NULL && GetFirstPlayer() != this) {
-          TeleportToAutoMarker(GetActionMarker(), TRUE);
-        }
-        m_bActionTeleportBack = TRUE;
+        paAction.pa_vTranslation = FLOAT3D(0.0f, 0.0f, -fSpeed);
       }
 
     } else {
@@ -5311,22 +5308,28 @@ functions:
 
     // create offset from marker
     const FLOAT fOffsetY = 0.1f * bAddY;  // how much to offset up (as precaution not to spawn in floor)
-    FLOAT3D vOffsetRel = FLOAT3D(0,fOffsetY,0);
-    if (GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
-      INDEX iRow = iPlayer/4;
-      INDEX iCol = iPlayer%4;
+    //FLOAT3D vOffsetRel = FLOAT3D(0.0f, fOffsetY, 0.0f);
 
-      // [Cecil] Different offset
-      if (!SPWorld(this) || GetSP()->sp_iPlayerCollision == 0) {
-        vOffsetRel = FLOAT3D(-3.0f+iCol*2.0f, fOffsetY, -3.0f+iRow*2.0f);
-
-      // [Cecil] Put players closer to each other if ignoring collision
-      } else {
-        vOffsetRel = FLOAT3D(-0.75f+iCol*0.5f, fOffsetY, -0.75f+iRow*0.5f);
-      }
+    // [Cecil] No offset on singleplayer maps or if ignoring collision
+    if (GetSP()->sp_bSinglePlayer || GetSP()->sp_iPlayerCollision != 0) {
+      return FLOAT3D(0.0f, fOffsetY, 0.0f);
     }
 
-    return vOffsetRel;
+    // [Cecil] For cooperative mode
+    if (GetSP()->sp_bCooperative) {
+      FLOAT fRow = floor(FLOAT(iPlayer) / 4.0f);
+      FLOAT fCol = FLOAT(iPlayer % 4);
+
+      // [Cecil] Standard offset in coop maps
+      if (!SPWorld(this)) {
+        return FLOAT3D(-3.0f + fCol*2.0f, fOffsetY, -3.0f + fRow*2.0f);
+      }
+      
+      // [Cecil] Put players closer on singleplayer maps
+      return FLOAT3D(-0.75f + fCol*0.5f, fOffsetY, -0.75f + fRow*0.5f);
+    }
+
+    return FLOAT3D(0.0f, fOffsetY, 0.0f);
   };
 
   void RemapLevelNames(INDEX &iLevel) {
@@ -5766,57 +5769,43 @@ functions:
     return penOne;
   };
 
-  void TeleportToAutoMarker(CPlayerActionMarker *ppam, BOOL bAway) 
+  // [Cecil] Replaced CPlayerActionMarker with CEntity, added everyone flag
+  void TeleportToAutoMarker(CEntity *penMarker, BOOL bEveryone) 
   {
-    // [Cecil] Not a singleplayer map in coop
-    // if we are in coop
-    if (GetSP()->sp_bCooperative && !SPWorld(this)) {
+    // [Cecil] Allow teleporting everyone
+    if (GetSP()->sp_bCooperative && (!SPWorld(this) || bEveryone)) {
       // for each player
       for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
-        CPlayer *ppl = (CPlayer*)GetPlayerEntity(iPlayer);
-        if (ppl!=NULL) {
+        CEntity *penPlayer = GetPlayerEntity(iPlayer);
+
+        // [Cecil] Assert player existence
+        if (ASSERT_ENTITY(penPlayer)) {
+          CPlayer *ppl = (CPlayer*)penPlayer;
+
           // put it at marker
-          CPlacement3D pl = ppam->GetPlacement();
+          CPlacement3D pl = penMarker->GetPlacement();
           FLOAT3D vOffsetRel = ppl->GetTeleportingOffset(TRUE);
-          pl.pl_PositionVector += vOffsetRel*ppam->en_mRotation;
+
+          pl.pl_PositionVector += vOffsetRel * penMarker->en_mRotation;
           ppl->Teleport(pl, FALSE);
+
           // remember new respawn place
           ppl->m_vDied = pl.pl_PositionVector;
           ppl->m_aDied = pl.pl_OrientationAngle;
+
+          // [Cecil] New spawn point
+          ppl->m_vSpawnPoint = pl.pl_PositionVector;
         }
       }
 
     // otherwise
     } else {
       // put yourself at marker
-      CPlacement3D pl = ppam->GetPlacement();
+      CPlacement3D pl = penMarker->GetPlacement();
       FLOAT3D vOffsetRel = GetTeleportingOffset(TRUE);
 
-      // [Cecil] Teleport away if needed
-      if (bAway) {
-        vOffsetRel = FLOAT3D(32000, 32000, 0);
-      }
-
-      pl.pl_PositionVector += vOffsetRel*ppam->en_mRotation;
+      pl.pl_PositionVector += vOffsetRel * penMarker->en_mRotation;
       Teleport(pl, FALSE);
-
-      // [Cecil] Apply this only in a singleplayer map (since teleport actions are sent to all players)
-      if (SPWorld(this)) {
-        // remember new respawn place
-        m_vDied = pl.pl_PositionVector;
-        m_aDied = pl.pl_OrientationAngle;
-
-        // [Cecil] Disable collision if needed
-        if (GetSP()->sp_iPlayerCollision == 1) {
-          SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
-          m_vSpawnPoint = pl.pl_PositionVector;
-        }
-
-        // [Cecil] Respawn if died
-        if (!(GetFlags()&ENF_ALIVE)) {
-          SendEvent(EEnd());
-        }
-      }
     }
   }
 
@@ -6124,12 +6113,14 @@ procedures:
         m_iViewState = PVT_PLAYERAUTOVIEW;
         resume;
       }
+
       // when anim is finished
       on (ETimer) : {
         // allow respawning
         m_iMayRespawn = 1;
         resume;
       }
+
       // when damaged
       on (EDamage eDamage) : { 
         if (eDamage.dmtType==DMT_ABYSS) {
@@ -6144,7 +6135,9 @@ procedures:
         }
         resume; 
       }
+
       on (EDeath) : { resume; }
+
       // if player pressed fire
       on (EEnd) : { 
         // NOTE: predictors must never respawn since player markers for respawning are not predicted
@@ -6152,22 +6145,24 @@ procedures:
         if (!IsPredictor()) { 
           // stop waiting
           stop; 
-        } 
+        }
       }
+
       // if autoaction is received
       on (EAutoAction eAutoAction) : {
         // if we are in coop
         if (GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
           // if the marker is teleport marker
-          if (eAutoAction.penFirstMarker!=NULL && 
+          if (eAutoAction.penFirstMarker != NULL && 
             ((CPlayerActionMarker*)&*eAutoAction.penFirstMarker)->m_paaAction == PAA_TELEPORT) {
             // teleport there
-            TeleportToAutoMarker((CPlayerActionMarker*)&*eAutoAction.penFirstMarker, FALSE);
+            TeleportToAutoMarker(eAutoAction.penFirstMarker, FALSE);
           }
         }
         // ignore the actions
         resume;
       }
+
       on (EDisconnected) : { pass; }
       on (EReceiveScore) : { pass; }
       on (EKilledEnemy) : { pass; }
@@ -6349,19 +6344,9 @@ procedures:
       StartModelAnim(PLAYER_ANIM_NORMALWALK, ulFlags);
     }
 
-    // [Cecil] Different checks due to teleporting offset
-    if (!SPWorld(this)) {
-      // wait a bit while not at marker
-      while ((m_penActionMarker->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > m_fAutoSpeed*_pTimer->TickQuantum * 2.0f) {
-        autowait(_pTimer->TickQuantum);
-      }
-
-    // [Cecil] Ignore collision during cutscenes
-    } else if (GetSP()->sp_iPlayerCollision == 0) {
-      // wait a bit while not at marker
-      while ((m_penActionMarker->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > 2.0f) {
-        autowait(_pTimer->TickQuantum);
-      }
+    // wait a bit while not at marker
+    while ((m_penActionMarker->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > m_fAutoSpeed*_pTimer->TickQuantum * 2.0f) {
+      autowait(_pTimer->TickQuantum);
     }
 
     // disable auto speed
@@ -6503,7 +6488,7 @@ procedures:
 
   AutoTeleport(EVoid) {
     // teleport there
-    TeleportToAutoMarker(GetActionMarker(), FALSE);
+    TeleportToAutoMarker(m_penActionMarker, FALSE);
 
     // return to auto-action loop
     return EReturn();
@@ -6676,7 +6661,7 @@ procedures:
   // perform player auto actions
   DoAutoActions(EVoid) {
     // don't look up/down
-    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0,0,0);
+    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     // disable playeranimator animating
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.m_bDisableAnimating = TRUE;
@@ -6686,23 +6671,19 @@ procedures:
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     }
 
-    m_bActionTeleportBack = FALSE;
-
-    // [Cecil] Forced loop ending
-    m_bExitActionLoop = FALSE;
-
     // while there is some marker
-    while (m_penActionMarker!=NULL && IsOfClass(m_penActionMarker, "PlayerActionMarker") && !m_bExitActionLoop) {
-
+    while (m_penActionMarker != NULL && IsOfClass(m_penActionMarker, "PlayerActionMarker")) {
+      
       // if should wait
-      if (GetActionMarker()->m_paaAction==PAA_WAIT) {
+      if (GetActionMarker()->m_paaAction == PAA_WAIT) {
         // play still anim
         CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
         // [Cecil] Default animation instead of wait animation
         moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, AOF_NORESTART|AOF_LOOPING);
         // wait given time
         autowait(GetActionMarker()->m_tmWait);
-      } else if (GetActionMarker()->m_paaAction==PAA_STOPANDWAIT) {
+
+      } else if (GetActionMarker()->m_paaAction == PAA_STOPANDWAIT) {
         // play still anim
         StartModelAnim(PLAYER_ANIM_STAND, 0);
         CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
@@ -6712,66 +6693,73 @@ procedures:
         autowait(GetActionMarker()->m_tmWait);
 
       // if should teleport here
-      } else if (GetActionMarker()->m_paaAction==PAA_APPEARING) {
+      } else if (GetActionMarker()->m_paaAction == PAA_APPEARING) {
         autocall AutoAppear() EReturn;
-      } else if (GetActionMarker()->m_paaAction==PAA_TRAVELING_IN_BEAM) {
+
+      } else if (GetActionMarker()->m_paaAction == PAA_TRAVELING_IN_BEAM) {
         autocall TravellingInBeam() EReturn;
-      } else if (GetActionMarker()->m_paaAction==PAA_INTROSE_SELECT_WEAPON) {
+
+      } else if (GetActionMarker()->m_paaAction == PAA_INTROSE_SELECT_WEAPON) {
         // order playerweapons to select weapon
         ESelectWeapon eSelect;
         eSelect.iWeapon = 1;
         ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
-      } else if (GetActionMarker()->m_paaAction==PAA_LOGO_FIRE_INTROSE) {
+
+      } else if (GetActionMarker()->m_paaAction == PAA_LOGO_FIRE_INTROSE) {
         autocall LogoFireMinigun() EReturn;
-      } else if (GetActionMarker()->m_paaAction==PAA_LOGO_FIRE_MINIGUN) {
+
+      } else if (GetActionMarker()->m_paaAction == PAA_LOGO_FIRE_MINIGUN) {
         autocall LogoFireMinigun() EReturn;
+
       // if should appear here
-      } else if (GetActionMarker()->m_paaAction==PAA_TELEPORT) {
+      } else if (GetActionMarker()->m_paaAction == PAA_TELEPORT) {
         autocall AutoTeleport() EReturn;
 
       // if should wait for trigger
-      } else if (GetActionMarker()->m_paaAction==PAA_WAITFOREVER) {
+      } else if (GetActionMarker()->m_paaAction == PAA_WAITFOREVER) {
         // wait forever
         wait() {
           on (EBegin) : { resume; }
           otherwise() : { pass; }
         }
+
       // if should store weapon
-      } else if (GetActionMarker()->m_paaAction==PAA_STOREWEAPON) {
+      } else if (GetActionMarker()->m_paaAction == PAA_STOREWEAPON) {
         autocall AutoStoreWeapon() EReturn;
       
       // if should draw weapon
-      } else if (GetActionMarker()->m_paaAction==PAA_DRAWWEAPON) {
+      } else if (GetActionMarker()->m_paaAction == PAA_DRAWWEAPON) {
         // order playerweapons to select best weapon
         ESelectWeapon eSelect;
         eSelect.iWeapon = -4;
         ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
 
       // if should wait
-      } else if (GetActionMarker()->m_paaAction==PAA_LOOKAROUND) {
+      } else if (GetActionMarker()->m_paaAction == PAA_LOOKAROUND) {
         autocall AutoLookAround() EReturn;
 
       // if should use item
-      } else if (GetActionMarker()->m_paaAction==PAA_USEITEM) {
+      } else if (GetActionMarker()->m_paaAction == PAA_USEITEM) {
         // use it
         autocall AutoUseItem() EReturn;
 
       // if should pick item
-      } else if (GetActionMarker()->m_paaAction==PAA_PICKITEM) {
+      } else if (GetActionMarker()->m_paaAction == PAA_PICKITEM) {
         // pick it
         autocall AutoPickItem() EReturn;
 
       // if falling from bridge
-      } else if (GetActionMarker()->m_paaAction==PAA_FALLDOWN) {
+      } else if (GetActionMarker()->m_paaAction == PAA_FALLDOWN) {
         // fall
         autocall AutoFallDown() EReturn;
 
       // if releasing player
-      } else if (GetActionMarker()->m_paaAction==PAA_RELEASEPLAYER) {
-        if (m_penCamera!=NULL) {
-          ((CCamera*)&*m_penCamera)->m_bStopMoving=TRUE;
+      } else if (GetActionMarker()->m_paaAction == PAA_RELEASEPLAYER) {
+        if (m_penCamera != NULL) {
+          ((CCamera*)&*m_penCamera)->m_bStopMoving = TRUE;
         }
         m_penCamera = NULL;
+
         // if currently not having any weapon in hand
         if (GetPlayerWeapons()->m_iCurrentWeapon == WEAPON_NONE) {
           // order playerweapons to select best weapon
@@ -6784,7 +6772,7 @@ procedures:
         m_tmSpiritStart = 0;
 
       // if start computer
-      } else if (GetActionMarker()->m_paaAction==PAA_STARTCOMPUTER) {
+      } else if (GetActionMarker()->m_paaAction == PAA_STARTCOMPUTER) {
         // mark that
         if (_pNetwork->IsPlayerLocal(this) && GetSP()->sp_bSinglePlayer) {
           cmp_ppenPlayer = this;
@@ -6792,31 +6780,31 @@ procedures:
         }
 
       // if start introscroll
-      } else if (GetActionMarker()->m_paaAction==PAA_STARTINTROSCROLL) {
+      } else if (GetActionMarker()->m_paaAction == PAA_STARTINTROSCROLL) {
         _pShell->Execute("sam_iStartCredits=1;");
 
       // if start credits
-      } else if (GetActionMarker()->m_paaAction==PAA_STARTCREDITS) {
+      } else if (GetActionMarker()->m_paaAction == PAA_STARTCREDITS) {
         _pShell->Execute("sam_iStartCredits=2;");
 
       // if stop scroller
-      } else if (GetActionMarker()->m_paaAction==PAA_STOPSCROLLER) {
+      } else if (GetActionMarker()->m_paaAction == PAA_STOPSCROLLER) {
         _pShell->Execute("sam_iStartCredits=-1;");
 
       // if should run to the marker
-      } else if (GetActionMarker()->m_paaAction==PAA_RUN) {
+      } else if (GetActionMarker()->m_paaAction == PAA_RUN) {
         // go to it
         m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;                                             
         autocall AutoGoToMarker() EReturn;
 
       // if should run to the marker and stop exactly there
-      } else if (GetActionMarker()->m_paaAction==PAA_RUNANDSTOP) {
+      } else if (GetActionMarker()->m_paaAction == PAA_RUNANDSTOP) {
         // go to it
         m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;                                             
         autocall AutoGoToMarkerAndStop() EReturn;
 
       // if should record end-of-level stats
-      } else if (GetActionMarker()->m_paaAction==PAA_RECORDSTATS) {
+      } else if (GetActionMarker()->m_paaAction == PAA_RECORDSTATS) {
 
         if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bPlayEntireGame) {
           // remeber estimated time
@@ -6828,112 +6816,103 @@ procedures:
         }
 
       // if should show statistics to the player
-      } else if (GetActionMarker()->m_paaAction==PAA_SHOWSTATS) {
+      } else if (GetActionMarker()->m_paaAction == PAA_SHOWSTATS) {
         // call computer
-        if (cmp_ppenPlayer==NULL && _pNetwork->IsPlayerLocal(this) && GetSP()->sp_bSinglePlayer) {
+        if (cmp_ppenPlayer == NULL && _pNetwork->IsPlayerLocal(this) && GetSP()->sp_bSinglePlayer) {
           m_bEndOfLevel = TRUE;
           cmp_ppenPlayer = this;
-          m_ulFlags|=PLF_DONTRENDER;
-          while(m_bEndOfLevel) {
-            wait(_pTimer->TickQuantum) {
+          m_ulFlags |= PLF_DONTRENDER;
+
+          while (m_bEndOfLevel) {
+            wait (_pTimer->TickQuantum) {
               on (ETimer) : { stop; }
               on (EReceiveScore) : { pass; }
               on (EKilledEnemy) : { pass; }
               on (ECenterMessage) : { pass; }
               on (EPostLevelChange) : { 
-                m_ulFlags&=!PLF_DONTRENDER;
+                m_ulFlags &= !PLF_DONTRENDER;
                 m_bEndOfLevel = FALSE;
                 pass; 
               }
               otherwise() : { resume; }
             }
           }
-          m_ulFlags&=!PLF_DONTRENDER;
+          m_ulFlags &= !PLF_DONTRENDER;
         }
       // if end of entire game
-      } else if (GetActionMarker()->m_paaAction==PAA_ENDOFGAME) {
-
+      } else if (GetActionMarker()->m_paaAction == PAA_ENDOFGAME) {
         // record stats
         jump TheEnd();
-      } else if (GetActionMarker()->m_paaAction==PAA_NOGRAVITY) {
+
+      } else if (GetActionMarker()->m_paaAction == PAA_NOGRAVITY) {
         SetPhysicsFlags(GetPhysicsFlags() & ~(EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY));
-        if( GetActionMarker()->GetParent() != NULL)
-        {
+        if (GetActionMarker()->GetParent() != NULL) {
           SetParent(GetActionMarker()->GetParent());
         }
-      } else if (GetActionMarker()->m_paaAction==PAA_TURNONGRAVITY) {
+
+      } else if (GetActionMarker()->m_paaAction == PAA_TURNONGRAVITY) {
         SetPhysicsFlags(GetPhysicsFlags()|EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY);
         SetParent(NULL);
-      }
-      else if (TRUE) {
+
+      } else if (TRUE) {
         ASSERT(FALSE);
       }
 
       // if marker points to a trigger
-      if (GetActionMarker()->m_penTrigger!=NULL &&
-          GetActionMarker()->m_paaAction!=PAA_PICKITEM) {
+      if (GetActionMarker()->m_penTrigger != NULL &&
+          GetActionMarker()->m_paaAction != PAA_PICKITEM) {
         // trigger it
         SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
       }
 
-      // get next marker
-      // [Cecil] Get next marker if it exists and set it to others if they are away
-      if (GetActionMarker()->m_penTarget != NULL && GetFirstPlayer() == this) {
-        //m_penActionMarker = GetActionMarker()->m_penTarget;
+      // [Cecil] Save last marker
+      m_penLastAction = m_penActionMarker;
 
-        CPlayerActionMarker *penMarker = (CPlayerActionMarker*)&*(GetActionMarker()->m_penTarget);
-
-        for (INDEX iNext = 0; iNext < GetMaxPlayers(); iNext++) {
-          CEntity *pen = GetPlayerEntity(iNext);
-
-          if (ASSERT_ENTITY(pen)) {
-            if (pen == this) {
-              m_penActionMarker = penMarker;
-
-            } else if ((penMarker->m_paaAction == PAA_RUN
-                     || penMarker->m_paaAction == PAA_RUNANDSTOP) && ((CPlayer*)&*pen)->m_bActionTeleportBack) {
-              ((CPlayer*)&*pen)->m_penActionMarker = penMarker;
-            }
-          }
-        }
-      } else {
-        m_bExitActionLoop = TRUE;
-      }
+      m_penActionMarker = GetActionMarker()->m_penTarget;
     }
     
     // disable auto speed
     m_fAutoSpeed = 0.0f;
 
-    // [Cecil] Teleport everyone back after the sequence if there's no teleport marker
-    if (SPWorld(this) && GetFirstPlayer() == this && GetActionMarker()->m_paaAction != PAA_TELEPORT) {
-      for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
-        CEntity *pen = GetPlayerEntity(iPlayer);
+    // [Cecil] If it's a singleplayer map and not a teleport action
+    if (SPWorld(this)) {
+      autowait(0.05f);
 
-        if (ASSERT_ENTITY(pen)) {
-          CPlayer *penPlayer = (CPlayer*)pen;
+      // [Cecil] Teleport everyone back after the sequence
+      if (m_penLastAction != NULL /*&& ((CPlayerActionMarker*)&*m_penLastAction)->m_paaAction != PAA_TELEPORT*/) {
+        for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
+          CEntity *pen = GetPlayerEntity(iPlayer);
 
-          if (penPlayer->m_bActionTeleportBack) {
-            penPlayer->TeleportToAutoMarker(penPlayer->GetActionMarker(), FALSE);
+          // ignore the first player
+          if (ASSERT_ENTITY(pen) && pen != this) {
+            CPlayer *penPlayer = (CPlayer*)pen;
+
+            // bring everyone back out of the dummy state
+            //penPlayer->SendEvent(EStopActions());
+            penPlayer->m_penActionMarker = NULL;
           }
         }
+
+        // teleport the first player after everyone else relatively
+        TeleportToAutoMarker(m_penLastAction, TRUE);
       }
-    }
 
-    // [Cecil] Autosave after the cutscene
-    if (SPWorld(this) && GetFirstPlayer() == this && GetSP()->sp_iAMPOptions & AMP_AUTOSAVE) {
-      CPlacement3D plStart = GetPlacement();
-      plStart.pl_PositionVector -= GetTeleportingOffset(FALSE)*GetRotationMatrix();
+      // [Cecil] Autosave after the cutscene
+      if (GetSP()->sp_iAMPOptions & AMP_AUTOSAVE) {
+        CPlacement3D plStart = GetPlacement();
+        plStart.pl_PositionVector -= GetTeleportingOffset(FALSE)*GetRotationMatrix();
 
-      CEntity *penStart = CreateEntity(plStart, CLASS_START);
-      CPlayerMarker *ppmStart = (CPlayerMarker*)penStart;
-      ppmStart->m_iGiveWeapons = GetPlayerWeapons()->m_iAvailableWeapons;
-      ppmStart->m_fMaxAmmoRatio = 0.5f;
+        CEntity *penStart = CreateEntity(plStart, CLASS_START);
+        CPlayerMarker *ppmStart = (CPlayerMarker*)penStart;
+        ppmStart->m_iGiveWeapons = GetPlayerWeapons()->m_iAvailableWeapons;
+        ppmStart->m_fMaxAmmoRatio = 0.5f;
 
-      penStart->Initialize();
+        penStart->Initialize();
 
-      ETrigger eTrigger;
-      eTrigger.penCaused = this;
-      penStart->SendEvent(eTrigger);
+        ETrigger eTrigger;
+        eTrigger.penCaused = this;
+        penStart->SendEvent(eTrigger);
+      }
     }
 
     // must clear marker, in case it was invalid
@@ -6950,7 +6929,51 @@ procedures:
 
     // return to main loop
     return EVoid();
-  }
+  };
+
+  // [Cecil] Dummy state for other players in singleplayer cutscenes
+  /*DummyActions() {
+    // don't look up/down
+    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
+    // disable playeranimator animating
+    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
+    plan.m_bDisableAnimating = TRUE;
+
+    // teleport away
+    if (m_penCamera != NULL) {
+      CPlacement3D plAway = GetPlacement();
+      plAway.pl_PositionVector = FLOAT3D(32000.0f, -512.0f, 32000.0f);
+
+      Teleport(plAway, FALSE);
+    }
+
+    // wait for auto action
+    wait() {
+      on (EBegin) : { resume; }
+
+      // teleport back
+      on (EStopActions) : {
+        stop;
+      }
+
+      otherwise() : { pass; }
+    }
+    
+    // must clear marker, in case it was invalid
+    m_penActionMarker = NULL;
+
+    // enable playeranimator animating
+    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
+    plan.m_bDisableAnimating = FALSE;
+
+    // [Cecil] Enable collision
+    if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 2) {
+      SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
+    }
+
+    return EVoid();
+  };*/
+
 /************************************************************
  *                        M  A  I  N                        *
  ************************************************************/
@@ -7048,6 +7071,7 @@ procedures:
       on (ERebirth) : { call Rebirth(); }
       on (EDeath eDeath) : { call Death(eDeath); }
       on (EDamage eDamage) : { call Wounded(eDamage); }
+
       on (EPreLevelChange) : { 
         m_ulFlags&=~PLF_INITIALIZED; 
         m_ulFlags|=PLF_CHANGINGLEVEL;
@@ -7070,6 +7094,7 @@ procedures:
           call WorldChangeDead(); 
         }
       }
+
       on (ETakingBreath eTakingBreath ) : {
         SetDefaultMouthPitch();
         if (eTakingBreath.fBreathDelay<0.2f) {
@@ -7081,6 +7106,7 @@ procedures:
         }
         resume;
       }
+
       on (ECameraStart eStart) : {
         m_penCamera = eStart.penCamera;
         // stop player
@@ -7092,12 +7118,14 @@ procedures:
         ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
         resume;
       }
+
       on (ECameraStop eCameraStop) : {
         if (m_penCamera==eCameraStop.penCamera) {
           m_penCamera = NULL;
         }
         resume;
       }
+
       on (ECenterMessage eMsg) : {
         m_strCenterMessage = eMsg.strMessage;
         m_tmCenterMessageEnd = _pTimer->CurrentTick()+eMsg.tmLength;
@@ -7107,20 +7135,31 @@ procedures:
         }
         resume;
       }
+
       on (EComputerMessage eMsg) : {
         ReceiveComputerMessage(eMsg.fnmMessage, CMF_ANALYZE);
         resume;
       }
+
       on (EVoiceMessage eMsg) : {
         SayVoiceMessage(eMsg.fnmMessage);
         resume;
       }
+
       on (EAutoAction eAutoAction) : {
         // remember first marker
         m_penActionMarker = eAutoAction.penFirstMarker;
+    
+        // [Cecil] Singleplayer cutscenes
+        if (SPWorld(this) && GetFirstPlayer() != this) {
+          //call DummyActions();
+          resume;
+        }
+
         // do the actions
         call DoAutoActions();
       }
+
       on (EReceiveScore eScore) : {
         m_psLevelStats.ps_iScore += eScore.iPoints;
         m_psGameStats.ps_iScore += eScore.iPoints;
@@ -7164,6 +7203,7 @@ procedures:
         m_psGameStats.ps_iSecrets += 1;
         resume;
       }
+
       on (EWeaponChanged) : {
         // make sure we discontinue zooming (even if not changing from sniper)
         ((CPlayerWeapons&)*m_penWeapons).m_bSniping=FALSE;
@@ -7172,16 +7212,19 @@ procedures:
         if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
         resume;
       }
+
       // EEnd should not arrive here
       on (EEnd) : {
         ASSERT(FALSE);
         resume;
       }
+
       // if player is disconnected
       on (EDisconnected) : {
         // exit the loop
         stop;
       }
+
       // support for jumping using bouncers
       on (ETouch eTouch) : {
         if (IsOfClass(eTouch.penOther, "Bouncer")) {
