@@ -1500,6 +1500,9 @@
     <ClInclude Include="PoisonCloud_tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Common\ExtraFunc.h">
+      <Filter>Header Files\Common headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">

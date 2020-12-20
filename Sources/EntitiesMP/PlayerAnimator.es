@@ -1305,7 +1305,8 @@ functions:
 
   // walk
   void BodyWalkAnimation() {
-    BodyAnimationTemplate(BODY_ANIM_NORMALWALK, 
+    // [Cecil] Default animation instead of walking animation
+    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
       BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
   };
@@ -1424,7 +1425,8 @@ functions:
 
     // pull item
     m_bChangeWeapon = FALSE;
-    SetBodyAnimation(BODY_ANIM_STATUE_PULL, 0);
+    // [Cecil] STATUE_PULL -> KNIFE_ATTACK
+    SetBodyAnimation(BODY_ANIM_KNIFE_ATTACK, 0);
     m_bChangeWeapon = TRUE;
     SpawnReminder(this, m_fBodyAnimTime, (INDEX) AA_PULLWEAPON);
     // sync apperances
@@ -1438,7 +1440,8 @@ functions:
 
     // pick item
     m_bChangeWeapon = FALSE;
-    SetBodyAnimation(BODY_ANIM_KEYLIFT, 0);
+    // [Cecil] KEYLIFT -> KNIFE_ATTACK
+    SetBodyAnimation(BODY_ANIM_KNIFE_ATTACK, 0);
     m_bChangeWeapon = TRUE;
     SpawnReminder(this, m_fBodyAnimTime, (INDEX) AA_PULLWEAPON);
     // sync apperances

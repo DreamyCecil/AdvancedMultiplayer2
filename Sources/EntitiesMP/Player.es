@@ -41,6 +41,9 @@
 #include "EntitiesMP/CreditsHolder.h"
 #include "EntitiesMP/HudPicHolder.h"
 
+// [Cecil] Extra functions
+#include "EntitiesMP/Common/ExtraFunc.h"
+
 extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
 // from game
 #define GRV_SHOWEXTRAS  (1L<<0)   // add extra stuff like console, weapon, pause
@@ -61,8 +64,6 @@ extern INDEX _iAliveEnemies;
 // [Cecil] Player tags
 static CTextureObject _toPlayerMarker;
 static INDEX amp_iPlayerTags = 2; // 0 - no tag, 1 - only marker, 2 - with name, 3 - with distance
-
-extern void ProperUndecorate(CTString &str);
 %}
 
 enum PlayerViewType {
@@ -104,9 +105,10 @@ event EAutoAction {
   CEntityPointer penFirstMarker,
 };
 
-// [Cecil] Stop auto actions for other players on singleplayer maps
-/*event EStopActions {
-};*/
+// [Cecil] Stop auto actions
+event EStopActions {
+  CEntityPointer pen,
+};
 
 %{
 extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOOL bSnooping, const CPlayer *penPlayerOwner);
@@ -1201,7 +1203,8 @@ properties:
  203 INDEX m_iTokens = 0,
 
  210 CEntityPointer m_penLastAction,
- 211 FLOAT3D m_vSpawnPoint = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 211 BOOL m_bActionLoopBreak = FALSE,
+ 212 FLOAT3D m_vSpawnPoint = FLOAT3D(0.0f, 0.0f, 0.0f),
 
 {
   ShellLaunchData ShellLaunchData_array;  // array of data describing flying empty shells
@@ -3003,8 +3006,9 @@ functions:
     en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle = ANGLE3D(0,0,0);
 
     StartModelAnim(PLAYER_ANIM_STAND, 0);
+    // [Cecil] Default animation instead of walking animation
     GetPlayerAnimator()->BodyAnimationTemplate(
-      BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
+      BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
   }
 
@@ -5678,7 +5682,7 @@ functions:
         ASSERTALWAYS("Unknown world link type");
 
         // [Cecil] No telefrag
-        Teleport(CPlacement3D(FLOAT3D(0, 0, 0)+vOffsetRel, ANGLE3D(0, 0, 0)), FALSE);
+        Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0, 0, 0)), FALSE);
       }
       // if there is a start trigger target
       if(CpmStart.m_penTarget!=NULL) {
@@ -5852,9 +5856,14 @@ functions:
   // [Cecil] Get first alive player
   CEntity *GetFirstPlayer(void) {
     CEntity *penOne = NULL;
+    CSessionState &ses = _pNetwork->ga_sesSessionState;
 
     for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
-      CEntity *pen = GetPlayerEntity(iPlayer);
+      if (!ses.ses_apltPlayers[iPlayer].plt_bActive) {
+        continue;
+      }
+
+      CEntity *pen = ses.ses_apltPlayers[iPlayer].plt_penPlayerEntity;
 
       if (ASSERT_ENTITY(pen)) {
         penOne = pen;
@@ -5906,7 +5915,7 @@ functions:
       pl.pl_PositionVector += vOffsetRel * penMarker->en_mRotation;
       Teleport(pl, FALSE);
     }
-  }
+  };
 
   // check whether this time we respawn in place or on marker
   void CheckDeathForRespawnInPlace(EDeath eDeath)
@@ -6134,12 +6143,16 @@ procedures:
     if (m_pstState == PST_SWIM || m_pstState == PST_DIVE) {
       iAnim1 = PLAYER_ANIM_DEATH_UNDERWATER;
       iAnim2 = BODY_ANIM_DEATH_UNDERWATER;
+
     } else if (eDeath.eLastDamage.dmtType==DMT_SPIKESTAB) {
       iAnim1 = PLAYER_ANIM_DEATH_SPIKES;
       iAnim2 = BODY_ANIM_DEATH_SPIKES;
+
     } else if (eDeath.eLastDamage.dmtType==DMT_ABYSS) {
-      iAnim1 = PLAYER_ANIM_ABYSSFALL;
-      iAnim2 = BODY_ANIM_ABYSSFALL;
+      // [Cecil] Spikes animation for multplayer skins
+      iAnim1 = PLAYER_ANIM_DEATH_SPIKES; //PLAYER_ANIM_ABYSSFALL;
+      iAnim2 = BODY_ANIM_DEATH_SPIKES; //BODY_ANIM_ABYSSFALL;
+
     } else {
       FLOAT3D vFront;
       GetHeadingDirection(0, vFront);
@@ -6299,8 +6312,9 @@ procedures:
 
     // look straight
     StartModelAnim(PLAYER_ANIM_STAND, 0);
+    // [Cecil] Default animation instead of walking animation
     ((CPlayerAnimator&)*m_penAnimator).BodyAnimationTemplate(
-      BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
+      BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
 
     en_plViewpoint.pl_OrientationAngle = ANGLE3D(0,0,0);
@@ -6540,9 +6554,10 @@ procedures:
   }
 
   AutoFallDown(EVoid) {
-    StartModelAnim(PLAYER_ANIM_BRIDGEFALLPOSE, 0);
+    // [Cecil] Default animation instead of bridge falling animation
+    StartModelAnim(PLAYER_ANIM_STAND, 0);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_BRIDGEFALLPOSE, 0);
+    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, 0);
 
     autowait(GetActionMarker()->m_tmWait);
 
@@ -6551,9 +6566,10 @@ procedures:
   }
 
   AutoFallToAbys(EVoid) {
-    StartModelAnim(PLAYER_ANIM_ABYSSFALL, AOF_LOOPING);
+    // [Cecil] ABYSSFALL -> DEATH_SPIKES
+    StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_ABYSSFALL, AOF_LOOPING);
+    moBody.PlayAnim(BODY_ANIM_DEATH_SPIKES, AOF_LOOPING);
 
     autowait(GetActionMarker()->m_tmWait);
 
@@ -6566,7 +6582,8 @@ procedures:
     StartModelAnim(PLAYER_ANIM_BACKPEDAL, 0);
     m_vAutoSpeed = FLOAT3D(0,0,plr_fSpeedForward/4/0.75f);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_NORMALWALK, 0);
+    // [Cecil] Default animation instead of walking animation
+    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, 0);
 
     autowait(GetModelObject()->GetCurrentAnimLength()/2);
 
@@ -6575,7 +6592,8 @@ procedures:
     // start looking around
     StartModelAnim(PLAYER_ANIM_STAND, 0);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_LOOKAROUND, 0);
+    // [Cecil] Default animation instead of looking animation
+    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, 0);
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
 
     // wait given time
@@ -6603,9 +6621,11 @@ procedures:
     SetPhysicsFlags(GetPhysicsFlags() & ~(EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY));
     m_ulFlags|=PLF_AUTOMOVEMENTS;
     SetDesiredRotation(ANGLE3D(60,0,0));
-    StartModelAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
+
+    // [Cecil] SPAWNPOSE -> DEATH_SPIKES
+    StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_SPAWNPOSE, AOF_LOOPING);
+    moBody.PlayAnim(BODY_ANIM_DEATH_SPIKES, AOF_LOOPING);
 
     // start stardust appearing
     m_tmSpiritStart = _pTimer->CurrentTick();
@@ -6626,17 +6646,19 @@ procedures:
     SetDesiredRotation(ANGLE3D(0,0,0));
     m_ulFlags&=~PLF_AUTOMOVEMENTS;
 
+    // [Cecil] SPAWN_FALLDOWN -> DEATH_BACK
     // play animation to fall down
-    StartModelAnim(PLAYER_ANIM_SPAWN_FALLDOWN, 0);
+    StartModelAnim(PLAYER_ANIM_DEATH_BACK, 0);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_SPAWN_FALLDOWN, 0);
+    moBody.PlayAnim(BODY_ANIM_DEATH_BACK, 0);
 
     autowait(GetModelObject()->GetCurrentAnimLength());
-
+    
+    // [Cecil] Default animation instead of getup animation
     // play animation to get up
-    StartModelAnim(PLAYER_ANIM_SPAWN_GETUP, AOF_SMOOTHCHANGE);
+    StartModelAnim(PLAYER_ANIM_STAND, AOF_SMOOTHCHANGE);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_SPAWN_GETUP, AOF_SMOOTHCHANGE);
+    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, AOF_SMOOTHCHANGE);
 
     autowait(GetModelObject()->GetCurrentAnimLength());
 
@@ -6652,9 +6674,12 @@ procedures:
     m_ulFlags|=PLF_AUTOMOVEMENTS;
     SetDesiredRotation(ANGLE3D(60,0,0));
     SetDesiredTranslation(ANGLE3D(0,20.0f,0));
-    StartModelAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
+
+    // [Cecil] SPAWNPOSE -> DEATH_SPIKES
+    StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_SPAWNPOSE, AOF_LOOPING);
+    moBody.PlayAnim(BODY_ANIM_DEATH_SPIKES, AOF_LOOPING);
+
     // wait till it appears
     autowait(8.0f);
     // switch to model
@@ -6671,8 +6696,9 @@ procedures:
     en_plViewpoint.pl_OrientationAngle(1) = 20.0f;
     en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle;
 
+    // [Cecil] Default animation instead of intro animation
     // stand in pose
-    StartModelAnim(PLAYER_ANIM_INTRO, AOF_LOOPING);
+    StartModelAnim(PLAYER_ANIM_DEFAULT_ANIMATION, AOF_LOOPING);
     // remember time for rotating view start
     m_tmMinigunAutoFireStart = _pTimer->CurrentTick();
     // wait some time for fade in and to look from left to right with out firing
@@ -6770,8 +6796,12 @@ procedures:
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     }
 
+    // [Cecil] Reset
+    m_penLastAction = NULL;
+    m_bActionLoopBreak = FALSE;
+
     // while there is some marker
-    while (m_penActionMarker != NULL && IsOfClass(m_penActionMarker, "PlayerActionMarker")) {
+    while (!m_bActionLoopBreak && m_penActionMarker != NULL && IsOfClass(m_penActionMarker, "PlayerActionMarker")) {
       
       // if should wait
       if (GetActionMarker()->m_paaAction == PAA_WAIT) {
@@ -6957,17 +6987,26 @@ procedures:
         ASSERT(FALSE);
       }
 
-      // if marker points to a trigger
-      if (GetActionMarker()->m_penTrigger != NULL &&
-          GetActionMarker()->m_paaAction != PAA_PICKITEM) {
-        // trigger it
-        SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
+      // [Cecil] Safety check
+      if (!ASSERT_ENTITY(m_penActionMarker)) {
+        m_bActionLoopBreak = TRUE;
+        m_penActionMarker = NULL;
+        m_penLastAction = NULL;
+
+      } else {
+        // [Cecil] NOTE: Crashes here on the first GetActionMarker() sometimes
+        // if marker points to a trigger
+        if (GetActionMarker()->m_penTrigger != NULL &&
+            GetActionMarker()->m_paaAction != PAA_PICKITEM) {
+          // trigger it
+          SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
+        }
+
+        // [Cecil] Save last marker
+        m_penLastAction = m_penActionMarker;
+
+        m_penActionMarker = GetActionMarker()->m_penTarget;
       }
-
-      // [Cecil] Save last marker
-      m_penLastAction = m_penActionMarker;
-
-      m_penActionMarker = GetActionMarker()->m_penTarget;
     }
     
     // disable auto speed
@@ -6983,17 +7022,19 @@ procedures:
           CEntity *pen = GetPlayerEntity(iPlayer);
 
           // ignore the first player
-          if (ASSERT_ENTITY(pen) && pen != this) {
+          if (ASSERT_ENTITY(pen) /*&& pen != this*/) {
             CPlayer *penPlayer = (CPlayer*)pen;
 
             // bring everyone back out of the dummy state
-            //penPlayer->SendEvent(EStopActions());
-            penPlayer->m_penActionMarker = NULL;
+            EStopActions eStop;
+            eStop.pen = m_penLastAction;
+            penPlayer->SendEvent(eStop);
+            //penPlayer->m_penActionMarker = NULL;
           }
         }
 
         // teleport the first player after everyone else relatively
-        TeleportToAutoMarker(m_penLastAction, TRUE);
+        //TeleportToAutoMarker(m_penLastAction, FALSE);
       }
 
       // [Cecil] Autosave after the cutscene
@@ -7246,17 +7287,52 @@ procedures:
       }
 
       on (EAutoAction eAutoAction) : {
+        // [Cecil] Reset just in case
+        m_penActionMarker = NULL;
+
+        // [Cecil] Safety check
+        if (eAutoAction.penFirstMarker == NULL) {
+          resume;
+        }
+
+        CPlayerActionMarker *penAction = (CPlayerActionMarker*)&*eAutoAction.penFirstMarker;
+
+        // [Cecil] Just teleport
+        if (penAction->m_paaAction == PAA_TELEPORT && penAction->m_penTarget == NULL) {
+          TeleportToAutoMarker(penAction, FALSE);
+
+          // trigger if needed
+          if (penAction->m_penTrigger != NULL) {
+            SendToTarget(penAction->m_penTrigger, EET_TRIGGER, this);
+          }
+          CPrintF("%s^r: Teleported\n", GetPlayerName()); // [Cecil] TEMP
+          resume;
+        }
+
         // remember first marker
         m_penActionMarker = eAutoAction.penFirstMarker;
     
         // [Cecil] Singleplayer cutscenes
         if (SPWorld(this) && GetFirstPlayer() != this) {
           //call DummyActions();
+          CPrintF("%s^r: Skipping action\n", GetPlayerName()); // [Cecil] TEMP
           resume;
         }
 
+        CPrintF("%s^r: DoAutoActions()\n", GetPlayerName()); // [Cecil] TEMP
+
         // do the actions
         call DoAutoActions();
+      }
+
+      // [Cecil] Stop auto actions
+      on (EStopActions eStop) : {
+        m_penActionMarker = NULL;
+
+        if (eStop.pen != NULL) {
+          TeleportToAutoMarker(eStop.pen, FALSE);
+        }
+        resume;
       }
 
       on (EReceiveScore eScore) : {

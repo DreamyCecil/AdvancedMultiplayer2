@@ -1,19 +1,11 @@
 #include "StdH.h"
+#include "ExtraFunc.h"
 
 #include "EntitiesMP/DoorController.h"
 #include "EntitiesMP/KeyItem.h"
 #include "EntitiesMP/PlayerMarker.h"
 #include "EntitiesMP/PlayerWeapons.h"
 #include "EntitiesMP/WorldBase.h"
-
-// [Cecil] Weapon flags
-inline INDEX WeaponFlag(const INDEX &iWeapon) {
-  return (1 << (iWeapon-1));
-};
-
-inline BOOL WeaponExists(const INDEX &iFlags, const INDEX &iWeapon) {
-  return (iFlags & WeaponFlag(iWeapon));
-};
 
 // [Cecil] TFE weapon flags to TSE flags
 void ConvertWeapon(INDEX &iFlags, const INDEX &iWeapon) {
@@ -174,7 +166,7 @@ extern void ConvertWorld(CEntity *penWorld) {
 };
 
 // [Cecil] Properly remove decorations from the string
-extern void ProperUndecorate(CTString &str) {
+DECL_DLL void ProperUndecorate(CTString &str) {
   // make a copy of the string to hold the result - we will rewrite it without the codes
   CTString strResult = str;
 
