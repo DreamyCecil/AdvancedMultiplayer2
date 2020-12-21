@@ -1399,14 +1399,16 @@ functions:
     }
 
     prProjection.ViewerPlacementL() = plView;
-    prProjection.ObjectPlacementL() = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0, 0, 0));
+    prProjection.ObjectPlacementL() = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
     prProjection.Prepare();
 
+    // relative resolution scaling
     const FLOAT fScalingX = pdp->GetWidth() / 640.0f;
     const FLOAT fScalingY = pdp->GetHeight() / 480.0f;
+    const FLOAT fTextScaling = ClampDn(fScalingX * 0.75f, 1.0f);
 
     pdp->SetFont(_pfdDisplayFont);
-    pdp->SetTextScaling(fScalingX);
+    pdp->SetTextScaling(fTextScaling);
 
     // render player tags
     if (amp_iPlayerTags > 0) {
@@ -1428,20 +1430,20 @@ functions:
         FLOAT3D vTarget = penTarget->GetLerpedPlacement().pl_PositionVector;
 
         // player render position
-        FLOAT3D vRenderPos = vTarget + FLOAT3D(0.0f, 1.0f, 0.0f) * penTarget->GetRotationMatrix();
+        FLOAT3D vRenderPos = vTarget + FLOAT3D(0.0f, 0.5f, 0.0f) * penTarget->GetRotationMatrix();
         FLOAT3D vRelativeToScreen(0.0f, 0.0f, 0.0f);
 
         const FLOAT fDist = (vTarget - vSource).Length();
-        const FLOAT fSize = 6.0f;
         UBYTE ubAlpha = 127 + UBYTE(Clamp((16.0f - fDist) * 8.0f, 0.0f, 128.0f));
 
+        // player body position
         if (penTarget->GetFlags() & ENF_ALIVE) {
           EntityInfo *peiPlayer = (EntityInfo*)penTarget->GetEntityInfo();
 
-          FLOAT3D vCenter = FLOAT3D(peiPlayer->vTargetCenter[0], peiPlayer->vTargetCenter[1], peiPlayer->vTargetCenter[2]) * penTarget->GetRotationMatrix();
-          FLOAT3D vOffset = FLOAT3D(0.0f, peiPlayer->vTargetCenter[1] + 0.25f, 0.0f) * GetRotationMatrix();
+          // top of the body
+          FLOAT3D vBody = FLOAT3D(peiPlayer->vTargetCenter[0], peiPlayer->vTargetCenter[1]*2.0f + 0.25f, peiPlayer->vTargetCenter[2]) * penTarget->GetRotationMatrix();
 
-          vRenderPos = vTarget + vCenter + vOffset;
+          vRenderPos = vTarget + vBody;
         }
 
         prProjection.ProjectCoordinate(vRenderPos, vRelativeToScreen);
@@ -1450,15 +1452,24 @@ functions:
           continue;
         }
 
+        // position on screen and marker size
         FLOAT2D vOnScreen(vRelativeToScreen(1), -vRelativeToScreen(2) + pdp->GetHeight());
+        const FLOAT fSize = 6.0f;
+        const FLOAT fMarkerSize = fSize * fTextScaling;
 
         pdp->InitTexture(&_toPlayerMarker);
-        pdp->AddTexture(vOnScreen(1) - fSize, vOnScreen(2) - fSize*2.0f, vOnScreen(1) + fSize, vOnScreen(2), colTag|ubAlpha);
+        pdp->AddTexture(vOnScreen(1) - fMarkerSize, vOnScreen(2) - fMarkerSize*2.0f, vOnScreen(1) + fMarkerSize, vOnScreen(2), colTag|ubAlpha);
         pdp->FlushRenderingQueue();
 
         // player name
         CTString strPlayerName = penTarget->GetName();
         ProperUndecorate(strPlayerName);
+
+        // limit the length
+        if (strPlayerName.Length() > 25) {
+          strPlayerName.TrimRight(25);
+          strPlayerName += "...";
+        }
 
         // distance to the player
         if (amp_iPlayerTags >= 3) {
@@ -1467,7 +1478,7 @@ functions:
 
         // render player name with the distance
         if (amp_iPlayerTags >= 2) {
-          pdp->PutTextC(strPlayerName, vOnScreen(1), vOnScreen(2) - fSize*4.0f, colTag|ubAlpha);
+          pdp->PutTextC(strPlayerName, vOnScreen(1), vOnScreen(2) - fMarkerSize*4.0f, colTag|ubAlpha);
         }
 	    }
     }
@@ -2658,7 +2669,7 @@ functions:
       RenderView(*en_pwoWorld, *penViewer, apr, *pdp);
       _ulPlayerRenderingMask = 0;
 
-      if (iEye==STEREO_LEFT) {
+      if (iEye == STEREO_LEFT) {
         // listen from here
         ListenFromEntity(this, plViewer);
       }
@@ -2668,11 +2679,11 @@ functions:
       RenderCredits(pdp);
       RenderHudPicFX(pdp);
 
-      if(hud_bShowAll && bShowExtras) {
+      if (hud_bShowAll && bShowExtras) {
         // let the player entity render its interface
         CPlacement3D plLight(_vViewerLightDirection, ANGLE3D(0,0,0));
         plLight.AbsoluteToRelative(plViewer);
-        RenderHUD( *(CPerspectiveProjection3D *)(CProjection3D *)apr, pdp, 
+        RenderHUD(*(CPerspectiveProjection3D *)(CProjection3D *)apr, pdp, 
           plLight.pl_PositionVector, _colViewerLight, _colViewerAmbient, 
           penViewer==this && (GetFlags()&ENF_ALIVE), iEye,
           // [Cecil] Pass it here
