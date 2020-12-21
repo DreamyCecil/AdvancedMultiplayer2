@@ -7086,49 +7086,6 @@ procedures:
     return EVoid();
   };
 
-  // [Cecil] Dummy state for other players in singleplayer cutscenes
-  /*DummyActions() {
-    // don't look up/down
-    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
-    // disable playeranimator animating
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.m_bDisableAnimating = TRUE;
-
-    // teleport away
-    if (m_penCamera != NULL) {
-      CPlacement3D plAway = GetPlacement();
-      plAway.pl_PositionVector = FLOAT3D(32000.0f, -512.0f, 32000.0f);
-
-      Teleport(plAway, FALSE);
-    }
-
-    // wait for auto action
-    wait() {
-      on (EBegin) : { resume; }
-
-      // teleport back
-      on (EStopActions) : {
-        stop;
-      }
-
-      otherwise() : { pass; }
-    }
-    
-    // must clear marker, in case it was invalid
-    m_penActionMarker = NULL;
-
-    // enable playeranimator animating
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.m_bDisableAnimating = FALSE;
-
-    // [Cecil] Enable collision
-    if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 2) {
-      SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
-    }
-
-    return EVoid();
-  };*/
-
 /************************************************************
  *                        M  A  I  N                        *
  ************************************************************/
@@ -7320,21 +7277,20 @@ procedures:
           if (penAction->m_penTrigger != NULL) {
             SendToTarget(penAction->m_penTrigger, EET_TRIGGER, this);
           }
-          CPrintF("%s^r: Teleported\n", GetPlayerName()); // [Cecil] TEMP
+          //CPrintF("%s^r: Teleported\n", GetPlayerName()); // [Cecil] TEMP
           resume;
         }
 
         // remember first marker
         m_penActionMarker = eAutoAction.penFirstMarker;
     
-        // [Cecil] Singleplayer cutscenes
+        // [Cecil] Only the first player does auto actions on singleplayer maps
         if (SPWorld(this) && GetFirstPlayer() != this) {
-          //call DummyActions();
-          CPrintF("%s^r: Skipping action\n", GetPlayerName()); // [Cecil] TEMP
+          //CPrintF("%s^r: Skipping action\n", GetPlayerName()); // [Cecil] TEMP
           resume;
         }
 
-        CPrintF("%s^r: DoAutoActions()\n", GetPlayerName()); // [Cecil] TEMP
+        //CPrintF("%s^r: DoAutoActions()\n", GetPlayerName()); // [Cecil] TEMP
 
         // do the actions
         call DoAutoActions();
