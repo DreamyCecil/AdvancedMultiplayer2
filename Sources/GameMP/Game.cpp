@@ -154,6 +154,7 @@ extern FLOAT amp_fBossResistance = 1.0f;
 extern INDEX amp_bNoRocketJump = FALSE;
 
 extern INDEX amp_bKeepSecrets = FALSE;
+extern INDEX amp_bSharedWeapons = FALSE;
 extern INDEX amp_iPlayerCollision = 0;
 extern INDEX amp_bAutosave = TRUE;
 
@@ -244,6 +245,7 @@ static void RestoreDefaultOptions(void) {
   amp_bNoRocketJump = FALSE;
 
   amp_bKeepSecrets = FALSE;
+  amp_bSharedWeapons = FALSE;
   amp_iPlayerCollision = 0;
   amp_bAutosave = TRUE;
 
@@ -1159,6 +1161,7 @@ void CGame::InitInternal( void)
   _pShell->DeclareSymbol("persistent user INDEX amp_bNoRocketJump;", &amp_bNoRocketJump);
 
   _pShell->DeclareSymbol("persistent user INDEX amp_bKeepSecrets;", &amp_bKeepSecrets);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bSharedWeapons;", &amp_bSharedWeapons);
   _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerCollision;", &amp_iPlayerCollision);
   _pShell->DeclareSymbol("persistent user INDEX amp_bAutosave;", &amp_bAutosave);
 

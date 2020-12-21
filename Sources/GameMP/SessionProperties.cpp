@@ -80,6 +80,7 @@ extern FLOAT amp_fBossResistance;
 extern INDEX amp_bNoRocketJump;
 
 extern INDEX amp_bKeepSecrets;
+extern INDEX amp_bSharedWeapons;
 extern INDEX amp_iPlayerCollision;
 extern INDEX amp_bAutosave;
 
@@ -160,6 +161,7 @@ static void SetAdvancedParameters(CSessionProperties &sp) {
                     | (amp_bUnlimitedCombos   ? AMP_UNLIMITCOMBO : 0)
                     | (amp_bStrongerEnemies   ? AMP_ENEMIES : 0)
                     | (amp_bKeepSecrets       ? AMP_KEEPSECRETS : 0)
+                    | (amp_bSharedWeapons     ? AMP_SHAREWEAPONS : 0)
                     | (amp_bAutosave          ? AMP_AUTOSAVE : 0)
                     | (amp_bTakeWeapons       ? AMP_TAKEWEAPONS : 0)
                     | (amp_bNoRocketJump      ? AMP_NOROCKETJUMP : 0);

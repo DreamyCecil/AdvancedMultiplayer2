@@ -457,6 +457,39 @@ functions:
     }
   };
 
+  // [Cecil] Shared weapon collection
+  BOOL ReceiveWeapon(CEntity *penPlayer, const EWeaponItem &eWeapon) {
+    if (!IsOfClass(penPlayer, "Player")) {
+      return FALSE;
+    }
+    
+    // not shared
+    BOOL bShared = (GetSP()->sp_iAMPOptions & AMP_SHAREWEAPONS);
+    if (!bShared) {
+      return penPlayer->ReceiveItem(eWeapon);
+    }
+
+    BOOL bReceived = FALSE;
+
+    // give to every player
+    for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
+      CEntity *pen = GetPlayerEntity(iPlayer);
+
+      if (ASSERT_ENTITY(pen)) {
+        // copy the event
+        EWeaponItem eReceive;
+        eReceive.iWeapon = eWeapon.iWeapon;
+        eReceive.iAmmo = eWeapon.iAmmo;
+        eReceive.bDropped = eWeapon.bDropped;
+
+        bReceived |= pen->ReceiveItem(eReceive);
+      }
+    }
+
+    // received by at least one player
+    return bReceived;
+  };
+
 procedures:
   ItemCollected(EPass epass) : CItem::ItemCollected {
     ASSERT(epass.penOther!=NULL);
@@ -468,7 +501,7 @@ procedures:
       if (bWasPicked) {
         // don't pick again
         return;
-        }
+      }
     }
 
     // send weapon to entity
@@ -476,14 +509,17 @@ procedures:
     eWeapon.iWeapon = m_EwitType;
     eWeapon.iAmmo = -1; // use default ammo amount
     eWeapon.bDropped = m_bDropped;
+
     // if weapon is received
-    if (epass.penOther->ReceiveItem(eWeapon)) {
+    if (ReceiveWeapon(epass.penOther, eWeapon)) {
       if(_pNetwork->IsPlayerLocal(epass.penOther)) {IFeel_PlayEffect("PU_Weapon");}
       // play the pickup sound
       m_soPick.Set3DParameters(50.0f, 1.0f, 1.0f, 1.0f);
       PlaySound(m_soPick, SOUND_PICK, SOF_3D);
       m_fPickSoundLen = GetSoundLength(SOUND_PICK);
-      if (!GetSP()->sp_bWeaponsStay || m_bDropped || (m_bPickupOnce||m_bRespawn)) {
+
+      // [Cecil] Receive if shared
+      if (!GetSP()->sp_bWeaponsStay || m_bDropped || m_bPickupOnce || m_bRespawn || GetSP()->sp_iAMPOptions & AMP_SHAREWEAPONS) {
         jump CItem::ItemReceived();
       }
     }
