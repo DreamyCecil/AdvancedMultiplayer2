@@ -2541,18 +2541,22 @@ functions:
 
     // init projection parameters
     CPerspectiveProjection3D prPerspectiveProjection;
-    plr_fFOV = Clamp( plr_fFOV, 1.0f, 160.0f);
-    ANGLE aFOV = plr_fFOV;
-    // disable zoom in deathmatch
-    if (!GetSP()->sp_bCooperative) {
-      aFOV = 90.0f;
+    plr_fFOV = Clamp(plr_fFOV, 1.0f, 160.0f);
+
+    // [Cecil] Steam patch workaround
+    BOOL bWidescreen = (FLOAT(pdp->GetHeight()) / FLOAT(pdp->GetWidth()) < 0.75f);
+    ANGLE aFOV = (bWidescreen ? 110.0f : 90.0f);
+    CPlayerWeapons &penWeapons = (CPlayerWeapons&)*m_penWeapons;
+
+    // [Cecil] Sniper zoom multiplier
+    if (penWeapons.m_iCurrentWeapon == WEAPON_SNIPER) {
+      aFOV *= Lerp(penWeapons.m_fSniperFOVlast, penWeapons.m_fSniperFOV, _pTimer->GetLerpFactor()) / 90.0f;
     }
-    // if sniper active
-    if (((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon==WEAPON_SNIPER)
-    {
-      aFOV = Lerp(((CPlayerWeapons&)*m_penWeapons).m_fSniperFOVlast,
-                  ((CPlayerWeapons&)*m_penWeapons).m_fSniperFOV,
-                  _pTimer->GetLerpFactor());
+
+    // [Cecil] Custom FOV
+    if (GetSP()->sp_bCooperative) {
+      aFOV *= (plr_fFOV / 90.0f);
+      aFOV = Clamp(aFOV, 1.0f, 179.0f);
     }
 
     if (m_pstState==PST_DIVE && iViewState == PVT_PLAYEREYES) {
