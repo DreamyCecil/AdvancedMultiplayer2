@@ -1484,6 +1484,21 @@ functions:
     }
   };
 
+  // [Cecil] Release player from auto actions
+  void ReleasePlayer(void) {
+    m_penActionMarker = NULL;
+
+    // enable animating
+    GetPlayerAnimator()->m_bDisableAnimating = FALSE;
+
+    // show the player
+    if (GetRenderType() != RT_MODEL) {
+      SwitchToModel();
+      SetPhysicsFlags(GetPhysicsFlags() | EPF_TRANSLATEDBYGRAVITY);
+      SetCollisionFlags(GetCollisionFlags() & ~((ECBI_PLAYER)<<ECB_PASS));
+    }
+  };
+
   INDEX GenderSound(INDEX iSound)
   {
     return iSound+m_iGender*GENDEROFFSET;
@@ -6767,10 +6782,9 @@ procedures:
   AutoStoreWeapon(EVoid) {
     // store current weapon slowly
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    // [Cecil] Default animation instead of wait animation
+    // [Cecil] Default animation instead of wait animation; REDRAWSLOW -> REDRAW
     plan.BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
-      BODY_ANIM_COLT_REDRAWSLOW, BODY_ANIM_SHOTGUN_REDRAWSLOW, BODY_ANIM_MINIGUN_REDRAWSLOW, 
-      0);
+      BODY_ANIM_COLT_REDRAW, BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, 0);
     autowait(plan.m_fBodyAnimTime);
 
     m_iAutoOrgWeapon = ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon;  
@@ -6787,9 +6801,9 @@ procedures:
     GetPlayerAnimator()->SyncWeapon();
 
     ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon = (WeaponType) m_iAutoOrgWeapon;
-    // [Cecil] Default animation instead of wait animation
-    plan.BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_DEACTIVATETOWALK,
-      BODY_ANIM_SHOTGUN_DEACTIVATETOWALK, BODY_ANIM_MINIGUN_DEACTIVATETOWALK, AOF_SMOOTHCHANGE);
+    // [Cecil] Default animation instead of wait animation; DEACTIVATETOWALK -> REDRAW
+    plan.BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_REDRAW,
+      BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, AOF_SMOOTHCHANGE);
     ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon = WEAPON_NONE;
 
     autowait(plan.m_fBodyAnimTime);
@@ -7009,7 +7023,6 @@ procedures:
         m_penLastAction = NULL;
 
       } else {
-        // [Cecil] NOTE: Crashes here on the first GetActionMarker() sometimes
         // if marker points to a trigger
         if (GetActionMarker()->m_penTrigger != NULL &&
             GetActionMarker()->m_paaAction != PAA_PICKITEM) {
@@ -7260,7 +7273,7 @@ procedures:
 
       on (EAutoAction eAutoAction) : {
         // [Cecil] Reset just in case
-        m_penActionMarker = NULL;
+        ReleasePlayer();
 
         // [Cecil] Safety check
         if (eAutoAction.penFirstMarker == NULL) {
@@ -7277,6 +7290,7 @@ procedures:
           if (penAction->m_penTrigger != NULL) {
             SendToTarget(penAction->m_penTrigger, EET_TRIGGER, this);
           }
+
           //CPrintF("%s^r: Teleported\n", GetPlayerName()); // [Cecil] TEMP
           resume;
         }
@@ -7286,6 +7300,11 @@ procedures:
     
         // [Cecil] Only the first player does auto actions on singleplayer maps
         if (SPWorld(this) && GetFirstPlayer() != this) {
+          // hide the player
+          SwitchToEditorModel();
+          SetPhysicsFlags(GetPhysicsFlags() & ~EPF_TRANSLATEDBYGRAVITY);
+          SetCollisionFlags(GetCollisionFlags() | ((ECBI_PLAYER)<<ECB_PASS));
+
           //CPrintF("%s^r: Skipping action\n", GetPlayerName()); // [Cecil] TEMP
           resume;
         }
@@ -7298,8 +7317,9 @@ procedures:
 
       // [Cecil] Stop auto actions
       on (EStopActions eStop) : {
-        m_penActionMarker = NULL;
+        ReleasePlayer();
 
+        // teleport if needed
         if (eStop.pen != NULL) {
           TeleportToAutoMarker(eStop.pen, FALSE);
         }
