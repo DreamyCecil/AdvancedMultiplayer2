@@ -550,6 +550,9 @@
     <ClCompile Include="Common\ExtraFunc.cpp">
       <Filter>Source Files\Common sources</Filter>
     </ClCompile>
+    <ClCompile Include="DummyEnemy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Common.h">
@@ -1503,6 +1506,12 @@
     <ClInclude Include="Common\ExtraFunc.h">
       <Filter>Header Files\Common headers</Filter>
     </ClInclude>
+    <ClInclude Include="DummyEnemy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DummyEnemy_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">
@@ -2380,6 +2389,9 @@
     </CustomBuild>
     <CustomBuild Include="PoisonCloud.es">
       <Filter>Class Files\Effects</Filter>
+    </CustomBuild>
+    <CustomBuild Include="DummyEnemy.es">
+      <Filter>Class Files\Enemies</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
