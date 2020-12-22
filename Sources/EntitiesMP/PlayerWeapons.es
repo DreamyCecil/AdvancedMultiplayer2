@@ -886,6 +886,7 @@ functions:
 
       if (pamo != NULL) {
         pamo->amo_plRelative.pl_OrientationAngle(3) += fAngle;
+        pamo->amo_plRelative.pl_PositionVector(3) += 0.1f;
       }
     }
   };

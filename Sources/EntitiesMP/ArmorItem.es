@@ -8,12 +8,13 @@ uses "EntitiesMP/Item";
 
 // health type 
 enum ArmorItemType {
-  0 ARIT_SHARD        "Shard",    // shard
-  1 ARIT_SMALL        "Small",    // small armor
-  2 ARIT_MEDIUM       "Medium",   // medium armor
-  3 ARIT_STRONG       "Strong",   // strong armor
-  4 ARIT_SUPER        "Super",    // super armor
-  5 ARIT_HELM         "Helm",     // helm
+  0 ARIT_SHARD   "Shard",  // shard
+  1 ARIT_SMALL   "Small",  // small armor
+  2 ARIT_MEDIUM  "Medium", // medium armor
+  3 ARIT_STRONG  "Strong", // strong armor
+  4 ARIT_SUPER   "Super",  // super armor
+  5 ARIT_HELM    "Helm",   // helm
+  6 ARIT_CUSTOM  "Custom", // [Cecil] Custom armor
 };
 
 // event for sending through receive item
@@ -115,26 +116,51 @@ functions:
       return;
     }
 
+    // [Cecil] Customizable options instead of particle functions
+    FLOAT fSize = 1.5f;
+    FLOAT fHeight = 1.5f;
+    INDEX ctParticles = 64;
+
     switch (m_EaitType) {
       case ARIT_SHARD:
-        Particles_Emanate(this, 0.75f*0.75, 0.75f*0.75, PT_STAR04, 8, 7.0f);
+        fSize = 0.75f;
+        fHeight = 0.75f;
+        ctParticles = 8;
         break;
+
       case ARIT_SMALL:
-        Particles_Emanate(this, 1.0f*0.75, 1.0f*0.75, PT_STAR04, 32, 7.0f);
-        break;                                      
+        fSize = 1.0f;
+        fHeight = 1.0f;
+        ctParticles = 32;
+        break;
+
       case ARIT_MEDIUM:
-        Particles_Emanate(this, 1.5f*0.75, 1.5f*0.75, PT_STAR04, 64, 7.0f);
+        fSize = 1.5f;
+        fHeight = 1.5f;
+        ctParticles = 64;
         break;
-      case ARIT_STRONG:                              
-        Particles_Emanate(this, 2.0f*0.75, 1.25f*0.75, PT_STAR04, 96, 7.0f);
+
+      case ARIT_STRONG:
+        fSize = 2.0f;
+        fHeight = 1.25f;
+        ctParticles = 96;
         break;
+
       case ARIT_SUPER:
-        Particles_Emanate(this, 2.5f*0.75, 1.5f*0.75, PT_STAR04, 128, 7.0f);
+        fSize = 2.5f;
+        fHeight = 1.5f;
+        ctParticles = 128;
         break;
+
       case ARIT_HELM:
-        Particles_Emanate(this, 0.875f*0.75, 0.875f*0.75, PT_STAR04, 16, 7.0f);
-        break;      
+        fSize = 0.875f;
+        fHeight = 0.875f;
+        ctParticles = 16;
+        break;
     }
+
+    // [Cecil] Render particles
+    Particles_Emanate(this, fSize*0.75, fHeight*0.75, PT_STAR04, ctParticles, 7.0f);
   }
 
   // set health properties depending on health type
@@ -144,7 +170,7 @@ functions:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_SMALL);
         m_fValue = 1.0f;
         m_bOverTopArmor = TRUE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 10.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Shard - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_1, TEXTURE_1, 0, TEX_SPEC_MEDIUM, 0);
@@ -152,11 +178,12 @@ functions:
         StretchItem(FLOAT3D(0.75f*0.75, 0.75f*0.75, 0.75f*0.75));
         m_iSoundComponent = SOUND_SHARD;
         break;
+
       case ARIT_SMALL:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 25.0f;
         m_bOverTopArmor = FALSE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 10.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Small - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_25, TEXTURE_25, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -164,23 +191,25 @@ functions:
         StretchItem(FLOAT3D(2.0f, 2.0f, 2.0f));
         m_iSoundComponent = SOUND_SMALL;
         break;
-      case ARIT_MEDIUM: {
+
+      case ARIT_MEDIUM:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 50.0f;
         m_bOverTopArmor = FALSE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 25.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 25.0f; 
         m_strDescription.PrintF("Medium - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_50, TEXTURE_50, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,1.0f,0), FLOAT3D(3,3,0.5f) );
         StretchItem(FLOAT3D(2.0f, 2.0f, 2.0f));
         m_iSoundComponent = SOUND_MEDIUM;
-                        } break;
+        break;
+
       case ARIT_STRONG:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 100.0f;
         m_bOverTopArmor = FALSE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 60.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 60.0f; 
         m_strDescription.PrintF("Strong - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_100, TEXTURE_100, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -188,11 +217,12 @@ functions:
         StretchItem(FLOAT3D(2.5f, 2.5f, 2.5f));
         m_iSoundComponent = SOUND_STRONG;
         break;
+
       case ARIT_SUPER:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 200.0f;
         m_bOverTopArmor = TRUE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 120.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 120.0f; 
         m_strDescription.PrintF("Super - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
 
@@ -201,27 +231,69 @@ functions:
         StretchItem(FLOAT3D(2.5f, 2.5f, 2.5f));
         m_iSoundComponent = SOUND_SUPER;
         break;
+
       case ARIT_HELM:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_SMALL);
         m_fValue = 5.0f;
         m_bOverTopArmor = FALSE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 10.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Helm - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_5, TEXTURE_5, 0, TEX_SPEC_MEDIUM, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.5f,0), FLOAT3D(1.5,1.5,0.4f) );
         StretchItem(FLOAT3D(0.875f*0.75, 0.875f*0.75, 0.875f*0.75));
         m_iSoundComponent = SOUND_HELM;
-        break;        
+        break;
+
+      // [Cecil] Custom armor
+      case ARIT_CUSTOM:
+        ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
+        m_fValue = m_fCustomValue;
+
+        // force over top armor
+        if (m_fValue > 100.0f) {
+          m_bOverTopArmor = TRUE;
+        }
+
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 25.0f; 
+        m_strDescription.PrintF("Custom - H:%g  T:%g", m_fValue, m_fRespawnTime);
+        // set appearance
+        AddItem(MODEL_50, TEXTURE_50, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
+        AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0.0f, 1.0f, 0.0f), FLOAT3D(3.0f, 3.0f, 0.5f));
+        StretchItem(FLOAT3D(2.0f, 2.0f, 2.0f));
+        m_iSoundComponent = -1;
+        break;
     }
   };
 
-  void AdjustDifficulty(void)
-  {
-    if (!GetSP()->sp_bAllowArmor && m_penTarget==NULL) {
+  void AdjustDifficulty(void) {
+    if (!GetSP()->sp_bAllowArmor && m_penTarget == NULL) {
       Destroy();
+      return;
     }
-  }
+
+    // [Cecil] Fix invalid vanilla types
+    if (FixTypes(FALSE)) {
+      // reset armor
+      ItemModel();
+      SetProperties();
+    }
+  };
+
+  // [Cecil] Fix invalid vanilla types
+  BOOL FixTypes(BOOL bAllowCustom) {
+    // clamp to 0 and 1
+    bAllowCustom = !!bAllowCustom;
+
+    if (m_EaitType < 0 || m_EaitType >= ARIT_CUSTOM+bAllowCustom) {
+      m_EaitType = ARIT_CUSTOM;
+      m_fCustomValue = m_fValue;
+      m_fCustomRespawnTime = m_fRespawnTime;
+      return TRUE;
+    }
+
+    return FALSE;
+  };
 
 procedures:
   ItemCollected(EPass epass) : CItem::ItemCollected {
@@ -243,11 +315,8 @@ procedures:
     eArmor.bOverTopArmor = m_bOverTopArmor;
     // if health is received
     if (epass.penOther->ReceiveItem(eArmor)) {
-
-      if(_pNetwork->IsPlayerLocal(epass.penOther))
-      {
-        switch (m_EaitType)
-        {
+      if (_pNetwork->IsPlayerLocal(epass.penOther)) {
+        switch (m_EaitType) {
           case ARIT_SHARD:  IFeel_PlayEffect("PU_ArmourShard"); break;
           case ARIT_SMALL:  IFeel_PlayEffect("PU_ArmourSmall"); break;
           case ARIT_MEDIUM: IFeel_PlayEffect("PU_ArmourMedium"); break;
@@ -259,10 +328,17 @@ procedures:
 
       // play the pickup sound
       m_soPick.Set3DParameters(50.0f, 1.0f, 1.0f, 1.0f);
-      PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
-      m_fPickSoundLen = GetSoundLength(m_iSoundComponent);
 
-      if (!GetSP()->sp_bHealthArmorStays || (m_bPickupOnce||m_bRespawn)) {
+      // [Cecil] Custom sound
+      if (m_iSoundComponent < 0) {
+        PlayCustomSound();
+
+      } else {
+        PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
+        m_fPickSoundLen = GetSoundLength(m_iSoundComponent);
+      }
+
+      if (!GetSP()->sp_bHealthArmorStays || m_bPickupOnce || m_bRespawn) {
         jump CItem::ItemReceived();
       }
     }
@@ -270,6 +346,9 @@ procedures:
   };
 
   Main() {
+    // [Cecil] Fix types
+    FixTypes(TRUE);
+
     Initialize();     // initialize base class
     StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
     SetProperties();  // set properties

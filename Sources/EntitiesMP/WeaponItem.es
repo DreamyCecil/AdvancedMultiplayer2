@@ -515,8 +515,15 @@ procedures:
       if(_pNetwork->IsPlayerLocal(epass.penOther)) {IFeel_PlayEffect("PU_Weapon");}
       // play the pickup sound
       m_soPick.Set3DParameters(50.0f, 1.0f, 1.0f, 1.0f);
-      PlaySound(m_soPick, SOUND_PICK, SOF_3D);
-      m_fPickSoundLen = GetSoundLength(SOUND_PICK);
+
+      // [Cecil] Custom sound
+      if (CustomSoundExists()) {
+        PlayCustomSound();
+
+      } else {
+        PlaySound(m_soPick, SOUND_PICK, SOF_3D);
+        m_fPickSoundLen = GetSoundLength(SOUND_PICK);
+      }
 
       // [Cecil] Receive if shared
       if (!GetSP()->sp_bWeaponsStay || m_bDropped || m_bPickupOnce || m_bRespawn || GetSP()->sp_iAMPOptions & AMP_SHAREWEAPONS) {

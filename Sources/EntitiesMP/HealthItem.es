@@ -8,11 +8,12 @@ uses "EntitiesMP/Item";
 
 // health type 
 enum HealthItemType {
-  0 HIT_PILL      "Pill",       // pill health
-  1 HIT_SMALL     "Small",      // small health
-  2 HIT_MEDIUM    "Medium",     // medium health
-  3 HIT_LARGE     "Large",      // large health
-  4 HIT_SUPER     "Super",      // super health
+  0 HIT_PILL   "Pill",   // pill health
+  1 HIT_SMALL  "Small",  // small health
+  2 HIT_MEDIUM "Medium", // medium health
+  3 HIT_LARGE  "Large",  // large health
+  4 HIT_SUPER  "Super",  // super health
+  5 HIT_CUSTOM "Custom", // [Cecil] Custom health
 };
 
 // event for sending through receive item
@@ -27,7 +28,8 @@ thumbnail "Thumbnails\\HealthItem.tbn";
 
 properties:
   1 enum HealthItemType m_EhitType    "Type" 'Y' = HIT_SMALL,     // health type
-  2 BOOL m_bOverTopHealth             = FALSE,  // can be received over top health
+  // [Cecil] Can be changed for custom health
+  2 BOOL m_bOverTopHealth "Over Top Health" = FALSE,  // can be received over top health
   3 INDEX m_iSoundComponent = 0,
 
 components:
@@ -109,23 +111,33 @@ functions:
       return;
     }
 
+    // [Cecil] Customizable options instead of particle functions
+    FLOAT fSize = 1.0f;
+    FLOAT fHeight = 0.75f;
+    INDEX ctParticles = 128;
+
     switch (m_EhitType) {
       case HIT_PILL:
-        Particles_Stardust(this, 0.9f*0.75f, 0.70f*0.75f, PT_STAR08, 32);
+        fSize = 0.9f;
+        fHeight = 0.7f;
+        ctParticles = 32;
         break;
-      case HIT_SMALL:
-        Particles_Stardust(this, 1.0f*0.75f, 0.75f*0.75f, PT_STAR08, 128);
-        break;
-      case HIT_MEDIUM:
-        Particles_Stardust(this, 1.0f*0.75f, 0.75f*0.75f, PT_STAR08, 128);
-        break;
+
       case HIT_LARGE:
-        Particles_Stardust(this, 2.0f*0.75f, 1.0f*0.75f, PT_STAR08, 192);
+        fSize = 2.0f;
+        fHeight = 1.0f;
+        ctParticles = 192;
         break;
+
       case HIT_SUPER:
-        Particles_Stardust(this, 2.3f*0.75f, 1.5f*0.75f, PT_STAR08, 320);
+        fSize = 2.3f;
+        fHeight = 1.5f;
+        ctParticles = 320;
         break;
     }
+
+    // [Cecil] Render particles
+    Particles_Stardust(this, fSize*0.75f, fHeight*0.75f, PT_STAR08, ctParticles);
   }
 
   // set health properties depending on health type
@@ -136,7 +148,7 @@ functions:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_SMALL);
         m_fValue = 1.0f;
         m_bOverTopHealth = TRUE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 10.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Pill - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_PILL, TEXTURE_PILL, 0, TEXTURE_SPECULAR_STRONG, TEXTURE_PILL_BUMP);
@@ -145,26 +157,27 @@ functions:
         StretchItem(FLOAT3D(1.0f*0.75f, 1.0f*0.75f, 1.0f*0.75));
         m_iSoundComponent = SOUND_PILL;
         break;
+
       case HIT_SMALL:
         StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 10.0f;
         m_bOverTopHealth = FALSE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 10.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Small - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_SMALL, TEXTURE_SMALL, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.4f,0), FLOAT3D(2,2,0.4f) );
         StretchItem(FLOAT3D(1.0f*0.75f, 1.0f*0.75f, 1.0f*0.75));
         m_iSoundComponent = SOUND_SMALL;
-        break;                                                                 // add flare
+        break;
 
       case HIT_MEDIUM:
         StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 25.0f;
         m_bOverTopHealth = FALSE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 25.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 25.0f; 
         m_strDescription.PrintF("Medium - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_MEDIUM, TEXTURE_MEDIUM, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
@@ -172,12 +185,13 @@ functions:
         StretchItem(FLOAT3D(1.5f*0.75f, 1.5f*0.75f, 1.5f*0.75));
         m_iSoundComponent = SOUND_MEDIUM;
         break;
+
       case HIT_LARGE:
         StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 50.0f;
         m_bOverTopHealth = FALSE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 60.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 60.0f; 
         m_strDescription.PrintF("Large - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_LARGE, TEXTURE_LARGE, TEXTURE_REFLECTION_GOLD01, TEXTURE_SPECULAR_STRONG, 0);
@@ -185,12 +199,13 @@ functions:
         StretchItem(FLOAT3D(1.2f*0.75f, 1.2f*0.75f, 1.2f*0.75));
         m_iSoundComponent = SOUND_LARGE;
         break;
-      case HIT_SUPER:
+
+      case HIT_SUPER: {
         StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fValue = 100.0f;
         m_bOverTopHealth = TRUE;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 120.0f; 
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 120.0f; 
         m_strDescription.PrintF("Super - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_SUPER, TEXTURE_SUPER, 0, TEXTURE_SPECULAR_MEDIUM, 0);
@@ -200,16 +215,60 @@ functions:
         mo.PlayAnim(0, AOF_LOOPING);
 
         m_iSoundComponent = SOUND_SUPER;
+      } break;
+
+      // [Cecil] Custom health
+      case HIT_CUSTOM:
+        StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
+        ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
+        m_fValue = m_fCustomValue;
+
+        // force over top health
+        if (m_fValue > 100.0f) {
+          m_bOverTopHealth = TRUE;
+        }
+
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 25.0f; 
+        m_strDescription.PrintF("Custom - H:%g  T:%g", m_fValue, m_fRespawnTime);
+
+        // set appearance
+        AddItem(MODEL_MEDIUM, TEXTURE_SMALL, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
+        AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0.0f, 0.6f, 0.0f), FLOAT3D(2.5f, 2.5f, 0.5f));
+        StretchItem(FLOAT3D(1.5f, 1.5f, 1.5f) * 0.75f);
+        m_iSoundComponent = -1;
         break;
     }
   };
 
-  void AdjustDifficulty(void)
-  {
-    if (!GetSP()->sp_bAllowHealth && m_penTarget==NULL) {
+  void AdjustDifficulty(void) {
+    if (!GetSP()->sp_bAllowHealth && m_penTarget == NULL) {
       Destroy();
+      return;
     }
-  }
+
+    // [Cecil] Fix types
+    if (FixTypes(FALSE)) {
+      // reset health
+      ItemModel();
+      SetProperties();
+    }
+  };
+
+  // [Cecil] Fix invalid vanilla types
+  BOOL FixTypes(BOOL bAllowCustom) {
+    // clamp to 0 and 1
+    bAllowCustom = !!bAllowCustom;
+
+    if (m_EhitType < 0 || m_EhitType >= HIT_CUSTOM+bAllowCustom) {
+      m_EhitType = HIT_CUSTOM;
+      m_fCustomValue = m_fValue;
+      m_fCustomRespawnTime = m_fRespawnTime;
+      return TRUE;
+    }
+
+    return FALSE;
+  };
+
 procedures:
   ItemCollected(EPass epass) : CItem::ItemCollected {
     ASSERT(epass.penOther!=NULL);
@@ -231,10 +290,8 @@ procedures:
     // if health is received
     if (epass.penOther->ReceiveItem(eHealth)) {
 
-      if(_pNetwork->IsPlayerLocal(epass.penOther))
-      {
-        switch (m_EhitType)
-        {
+      if (_pNetwork->IsPlayerLocal(epass.penOther)) {
+        switch (m_EhitType) {
           case HIT_PILL:  IFeel_PlayEffect("PU_HealthPill"); break;
           case HIT_SMALL: IFeel_PlayEffect("PU_HealthSmall"); break;
           case HIT_MEDIUM:IFeel_PlayEffect("PU_HealthMedium"); break;
@@ -245,9 +302,17 @@ procedures:
 
       // play the pickup sound
       m_soPick.Set3DParameters(50.0f, 1.0f, 1.0f, 1.0f);
-      PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
-      m_fPickSoundLen = GetSoundLength(m_iSoundComponent);
-      if (!GetSP()->sp_bHealthArmorStays || (m_bPickupOnce||m_bRespawn)) {
+
+      // [Cecil] Custom sound
+      if (m_iSoundComponent < 0) {
+        PlayCustomSound();
+
+      } else {
+        PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
+        m_fPickSoundLen = GetSoundLength(m_iSoundComponent);
+      }
+
+      if (!GetSP()->sp_bHealthArmorStays || m_bPickupOnce || m_bRespawn) {
         jump CItem::ItemReceived();
       }
     }
@@ -255,8 +320,11 @@ procedures:
   };
 
   Main() {
-    Initialize();     // initialize base class
-    SetProperties();  // set properties
+    // [Cecil] Fix types
+    FixTypes(TRUE);
+
+    Initialize();    // initialize base class
+    SetProperties(); // set properties
 
     jump CItem::ItemLoop();
   };

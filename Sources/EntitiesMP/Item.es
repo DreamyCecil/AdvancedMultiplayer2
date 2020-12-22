@@ -2,6 +2,9 @@
 %{
 #include "StdH.h"
 #include "Models/Items/ItemHolder/ItemHolder.h"
+
+// [Cecil] For custom sounds
+#include <Engine/Sound/SoundData.h>
 %}
 
 %{
@@ -30,6 +33,11 @@ properties:
  14 BOOL m_bDropped = FALSE,    // dropped by a player during a deathmatch game
  15 INDEX m_ulPickedMask = 0,   // mask for which players picked this item
  16 BOOL m_bFloating "Floating" 'F' = FALSE,
+
+ // [Cecil] Custom items
+ 30 FLOAT m_fCustomValue "Custom Value" = 0.0f,
+
+ 40 CTFileName m_fnPickupSound "Custom Sound" = CTString(""),
 
 components:
   1 model   MODEL_ITEM      "Models\\Items\\ItemHolder\\ItemHolder.mdl",
@@ -236,7 +244,24 @@ functions:
     return slUsedMemory;
   }
 
+  // [Cecil] Check custom sound
+  BOOL CustomSoundExists(void) {
+    if (m_fnPickupSound == CTString("") || !FileExists(m_fnPickupSound)) {
+      return FALSE;
+    }
+    return TRUE;
+  };
 
+  // [Cecil] Custom pickup sound
+  void PlayCustomSound(void) {
+    // no custom sound
+    if (CustomSoundExists()) {
+      m_fnPickupSound = CTFILENAME("Sounds\\Default.wav");
+    }
+
+    PlaySound(m_soPick, m_fnPickupSound, SOF_3D);
+    m_fPickSoundLen = m_soPick.so_pCsdLink->GetSecondsLength();
+  };
 
 procedures:
 

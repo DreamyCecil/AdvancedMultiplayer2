@@ -6952,13 +6952,13 @@ procedures:
       // if should run to the marker
       } else if (GetActionMarker()->m_paaAction == PAA_RUN) {
         // go to it
-        m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;                                             
+        m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;
         autocall AutoGoToMarker() EReturn;
 
       // if should run to the marker and stop exactly there
       } else if (GetActionMarker()->m_paaAction == PAA_RUNANDSTOP) {
         // go to it
-        m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;                                             
+        m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;
         autocall AutoGoToMarkerAndStop() EReturn;
 
       // if should record end-of-level stats

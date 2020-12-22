@@ -274,11 +274,17 @@ functions:
   // set ammo properties depending on ammo type
   void SetProperties(void)
   {
+    // [Cecil] Print custom amount
+    FLOAT &fValue = m_fValue;
+    if (m_fCustomValue != 0.0f) {
+      fValue = m_fCustomValue;
+    }
+
     switch (m_EaitType) {
       case AIT_SHELLS:
         m_fValue = 10.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Shells: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Shells: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_SHELLS, TEXTURE_SHELLS, 0, 0, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.25f,0), FLOAT3D(1.5,1.5,0.75f) );
@@ -286,8 +292,8 @@ functions:
         break;
       case AIT_BULLETS:
         m_fValue = 50.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Bullets: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Bullets: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_BULLETS, TEXTURE_BULLETS, 0, 0, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.6f,0), FLOAT3D(3,3,1.0f) );
@@ -295,8 +301,8 @@ functions:
         break;
       case AIT_ROCKETS:
         m_fValue = 5.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Rockets: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Rockets: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_ROCKETS, TEXTURE_ROCKET, 0, 0, 0);
         AddItemAttachment(ROCKETS_ATTACHMENT_ROCKET1, MODEL_RC_ROCKET, TEXTURE_ROCKET, 0, 0, 0);
@@ -314,8 +320,8 @@ functions:
         break;
       case AIT_GRENADES:
         m_fValue = 5.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Grenades: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Grenades: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_GRENADES, TEXTURE_GRENADES, 0, 0, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.6f,0), FLOAT3D(4,4,1.0f) );
@@ -323,8 +329,8 @@ functions:
         break;
       case AIT_ELECTRICITY:
         m_fValue = 50.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Electricity: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Electricity: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_ELECTRICITY, TEXTURE_ELECTRICITY, TEXTURE_EL_EFFECT, TEXTURE_EL_EFFECT, 0);
         AddItemAttachment(ELECTRICITY_ATTACHMENT_EFFECT1, MODEL_EL_EFFECT, TEXTURE_EL_EFFECT, 0, 0, 0);
@@ -335,8 +341,8 @@ functions:
         break;
       case AIT_IRONBALLS:
         m_fValue = 4.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Iron balls: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Iron balls: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_CANNONBALLS, TEXTURE_IRONBALL, TEX_REFL_DARKMETAL, TEX_SPEC_WEAK, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.75f,0), FLOAT3D(5,5,1.3f) );
@@ -344,8 +350,8 @@ functions:
         break;
       case AIT_NAPALM:
         m_fValue = 100.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Napalm: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Napalm: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_FL_RESERVOIR, TEXTURE_FL_FUELRESERVOIR, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.75f,0), FLOAT3D(3,3,1.0f) );
@@ -353,8 +359,8 @@ functions:
         break;
       case AIT_SERIOUSPACK:
         m_fValue = 1.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("SeriousPack: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("SeriousPack: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_SERIOUSPACK, TEXTURE_SERIOUSPACK, 0,0,0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.75f,0), FLOAT3D(2,2,1.3f) );
@@ -362,8 +368,8 @@ functions:
         break;
       case AIT_BACKPACK:
         m_fValue = 1.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("BackPack: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("BackPack: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_BACKPACK, TEXTURE_BACKPACK, 0,0,0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.75f,0), FLOAT3D(2,2,1.3f) );
@@ -371,8 +377,8 @@ functions:
         break;
       case AIT_SNIPERBULLETS:
         m_fValue = 5.0f;
-        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 30.0f; 
-        m_strDescription.PrintF("Sniper bullets: %d", (int) m_fValue);
+        m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 30.0f; 
+        m_strDescription.PrintF("Sniper bullets: %d", (int)fValue);
         // set appearance
         AddItem(MODEL_SNIPER_BULLETS, TEXTURE_SNIPER_BULLETS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.75f,0), FLOAT3D(3,3,1.0f) );
@@ -380,12 +386,17 @@ functions:
         break;
       default: ASSERTALWAYS("Uknown ammo");
     }
+
+    // [Cecil] Set custom amount
+    if (m_fCustomValue != 0.0f) {
+      m_fValue = m_fCustomValue;
+    }
   };
 
   void AdjustDifficulty(void) {
     m_fValue = ceil(m_fValue*GetSP()->sp_fAmmoQuantity);
 
-    if (GetSP()->sp_bInfiniteAmmo && m_penTarget==NULL) {
+    if (GetSP()->sp_bInfiniteAmmo && m_penTarget == NULL) {
       Destroy();
       return;
     }
@@ -449,17 +460,21 @@ procedures:
       // play the pickup sound
       m_soPick.Set3DParameters(50.0f, 1.0f, 1.0f, 1.0f);
       if(_pNetwork->IsPlayerLocal(epass.penOther)) {IFeel_PlayEffect("PU_Ammo");}
-      if( (m_EaitType == AIT_SERIOUSPACK) || (m_EaitType == AIT_BACKPACK) )
-      {
+
+      if (m_EaitType == AIT_SERIOUSPACK || m_EaitType == AIT_BACKPACK) {
         PlaySound(m_soPick, SOUND_DEFAULT, SOF_3D);
         CPrintF("^cFF0000^f5Warning!!! Replace old serious pack with new, BackPack entity!^r\n");
-      }
-      else
-      {
+
+      // [Cecil] Custom sound
+      } else if (CustomSoundExists()) {
+        PlayCustomSound();
+
+      } else {
         PlaySound(m_soPick, SOUND_PICK, SOF_3D);
       }
+
       m_fPickSoundLen = GetSoundLength(SOUND_PICK);
-      if (!GetSP()->sp_bAmmoStays || (m_bPickupOnce||m_bRespawn)) {
+      if (!GetSP()->sp_bAmmoStays || m_bPickupOnce || m_bRespawn) {
         jump CItem::ItemReceived();
       }
     }
@@ -467,9 +482,10 @@ procedures:
   };
 
   Main() {
-    if (m_EaitType==AIT_NUKEBALL /*|| m_EaitType==AIT_NAPALM*/) {
-      m_EaitType=AIT_SHELLS;
+    if (m_EaitType == AIT_NUKEBALL) {
+      m_EaitType = AIT_SHELLS;
     }
+
     Initialize();     // initialize base class
     StartModelAnim(ITEMHOLDER_ANIM_MEDIUMOSCILATION, AOF_LOOPING|AOF_NORESTART);
     ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
