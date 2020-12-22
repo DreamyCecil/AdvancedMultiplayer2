@@ -828,8 +828,12 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   COLOR colDefault;
 
   // [Cecil] Set health and armor
-  const FLOAT fTopHealth = (GetSP()->sp_iAMPOptions & AMP_ENABLE ? GetSP()->sp_fStartHealth     : 100.0f);
-  const FLOAT fTopArmor  = (GetSP()->sp_iAMPOptions & AMP_ENABLE ? GetSP()->sp_fMaxArmor * 0.5f : 100.0f);
+  const FLOAT fTopHealth = GetSP()->sp_fStartHealth;
+  const FLOAT fTopArmor  = GetSP()->sp_fMaxArmor * 0.5f;
+
+  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
+  const FLOAT fMaxHealth = GetSP()->sp_fMaxHealth;
+  const FLOAT fMaxArmor = GetSP()->sp_fMaxArmor * (bEasy ? 1.5f : 1.0f);
   
   // prepare and draw health info
   fValue = ClampDn(_penPlayer->GetHealth(), 0.0f);  // never show negative health
@@ -838,7 +842,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.5f, 0.25f, FALSE);
 
   // [Cecil] Adjust size based on max health or armor
-  FLOAT fMaxHealthArmor = Max(fTopHealth, fTopArmor);
+  FLOAT fMaxHealthArmor = Max(fMaxHealth, fMaxArmor);
   FLOAT fWidth = Max(FLOAT(Floor(log10(fMaxHealthArmor)+1.0f)), 3.0f);
 
   fRow = pixBottomBound-fHalfUnit;

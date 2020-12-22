@@ -5621,13 +5621,8 @@ functions:
     // if respawning in place
     if ((m_ulFlags&PLF_RESPAWNINPLACE) && pen!=NULL && !((CPlayerMarker*)&*pen)->m_bNoRespawnInPlace) {
       m_ulFlags &= ~PLF_RESPAWNINPLACE;
-      // [Cecil] Set health
       // set default params
-      if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-        SetHealth(GetSP()->sp_fStartHealth);
-      } else {
-        SetHealth(TopHealth());
-      }
+      SetHealth(TopHealth());
 
       m_iMana  = GetSP()->sp_iInitialMana;
       m_fArmor = 0.0f;
@@ -5721,13 +5716,8 @@ functions:
 
     // default start position
     } else {
-      // [Cecil] Set health
       // set player characteristics
-      if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-        SetHealth(GetSP()->sp_fStartHealth);
-      } else {
-        SetHealth(TopHealth());
-      }
+      SetHealth(TopHealth());
 
       m_iMana = GetSP()->sp_iInitialMana;
       m_fArmor = 0.0f;
