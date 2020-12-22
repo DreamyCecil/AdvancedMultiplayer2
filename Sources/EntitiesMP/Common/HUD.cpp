@@ -1354,7 +1354,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fAdv = fAdvUnit+ fChrUnit*fWidthAdj/2 -fHalfUnit;
     HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
     HUD_DrawBorder(fCol+fAdv, fRow, fChrUnit*fWidthAdj, fOneUnit, colBorder);
-    HUD_DrawText(fCol+fAdv, fRow, strValue,  colMana, 1.0f);
+    HUD_DrawText(fCol+fAdv, fRow, strValue, C_lGRAY, 1.0f);
     HUD_DrawIcon(fCol, fRow, _toEnemyCount, C_WHITE, 1.0f, FALSE, 1.0f);
   }
 
@@ -1368,7 +1368,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fAdv = fAdvUnit+ fChrUnit*fWidthAdj/2 -fHalfUnit;
     HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
     HUD_DrawBorder(fCol+fAdv, fRow, fChrUnit*fWidthAdj, fOneUnit, colBorder);
-    HUD_DrawText(fCol+fAdv, fRow, strValue,  colMana, 1.0f);
+    HUD_DrawText(fCol+fAdv, fRow, strValue, C_lGRAY, 1.0f);
     HUD_DrawIcon(fCol, fRow, _toComboToken, C_WHITE, 1.0f, FALSE, 0.2f);
   }
 

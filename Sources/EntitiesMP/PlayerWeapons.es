@@ -1808,12 +1808,12 @@ functions:
     ANGLE aAngle = Lerp(m_aMiniGunLast, m_aMiniGun, _pTimer->GetLerpFactor());
     // rotate minigun barrels
     CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
-    amo->amo_plRelative.pl_OrientationAngle(3) = aAngle;
+    amo->amo_plRelative.pl_OrientationAngle(3) = aAngle*FireSpeed();
 
     // [Cecil] Dual minigun
     if (AltFireExists(WEAPON_MINIGUN)) {
       amo = m_moWeaponSecond.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
-      amo->amo_plRelative.pl_OrientationAngle(3) = -aAngle;
+      amo->amo_plRelative.pl_OrientationAngle(3) = -aAngle*FireSpeed();
     }
   };
 
