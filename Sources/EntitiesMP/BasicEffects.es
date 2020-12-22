@@ -65,7 +65,10 @@ enum BasicEffectType {
  52 BET_DISAPPEAR_DUST          "Disappear dust",
  53 BET_DUST_FALL               "Dust fall",
  54 BET_BULLETSTAINSNOW         "Bullet stain snow", 
- 55 BET_BULLETSTAINSNOWNOSOUND  "Bullet stain snow", 
+ 55 BET_BULLETSTAINSNOWNOSOUND  "Bullet stain snow",
+
+ // [Cecil] New types
+ 56 BET_FIREWORKS "Fireworks",
 };
 
 // input parameter for spwaning a basic effect
@@ -78,140 +81,157 @@ event ESpawnEffect {
 };
 
 %{
-void CBasicEffect_OnPrecache(CDLLEntityClass *pdec, INDEX iUser) 
-{
+void CBasicEffect_OnPrecache(CDLLEntityClass *pdec, INDEX iUser) {
   switch ((BasicEffectType)iUser) {
-  case BET_ROCKET:
-  case BET_ROCKET_PLANE:
-    pdec->PrecacheSound(SOUND_EXPLOSION);
-    pdec->PrecacheModel(MDL_ROCKET_EXPLOSION);
-    pdec->PrecacheTexture(TXT_ROCKET_EXPLOSION);
-    pdec->PrecacheModel(MDL_PARTICLES_EXPLOSION);
-    pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
-    pdec->PrecacheModel(MDL_ROCKET3D_EXPLOSION);
-    pdec->PrecacheTexture(TXT_ROCKET_EXPLOSION);
-    pdec->PrecacheModel(MDL_PARTICLES3D_EXPLOSION);
-    pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
-    break;
-  case BET_BOMB:
-  case BET_GRENADE:
-  case BET_GRENADE_PLANE:
-    pdec->PrecacheSound(SOUND_EXPLOSION);
-    pdec->PrecacheModel(MDL_GRENADE_EXPLOSION);
-    pdec->PrecacheTexture(TXT_GRENADE_EXPLOSION);
-    pdec->PrecacheModel(MDL_PARTICLES_EXPLOSION);
-    pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
-    pdec->PrecacheModel(MDL_GRENADE3D_EXPLOSION);
-    pdec->PrecacheTexture(TXT_GRENADE_EXPLOSION);
-    pdec->PrecacheModel(MDL_PARTICLES3D_EXPLOSION);
-    pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
-    break;
-  case BET_CANNON:
-  case BET_CANNON_NOLIGHT:
-  case BET_LIGHT_CANNON:
-  case BET_CANNON_PLANE:
-  case BET_CANNONSHOCKWAVE:
-    pdec->PrecacheSound(SOUND_EXPLOSION);
-    pdec->PrecacheModel(MDL_CANNON_EXPLOSION);
-    pdec->PrecacheTexture(TXT_CANNON_EXPLOSION);
-    pdec->PrecacheModel(MDL_CANNON3D_EXPLOSION);
-    pdec->PrecacheTexture(TXT_CANNON_EXPLOSION);
-    pdec->PrecacheModel(MODEL_CANNONSHOCKWAVE);
-    pdec->PrecacheTexture(TEXTURE_CANNONSHOCKWAVE);
-    break;
-  case BET_EXPLOSIONSTAIN:
-    pdec->PrecacheModel(MODEL_EXPLOSION_STAIN);
-    pdec->PrecacheTexture(TEXTURE_EXPLOSION_STAIN);
-    break;
-  case BET_CANNONEXPLOSIONSTAIN:
-    pdec->PrecacheModel(MODEL_CANNON_EXPLOSION_STAIN);
-    pdec->PrecacheTexture(TEXTURE_CANNON_EXPLOSION_STAIN);
-    break;
-  case BET_SHOCKWAVE:
-    pdec->PrecacheModel(MODEL_SHOCKWAVE);
-    pdec->PrecacheTexture(TEXTURE_SHOCKWAVE);
-    break;
-  case BET_LASERWAVE:
-    pdec->PrecacheModel(MODEL_LASERWAVE);
-    pdec->PrecacheTexture(TEXTURE_LASERWAVE);
-    break;
-  case BET_BULLETSTAINSTONE:
-  case BET_BULLETSTAINSAND:
-  case BET_BULLETSTAINREDSAND:
-  case BET_BULLETSTAINWATER:
-  case BET_BULLETSTAINUNDERWATER:
-  case BET_BULLETSTAINSTONENOSOUND:
-  case BET_BULLETSTAINSANDNOSOUND:
-  case BET_BULLETSTAINREDSANDNOSOUND:
-  case BET_BULLETSTAINWATERNOSOUND:
-  case BET_BULLETSTAINUNDERWATERNOSOUND:
-  case BET_BULLETSTAINGRASS:
-  case BET_BULLETSTAINWOOD:
-  case BET_BULLETSTAINGRASSNOSOUND:
-  case BET_BULLETSTAINWOODNOSOUND:
-  case BET_BULLETSTAINSNOW:
-  case BET_BULLETSTAINSNOWNOSOUND:
-    pdec->PrecacheModel(MODEL_BULLET_HIT);
-    pdec->PrecacheTexture(TEXTURE_BULLET_HIT);
-    pdec->PrecacheTexture(TEXTURE_BULLET_SAND);
-    pdec->PrecacheModel(MODEL_SHOCKWAVE);
-    pdec->PrecacheTexture(TEXTURE_WATER_WAVE);
-    pdec->PrecacheSound(SOUND_BULLET_STONE);
-    pdec->PrecacheSound(SOUND_BULLET_SAND);
-    pdec->PrecacheSound(SOUND_BULLET_WATER);
-    pdec->PrecacheModel(MODEL_BULLET_STAIN);
-    pdec->PrecacheTexture(TEXTURE_BULLET_STAIN);
-    pdec->PrecacheSound(SOUND_BULLET_GRASS);
-    pdec->PrecacheSound(SOUND_BULLET_WOOD);
-    pdec->PrecacheSound(SOUND_BULLET_SNOW);
-    break;
-  case BET_BULLETTRAIL:
-    pdec->PrecacheModel(MODEL_BULLET_TRAIL);
-    pdec->PrecacheTexture(TEXTURE_BULLET_TRAIL);
-    break;
-  case BET_GIZMO_SPLASH_FX:
-    pdec->PrecacheModel(MODEL_BULLET_HIT);
-    pdec->PrecacheTexture(TEXTURE_BULLET_HIT);
-    pdec->PrecacheSound(SOUND_GIZMO_SPLASH);
-    break;
-  case BET_BLOODEXPLODE:
-    pdec->PrecacheModel(MODEL_BLOOD_EXPLODE);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_EXPLODE);
-    pdec->PrecacheSound(SOUND_BULLET_FLESH);
-    break;
-  case BET_BLOODSTAIN:
-  case BET_BLOODSTAINGROW:
-  case BET_BLOODSPILL:
-  case BET_GIZMOSTAIN:
-    pdec->PrecacheModel(MODEL_BLOOD_STAIN);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN1);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN2);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN3);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN4);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_SPILL1);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_SPILL2);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_SPILL3);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER1);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER2);
-    pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER3);
+    case BET_ROCKET:
+    case BET_ROCKET_PLANE:
+      pdec->PrecacheSound(SOUND_EXPLOSION);
+      pdec->PrecacheModel(MDL_ROCKET_EXPLOSION);
+      pdec->PrecacheTexture(TXT_ROCKET_EXPLOSION);
+      pdec->PrecacheModel(MDL_PARTICLES_EXPLOSION);
+      pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
+      pdec->PrecacheModel(MDL_ROCKET3D_EXPLOSION);
+      pdec->PrecacheTexture(TXT_ROCKET_EXPLOSION);
+      pdec->PrecacheModel(MDL_PARTICLES3D_EXPLOSION);
+      pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
+      break;
 
-    // [Cecil] Blood textures for coloring
-    pdec->PrecacheTexture(TEX_BLOOD_EXPLODE);
-    pdec->PrecacheTexture(TEX_BLOOD_STAIN1);
-    pdec->PrecacheTexture(TEX_BLOOD_STAIN2);
-    pdec->PrecacheTexture(TEX_BLOOD_STAIN3);
-    pdec->PrecacheTexture(TEX_BLOOD_STAIN4);
-    pdec->PrecacheTexture(TEX_BLOOD_SPILL1);
-    pdec->PrecacheTexture(TEX_BLOOD_SPILL2);
-    pdec->PrecacheTexture(TEX_BLOOD_SPILL3);
-    break;
-  case BET_TELEPORT:
-    pdec->PrecacheModel(MODEL_TELEPORT_EFFECT);
-    pdec->PrecacheTexture(TEXTURE_TELEPORT_EFFECT);
-    pdec->PrecacheSound(SOUND_TELEPORT);
-    break;
-  default:
-    ASSERT(FALSE);
+    case BET_BOMB:
+    case BET_GRENADE:
+    case BET_GRENADE_PLANE:
+      pdec->PrecacheSound(SOUND_EXPLOSION);
+      pdec->PrecacheModel(MDL_GRENADE_EXPLOSION);
+      pdec->PrecacheTexture(TXT_GRENADE_EXPLOSION);
+      pdec->PrecacheModel(MDL_PARTICLES_EXPLOSION);
+      pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
+      pdec->PrecacheModel(MDL_GRENADE3D_EXPLOSION);
+      pdec->PrecacheTexture(TXT_GRENADE_EXPLOSION);
+      pdec->PrecacheModel(MDL_PARTICLES3D_EXPLOSION);
+      pdec->PrecacheTexture(TXT_PARTICLES_EXPLOSION);
+      break;
+
+    case BET_CANNON:
+    case BET_CANNON_NOLIGHT:
+    case BET_LIGHT_CANNON:
+    case BET_CANNON_PLANE:
+    case BET_CANNONSHOCKWAVE:
+      pdec->PrecacheSound(SOUND_EXPLOSION);
+      pdec->PrecacheModel(MDL_CANNON_EXPLOSION);
+      pdec->PrecacheTexture(TXT_CANNON_EXPLOSION);
+      pdec->PrecacheModel(MDL_CANNON3D_EXPLOSION);
+      pdec->PrecacheTexture(TXT_CANNON_EXPLOSION);
+      pdec->PrecacheModel(MODEL_CANNONSHOCKWAVE);
+      pdec->PrecacheTexture(TEXTURE_CANNONSHOCKWAVE);
+      break;
+
+    case BET_EXPLOSIONSTAIN:
+      pdec->PrecacheModel(MODEL_EXPLOSION_STAIN);
+      pdec->PrecacheTexture(TEXTURE_EXPLOSION_STAIN);
+      break;
+
+    case BET_CANNONEXPLOSIONSTAIN:
+      pdec->PrecacheModel(MODEL_CANNON_EXPLOSION_STAIN);
+      pdec->PrecacheTexture(TEXTURE_CANNON_EXPLOSION_STAIN);
+      break;
+
+    case BET_SHOCKWAVE:
+      pdec->PrecacheModel(MODEL_SHOCKWAVE);
+      pdec->PrecacheTexture(TEXTURE_SHOCKWAVE);
+      break;
+
+    case BET_LASERWAVE:
+      pdec->PrecacheModel(MODEL_LASERWAVE);
+      pdec->PrecacheTexture(TEXTURE_LASERWAVE);
+      break;
+
+    case BET_BULLETSTAINSTONE:
+    case BET_BULLETSTAINSAND:
+    case BET_BULLETSTAINREDSAND:
+    case BET_BULLETSTAINWATER:
+    case BET_BULLETSTAINUNDERWATER:
+    case BET_BULLETSTAINSTONENOSOUND:
+    case BET_BULLETSTAINSANDNOSOUND:
+    case BET_BULLETSTAINREDSANDNOSOUND:
+    case BET_BULLETSTAINWATERNOSOUND:
+    case BET_BULLETSTAINUNDERWATERNOSOUND:
+    case BET_BULLETSTAINGRASS:
+    case BET_BULLETSTAINWOOD:
+    case BET_BULLETSTAINGRASSNOSOUND:
+    case BET_BULLETSTAINWOODNOSOUND:
+    case BET_BULLETSTAINSNOW:
+    case BET_BULLETSTAINSNOWNOSOUND:
+      pdec->PrecacheModel(MODEL_BULLET_HIT);
+      pdec->PrecacheTexture(TEXTURE_BULLET_HIT);
+      pdec->PrecacheTexture(TEXTURE_BULLET_SAND);
+      pdec->PrecacheModel(MODEL_SHOCKWAVE);
+      pdec->PrecacheTexture(TEXTURE_WATER_WAVE);
+      pdec->PrecacheSound(SOUND_BULLET_STONE);
+      pdec->PrecacheSound(SOUND_BULLET_SAND);
+      pdec->PrecacheSound(SOUND_BULLET_WATER);
+      pdec->PrecacheModel(MODEL_BULLET_STAIN);
+      pdec->PrecacheTexture(TEXTURE_BULLET_STAIN);
+      pdec->PrecacheSound(SOUND_BULLET_GRASS);
+      pdec->PrecacheSound(SOUND_BULLET_WOOD);
+      pdec->PrecacheSound(SOUND_BULLET_SNOW);
+      break;
+
+    case BET_BULLETTRAIL:
+      pdec->PrecacheModel(MODEL_BULLET_TRAIL);
+      pdec->PrecacheTexture(TEXTURE_BULLET_TRAIL);
+      break;
+
+    case BET_GIZMO_SPLASH_FX:
+      pdec->PrecacheModel(MODEL_BULLET_HIT);
+      pdec->PrecacheTexture(TEXTURE_BULLET_HIT);
+      pdec->PrecacheSound(SOUND_GIZMO_SPLASH);
+      break;
+    case BET_BLOODEXPLODE:
+      pdec->PrecacheModel(MODEL_BLOOD_EXPLODE);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_EXPLODE);
+      pdec->PrecacheSound(SOUND_BULLET_FLESH);
+      break;
+
+    case BET_BLOODSTAIN:
+    case BET_BLOODSTAINGROW:
+    case BET_BLOODSPILL:
+    case BET_GIZMOSTAIN:
+      pdec->PrecacheModel(MODEL_BLOOD_STAIN);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN1);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN2);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN3);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_STAIN4);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_SPILL1);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_SPILL2);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_SPILL3);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER1);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER2);
+      pdec->PrecacheTexture(TEXTURE_BLOOD_FLOWER3);
+
+      // [Cecil] Blood textures for coloring
+      pdec->PrecacheTexture(TEX_BLOOD_EXPLODE);
+      pdec->PrecacheTexture(TEX_BLOOD_STAIN1);
+      pdec->PrecacheTexture(TEX_BLOOD_STAIN2);
+      pdec->PrecacheTexture(TEX_BLOOD_STAIN3);
+      pdec->PrecacheTexture(TEX_BLOOD_STAIN4);
+      pdec->PrecacheTexture(TEX_BLOOD_SPILL1);
+      pdec->PrecacheTexture(TEX_BLOOD_SPILL2);
+      pdec->PrecacheTexture(TEX_BLOOD_SPILL3);
+      break;
+
+    case BET_TELEPORT:
+      pdec->PrecacheModel(MODEL_TELEPORT_EFFECT);
+      pdec->PrecacheTexture(TEXTURE_TELEPORT_EFFECT);
+      pdec->PrecacheSound(SOUND_TELEPORT);
+      break;
+
+    // [Cecil] Fireworks sounds
+    case BET_FIREWORKS:
+      pdec->PrecacheSound(SOUND_FIREWORKS1);
+      pdec->PrecacheSound(SOUND_FIREWORKS2);
+      pdec->PrecacheSound(SOUND_FIREWORKS3);
+      break;
+
+    default: ASSERT(FALSE);
   }
 }
 %}
@@ -340,6 +360,11 @@ components:
 156 texture TEX_BLOOD_SPILL2  "Textures\\Blood\\Spill2.tex",
 157 texture TEX_BLOOD_SPILL3  "Textures\\Blood\\Spill3.tex",
 
+// [Cecil] Fireworks sounds
+160 sound SOUND_FIREWORKS1 "Sounds\\Effects\\Fireworks01.wav",
+161 sound SOUND_FIREWORKS2 "Sounds\\Effects\\Fireworks02.wav",
+162 sound SOUND_FIREWORKS3 "Sounds\\Effects\\Fireworks03.wav",
+
 functions:
 
   // dump sync data to text file
@@ -437,54 +462,59 @@ functions:
 /* RENDER PARTICLES */
 
 
-  void RenderParticles(void)
-  {
-    if( m_eptType != EPT_NONE)
-    {
-      FLOAT fStretch=0.3f;
-      Particles_BulletSpray(en_ulID, GetLerpedPlacement().pl_PositionVector, m_vGravity, 
-        m_eptType, m_tmSpawn, m_vStretch, fStretch);
+  void RenderParticles(void) {
+    if (m_eptType != EPT_NONE) {
+      FLOAT fStretch = 0.3f;
+      Particles_BulletSpray(en_ulID, GetLerpedPlacement().pl_PositionVector, m_vGravity, m_eptType, m_tmSpawn, m_vStretch, fStretch);
     }
-    if(m_betType==BET_EXPLOSION_DEBRIS)
-    {
-      Particles_ExplosionDebris1(this, m_tmSpawn, m_vStretch, m_colMultiplyColor);
-      Particles_ExplosionDebris2(this, m_tmSpawn, m_vStretch, m_colMultiplyColor);
-      Particles_ExplosionDebris3(this, m_tmSpawn, m_vStretch, m_colMultiplyColor);
-    }
-    if(m_betType==BET_COLLECT_ENERGY)
-    {
-      Particles_CollectEnergy(this, m_tmSpawn, m_tmSpawn+m_fWaitTime);
-    }
-    /*if(m_betType==BET_SNIPER_RESIDUE)
-    {
-      Particles_SniperResidue(this, m_tmSpawn, m_tmSpawn+m_fWaitTime, m_vNormal, m_vDirection);
-    }*/
-    if(m_betType==BET_EXPLOSION_SMOKE && _pTimer->GetLerpedCurrentTick()>(m_tmSpawn+m_fWaitTime))
-    {
-      Particles_ExplosionSmoke(this, m_tmSpawn+m_fWaitTime, m_vStretch, m_colMultiplyColor);
-    }
-    if(m_betType==BET_SUMMONERSTAREXPLOSION)
-    {
-      Particles_SummonerExplode(this, GetPlacement().pl_PositionVector,
-                                60.0f, 1.0f, m_tmSpawn, m_fWaitTime);
-    }
-    if(m_betType==BET_GROWING_SWIRL)
-    {
-      FLOAT fStretch=(m_vStretch(1)+m_vStretch(2)+m_vStretch(3))/3.0f;
-      Particles_GrowingSwirl(this, fStretch, m_tmSpawn);
-    }
-    if(m_betType==BET_DISAPPEAR_DUST)
-    {
-      FLOAT fStretch=(m_vStretch(1)+m_vStretch(2)+m_vStretch(3))/3.0f;
-      Particles_DisappearDust(this, fStretch, m_tmSpawn);
-    }
-    if(m_betType==BET_DUST_FALL)
-    {
-      Particles_DustFall(this, m_tmSpawn, m_vStretch);
-    }    
-  }
 
+    // [Cecil] Replaced if-else with switch-case
+    switch (m_betType) {
+      case BET_EXPLOSION_DEBRIS:
+        Particles_ExplosionDebris1(this, m_tmSpawn, m_vStretch, m_colMultiplyColor);
+        Particles_ExplosionDebris2(this, m_tmSpawn, m_vStretch, m_colMultiplyColor);
+        Particles_ExplosionDebris3(this, m_tmSpawn, m_vStretch, m_colMultiplyColor);
+        break;
 
+      case BET_COLLECT_ENERGY:
+        Particles_CollectEnergy(this, m_tmSpawn, m_tmSpawn+m_fWaitTime);
+        break;
+
+      case BET_EXPLOSION_SMOKE:
+        if (_pTimer->GetLerpedCurrentTick() > m_tmSpawn+m_fWaitTime) {
+          Particles_ExplosionSmoke(this, m_tmSpawn+m_fWaitTime, m_vStretch, m_colMultiplyColor);
+        }
+        break;
+
+      case BET_SUMMONERSTAREXPLOSION:
+        Particles_SummonerExplode(this, GetPlacement().pl_PositionVector, 60.0f, 1.0f, m_tmSpawn, m_fWaitTime);
+        break;
+
+      case BET_GROWING_SWIRL: {
+        FLOAT fStretch = (m_vStretch(1) + m_vStretch(2) + m_vStretch(3)) / 3.0f;
+        Particles_GrowingSwirl(this, fStretch, m_tmSpawn);
+      } break;
+
+      case BET_DISAPPEAR_DUST: {
+        FLOAT fStretch = (m_vStretch(1) + m_vStretch(2) + m_vStretch(3)) / 3.0f;
+        Particles_DisappearDust(this, fStretch, m_tmSpawn);
+      } break;
+
+      case BET_DUST_FALL:
+        Particles_DustFall(this, m_tmSpawn, m_vStretch);
+        break;
+
+      // [Cecil] Fireworks
+      case BET_FIREWORKS: {
+        INDEX iRandom = (en_ulID + m_tmSpawn / _pTimer->TickQuantum);
+        COLOR colRandom = ChristmasColor(iRandom, 0xFF, 0x00);
+        colRandom |= 0x1F1F1F00;
+
+        FLOAT fStretch = (m_vStretch(1) + m_vStretch(2) + m_vStretch(3)) / 3.0f;
+        Particles_Fireworks(this, GetPlacement(), fStretch, fStretch/8.0f, m_tmSpawn, m_fWaitTime, PT_STAR02, colRandom);
+      } break;
+    }
+  };
 
 /************************************************************
  *                        FADE OUT                          *
@@ -609,7 +639,7 @@ functions:
   };
 
   void Stretch(void) {
-    ASSERT(m_vStretch(1)>0.01f && m_vStretch(3)>0.01f && m_vStretch(3)>0.01f);
+    ASSERT(m_vStretch(1) > 0.01f && m_vStretch(2) > 0.01f && m_vStretch(3) > 0.01f);
     GetModelObject()->mo_Stretch = m_vStretch;
   };
 
@@ -1197,7 +1227,7 @@ functions:
         // Halloween
         case 5: SetModelColor(0xFF7F00FF); break;
         // Christmas
-        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
         // Red
         default: SetModelColor(0xFA1414FF);
       }
@@ -1244,7 +1274,7 @@ functions:
         // Halloween
         case 5: SetModelColor(0xFF7F00FF); break;
         // Christmas
-        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
         // Red
         default: SetModelColor(0xFA1414FF);
       }
@@ -1292,7 +1322,7 @@ functions:
         // Halloween
         case 5: SetModelColor(0xFF7F00FF); break;
         // Christmas
-        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
         // Red
         default: SetModelColor(0xFA1414FF);
       }
@@ -1342,7 +1372,7 @@ functions:
         // Halloween
         case 5: SetModelColor(0xFF7F00FF); break;
         // Christmas
-        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
         // Green
         default: SetModelColor(0x00FA00FF);
       }
@@ -1389,7 +1419,7 @@ functions:
         // Halloween
         case 5: SetModelColor(0xFF7F00FF); break;
         // Christmas
-        case 6: SetModelColor(ChristmasBlood(rand(), 0xFF, 0xFF)); break;
+        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
         // Red or other
         default: SetModelColor(colBloodSpillColor);
       }
@@ -1401,31 +1431,45 @@ functions:
     ParentToNearestPolygonAndStretch();
   }
 
-procedures:
+  // [Cecil] Small fireworks
+  void FireworksExplosion(void) {
+    SetPredictable(TRUE);
+    SetModel(MODEL_BULLET_HIT);
+    SetModelMainTexture(TEXTURE_BULLET_HIT);
+    m_fWaitTime = 2.0f + FRnd();
+    m_tmWaitAfterDeath = 2.0f;
+    m_bLightSource = FALSE;
 
+    FLOAT fStretch = (m_vStretch(1) + m_vStretch(2) + m_vStretch(3)) / 3.0f;
+    m_soEffect.Set3DParameters(64.0f * fStretch, 8.0f * fStretch, 2.0f, 0.8f + FRnd()*0.3f);
+
+    INDEX iSound = (SOUND_FIREWORKS1 + IRnd() % 3);
+    PlaySound(m_soEffect, iSound, SOF_3D);
+    m_fSoundTime = GetSoundLength(iSound);
+  };
+
+procedures:
 
 /************************************************************
  *                    M  A  I  N                            *
  ************************************************************/
-
-  Main(ESpawnEffect eSpawn)
-  {
-    if(eSpawn.betType==BET_GIZMO_SPLASH_FX ||
-       eSpawn.betType==BET_EXPLOSION_DEBRIS ||
-       eSpawn.betType==BET_EXPLOSION_SMOKE ||
-       eSpawn.betType==BET_SUMMONERSTAREXPLOSION  ||
-       eSpawn.betType==BET_COLLECT_ENERGY ||
-       eSpawn.betType==BET_GROWING_SWIRL||
-       eSpawn.betType==BET_DISAPPEAR_DUST||
-       /*eSpawn.betType==BET_SNIPER_RESIDUE ||*/
-       eSpawn.betType==BET_DUST_FALL)
+  Main(ESpawnEffect eSpawn) {
+    if (eSpawn.betType == BET_GIZMO_SPLASH_FX
+     || eSpawn.betType == BET_EXPLOSION_DEBRIS
+     || eSpawn.betType == BET_EXPLOSION_SMOKE
+     || eSpawn.betType == BET_SUMMONERSTAREXPLOSION
+     || eSpawn.betType == BET_COLLECT_ENERGY
+     || eSpawn.betType == BET_GROWING_SWIRL
+     || eSpawn.betType == BET_DISAPPEAR_DUST
+     || eSpawn.betType == BET_DUST_FALL
+     // [Cecil] New types
+     || eSpawn.betType == BET_FIREWORKS)
     {
       InitAsEditorModel();
-    }
-    else
-    {
+    } else {
       InitAsModel();
     }
+
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
     SetFlags(GetFlags() | ENF_SEETHROUGH);
@@ -1485,8 +1529,11 @@ procedures:
       case BET_DUST_FALL: DustFall(); break;
       case BET_BULLETSTAINSNOW: BulletStainSnow(TRUE); break;
       case BET_BULLETSTAINSNOWNOSOUND: BulletStainSnow(FALSE); break;
-      default:
-        ASSERTALWAYS("Unknown effect type");
+
+      // [Cecil] New types
+      case BET_FIREWORKS: FireworksExplosion(); break;
+
+      default: ASSERTALWAYS("Unknown effect type");
     }
 
     // setup light source
@@ -1509,11 +1556,12 @@ procedures:
   EffectLoop() 
   {
     // wait
-    if (m_fWaitTime>0.0f) {
+    if (m_fWaitTime > 0.0f) {
       autowait(m_fWaitTime);
     }
+
     // fading
-    if (m_fFadeTime>0.0f) {
+    if (m_fFadeTime > 0.0f) {
       m_fFadeStartTime  = _pTimer->CurrentTick();
       m_fFadeStartAlpha = ((GetModelColor()&CT_AMASK)>>CT_ASHIFT) / 255.0f;
       m_bFade = TRUE;
@@ -1522,14 +1570,13 @@ procedures:
     }
     
     // wait for sound to end
-    if (m_fSoundTime > m_fWaitTime+m_fFadeTime) {
+    if (m_fSoundTime > m_fWaitTime + m_fFadeTime) {
       SwitchToEditorModel();
       autowait(m_fSoundTime - (m_fWaitTime+m_fFadeTime));
     }
 
-    if (m_tmWaitAfterDeath>0.0f) {
-      if( en_RenderType != RT_EDITORMODEL)
-      {
+    if (m_tmWaitAfterDeath > 0.0f) {
+      if (en_RenderType != RT_EDITORMODEL) {
         SwitchToEditorModel();
       }
       autowait(m_tmWaitAfterDeath);

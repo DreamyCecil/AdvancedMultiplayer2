@@ -713,6 +713,8 @@ void CPlayer_Precache(void)
   pdec->PrecacheSound(SOUND_TOKEN);
   // [Cecil] Powerup sound
   pdec->PrecacheSound(SOUND_POWERUP);
+  // [Cecil] Fireworks effect
+  pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_FIREWORKS);
 
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODSPILL);
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODSTAIN);
@@ -3520,7 +3522,7 @@ functions:
         // Halloween
         case 5: colDebris = 0xFF7F00FF; break;
         // Christmas
-        case 6: colDebris = ChristmasBlood(rand(), 0xFF, 0xFF); break;
+        case 6: colDebris = ChristmasColor(rand(), 0xFF, 0xFF); break;
       }
 
       // [Cecil] Moved from above for random colors
@@ -3544,8 +3546,27 @@ functions:
       en_vCurrentTranslationAbsolute *= fSpeedMax/fSpeedOrg;
     }
 
-//    SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
-//    SetCollisionFlags(ECF_IMMATERIAL);
+    // [Cecil] Christmas fireworks
+    if (GetCurrentEvent() == ESE_CHRISTMAS) {
+      ESpawnEffect eSpawnEffect;
+      eSpawnEffect.colMuliplier = 0xFFFFFFFF;
+      eSpawnEffect.betType = BET_FIREWORKS;
+
+      // get enemy center
+      EntityInfo *pei = (EntityInfo*)GetEntityInfo();
+      FLOAT3D vCenter = FLOAT3D(0.0f, pei->vTargetCenter[1], 0.0f);
+
+      // position and scale
+      CPlacement3D plFireworks = CPlacement3D(vCenter * GetRotationMatrix(), ANGLE3D(FRnd() * 360.0f, 0.0f, 0.0f));
+      plFireworks.RelativeToAbsolute(GetPlacement());
+
+      FLOAT fScale = (2.0f + FRnd());
+      eSpawnEffect.vStretch = FLOAT3D(fScale, fScale, fScale);
+
+      // spawn fireworks
+      CEntityPointer penFireworks = CreateEntity(plFireworks, CLASS_BASIC_EFFECT);
+      penFireworks->Initialize(eSpawnEffect);
+    }
   };
 
 /************************************************************

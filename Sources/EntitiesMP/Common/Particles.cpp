@@ -1507,7 +1507,7 @@ void Particles_BloodTrail(CEntity *pen) {
         // Halloween
         case 5: col = RGBAToColor(ub, FLOAT(ub) * 0.5f, 0, ub); break;
         // Christmas
-        case 6: col = ChristmasBlood(pen->en_ulID, ub, ub); break;
+        case 6: col = ChristmasColor(pen->en_ulID, ub, ub); break;
         // Red
         default: col = RGBAToColor(ub, 20, 20, ub);
       }
@@ -4485,7 +4485,7 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
         // Halloween
         case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
         // Christmas
-        case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+        case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
         // Red
         default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha);
       }
@@ -4503,7 +4503,7 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
           // Halloween
           case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
           // Christmas
-          case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
           // Green
           default: col = RGBAToColor(0, ubRndCol, 0, ubAlpha);
         }
@@ -4522,7 +4522,7 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
           // Halloween
           case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
           // Christmas
-          case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
           // Goo
           default: col = RGBAToColor(ubRndCol, 128, 12, ubAlpha);
         }
@@ -4554,7 +4554,7 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
           // Halloween
           case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
           // Christmas
-          case 6: col = ChristmasBlood(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
           // Red
           default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha);
         }
@@ -5178,6 +5178,56 @@ void Particles_SummonerExplode(CEntity *pen, FLOAT3D vCenter, FLOAT fArea, FLOAT
   Particle_Flush();
 
 }
+
+// [Cecil] Fireworks particles
+void Particles_Fireworks(CEntity *pen, CPlacement3D plPos, FLOAT fArea, FLOAT fSize, FLOAT tmStart, FLOAT tmDuration, ParticleTexture ptTexture, COLOR col) {
+  FLOAT fElapsed = _pTimer->GetLerpedCurrentTick() - tmStart;
+  SetupParticleTextureWithAddAlpha(ptTexture);
+    
+  for (INDEX i = 0; i < 128; i++) {
+    // random particles
+    INDEX iParticle = INDEX(i + pen->en_ulID + tmStart/_pTimer->TickQuantum) % CT_MAX_PARTICLES_TABLE;
+
+    FLOAT3D vPos;
+    FLOAT fAngle = auStarsColors[iParticle][0];
+    
+    vPos = FLOAT3D(afStarsPositions[iParticle][0], afStarsPositions[iParticle][1], afStarsPositions[iParticle][2]);
+    
+    FLOAT fAreaModificator = afStarsPositions[iParticle][2] + 1.0f;
+
+    vPos *= (5.0f - 5.0f / (fElapsed*4.0f + 1.0f)) * fArea * fAreaModificator;
+    vPos(2) -= fElapsed*fElapsed;
+
+    // apply absolute position
+    FLOATmatrix3D mRot;
+    MakeRotationMatrixFast(mRot, plPos.pl_OrientationAngle);
+    vPos = plPos.pl_PositionVector + vPos*mRot;
+
+    COLOR colColor;
+    UBYTE ub;
+    FLOAT fFadeBegin = tmDuration * (0.6f + afStarsPositions[iParticle][2] * 0.1f);
+    FLOAT fFadeEnd   = tmDuration * (0.8f + afStarsPositions[iParticle][1] * 0.3f);
+
+    if (fElapsed < fFadeBegin) {
+      ub = 255;
+    } else if (fElapsed < fFadeEnd) {
+      ub = ((fFadeEnd - fElapsed) / (fFadeEnd - fFadeBegin)) * 255;
+    } else {
+      ub = 0;
+    }
+
+    colColor = RGBToColor(auStarsColors[iParticle][0], auStarsColors[iParticle][1], auStarsColors[iParticle][2]);
+
+    // multiply colors
+    colColor = MulColors(colColor, col);
+    colColor |= ub;
+    
+    Particle_RenderSquare(vPos, fSize, fAngle, colColor);
+  }
+
+  // all done
+  Particle_Flush();
+};
 
 #define TM_TWISTER_TOTAL_LIFE 10.0f
 void Particles_Twister( CEntity *pen, FLOAT fStretch, FLOAT fStartTime, FLOAT fFadeOutStartTime, FLOAT fParticleStretch)

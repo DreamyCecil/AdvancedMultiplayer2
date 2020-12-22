@@ -1757,12 +1757,32 @@ functions:
 
 
   // base function for blowing up
-  void BlowUpBase(void)
-  {
+  void BlowUpBase(void) {
     // call derived function
     BlowUp();
-  }
 
+    // [Cecil] Christmas fireworks
+    if (GetCurrentEvent() == ESE_CHRISTMAS) {
+      ESpawnEffect eSpawnEffect;
+      eSpawnEffect.colMuliplier = 0xFFFFFFFF;
+      eSpawnEffect.betType = BET_FIREWORKS;
+
+      // get enemy center
+      EntityInfo *pei = (EntityInfo*)GetEntityInfo();
+      FLOAT3D vCenter = FLOAT3D(0.0f, pei->vTargetCenter[1], 0.0f) * m_fStretchMultiplier;
+
+      // position and scale
+      CPlacement3D plFireworks = CPlacement3D(vCenter * GetRotationMatrix(), ANGLE3D(FRnd() * 360.0f, 0.0f, 0.0f));
+      plFireworks.RelativeToAbsolute(GetPlacement());
+
+      FLOAT fScale = (1.5f + FRnd());
+      eSpawnEffect.vStretch = FLOAT3D(fScale, fScale, fScale);
+
+      // spawn fireworks
+      CEntityPointer penFireworks = CreateEntity(plFireworks, CLASS_BASIC_EFFECT);
+      penFireworks->Initialize(eSpawnEffect);
+    }
+  };
 
   // spawn body parts
   virtual void BlowUp(void)
@@ -1820,7 +1840,7 @@ functions:
           // Halloween
           case 5: colDebris = 0xFF7F00FF; break;
           // Christmas
-          case 6: colDebris = ChristmasBlood(rand(), 0xFF, 0xFF); break;
+          case 6: colDebris = ChristmasColor(rand(), 0xFF, 0xFF); break;
         }
 
         // [Cecil] Moved from above for random colors

@@ -346,7 +346,7 @@ static const INDEX _aiWeaponItemFlags[13] = {
 #define ASSERT_ENTITY(_Entity) (_Entity != NULL && !(_Entity->GetFlags() & ENF_DELETED))
 
 // [Cecil] Christmas blood color
-inline COLOR ChristmasBlood(INDEX iRandom, UBYTE ubFactor, UBYTE ubAlpha) {
+inline COLOR ChristmasColor(INDEX iRandom, UBYTE ubFactor, UBYTE ubAlpha) {
   COLOR colWhite = RGBAToColor(ubFactor, ubFactor, ubFactor, ubAlpha);
 
   switch (iRandom % 3) {

@@ -241,10 +241,6 @@ functions:
     SetCollisionFlags(ECF_IMMATERIAL);
   };
 
-
-
-
-
 procedures:
 /************************************************************
  *                A T T A C K   E N E M Y                   *

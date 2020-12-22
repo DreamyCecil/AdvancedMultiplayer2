@@ -837,7 +837,7 @@ functions:
       iEnemy++;
 
       // enough enemies damaged
-      if (iEnemy >= 30) {
+      if (iEnemy >= 50) {
         break;
       }
     }

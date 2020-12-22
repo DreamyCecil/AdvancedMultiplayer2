@@ -161,3 +161,5 @@ void DECL_DLL Particles_RunAfterBurner(CEntity *pen, FLOAT tmEnd, FLOAT fStretch
 void DECL_DLL Particles_TeslaLightning(FLOAT3D vSrc, FLOAT3D vDst, FLOAT fTimeStart, FLOAT fPower, FLOAT fKneeLen, FLOAT fPosFactor);
 // [Cecil] Ghost Buster replacement particles
 void DECL_DLL Particles_Ghostbuster2(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRays, FLOAT fSize, FLOAT fPower);
+// [Cecil] Fireworks particles
+void DECL_DLL Particles_Fireworks(CEntity *pen, CPlacement3D plPos, FLOAT fArea, FLOAT fSize, FLOAT tmStart, FLOAT tmDuration, ParticleTexture ptTexture, COLOR col);
