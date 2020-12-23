@@ -1054,13 +1054,11 @@ functions:
  ************************************************************/
 
   // get movement frequency for attack
-  virtual FLOAT GetAttackMoveFrequency(FLOAT fEnemyDistance)
-  {
-    if (fEnemyDistance>GetProp(m_fCloseDistance)) {
+  virtual FLOAT GetAttackMoveFrequency(FLOAT fEnemyDistance) {
+    if (fEnemyDistance > GetProp(m_fCloseDistance)) {
       return 0.5f;
-    } else {
-      return 0.25f;
     }
+    return 0.25f;
   }
 
   // set speeds for movement towards desired position

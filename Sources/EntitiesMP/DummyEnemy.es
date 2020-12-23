@@ -43,7 +43,7 @@ properties:
  32 FLOAT m_fSetCloseSpeed "Dummy Speed Close" = 11.0f,
  33 FLOAT m_fSetStopDist   "Dummy Dist Stop" = 1.5f,
  34 FLOAT m_fSetAttackDist "Dummy Dist Attack" = 50.0f,
- 35 FLOAT m_fSetCloseDist  "Dummy Dist Close" = 10.0f,
+ 35 FLOAT m_fSetCloseDist  "Dummy Dist Close" = 6.0f,
 
 {
   CAutoPrecacheSound m_apsAttack;
@@ -248,18 +248,19 @@ procedures:
     }
 
     StandingAnimFight();
-    autowait(0.25f);
+    autowait(0.15f + FRnd()*0.15f);
 
     m_iFireCounter = m_iAttackFire;
 
     while (--m_iFireCounter >= 0) {
       BodyAnim(BODY_ANIM_COLT_FIRERIGHT, 0);
-      ShootProjectile(m_prtProjectile, FLOAT3D(0.2f, 1.3f, -0.2f) * m_fStretchMultiplier, ANGLE3D(0.0f, 0.0f, 0.0f));
+      ShootProjectile(m_prtProjectile, FLOAT3D(0.2f, 1.4f, -0.25f) * m_fStretchMultiplier, ANGLE3D(0.0f, 0.0f, 0.0f));
       PlaySound(m_soSound, m_fnFireSound, SOF_3D);
 
       autowait(ClampDn(m_fFireRate, 0.05f));
     }
-
+    
+    m_fShootTime = _pTimer->CurrentTick() + 0.4f + FRnd()*0.3f;
     return EReturn();
   };
 
@@ -269,15 +270,13 @@ procedures:
       return EReturn();
     }
 
-    m_fShootTime = _pTimer->CurrentTick() + 0.5f;
-
     // within hitting range
-    if (CalcDist(m_penEnemy) < 3.0f*m_fStretchMultiplier) {
+    if (CalcDist(m_penEnemy) < 2.0f*m_fStretchMultiplier) {
       StandingAnimFight();
       BodyAnim(BODY_ANIM_KNIFE_ATTACK, 0);
 
       // wait for animation
-      autowait(0.25f);
+      autowait(0.1f);
 
       // within hitting range
       if (CalcDist(m_penEnemy) < 3.0f*m_fStretchMultiplier) {
@@ -291,6 +290,7 @@ procedures:
       autowait(0.5f);
     }
 
+    m_fShootTime = _pTimer->CurrentTick() + 0.4f + FRnd()*0.3f;
     return EReturn();
   };
 
@@ -303,6 +303,7 @@ procedures:
 
     SetHealth(m_fHealth);
     m_fMaxHealth = m_fHealth;
+    m_sptType = m_sptParticles;
 
     en_tmMaxHoldBreath = 5.0f;
     en_fDensity = 1000.0f;
@@ -344,7 +345,7 @@ procedures:
     // damage/explode properties
     m_fBlowUpAmount = m_fBlowupDamage;
     m_fBodyParts = 4;
-    m_fDamageWounded = 0.0f;
+    m_fDamageWounded = 50.0f;
     
     m_iScore = 1000;
     
