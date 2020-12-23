@@ -1414,36 +1414,39 @@ functions:
 
     // render player tags
     if (amp_iPlayerTags > 0) {
-	    for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
-		    if (iPlayer == GetMyPlayerIndex()) {
-			    continue;
-		    }
-		    
-		    CPlayer *penTarget = (CPlayer*)GetPlayerEntity(iPlayer);
-
-		    if (penTarget == NULL) {
-			    continue;
-		    }
-
+      for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
+        if (iPlayer == GetMyPlayerIndex()) {
+          continue;
+        }
+        
+        CEntity *pen = GetPlayerEntity(iPlayer);
+        
+        // invalid or invisible player
+        if (!ASSERT_ENTITY(pen) || pen->GetRenderType() != RT_MODEL) {
+          continue;
+        }
+        
+        CPlayer *penPlayer = (CPlayer*)pen;
+        
         // tag color
-        COLOR colTag = (penTarget->GetFlags() & ENF_ALIVE ? 0x6097CC00 : 0xFF000000);
-
+        COLOR colTag = (penPlayer->GetFlags() & ENF_ALIVE ? 0x6097CC00 : 0xFF000000);
+        
         FLOAT3D vSource = GetLerpedPlacement().pl_PositionVector;
-        FLOAT3D vTarget = penTarget->GetLerpedPlacement().pl_PositionVector;
+        FLOAT3D vTarget = penPlayer->GetLerpedPlacement().pl_PositionVector;
 
         // player render position
-        FLOAT3D vRenderPos = vTarget + FLOAT3D(0.0f, 0.5f, 0.0f) * penTarget->GetRotationMatrix();
+        FLOAT3D vRenderPos = vTarget + FLOAT3D(0.0f, 0.5f, 0.0f) * penPlayer->GetRotationMatrix();
         FLOAT3D vRelativeToScreen(0.0f, 0.0f, 0.0f);
 
         const FLOAT fDist = (vTarget - vSource).Length();
         UBYTE ubAlpha = 127 + UBYTE(Clamp((16.0f - fDist) * 8.0f, 0.0f, 128.0f));
 
         // player body position
-        if (penTarget->GetFlags() & ENF_ALIVE) {
-          EntityInfo *peiPlayer = (EntityInfo*)penTarget->GetEntityInfo();
+        if (penPlayer->GetFlags() & ENF_ALIVE) {
+          EntityInfo *peiPlayer = (EntityInfo*)penPlayer->GetEntityInfo();
 
           // top of the body
-          FLOAT3D vBody = FLOAT3D(peiPlayer->vTargetCenter[0], peiPlayer->vTargetCenter[1]*2.0f + 0.25f, peiPlayer->vTargetCenter[2]) * penTarget->GetRotationMatrix();
+          FLOAT3D vBody = FLOAT3D(peiPlayer->vTargetCenter[0], peiPlayer->vTargetCenter[1]*2.0f + 0.25f, peiPlayer->vTargetCenter[2]) * penPlayer->GetRotationMatrix();
 
           vRenderPos = vTarget + vBody;
         }
@@ -1464,7 +1467,7 @@ functions:
         pdp->FlushRenderingQueue();
 
         // player name
-        CTString strPlayerName = penTarget->GetName();
+        CTString strPlayerName = penPlayer->GetName();
         ProperUndecorate(strPlayerName);
 
         // limit the length
@@ -1482,7 +1485,7 @@ functions:
         if (amp_iPlayerTags >= 2) {
           pdp->PutTextC(strPlayerName, vOnScreen(1), vOnScreen(2) - fMarkerSize*4.0f, colTag|ubAlpha);
         }
-	    }
+      }
     }
   };
 
@@ -5745,7 +5748,7 @@ functions:
       // set weapons
       ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(0, 0, 0, 0);
       // start position
-      Teleport(CPlacement3D(FLOAT3D(0, 0, 0)+vOffsetRel, ANGLE3D(0, 0, 0)));
+      Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0, 0, 0)));
     }
     // send teleport event to all entities in range
     SendEventInRange(ETeleport(), FLOATaabbox3D(GetPlacement().pl_PositionVector, 200.0f));
@@ -6321,6 +6324,10 @@ procedures:
       on (EKilledEnemy) : { pass; }
       on (EPreLevelChange) : { pass; }
       on (EPostLevelChange) : { pass; }
+
+      // [Cecil] Pass new weapon
+      on (EWeaponItem) : { pass; }
+
       otherwise() : { resume; }
     }
 
@@ -6369,6 +6376,10 @@ procedures:
       on (EReceiveScore) : { pass; }
       on (EKilledEnemy) : { pass; }
       on (ECenterMessage) : { pass; }
+
+      // [Cecil] Pass new weapon
+      on (EWeaponItem) : { pass; }
+
       otherwise() : { resume; }
     }
   };
@@ -7003,6 +7014,10 @@ procedures:
                 m_bEndOfLevel = FALSE;
                 pass; 
               }
+
+              // [Cecil] Pass new weapon
+              on (EWeaponItem) : { pass; }
+
               otherwise() : { resume; }
             }
           }
@@ -7146,7 +7161,7 @@ procedures:
     }
 
     // wait a bit to allow other entities to start
-    wait(0.2f) { // this is 4 ticks, it has to be at least more than musicchanger for enemy counting
+    wait (0.2f) { // this is 4 ticks, it has to be at least more than musicchanger for enemy counting
       on (EBegin) : { resume; }
       on (ETimer) : { stop; }
       on (EDisconnected) : { 
@@ -7366,6 +7381,12 @@ procedures:
             }
           }
         }
+        resume;
+      }
+
+      // [Cecil] New weapon
+      on (EWeaponItem eWeapon) : {
+        ReceiveItem(eWeapon);
         resume;
       }
 

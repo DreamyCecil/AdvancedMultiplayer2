@@ -2923,22 +2923,23 @@ functions:
   BOOL ReceiveWeapon(const CEntityEvent &ee) {
     ASSERT(ee.ee_slEvent == EVENTCODE_EWeaponItem);
     
-    EWeaponItem &Ewi = (EWeaponItem&)ee;
+    // [Cecil] Get weapon type
+    INDEX iReceiveType = ((EWeaponItem&)ee).iWeapon;
 
     // [Cecil] Random weapon item
-    if (Ewi.iWeapon == WIT_RANDOM) {
-      Ewi.iWeapon = WeaponItemType(IRnd() % 13);
+    if (iReceiveType == WIT_RANDOM) {
+      iReceiveType = WeaponItemType(IRnd() % 13);
 
       // replace weapons with unlimited ammo with something else
-      if ((Ewi.iWeapon == WIT_KNIFE    && m_iAvailableWeapons & IRF_KNIFE)
-       || (Ewi.iWeapon == WIT_CHAINSAW && m_iAvailableWeapons & IRF_CHAINSAW)
-       || (Ewi.iWeapon == WIT_COLT     && m_iAvailableWeapons & IRF_COLT && m_iAvailableWeapons & IRF_DCOLT)) {
-        Ewi.iWeapon = WeaponItemType(IRnd() % 10 + 3);
+      if ((iReceiveType == WIT_KNIFE    && m_iAvailableWeapons & IRF_KNIFE)
+       || (iReceiveType == WIT_CHAINSAW && m_iAvailableWeapons & IRF_CHAINSAW)
+       || (iReceiveType == WIT_COLT     && m_iAvailableWeapons & IRF_COLT && m_iAvailableWeapons & IRF_DCOLT)) {
+        iReceiveType = WeaponItemType(IRnd() % 10 + 3);
       }
 
     } else {
       // [Cecil] Don't receive disabled weapons
-      BOOL bEnabled = (GetSP()->sp_iItemRemoval & _aiWeaponItemFlags[Ewi.iWeapon]);
+      BOOL bEnabled = (GetSP()->sp_iItemRemoval & _aiWeaponItemFlags[iReceiveType]);
       if (!bEnabled) {
         return TRUE;
       }
@@ -2949,33 +2950,33 @@ functions:
       return TRUE;
     }
 
-    INDEX wit = Ewi.iWeapon;
+    INDEX wit = iReceiveType;
 
-    switch (Ewi.iWeapon) {
+    switch (iReceiveType) {
       // [Cecil] Knife item
-      case WIT_KNIFE: Ewi.iWeapon = WEAPON_KNIFE; break;
-      case WIT_COLT: Ewi.iWeapon = WEAPON_COLT; break;
-      case WIT_SINGLESHOTGUN: Ewi.iWeapon = WEAPON_SINGLESHOTGUN; break;
-      case WIT_DOUBLESHOTGUN: Ewi.iWeapon = WEAPON_DOUBLESHOTGUN; break;
-      case WIT_TOMMYGUN: Ewi.iWeapon = WEAPON_TOMMYGUN; break;
-      case WIT_SNIPER: Ewi.iWeapon = WEAPON_SNIPER; break;
-      case WIT_MINIGUN: Ewi.iWeapon = WEAPON_MINIGUN; break;
-      case WIT_ROCKETLAUNCHER: Ewi.iWeapon = WEAPON_ROCKETLAUNCHER; break;
-      case WIT_GRENADELAUNCHER: Ewi.iWeapon = WEAPON_GRENADELAUNCHER; break;
-      case WIT_FLAMER: Ewi.iWeapon = WEAPON_FLAMER; break;
-      case WIT_CHAINSAW: Ewi.iWeapon = WEAPON_CHAINSAW; break;
-      case WIT_LASER: Ewi.iWeapon = WEAPON_LASER; break;
-      case WIT_CANNON: Ewi.iWeapon = WEAPON_IRONCANNON; break;
+      case WIT_KNIFE:           iReceiveType = WEAPON_KNIFE; break;
+      case WIT_COLT:            iReceiveType = WEAPON_COLT; break;
+      case WIT_SINGLESHOTGUN:   iReceiveType = WEAPON_SINGLESHOTGUN; break;
+      case WIT_DOUBLESHOTGUN:   iReceiveType = WEAPON_DOUBLESHOTGUN; break;
+      case WIT_TOMMYGUN:        iReceiveType = WEAPON_TOMMYGUN; break;
+      case WIT_SNIPER:          iReceiveType = WEAPON_SNIPER; break;
+      case WIT_MINIGUN:         iReceiveType = WEAPON_MINIGUN; break;
+      case WIT_ROCKETLAUNCHER:  iReceiveType = WEAPON_ROCKETLAUNCHER; break;
+      case WIT_GRENADELAUNCHER: iReceiveType = WEAPON_GRENADELAUNCHER; break;
+      case WIT_FLAMER:          iReceiveType = WEAPON_FLAMER; break;
+      case WIT_CHAINSAW:        iReceiveType = WEAPON_CHAINSAW; break;
+      case WIT_LASER:           iReceiveType = WEAPON_LASER; break;
+      case WIT_CANNON:          iReceiveType = WEAPON_IRONCANNON; break;
       default: ASSERTALWAYS("Uknown weapon type");
     }
 
     // add weapon
-    if (Ewi.iWeapon == WEAPON_COLT && (m_iAvailableWeapons & (1<<(WEAPON_COLT-1)))) {
-      Ewi.iWeapon = WEAPON_DOUBLECOLT;
+    if (iReceiveType == WEAPON_COLT && (m_iAvailableWeapons & (1 << (WEAPON_COLT-1)))) {
+      iReceiveType = WEAPON_DOUBLECOLT;
     }
 
     ULONG ulOldWeapons = m_iAvailableWeapons;
-    m_iAvailableWeapons |= 1<<(Ewi.iWeapon-1);
+    m_iAvailableWeapons |= 1 << (iReceiveType-1);
 
     // precache eventual new weapons
     Precache();
@@ -3048,8 +3049,7 @@ functions:
         fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\cannon.txt");
         break;
 
-      default:
-        ASSERTALWAYS("Uknown weapon type");
+      default: ASSERTALWAYS("Uknown weapon type");
     }
 
     // send computer message
@@ -3059,10 +3059,8 @@ functions:
       m_penPlayer->SendEvent(eMsg);
     }
 
-    // must be -1 for default (still have to implement dropping weapons in deathmatch !!!!)
-    ASSERT(Ewi.iAmmo==-1);
     // add the ammunition
-    AddDefaultAmmoForWeapon(Ewi.iWeapon, 0);
+    AddDefaultAmmoForWeapon(iReceiveType, 0);
 
     // if this weapon should be auto selected
     BOOL bAutoSelect = FALSE;
@@ -3074,13 +3072,13 @@ functions:
         bAutoSelect = TRUE;
       }
     } else if (iSelectionSetting==PS_WAS_BETTER) {
-      if (FindRemapedPos(m_iCurrentWeapon)<FindRemapedPos((WeaponType)Ewi.iWeapon)) {
+      if (FindRemapedPos(m_iCurrentWeapon)<FindRemapedPos((WeaponType)iReceiveType)) {
         bAutoSelect = TRUE;
       }
     }
     if (bAutoSelect) {
       // select it
-      if (WeaponSelectOk((WeaponType)Ewi.iWeapon)) {
+      if (WeaponSelectOk((WeaponType)iReceiveType)) {
         SendEvent(EBegin());
       }
     }

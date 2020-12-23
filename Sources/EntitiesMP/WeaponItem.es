@@ -476,13 +476,8 @@ functions:
       CEntity *pen = GetPlayerEntity(iPlayer);
 
       if (ASSERT_ENTITY(pen)) {
-        // copy the event
-        EWeaponItem eReceive;
-        eReceive.iWeapon = eWeapon.iWeapon;
-        eReceive.iAmmo = eWeapon.iAmmo;
-        eReceive.bDropped = eWeapon.bDropped;
-
-        bReceived |= pen->ReceiveItem(eReceive);
+        pen->SendEvent(eWeapon);
+        bReceived = TRUE;
       }
     }
 
@@ -494,8 +489,14 @@ procedures:
   ItemCollected(EPass epass) : CItem::ItemCollected {
     ASSERT(epass.penOther!=NULL);
 
+    // [Cecil] Shared weapons
+    BOOL bShared = (GetSP()->sp_iAMPOptions & AMP_SHAREWEAPONS);
+
+    // [Cecil] Check for special flags beforehand
+    BOOL bSpecial = (m_bPickupOnce || m_bRespawn || bShared);
+
     // if weapons stays
-    if (GetSP()->sp_bWeaponsStay && !(m_bPickupOnce||m_bRespawn)) {
+    if (GetSP()->sp_bWeaponsStay && !bSpecial) {
       // if already picked by this player
       BOOL bWasPicked = MarkPickedBy(epass.penOther);
       if (bWasPicked) {
@@ -526,7 +527,7 @@ procedures:
       }
 
       // [Cecil] Receive if shared
-      if (!GetSP()->sp_bWeaponsStay || m_bDropped || m_bPickupOnce || m_bRespawn || GetSP()->sp_iAMPOptions & AMP_SHAREWEAPONS) {
+      if (!GetSP()->sp_bWeaponsStay || m_bDropped || bSpecial) {
         jump CItem::ItemReceived();
       }
     }
