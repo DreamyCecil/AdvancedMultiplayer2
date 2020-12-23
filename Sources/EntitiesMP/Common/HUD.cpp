@@ -832,8 +832,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   const FLOAT fTopArmor  = GetSP()->sp_fMaxArmor * 0.5f;
 
   BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
-  const FLOAT fMaxHealth = GetSP()->sp_fMaxHealth;
-  const FLOAT fMaxArmor = GetSP()->sp_fMaxArmor * (bEasy ? 1.5f : 1.0f);
+  const FLOAT fMaxHealth = GetSP()->sp_fMaxHealth * (bEasy ? 1.5f : 1.0f);
+  const FLOAT fMaxArmor  = GetSP()->sp_fMaxArmor  * (bEasy ? 1.5f : 1.0f);
   
   // prepare and draw health info
   fValue = ClampDn(_penPlayer->GetHealth(), 0.0f);  // never show negative health

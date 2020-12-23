@@ -922,17 +922,21 @@ FLOAT TopArmor(void) {
 };
 
 FLOAT MaxHealth(void) {
+  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
+
   if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fMaxHealth != 200.0f) {
-    return GetSP()->sp_fMaxHealth;
+    return GetSP()->sp_fMaxHealth * (bEasy ? 1.5f : 1.0f);
   }
-  return (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY) ? 300.0f : 200.0f;
+  return (bEasy ? 300.0f : 200.0f);
 };
 
 FLOAT TopHealth(void) {
+  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
+
   if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fStartHealth != 100.0f) {
-    return GetSP()->sp_fStartHealth;
+    return GetSP()->sp_fStartHealth * (bEasy ? 2.0f : 1.0f);
   }
-  return (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY) ? 200.0f : 100.0f;
+  return (bEasy ? 200.0f : 100.0f);
 };
 
 // info structure
@@ -5537,8 +5541,7 @@ functions:
   }
   
   
-  void TeleportPlayer(enum WorldLinkType EwltType) 
-  {
+  void TeleportPlayer(enum WorldLinkType EwltType) {
     INDEX iLevel = -1;
     CTString strLevelName = GetWorld()->wo_fnmFileName.FileName();
     
@@ -5550,16 +5553,17 @@ functions:
     
     RemapLevelNames(iLevel);
             
-    if (iLevel>0) {
-      ((CSessionProperties*)GetSP())->sp_ulLevelsMask|=1<<(iLevel-1);
+    if (iLevel > 0) {
+      ((CSessionProperties*)GetSP())->sp_ulLevelsMask |= 1 << (iLevel-1);
     }
 
     // find player index
     INDEX iPlayer = GetMyPlayerIndex();
     // player placement
     CPlacement3D plSet = GetPlacement();
-    // teleport in dummy space to avoid auto teleport frag
-    Teleport(CPlacement3D(FLOAT3D(32000.0f+100.0f*iPlayer, 32000.0f, 0), ANGLE3D(0, 0, 0)));
+    // [Cecil] No telefrag
+    // teleport in dummy space
+    Teleport(CPlacement3D(FLOAT3D(32000.0f + 100.0f*iPlayer, 32000.0f, 0), ANGLE3D(0.0f, 0.0f, 0.0f)), FALSE);
     // force yourself to standing state
     ForceCollisionBoxIndexChange(PLAYER_COLLISION_BOX_STAND);
     en_plViewpoint.pl_PositionVector(2) = plr_fViewHeightStand;
@@ -5574,8 +5578,9 @@ functions:
     BOOL bSetHealth = FALSE;      // for getting health from marker
     BOOL bAdjustHealth = FALSE;   // for getting adjusting health to 50-100 interval
     CEntity *pen = NULL;
+
     if (GetSP()->sp_bCooperative) {
-      if (cht_iGoToMarker>=0) {
+      if (cht_iGoToMarker >= 0) {
         // try to find fast go marker
         CTString strPlayerStart;
         strPlayerStart.PrintF("Player Start - %d", (INDEX)cht_iGoToMarker);
@@ -5584,10 +5589,11 @@ functions:
         cht_iGoToMarker = -1;
         bSetHealth = TRUE;
         bAdjustHealth = FALSE;
+
       // if there is coop respawn marker
-      } else if (m_penMainMusicHolder!=NULL && !(m_ulFlags&PLF_CHANGINGLEVEL)) {
+      } else if (m_penMainMusicHolder != NULL && !(m_ulFlags & PLF_CHANGINGLEVEL)) {
         CMusicHolder *pmh = (CMusicHolder *)&*m_penMainMusicHolder;
-        if (pmh->m_penRespawnMarker!=NULL) {
+        if (pmh->m_penRespawnMarker != NULL) {
           // get it
           pen = pmh->m_penRespawnMarker;
           bSetHealth = TRUE;
@@ -5596,7 +5602,7 @@ functions:
       }
 
       // if quick start is enabled (in wed)
-      if (pen==NULL && GetSP()->sp_bQuickTest && m_strGroup=="") {
+      if (pen == NULL && GetSP()->sp_bQuickTest && m_strGroup == "") {
         // try to find quick start marker
         CTString strPlayerStart;
         strPlayerStart.PrintF("Player Quick Start");
@@ -5604,17 +5610,18 @@ functions:
         bSetHealth = TRUE;
         bAdjustHealth = FALSE;
       }
+
       // if no start position yet
-      if (pen==NULL) {
+      if (pen == NULL) {
         // try to find normal start marker
         CTString strPlayerStart;
         strPlayerStart.PrintF("Player Start - %s", m_strGroup);
         pen = _pNetwork->GetEntityWithName(strPlayerStart, 0);
-        if (m_strGroup=="") {
+        if (m_strGroup == "") {
           bSetHealth = TRUE;
           bAdjustHealth = FALSE;
         } else {
-          if (EwltType==WLT_FIXED) {
+          if (EwltType == WLT_FIXED) {
             bSetHealth = FALSE;
             bAdjustHealth = TRUE;
           } else {
@@ -5623,8 +5630,9 @@ functions:
           }
         }
       }
+
       // if no start position yet
-      if (pen==NULL) {
+      if (pen == NULL) {
         // try to find normal start marker without group anyway
         CTString strPlayerStart;
         strPlayerStart.PrintF("Player Start - ");
@@ -5632,18 +5640,20 @@ functions:
         bSetHealth = TRUE;
         bAdjustHealth = FALSE;
       }
+
     } else {
       bSetHealth = TRUE;
       bAdjustHealth = FALSE;
       // try to find start marker by random
       pen = GetDeathmatchStartMarker();
-      if (pen!=NULL) {
+
+      if (pen != NULL) {
         ((CPlayerMarker&)*pen).m_tmLastSpawned = _pTimer->CurrentTick();
       }
     }
 
     // if respawning in place
-    if ((m_ulFlags&PLF_RESPAWNINPLACE) && pen!=NULL && !((CPlayerMarker*)&*pen)->m_bNoRespawnInPlace) {
+    if ((m_ulFlags&PLF_RESPAWNINPLACE) && pen != NULL && !((CPlayerMarker*)&*pen)->m_bNoRespawnInPlace) {
       m_ulFlags &= ~PLF_RESPAWNINPLACE;
       // set default params
       SetHealth(TopHealth());
@@ -5656,11 +5666,11 @@ functions:
       Teleport(CPlacement3D(m_vDied, m_aDied), FALSE);
 
     // if start marker is found
-    } else if (pen!=NULL) {
+    } else if (pen != NULL) {
       // if there is no respawn marker yet
-      if (m_penMainMusicHolder!=NULL) {
+      if (m_penMainMusicHolder != NULL) {
         CMusicHolder *pmh = (CMusicHolder *)&*m_penMainMusicHolder;
-        if (pmh->m_penRespawnMarker==NULL) {
+        if (pmh->m_penRespawnMarker == NULL) {
           // set it
           pmh->m_penRespawnMarker = pen;
         }
@@ -5672,10 +5682,11 @@ functions:
         SetHealth(CpmStart.m_fHealth/100.0f*TopHealth());
         m_iMana  = GetSP()->sp_iInitialMana;
         m_fArmor = CpmStart.m_fShield;
+
       } else if (bAdjustHealth) {
         FLOAT fHealth = GetHealth();
         FLOAT fTopHealth = TopHealth();
-        if( fHealth < fTopHealth) {
+        if (fHealth < fTopHealth) {
           SetHealth(ClampUp(fHealth+fTopHealth/2.0f, fTopHealth));
         }
       }
@@ -7066,7 +7077,7 @@ procedures:
     // disable auto speed
     m_fAutoSpeed = 0.0f;
 
-    // [Cecil] If it's a singleplayer map and not a teleport action
+    // [Cecil] If it's a singleplayer map
     if (SPWorld(this)) {
       autowait(0.05f);
 
@@ -7091,6 +7102,7 @@ procedures:
         //TeleportToAutoMarker(m_penLastAction, FALSE);
       }
 
+      // [Cecil] NOTE: Doesn't execute in some cases for some reason
       // [Cecil] Autosave after the cutscene
       if (GetSP()->sp_iAMPOptions & AMP_AUTOSAVE) {
         CPlacement3D plStart = GetPlacement();
@@ -7101,11 +7113,17 @@ procedures:
         ppmStart->m_iGiveWeapons = GetPlayerWeapons()->m_iAvailableWeapons;
         ppmStart->m_fMaxAmmoRatio = 0.5f;
 
+        // name it after the current tick
+        INDEX iTick = (_pTimer->CurrentTick() / _pTimer->TickQuantum);
+        ppmStart->m_strGroup.PrintF("AMP2_%d", iTick);
+
         penStart->Initialize();
 
         ETrigger eTrigger;
         eTrigger.penCaused = this;
         penStart->SendEvent(eTrigger);
+
+        //CPrintF("%s^r: Checkpoint with %s\n", GetPlayerName(), ppmStart->m_strGroup); // [Cecil] TEMP
       }
     }
 
