@@ -345,6 +345,22 @@ static const INDEX _aiWeaponItemFlags[13] = {
 // [Cecil] Assert entity existence
 #define ASSERT_ENTITY(_Entity) (_Entity != NULL && !(_Entity->GetFlags() & ENF_DELETED))
 
+// [Cecil] Model path
+inline CTFileName GetModelPath(CModelObject *pmo) {
+  if (pmo->GetData() == NULL) {
+    return CTFILENAME("");
+  }
+  return pmo->GetData()->GetName();
+};
+
+// [Cecil] Texture path
+inline CTFileName GetModelTexturePath(CModelObject *pmo) {
+  if (pmo->mo_toTexture.GetData() == NULL) {
+    return CTFILENAME("");
+  }
+  return pmo->mo_toTexture.GetData()->GetName();
+};
+
 // [Cecil] Christmas blood color
 inline COLOR ChristmasColor(INDEX iRandom, UBYTE ubFactor, UBYTE ubAlpha) {
   COLOR colWhite = RGBAToColor(ubFactor, ubFactor, ubFactor, ubAlpha);

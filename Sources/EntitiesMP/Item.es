@@ -36,8 +36,11 @@ properties:
 
  // [Cecil] Custom items
  30 FLOAT m_fCustomValue "Custom Value" = 0.0f,
+ 31 FLOAT m_fCustomSize  "Custom Size" = 1.0f,
 
- 40 CTFileName m_fnPickupSound "Custom Sound" = CTString(""),
+ 40 CTFileName m_fnPickupSound   "Custom Sound" = CTString(""),
+ 41 CTFileName m_fnCustomModel   "Custom Model" = CTString(""),
+ 42 CTFileName m_fnCustomTexture "Custom Texture" = CTString(""),
 
 components:
   1 model   MODEL_ITEM      "Models\\Items\\ItemHolder\\ItemHolder.mdl",
@@ -230,7 +233,15 @@ functions:
     ModelChangeNotify();
   };
 
+  // [Cecil] Get item attachment model
+  CModelObject *GetItemModel(void) {
+    CAttachmentModelObject *pamo = GetModelObject()->GetAttachmentModel(ITEMHOLDER_ATTACHMENT_ITEM);
 
+    if (pamo == NULL) {
+      return NULL;
+    }
+    return &pamo->amo_moModelObject;
+  };
 
   // returns bytes of memory used by this object
   SLONG GetUsedMemory(void)
@@ -246,21 +257,34 @@ functions:
 
   // [Cecil] Check custom sound
   BOOL CustomSoundExists(void) {
-    if (m_fnPickupSound == CTString("") || !FileExists(m_fnPickupSound)) {
-      return FALSE;
-    }
-    return TRUE;
+    return FileExists(m_fnPickupSound);
   };
 
   // [Cecil] Custom pickup sound
-  void PlayCustomSound(void) {
+  void PlayCustomSound(CTFileName fnDefault) {
     // no custom sound
-    if (CustomSoundExists()) {
-      m_fnPickupSound = CTFILENAME("Sounds\\Default.wav");
+    if (!CustomSoundExists()) {
+      m_fnPickupSound = fnDefault;
     }
 
     PlaySound(m_soPick, m_fnPickupSound, SOF_3D);
     m_fPickSoundLen = m_soPick.so_pCsdLink->GetSecondsLength();
+  };
+
+  // [Cecil] Set custom model
+  void SetCustomModel(void) {
+    CModelObject *pmo = GetItemModel();
+
+    if (GetItemModel() == NULL) {
+      return;
+    }
+
+    if (FileExists(m_fnCustomModel)) {
+      pmo->SetData_t(m_fnCustomModel);
+    }
+    if (FileExists(m_fnCustomModel)) {
+      pmo->mo_toTexture.SetData_t(m_fnCustomTexture);
+    }
   };
 
 procedures:

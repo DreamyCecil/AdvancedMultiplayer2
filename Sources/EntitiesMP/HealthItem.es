@@ -74,17 +74,15 @@ components:
 
 functions:
   void Precache(void) {
-    switch (m_EhitType) {
-      case HIT_PILL:   PrecacheSound(SOUND_PILL  ); break;
-      case HIT_SMALL:  PrecacheSound(SOUND_SMALL ); break;                                      
-      case HIT_MEDIUM: PrecacheSound(SOUND_MEDIUM); break;
-      case HIT_LARGE:  PrecacheSound(SOUND_LARGE ); break;
-      case HIT_SUPER:  PrecacheSound(SOUND_SUPER ); break;
-    }
-  }
+    PrecacheSound(SOUND_PILL);
+    PrecacheSound(SOUND_SMALL);
+    PrecacheSound(SOUND_MEDIUM);
+    PrecacheSound(SOUND_LARGE);
+    PrecacheSound(SOUND_SUPER);
+  };
+
   /* Fill in entity statistics - for AI purposes only */
-  BOOL FillEntityStatistics(EntityStats *pes)
-  {
+  BOOL FillEntityStatistics(EntityStats *pes) {
     pes->es_strName = "Health"; 
     pes->es_ctCount = 1;
     pes->es_ctAmmount = m_fValue;
@@ -100,7 +98,7 @@ functions:
     }
 
     return TRUE;
-  }
+  };
 
   // render particles
   void RenderParticles(void) {
@@ -139,6 +137,32 @@ functions:
     // [Cecil] Render particles
     Particles_Stardust(this, fSize*0.75f, fHeight*0.75f, PT_STAR08, ctParticles);
   }
+  
+  // [Cecil] Patching for custom types
+  void Read_t(CTStream *istr) {
+    CItem::Read_t(istr);
+
+    // [Cecil] Fix invalid vanilla types
+    if (m_EhitType < 0 || m_EhitType >= HIT_CUSTOM) {
+      m_EhitType = HIT_CUSTOM;
+      m_fCustomValue = m_fValue;
+      m_fCustomRespawnTime = m_fRespawnTime;
+      
+      // get custom model
+      CModelObject *pmoItem = GetItemModel();
+
+      if (pmoItem != NULL) {
+        m_fnCustomModel = GetModelPath(pmoItem);
+        m_fnCustomTexture = GetModelTexturePath(pmoItem);
+
+        m_fCustomSize = pmoItem->mo_Stretch(2);
+      }
+
+      // reset health
+      ItemModel();
+      SetProperties();
+    }
+  };
 
   // set health properties depending on health type
   void SetProperties(void) {
@@ -232,9 +256,12 @@ functions:
         m_strDescription.PrintF("Custom - H:%g  T:%g", m_fValue, m_fRespawnTime);
 
         // set appearance
-        AddItem(MODEL_MEDIUM, TEXTURE_SMALL, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
+        AddItem(MODEL_MEDIUM, TEXTURE_MEDIUM, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
+        SetCustomModel();
+
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0.0f, 0.6f, 0.0f), FLOAT3D(2.5f, 2.5f, 0.5f));
-        StretchItem(FLOAT3D(1.5f, 1.5f, 1.5f) * 0.75f);
+        StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f) * m_fCustomSize);
+
         m_iSoundComponent = -1;
         break;
     }
@@ -245,28 +272,6 @@ functions:
       Destroy();
       return;
     }
-
-    // [Cecil] Fix types
-    if (FixTypes(FALSE)) {
-      // reset health
-      ItemModel();
-      SetProperties();
-    }
-  };
-
-  // [Cecil] Fix invalid vanilla types
-  BOOL FixTypes(BOOL bAllowCustom) {
-    // clamp to 0 and 1
-    bAllowCustom = !!bAllowCustom;
-
-    if (m_EhitType < 0 || m_EhitType >= HIT_CUSTOM+bAllowCustom) {
-      m_EhitType = HIT_CUSTOM;
-      m_fCustomValue = m_fValue;
-      m_fCustomRespawnTime = m_fRespawnTime;
-      return TRUE;
-    }
-
-    return FALSE;
   };
 
 procedures:
@@ -305,7 +310,7 @@ procedures:
 
       // [Cecil] Custom sound
       if (m_iSoundComponent < 0) {
-        PlayCustomSound();
+        PlayCustomSound(FileNameForComponent(ECT_SOUND, SOUND_SMALL));
 
       } else {
         PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
@@ -320,9 +325,6 @@ procedures:
   };
 
   Main() {
-    // [Cecil] Fix types
-    FixTypes(TRUE);
-
     Initialize();    // initialize base class
     SetProperties(); // set properties
 

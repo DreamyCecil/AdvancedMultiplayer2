@@ -79,18 +79,16 @@ components:
 
 functions:
   void Precache(void) {
-    switch (m_EaitType) {
-      case ARIT_SHARD:  PrecacheSound(SOUND_SHARD ); break;
-      case ARIT_SMALL:  PrecacheSound(SOUND_SMALL ); break;                                      
-      case ARIT_MEDIUM: PrecacheSound(SOUND_MEDIUM); break;
-      case ARIT_STRONG: PrecacheSound(SOUND_STRONG); break;
-      case ARIT_SUPER:  PrecacheSound(SOUND_SUPER ); break;
-      case ARIT_HELM:   PrecacheSound(SOUND_HELM  ); break;
-    }
-  }
+    PrecacheSound(SOUND_SHARD);
+    PrecacheSound(SOUND_SMALL);
+    PrecacheSound(SOUND_MEDIUM);
+    PrecacheSound(SOUND_STRONG);
+    PrecacheSound(SOUND_SUPER);
+    PrecacheSound(SOUND_HELM);
+  };
+
   /* Fill in entity statistics - for AI purposes only */
-  BOOL FillEntityStatistics(EntityStats *pes)
-  {
+  BOOL FillEntityStatistics(EntityStats *pes) {
     pes->es_strName = "Armor"; 
     pes->es_ctCount = 1;
     pes->es_ctAmmount = m_fValue;
@@ -105,7 +103,7 @@ functions:
       case ARIT_HELM:   pes->es_strName+=" helm";   break;
     }
     return TRUE;
-  }
+  };
 
   // render particles
   void RenderParticles(void) {
@@ -161,10 +159,39 @@ functions:
 
     // [Cecil] Render particles
     Particles_Emanate(this, fSize*0.75, fHeight*0.75, PT_STAR04, ctParticles, 7.0f);
-  }
+  };
+
+  // [Cecil] Patching for custom types
+  void Read_t(CTStream *istr) {
+    CItem::Read_t(istr);
+
+    // [Cecil] Fix invalid vanilla types
+    if (m_EaitType < 0 || m_EaitType >= ARIT_CUSTOM) {
+      m_EaitType = ARIT_CUSTOM;
+      m_fCustomValue = m_fValue;
+      m_fCustomRespawnTime = m_fRespawnTime;
+      
+      // get custom model
+      CModelObject *pmoItem = GetItemModel();
+
+      if (pmoItem != NULL) {
+        m_fnCustomModel = GetModelPath(pmoItem);
+        m_fnCustomTexture = GetModelTexturePath(pmoItem);
+
+        m_fCustomSize = pmoItem->mo_Stretch(2);
+      }
+
+      // reset armor
+      ItemModel();
+      SetProperties();
+    }
+  };
 
   // set health properties depending on health type
   void SetProperties(void) {
+    // [Cecil] Moved from the main procedure
+    StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
+
     switch (m_EaitType) {
       case ARIT_SHARD:
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_SMALL);
@@ -257,10 +284,14 @@ functions:
 
         m_fRespawnTime = (m_fCustomRespawnTime > 0) ? m_fCustomRespawnTime : 25.0f; 
         m_strDescription.PrintF("Custom - H:%g  T:%g", m_fValue, m_fRespawnTime);
+
         // set appearance
         AddItem(MODEL_50, TEXTURE_50, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
+        SetCustomModel();
+
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0.0f, 1.0f, 0.0f), FLOAT3D(3.0f, 3.0f, 0.5f));
-        StretchItem(FLOAT3D(2.0f, 2.0f, 2.0f));
+        StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f) * m_fCustomSize);
+
         m_iSoundComponent = -1;
         break;
     }
@@ -271,28 +302,6 @@ functions:
       Destroy();
       return;
     }
-
-    // [Cecil] Fix invalid vanilla types
-    if (FixTypes(FALSE)) {
-      // reset armor
-      ItemModel();
-      SetProperties();
-    }
-  };
-
-  // [Cecil] Fix invalid vanilla types
-  BOOL FixTypes(BOOL bAllowCustom) {
-    // clamp to 0 and 1
-    bAllowCustom = !!bAllowCustom;
-
-    if (m_EaitType < 0 || m_EaitType >= ARIT_CUSTOM+bAllowCustom) {
-      m_EaitType = ARIT_CUSTOM;
-      m_fCustomValue = m_fValue;
-      m_fCustomRespawnTime = m_fRespawnTime;
-      return TRUE;
-    }
-
-    return FALSE;
   };
 
 procedures:
@@ -331,7 +340,7 @@ procedures:
 
       // [Cecil] Custom sound
       if (m_iSoundComponent < 0) {
-        PlayCustomSound();
+        PlayCustomSound(FileNameForComponent(ECT_SOUND, SOUND_SMALL));
 
       } else {
         PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
@@ -346,11 +355,7 @@ procedures:
   };
 
   Main() {
-    // [Cecil] Fix types
-    FixTypes(TRUE);
-
     Initialize();     // initialize base class
-    StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
     SetProperties();  // set properties
 
     jump CItem::ItemLoop();

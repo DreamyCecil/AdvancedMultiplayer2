@@ -36,7 +36,8 @@ properties:
  20 FLOAT m_fHealth       "Dummy Health" = 100.0f,
  21 FLOAT m_fBlowupDamage "Dummy Blowup Damage" = 100.0f,
  22 enum SprayParticlesType m_sptParticles "Dummy Spray Particles" = SPT_BLOOD,
- 23 BOOL m_bSetBoss "Dummy Boss" = FALSE,
+ 23 BOOL m_bSetBoss      "Dummy Boss" = FALSE,
+ 24 FLOAT m_fWoundDamage "Dummy Wound Damage" = 60.0f,
 
  30 FLOAT m_fSetWalkSpeed  "Dummy Speed Walk" = 2.0f,
  31 FLOAT m_fSetRunSpeed   "Dummy Speed Run" = 12.0f,
@@ -94,6 +95,24 @@ functions:
     GetBody().PlayAnim(iAnim, ulFlags);
   };
 
+  // [Cecil] Set dummy model
+  void DummyAppearance(void) {
+    SetModel(MODEL_PLAYER);
+    SetModelMainTexture(TEXTURE_PLAYER);
+    AddAttachment(PLAYER_ATTACHMENT_TORSO, MODEL_BODY, TEXTURE_BODY);
+    AddAttachmentToModel(this, GetBody(), BODY_ATTACHMENT_HEAD, MODEL_HEAD, TEXTURE_HEAD, 0, 0, 0);
+
+    // weapon
+    if (m_iAttackFire > 0) {
+      AddAttachmentToModel(this, GetBody(), BODY_ATTACHMENT_COLT_RIGHT, MODEL_COLT, MODEL_COLTMAIN, 0, 0, 0);
+
+      CModelObject &moColt = GetBody().GetAttachmentModel(BODY_ATTACHMENT_COLT_RIGHT)->amo_moModelObject;
+      AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, 0, 0, 0);
+      AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, 0, 0, 0);
+      AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_BODY, MODEL_COLTMAIN, TEXTURE_COLTMAIN, 0, 0, 0);
+    }
+  };
+
   // [Cecil] Patching for enemy replacements
   void Read_t(CTStream *istr) {
     CEnemyBase::Read_t(istr);
@@ -103,6 +122,7 @@ functions:
     m_fBlowupDamage = m_fBlowUpAmount;
     m_sptParticles = m_sptType;
     m_bSetBoss = m_bBoss;
+    m_fWoundDamage = m_fDamageWounded;
 
     m_fSetWalkSpeed = m_fWalkSpeed;
     m_fSetRunSpeed = m_fAttackRunSpeed;
@@ -111,6 +131,9 @@ functions:
     m_fSetStopDist = m_fStopDistance;
     m_fSetAttackDist = m_fAttackDistance;
     m_fSetCloseDist = m_fCloseDistance;
+
+    // reset custom model
+    DummyAppearance();
   };
 
   void Precache(void) {
@@ -311,20 +334,7 @@ procedures:
     m_bBoss = m_bSetBoss;
 
     // appearance
-    SetModel(MODEL_PLAYER);
-    SetModelMainTexture(TEXTURE_PLAYER);
-    AddAttachment(PLAYER_ATTACHMENT_TORSO, MODEL_BODY, TEXTURE_BODY);
-    AddAttachmentToModel(this, GetBody(), BODY_ATTACHMENT_HEAD, MODEL_HEAD, TEXTURE_HEAD, 0, 0, 0);
-
-    // weapon
-    if (m_iAttackFire > 0) {
-      AddAttachmentToModel(this, GetBody(), BODY_ATTACHMENT_COLT_RIGHT, MODEL_COLT, MODEL_COLTMAIN, 0, 0, 0);
-
-      CModelObject &moColt = GetBody().GetAttachmentModel(BODY_ATTACHMENT_COLT_RIGHT)->amo_moModelObject;
-      AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, 0, 0, 0);
-      AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, 0, 0, 0);
-      AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_BODY, MODEL_COLTMAIN, TEXTURE_COLTMAIN, 0, 0, 0);
-    }
+    DummyAppearance();
     
     // set moving speed
     m_fWalkSpeed      = m_fSetWalkSpeed;
@@ -345,7 +355,7 @@ procedures:
     // damage/explode properties
     m_fBlowUpAmount = m_fBlowupDamage;
     m_fBodyParts = 4;
-    m_fDamageWounded = 50.0f;
+    m_fDamageWounded = m_fWoundDamage;
     
     m_iScore = 1000;
     

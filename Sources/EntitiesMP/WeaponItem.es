@@ -519,7 +519,7 @@ procedures:
 
       // [Cecil] Custom sound
       if (CustomSoundExists()) {
-        PlayCustomSound();
+        PlayCustomSound(FileNameForComponent(ECT_SOUND, SOUND_PICK));
 
       } else {
         PlaySound(m_soPick, SOUND_PICK, SOF_3D);
