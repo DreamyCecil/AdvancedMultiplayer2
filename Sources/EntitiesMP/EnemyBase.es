@@ -1773,7 +1773,7 @@ functions:
       CPlacement3D plFireworks = CPlacement3D(vCenter * GetRotationMatrix(), ANGLE3D(FRnd() * 360.0f, 0.0f, 0.0f));
       plFireworks.RelativeToAbsolute(GetPlacement());
 
-      FLOAT fScale = (1.5f + FRnd());
+      FLOAT fScale = (1.5f + FRnd()) * m_fStretchMultiplier;
       eSpawnEffect.vStretch = FLOAT3D(fScale, fScale, fScale);
 
       // spawn fireworks

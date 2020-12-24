@@ -56,7 +56,8 @@ properties:
   5 CTFileName m_fnHitSound  "Dummy Hit Sound" = CTString("SoundsMP\\Misc\\Punch.wav"),
 
  10 INDEX m_iFireCounter = 0,
- 11 FLOAT m_fFireRate "Dummy Fire Rate" = 0.5f,
+ 11 FLOAT m_fFireRate      "Dummy Fire Rate" = 0.5f,
+ 12 FLOAT m_fFireFrequency "Dummy Fire Frequency" = 3.0f,
 
  20 FLOAT m_fHealth "Health" = 100.0f,
  21 BOOL m_bSetBoss "Boss" = FALSE,
@@ -169,7 +170,8 @@ functions:
     // patch the dummy
     PatchDummy(m_fnPatch);
 
-    SizeModel();
+    // reset size
+    CEnemyBase::SizeModel();
   };
 
   // [Cecil] Apply dummy patch
@@ -186,6 +188,13 @@ functions:
     if (ParseConfig(fnPatch, cbPatch) != DJSON_OK) {
       FatalError("Cannot parse dummy patch '%s'!", fnPatch);
       return;
+    }
+
+    // name
+    JSON_String strName;
+
+    if (cbPatch.GetValue("Name", strName)) {
+      m_strName = strName.c_str();
     }
 
     // appearance
@@ -295,6 +304,10 @@ functions:
       m_fFireRate = fProp;
     }
 
+    if (cbPatch.GetValue("FireFrequency", fProp)) {
+      m_fFireFrequency = fProp;
+    }
+
     if (cbPatch.GetValue("HitDamage", fProp)) {
       m_fAttackHit = fProp;
     }
@@ -324,16 +337,18 @@ functions:
   void Read_t(CTStream *istr) {
     CEnemyBase::Read_t(istr);
 
-    // reset size
+    // set normal size
     StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
 
     // set custom properties
     m_fHealth = GetHealth();
     m_fMaxHealth = m_fHealth;
-    m_fBlowupDamage = m_fBlowUpAmount;
-    m_sptParticles = m_sptType;
     m_bSetBoss = m_bBoss;
+    m_sptParticles = m_sptType;
+
+    m_fBlowupDamage = m_fBlowUpAmount;
     m_fWoundDamage = m_fDamageWounded;
+    m_fFireFrequency = m_fAttackFireTime;
 
     m_fSetWalkSpeed = m_fWalkSpeed;
     m_fSetRunSpeed = m_fAttackRunSpeed;
@@ -378,6 +393,9 @@ functions:
   void *GetEntityInfo(void) {
     return &eiDummyEnemy;
   };
+
+  // [Cecil] Set the size manually
+  void SizeModel(void) {};
 
   void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType, FLOAT fDamage, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) {
     // [Cecil] Can't harm allies
@@ -522,7 +540,7 @@ procedures:
       autowait(ClampDn(m_fFireRate, 0.05f));
     }
     
-    m_fShootTime = _pTimer->CurrentTick() + 0.4f + FRnd()*0.3f;
+    m_fShootTime = _pTimer->CurrentTick() + m_fFireFrequency + (FRnd()*0.3f - 0.15f);
     return EReturn();
   };
 
@@ -587,7 +605,7 @@ procedures:
     m_fStopDistance   = m_fSetStopDist;
     m_fAttackDistance = m_fSetAttackDist;
     m_fCloseDistance  = m_fSetCloseDist;
-    m_fAttackFireTime = 1.0f;
+    m_fAttackFireTime = m_fFireFrequency;
     m_fCloseFireTime = 0.25f;
     m_fIgnoreRange = 250.0f;
 
