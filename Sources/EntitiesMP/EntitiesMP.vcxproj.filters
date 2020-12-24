@@ -62,6 +62,15 @@
     <Filter Include="Messages">
       <UniqueIdentifier>{7a1dcaf7-0837-41e6-9e0c-6a85f796cc5c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\DreamyJSON headers">
+      <UniqueIdentifier>{32e46f59-9b4b-4869-9395-8e3ec168b463}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\DreamyStructures">
+      <UniqueIdentifier>{33a3dab4-a408-4e7a-87de-72aac363208f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DreamyJSON sources">
+      <UniqueIdentifier>{3da357b5-a4e7-4003-aa04-60c904cb2cb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Common.cpp">
@@ -552,6 +561,24 @@
     </ClCompile>
     <ClCompile Include="DummyEnemy.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Values\ConfigValue.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Parser\ConfigParser.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Containers\ConfigArray.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Containers\ConfigBlock.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Base\Compatibility.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Base\Formatting.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1512,6 +1539,54 @@
     <ClInclude Include="DummyEnemy_tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataArray.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataList.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataMap.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataStack.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataStructures.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataTemplates.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\ConfigBase.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\ConfigElement.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\DreamyJSON.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Base\Compatibility.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Base\Formatting.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Containers\ConfigArray.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Containers\ConfigBlock.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Parser\ConfigParser.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Parser\ParserToken.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Values\ConfigValue.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">
@@ -2393,5 +2468,19 @@
     <CustomBuild Include="DummyEnemy.es">
       <Filter>Class Files\Enemies</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\DreamyJSON\DreamyStructures\DataArray.inl">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </None>
+    <None Include="..\DreamyJSON\DreamyStructures\DataList.inl">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </None>
+    <None Include="..\DreamyJSON\DreamyStructures\DataMap.inl">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </None>
+    <None Include="..\DreamyJSON\DreamyStructures\DataStack.inl">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </None>
   </ItemGroup>
 </Project>
