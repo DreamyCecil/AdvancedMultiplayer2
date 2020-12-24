@@ -7242,8 +7242,8 @@ procedures:
       on (EDamage eDamage) : { call Wounded(eDamage); }
 
       on (EPreLevelChange) : { 
-        m_ulFlags&=~PLF_INITIALIZED; 
-        m_ulFlags|=PLF_CHANGINGLEVEL;
+        m_ulFlags &= ~PLF_INITIALIZED; 
+        m_ulFlags |= PLF_CHANGINGLEVEL;
         m_ulFlags &= ~PLF_LEVELSTARTED;
 
         // [Cecil] Clear enemy counter

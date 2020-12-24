@@ -5,6 +5,31 @@
 #include "ModelsMP/Player/SeriousSam/Body.h"
 #include "ModelsMP/Player/SeriousSam/Head.h"
 #include "Models/Weapons/Colt/ColtItem.h"
+
+// [Cecil] Patch parser
+#include "DreamyJSON/DreamyJSON.h"
+
+// [Cecil] Hook functions
+extern void (*_pJSON_ErrorFunction)(const char *);
+extern JSON_String (*_pJSON_LoadConfigFile)(JSON_String);
+
+JSON_String LoadConfigFile(JSON_String strFile) {
+  CTFileStream strm;
+  strm.Open_t(CTString(strFile.c_str()));
+
+  // read until the end
+  CTString strConfig = "";
+  strConfig.ReadUntilEOF_t(strm);
+  strm.Close();
+
+  // return config
+  return strConfig;
+};
+
+void HookFunctions(void) {
+  _pJSON_ErrorFunction = (void (*)(const char *))FatalError;
+  _pJSON_LoadConfigFile = (JSON_String (*)(JSON_String))LoadConfigFile;
+};
 %}
 
 uses "EntitiesMP/EnemyBase";
@@ -45,6 +70,8 @@ properties:
  33 FLOAT m_fSetStopDist   "Dummy Dist Stop" = 1.5f,
  34 FLOAT m_fSetAttackDist "Dummy Dist Attack" = 50.0f,
  35 FLOAT m_fSetCloseDist  "Dummy Dist Close" = 6.0f,
+
+ 40 CTFileName m_fnPatch "Dummy Patch" = CTString(""),
 
 {
   CAutoPrecacheSound m_apsAttack;
@@ -90,6 +117,12 @@ functions:
     return pamoBody->amo_moModelObject;
   };
 
+  // [Cecil] Get head model
+  CModelObject &GetHead(void) {
+    CAttachmentModelObject *pamoHead = GetBody().GetAttachmentModel(BODY_ATTACHMENT_HEAD);
+    return pamoHead->amo_moModelObject;
+  };
+
   // [Cecil] Body animation
   void BodyAnim(INDEX iAnim, ULONG ulFlags) {
     GetBody().PlayAnim(iAnim, ulFlags);
@@ -110,6 +143,62 @@ functions:
       AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, 0, 0, 0);
       AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, 0, 0, 0);
       AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_BODY, MODEL_COLTMAIN, TEXTURE_COLTMAIN, 0, 0, 0);
+    }
+      
+    // patch the dummy
+    PatchDummy(m_fnPatch);
+  };
+
+  // [Cecil] Apply dummy patch
+  void PatchDummy(CTFileName fnPatch) {
+    // no patch
+    if (!FileExists(fnPatch)) {
+      return;
+    }
+
+    CConfigBlock cbPatch;
+    HookFunctions();
+
+    // couldn't parse
+    if (ParseConfig(fnPatch, cbPatch) != DJSON_OK) {
+      FatalError("Cannot parse dummy patch '%s'!", fnPatch);
+      return;
+    }
+
+    // appearance
+    JSON_String strTex;
+
+    // legs texture
+    if (cbPatch.GetValue("Legs", strTex)) {
+      CTFileName fnTex = CTString(strTex.c_str());
+
+      if (FileExists(fnTex)) {
+        GetModelObject()->mo_toTexture.SetData_t(fnTex);
+      } else {
+        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex);
+      }
+    }
+
+    // body texture
+    if (cbPatch.GetValue("Body", strTex)) {
+      CTFileName fnTex = CTString(strTex.c_str());
+
+      if (FileExists(fnTex)) {
+        GetBody().mo_toTexture.SetData_t(fnTex);
+      } else {
+        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex);
+      }
+    }
+
+    // head texture
+    if (cbPatch.GetValue("Head", strTex)) {
+      CTFileName fnTex = CTString(strTex.c_str());
+
+      if (FileExists(fnTex)) {
+        GetHead().mo_toTexture.SetData_t(fnTex);
+      } else {
+        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex);
+      }
     }
   };
 
@@ -132,6 +221,12 @@ functions:
     m_fSetAttackDist = m_fAttackDistance;
     m_fSetCloseDist = m_fCloseDistance;
 
+    // load dummy patch
+    if (m_fnPatch == CTString("")) {
+      CTString strWorld = GetWorld()->wo_fnmFileName.FileName();
+      m_fnPatch.PrintF("LevelPatches\\Dummies\\%s_%d.json", strWorld, en_ulID);
+    }
+
     // reset custom model
     DummyAppearance();
   };
@@ -150,6 +245,17 @@ functions:
     CTString str;
     str.PrintF(TRANS("%s killed %s"), GetName(), strPlayerName);
     return str;
+  };
+
+  // [Cecil] Display entity ID
+  const CTString &GetDescription(void) const {
+    ((CTString&)m_strDescription).PrintF("%d -> <none>", en_ulID);
+
+    if (m_penMarker != NULL) {
+      ((CTString&)m_strDescription).PrintF("%d -> %s", en_ulID, m_penMarker->GetName());
+    }
+
+    return m_strDescription;
   };
 
   void *GetEntityInfo(void) {

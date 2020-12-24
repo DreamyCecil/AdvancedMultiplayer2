@@ -120,9 +120,9 @@ functions:
     }
 
     // [Cecil] Customizable options instead of particle functions
-    FLOAT fSize = 1.5f;
-    FLOAT fHeight = 1.5f;
-    INDEX ctParticles = 64;
+    FLOAT fSize = m_vParticles(1);
+    FLOAT fHeight = m_vParticles(2);
+    INDEX ctParticles = INDEX(m_vParticles(3));
 
     switch (m_EaitType) {
       case ARIT_SHARD:

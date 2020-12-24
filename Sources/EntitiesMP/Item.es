@@ -37,6 +37,7 @@ properties:
  // [Cecil] Custom items
  30 FLOAT m_fCustomValue "Custom Value" = 0.0f,
  31 FLOAT m_fCustomSize  "Custom Size" = 1.0f,
+ 32 ANGLE3D m_vParticles "Custom Particles" = ANGLE3D(1.5f, 1.0f, 32.0f),
 
  40 CTFileName m_fnPickupSound   "Custom Sound" = CTString(""),
  41 CTFileName m_fnCustomModel   "Custom Model" = CTString(""),

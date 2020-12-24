@@ -113,15 +113,22 @@ functions:
     }
 
     // [Cecil] Customizable options instead of particle functions
-    FLOAT fSize = 1.0f;
-    FLOAT fHeight = 0.75f;
-    INDEX ctParticles = 128;
+    FLOAT fSize = m_vParticles(1);
+    FLOAT fHeight = m_vParticles(2);
+    INDEX ctParticles = INDEX(m_vParticles(3));
 
     switch (m_EhitType) {
       case HIT_PILL:
         fSize = 0.9f;
         fHeight = 0.7f;
         ctParticles = 32;
+        break;
+
+      case HIT_SMALL:
+      case HIT_MEDIUM:
+        fSize = 1.0f;
+        fHeight = 0.75f;
+        ctParticles = 128;
         break;
 
       case HIT_LARGE:
@@ -313,7 +320,7 @@ procedures:
 
       // [Cecil] Custom sound
       if (m_iSoundComponent < 0) {
-        PlayCustomSound(FileNameForComponent(ECT_SOUND, SOUND_SMALL));
+        PlayCustomSound(FileNameForComponent(ECT_SOUND, SOUND_MEDIUM));
 
       } else {
         PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
