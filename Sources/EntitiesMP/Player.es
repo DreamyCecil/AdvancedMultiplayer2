@@ -1586,8 +1586,7 @@ functions:
     }
   }
 
-  void CPlayer(void) 
-  {
+  void CPlayer(void) {
     // clear flying shells data array
     bUseButtonHeld = FALSE;
     ClearShellLaunchData();
@@ -1598,23 +1597,21 @@ functions:
     // [Cecil] Load player marker texture
     _toPlayerMarker.SetData_t(CTFILENAME("Textures\\Interface\\PlayerMarker.tex"));
     ((CTextureData*)_toPlayerMarker.GetData())->Force(TEX_CONSTANT);
-  }
+  };
 
-  class CPlayerWeapons *GetPlayerWeapons(void)
-  {
+  class CPlayerWeapons *GetPlayerWeapons(void) {
     ASSERT(m_penWeapons!=NULL);
     return (CPlayerWeapons *)&*m_penWeapons;
-  }
-  class CPlayerAnimator *GetPlayerAnimator(void)
-  {
+  };
+
+  class CPlayerAnimator *GetPlayerAnimator(void) {
     ASSERT(m_penAnimator!=NULL);
     return (CPlayerAnimator *)&*m_penAnimator;
-  }
+  };
 
-  CPlayerSettings *GetSettings(void)
-  {
+  CPlayerSettings *GetSettings(void) {
     return (CPlayerSettings *)en_pcCharacter.pc_aubAppearance;
-  }
+  };
 
   export void Copy(CEntity &enOther, ULONG ulFlags)
   {
@@ -7146,8 +7143,7 @@ procedures:
 /************************************************************
  *                        M  A  I  N                        *
  ************************************************************/
-  Main(EVoid evoid)
-  {
+  Main() {
     // remember start time
     time(&m_iStartTime);
 
@@ -7172,6 +7168,11 @@ procedures:
     //const FLOAT fSize = 2.1f/1.85f;
     //GetModelObject()->StretchModel(FLOAT3D(fSize, fSize, fSize));
     ModelChangeNotify();
+    
+    // [Cecil] Clear enemy counter
+    if (_pNetwork->IsPlayerLocal(this)) {
+      _iAliveEnemies = 0;
+    }
 
     // [Cecil] Convert world
     if (GetSP()->sp_iAMPOptions & AMP_CONVERSION) {
