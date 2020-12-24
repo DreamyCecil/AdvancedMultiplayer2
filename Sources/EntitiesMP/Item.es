@@ -42,13 +42,32 @@ properties:
  41 CTFileName m_fnCustomModel   "Custom Model" = CTString(""),
  42 CTFileName m_fnCustomTexture "Custom Texture" = CTString(""),
 
+{
+  CAutoPrecacheModel m_apmCustom;
+  CAutoPrecacheTexture m_aptCustom;
+  CAutoPrecacheSound m_apsCustom;
+}
+
 components:
   1 model   MODEL_ITEM      "Models\\Items\\ItemHolder\\ItemHolder.mdl",
 
 functions:
-  virtual void AdjustDifficulty(void)
-  {
-  }
+  virtual void AdjustDifficulty(void) {};
+
+  // [Cecil] Precache custom resources
+  void Precache(void) {
+    if (FileExists(m_fnCustomModel)) {
+      m_apmCustom.Precache(m_fnCustomModel);
+    }
+
+    if (FileExists(m_fnCustomTexture)) {
+      m_aptCustom.Precache(m_fnCustomTexture);
+    }
+
+    if (FileExists(m_fnPickupSound)) {
+      m_apsCustom.Precache(m_fnPickupSound);
+    }
+  };
 
   /* Adjust model mip factor if needed. */
   void AdjustMipFactor(FLOAT &fMipFactor)

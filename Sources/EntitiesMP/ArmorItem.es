@@ -79,6 +79,8 @@ components:
 
 functions:
   void Precache(void) {
+    CItem::Precache();
+
     PrecacheSound(SOUND_SHARD);
     PrecacheSound(SOUND_SMALL);
     PrecacheSound(SOUND_MEDIUM);
@@ -87,13 +89,14 @@ functions:
     PrecacheSound(SOUND_HELM);
   };
 
-  /* Fill in entity statistics - for AI purposes only */
+  // Fill in entity statistics - for AI purposes only
   BOOL FillEntityStatistics(EntityStats *pes) {
     pes->es_strName = "Armor"; 
     pes->es_ctCount = 1;
     pes->es_ctAmmount = m_fValue;
     pes->es_fValue = m_fValue*2;
-    pes->es_iScore = 0;//m_iScore;
+    pes->es_iScore = 0;
+
     switch (m_EaitType) {
       case ARIT_SHARD:  pes->es_strName+=" shard";  break;
       case ARIT_SMALL:  pes->es_strName+=" small";  break;                                      
@@ -101,7 +104,9 @@ functions:
       case ARIT_STRONG: pes->es_strName+=" strong"; break;
       case ARIT_SUPER:  pes->es_strName+=" super";  break;
       case ARIT_HELM:   pes->es_strName+=" helm";   break;
+      case ARIT_CUSTOM: pes->es_strName+=" custom";   break;
     }
+
     return TRUE;
   };
 

@@ -74,6 +74,8 @@ components:
 
 functions:
   void Precache(void) {
+    CItem::Precache();
+
     PrecacheSound(SOUND_PILL);
     PrecacheSound(SOUND_SMALL);
     PrecacheSound(SOUND_MEDIUM);
@@ -81,20 +83,21 @@ functions:
     PrecacheSound(SOUND_SUPER);
   };
 
-  /* Fill in entity statistics - for AI purposes only */
+  // Fill in entity statistics - for AI purposes only
   BOOL FillEntityStatistics(EntityStats *pes) {
     pes->es_strName = "Health"; 
     pes->es_ctCount = 1;
     pes->es_ctAmmount = m_fValue;
     pes->es_fValue = m_fValue;
-    pes->es_iScore = 0;//m_iScore;
+    pes->es_iScore = 0;
     
     switch (m_EhitType) {
-      case HIT_PILL:  pes->es_strName+=" pill";   break;
-      case HIT_SMALL: pes->es_strName+=" small";  break;
-      case HIT_MEDIUM:pes->es_strName+=" medium"; break;
-      case HIT_LARGE: pes->es_strName+=" large";  break;
-      case HIT_SUPER: pes->es_strName+=" super";  break;
+      case HIT_PILL:   pes->es_strName+=" pill";   break;
+      case HIT_SMALL:  pes->es_strName+=" small";  break;
+      case HIT_MEDIUM: pes->es_strName+=" medium"; break;
+      case HIT_LARGE:  pes->es_strName+=" large";  break;
+      case HIT_SUPER:  pes->es_strName+=" super";  break;
+      case HIT_CUSTOM: pes->es_strName+=" custom"; break;
     }
 
     return TRUE;
