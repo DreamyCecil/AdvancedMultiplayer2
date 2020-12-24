@@ -57,17 +57,9 @@ functions:
 
   // [Cecil] Precache custom resources
   void Precache(void) {
-    if (FileExists(m_fnCustomModel)) {
-      m_apmCustom.Precache(m_fnCustomModel);
-    }
-
-    if (FileExists(m_fnCustomTexture)) {
-      m_aptCustom.Precache(m_fnCustomTexture);
-    }
-
-    if (FileExists(m_fnPickupSound)) {
-      m_apsCustom.Precache(m_fnPickupSound);
-    }
+    m_apmCustom.Precache(m_fnCustomModel);
+    m_aptCustom.Precache(m_fnCustomTexture);
+    m_apsCustom.Precache(m_fnPickupSound);
   };
 
   /* Adjust model mip factor if needed. */

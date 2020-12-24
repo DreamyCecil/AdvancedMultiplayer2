@@ -58,23 +58,29 @@ properties:
  10 INDEX m_iFireCounter = 0,
  11 FLOAT m_fFireRate "Dummy Fire Rate" = 0.5f,
 
- 20 FLOAT m_fHealth       "Dummy Health" = 100.0f,
- 21 FLOAT m_fBlowupDamage "Dummy Blowup Damage" = 100.0f,
+ 20 FLOAT m_fHealth "Health" = 100.0f,
+ 21 BOOL m_bSetBoss "Boss" = FALSE,
  22 enum SprayParticlesType m_sptParticles "Dummy Spray Particles" = SPT_BLOOD,
- 23 BOOL m_bSetBoss      "Dummy Boss" = FALSE,
- 24 FLOAT m_fWoundDamage "Dummy Wound Damage" = 60.0f,
 
- 30 FLOAT m_fSetWalkSpeed  "Dummy Speed Walk" = 2.0f,
- 31 FLOAT m_fSetRunSpeed   "Dummy Speed Run" = 12.0f,
- 32 FLOAT m_fSetCloseSpeed "Dummy Speed Close" = 11.0f,
- 33 FLOAT m_fSetStopDist   "Dummy Dist Stop" = 1.5f,
- 34 FLOAT m_fSetAttackDist "Dummy Dist Attack" = 50.0f,
- 35 FLOAT m_fSetCloseDist  "Dummy Dist Close" = 6.0f,
+ 30 FLOAT m_fSetWalkSpeed  "Speed Walk" = 2.0f,
+ 31 FLOAT m_fSetRunSpeed   "Speed Run" = 12.0f,
+ 32 FLOAT m_fSetCloseSpeed "Speed Close" = 11.0f,
+ 33 FLOAT m_fSetStopDist   "Dist Stop" = 1.5f,
+ 34 FLOAT m_fSetAttackDist "Dist Attack" = 50.0f,
+ 35 FLOAT m_fSetCloseDist  "Dist Close" = 6.0f,
+ 36 FLOAT m_fSetReflexDist "Dist Reflex" = 6.0f,
 
  40 CTFileName m_fnPatch "Dummy Patch" = CTString(""),
+ 41 CTFileName m_fnSight "Sound Sight" = CTString(""),
+ 42 CTFileName m_fnWound "Sound Wound" = CTString(""),
+ 43 CTFileName m_fnDeath "Sound Death" = CTString(""),
+
+ 50 FLOAT m_fBlowupDamage "Dummy Blowup Damage" = 100.0f,
+ 51 FLOAT m_fWoundDamage  "Dummy Wound Damage" = 60.0f,
+ 52 BOOL m_bWoundAnim     "Dummy Wound Animation" = TRUE,
 
 {
-  CAutoPrecacheSound m_apsAttack;
+  CAutoPrecacheSound m_apsSound;
 }
   
 components:
@@ -110,6 +116,21 @@ functions:
   virtual INDEX LegionMulFactor(void) {
     return 1;
   };
+
+  // [Cecil] Precache sounds
+  void Precache(void) {
+    CEnemyBase::Precache();
+    PrecacheSound(SOUND_SIGHT);
+    PrecacheSound(SOUND_WOUND);
+    PrecacheSound(SOUND_DEATH);
+    
+    m_apsSound.Precache(m_fnFireSound);
+    m_apsSound.Precache(m_fnHitSound);
+
+    m_apsSound.Precache(m_fnSight);
+    m_apsSound.Precache(m_fnWound);
+    m_apsSound.Precache(m_fnDeath);
+  };
   
   // [Cecil] Get body model
   CModelObject &GetBody(void) {
@@ -144,9 +165,11 @@ functions:
       AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, 0, 0, 0);
       AddAttachmentToModel(this, moColt, COLTITEM_ATTACHMENT_BODY, MODEL_COLTMAIN, TEXTURE_COLTMAIN, 0, 0, 0);
     }
-      
+    
     // patch the dummy
     PatchDummy(m_fnPatch);
+
+    SizeModel();
   };
 
   // [Cecil] Apply dummy patch
@@ -166,39 +189,134 @@ functions:
     }
 
     // appearance
-    JSON_String strTex;
+    JSON_String strPath;
 
     // legs texture
-    if (cbPatch.GetValue("Legs", strTex)) {
-      CTFileName fnTex = CTString(strTex.c_str());
+    if (cbPatch.GetValue("Legs", strPath)) {
+      CTFileName fnTex = CTString(strPath.c_str());
 
       if (FileExists(fnTex)) {
         GetModelObject()->mo_toTexture.SetData_t(fnTex);
       } else {
-        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex);
+        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex.str_String);
       }
     }
 
     // body texture
-    if (cbPatch.GetValue("Body", strTex)) {
-      CTFileName fnTex = CTString(strTex.c_str());
+    if (cbPatch.GetValue("Body", strPath)) {
+      CTFileName fnTex = CTString(strPath.c_str());
 
       if (FileExists(fnTex)) {
         GetBody().mo_toTexture.SetData_t(fnTex);
       } else {
-        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex);
+        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex.str_String);
       }
     }
 
     // head texture
-    if (cbPatch.GetValue("Head", strTex)) {
-      CTFileName fnTex = CTString(strTex.c_str());
+    if (cbPatch.GetValue("Head", strPath)) {
+      CTFileName fnTex = CTString(strPath.c_str());
 
       if (FileExists(fnTex)) {
         GetHead().mo_toTexture.SetData_t(fnTex);
       } else {
-        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex);
+        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex.str_String);
       }
+    }
+
+    // custom sounds
+    if (cbPatch.GetValue("SightSound", strPath)) {
+      CTString strSound = strPath.c_str();
+
+      if (FileExists(strSound)) {
+        m_fnSight = strSound;
+      } else {
+        CPrintF("Invalid sight sound for the dummy: '%s'\n", strSound);
+      }
+    }
+
+    if (cbPatch.GetValue("WoundSound", strPath)) {
+      CTString strSound = strPath.c_str();
+
+      if (FileExists(strSound)) {
+        m_fnWound = strSound;
+      } else {
+        CPrintF("Invalid wound sound for the dummy: '%s'\n", strSound);
+      }
+    }
+
+    if (cbPatch.GetValue("DeathSound", strPath)) {
+      CTString strSound = strPath.c_str();
+
+      if (FileExists(strSound)) {
+        m_fnDeath = strSound;
+      } else {
+        CPrintF("Invalid death sound for the dummy: '%s'\n", strSound);
+      }
+    }
+
+    // attack sounds
+    if (cbPatch.GetValue("FireSound", strPath)) {
+      CTString strSound = strPath.c_str();
+
+      if (FileExists(strSound)) {
+        m_fnFireSound = strSound;
+      } else {
+        CPrintF("Invalid fire sound for the dummy: '%s'\n", strSound);
+      }
+    }
+
+    if (cbPatch.GetValue("HitSound", strPath)) {
+      CTString strSound = strPath.c_str();
+
+      if (FileExists(strSound)) {
+        m_fnHitSound = strSound;
+      } else {
+        CPrintF("Invalid hit sound for the dummy: '%s'\n", strSound);
+      }
+    }
+
+    // float properties
+    float fProp;
+
+    if (cbPatch.GetValue("BlowupDamage", fProp)) {
+      m_fBlowupDamage = fProp;
+    }
+
+    if (cbPatch.GetValue("WoundDamage", fProp)) {
+      m_fWoundDamage = fProp;
+    }
+
+    if (cbPatch.GetValue("ReflexDist", fProp)) {
+      m_fSetReflexDist = fProp;
+    }
+
+    if (cbPatch.GetValue("FireRate", fProp)) {
+      m_fFireRate = fProp;
+    }
+
+    if (cbPatch.GetValue("HitDamage", fProp)) {
+      m_fAttackHit = fProp;
+    }
+
+    // integer properties
+    int iProp;
+
+    if (cbPatch.GetValue("FireCount", iProp)) {
+      m_iAttackFire = iProp;
+    }
+
+    if (cbPatch.GetValue("Projectile", iProp)) {
+      // check for valid projectiles
+      if (ProjectileType_enum.NameForValue(iProp) != "") {
+        m_prtProjectile = (ProjectileType)iProp;
+      } else {
+        CPrintF("Invalid projectile index for the dummy: %d\n", iProp);
+      }
+    }
+
+    if (cbPatch.GetValue("WoundAnim", iProp)) {
+      m_bWoundAnim = iProp;
     }
   };
 
@@ -206,8 +324,12 @@ functions:
   void Read_t(CTStream *istr) {
     CEnemyBase::Read_t(istr);
 
+    // reset size
+    StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
+
     // set custom properties
     m_fHealth = GetHealth();
+    m_fMaxHealth = m_fHealth;
     m_fBlowupDamage = m_fBlowUpAmount;
     m_sptParticles = m_sptType;
     m_bSetBoss = m_bBoss;
@@ -225,20 +347,15 @@ functions:
     if (m_fnPatch == CTString("")) {
       CTString strWorld = GetWorld()->wo_fnmFileName.FileName();
       m_fnPatch.PrintF("LevelPatches\\Dummies\\%s_%d.json", strWorld, en_ulID);
+
+      // load global one if no specific one
+      if (!FileExists(m_fnPatch)) {
+        m_fnPatch.PrintF("LevelPatches\\Dummies\\%s.json", strWorld);
+      }
     }
 
     // reset custom model
     DummyAppearance();
-  };
-
-  void Precache(void) {
-    CEnemyBase::Precache();
-    PrecacheSound(SOUND_SIGHT);
-    PrecacheSound(SOUND_WOUND);
-    PrecacheSound(SOUND_DEATH);
-    
-    m_apsAttack.Precache(m_fnFireSound);
-    m_apsAttack.Precache(m_fnHitSound);
   };
 
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath) {
@@ -273,10 +390,14 @@ functions:
 
   // [Cecil] Wound animation
   INDEX AnimForDamage(FLOAT fDamage) {
-    StartModelAnim(PLAYER_ANIM_TURNLEFT, AOF_LOOPING|AOF_NORESTART);
-    BodyAnim(BODY_ANIM_COLT_STAND, AOF_LOOPING|AOF_NORESTART);
+    if (m_bWoundAnim) {
+      StartModelAnim(PLAYER_ANIM_TURNLEFT, AOF_LOOPING|AOF_NORESTART);
+      BodyAnim(BODY_ANIM_COLT_STAND, AOF_LOOPING|AOF_NORESTART);
 
-    return PLAYER_ANIM_TURNLEFT;
+      return PLAYER_ANIM_TURNLEFT;
+    }
+
+    return PLAYER_ANIM_DEFAULT_ANIMATION;
   };
 
   // [Cecil] Death animation
@@ -345,24 +466,36 @@ functions:
   // virtual sound functions
   void SightSound(void) {
     if (!m_soSound.IsPlaying()) {
-      PlaySound(m_soSound, SOUND_SIGHT, SOF_3D);
+      if (FileExists(m_fnSight)) {
+        PlaySound(m_soSound, m_fnSight, SOF_3D);
+      } else {
+        PlaySound(m_soSound, SOUND_SIGHT, SOF_3D);
+      }
     }
   };
   
   void WoundSound(void) {
     if (!m_soSound.IsPlaying()) {
-      PlaySound(m_soSound, SOUND_WOUND, SOF_3D);
+      if (FileExists(m_fnWound)) {
+        PlaySound(m_soSound, m_fnWound, SOF_3D);
+      } else {
+        PlaySound(m_soSound, SOUND_WOUND, SOF_3D);
+      }
     }
   };
   
   void DeathSound(void) {
-    PlaySound(m_soSound, SOUND_DEATH, SOF_3D);
+    if (FileExists(m_fnDeath)) {
+      PlaySound(m_soSound, m_fnDeath, SOF_3D);
+    } else {
+      PlaySound(m_soSound, SOUND_DEATH, SOF_3D);
+    }
   };
 
   // get movement frequency for attack
   virtual FLOAT GetAttackMoveFrequency(FLOAT fEnemyDistance) {
     // sharp reflexes when close
-    if (fEnemyDistance < m_fCloseDistance) {
+    if (fEnemyDistance < m_fSetReflexDist) {
       return 0.1f;
     }
     
