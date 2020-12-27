@@ -202,14 +202,41 @@ functions:
 
     // other properties
     GetConfigString(cbPatch, "Name", m_strName);
+
     cbPatch.GetValue("BlowupDamage",  (float&)m_fBlowupDamage);
     cbPatch.GetValue("WoundDamage",   (float&)m_fWoundDamage);
     cbPatch.GetValue("ReflexDist",    (float&)m_fSetReflexDist);
     cbPatch.GetValue("FireRate",      (float&)m_fFireRate);
     cbPatch.GetValue("FireFrequency", (float&)m_fFireFrequency);
     cbPatch.GetValue("HitDamage",     (float&)m_fAttackHit);
+
     cbPatch.GetValue("FireCount",     (int&)m_iAttackFire);
     cbPatch.GetValue("WoundAnim",     (int&)m_bWoundAnim);
+
+    // speeds and distances
+    if (cbPatch.GetValue("WalkSpeed", (float&)m_fSetWalkSpeed)) {
+      m_fWalkSpeed = m_fSetWalkSpeed;
+    }
+
+    if (cbPatch.GetValue("RunSpeed", (float&)m_fSetRunSpeed)) {
+      m_fAttackRunSpeed = m_fSetRunSpeed;
+    }
+
+    if (cbPatch.GetValue("CloseSpeed", (float&)m_fSetCloseSpeed)) {
+      m_fCloseRunSpeed = m_fSetCloseSpeed;
+    }
+
+    if (cbPatch.GetValue("StopDist", (float&)m_fSetStopDist)) {
+      m_fStopDistance = m_fSetStopDist;
+    }
+
+    if (cbPatch.GetValue("AttackDist", (float&)m_fSetAttackDist)) {
+      m_fAttackDistance = m_fSetAttackDist;
+    }
+
+    if (cbPatch.GetValue("CloseDist", (float&)m_fSetCloseDist)) {
+      m_fCloseDistance = m_fSetCloseDist;
+    }
   };
 
   // [Cecil] Patching for enemy replacements
@@ -413,7 +440,7 @@ procedures:
 
     while (--m_iFireCounter >= 0) {
       BodyAnim(BODY_ANIM_COLT_FIRERIGHT, 0);
-      ShootProjectile(m_prtProjectile, FLOAT3D(0.2f, 1.4f, -0.25f) * m_fStretchMultiplier, ANGLE3D(0.0f, 0.0f, 0.0f));
+      ShootProjectile(m_prtProjectile, FLOAT3D(0.2f, 1.4f, -0.25f) * ClampDn(m_fStretchMultiplier, 0.5f), ANGLE3D(0.0f, 0.0f, 0.0f));
       PlaySound(m_soSound, m_fnFireSound, SOF_3D);
 
       autowait(ClampDn(m_fFireRate, 0.05f));
@@ -430,7 +457,7 @@ procedures:
     }
 
     // within hitting range
-    if (CalcDist(m_penEnemy) < 2.0f*m_fStretchMultiplier) {
+    if (CalcDist(m_penEnemy) < 2.0f * ClampDn(m_fStretchMultiplier, 0.5f)) {
       StandingAnimFight();
       BodyAnim(BODY_ANIM_KNIFE_ATTACK, 0);
 
@@ -438,7 +465,7 @@ procedures:
       autowait(0.1f);
 
       // within hitting range
-      if (CalcDist(m_penEnemy) < 3.0f*m_fStretchMultiplier) {
+      if (CalcDist(m_penEnemy) < 3.0f * ClampDn(m_fStretchMultiplier, 0.5f)) {
         FLOAT3D vDir = m_penEnemy->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector;
         vDir.Normalize();
 
