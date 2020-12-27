@@ -182,19 +182,20 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClCompile Include="..\DreamyJSON\Base\Formatting.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Containers\ConfigArray.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Containers\ConfigBlock.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="..\DreamyJSON\Parser\ConfigParser.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Values\ConfigBlock.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Values\ConfigElement.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\DreamyJSON\Values\ConfigValue.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Common\Common.cpp" />
+    <ClCompile Include="Common\ConfigFunc.cpp" />
     <ClCompile Include="Common\EmanatingParticles.cpp" />
     <ClCompile Include="Common\ExtraFunc.cpp" />
     <ClCompile Include="Common\HUD.cpp" />
@@ -416,9 +417,6 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="..\DreamyJSON\Base\Compatibility.h" />
     <ClInclude Include="..\DreamyJSON\Base\Formatting.h" />
     <ClInclude Include="..\DreamyJSON\ConfigBase.h" />
-    <ClInclude Include="..\DreamyJSON\ConfigElement.h" />
-    <ClInclude Include="..\DreamyJSON\Containers\ConfigArray.h" />
-    <ClInclude Include="..\DreamyJSON\Containers\ConfigBlock.h" />
     <ClInclude Include="..\DreamyJSON\DreamyJSON.h" />
     <ClInclude Include="..\DreamyJSON\DreamyStructures\DataArray.h" />
     <ClInclude Include="..\DreamyJSON\DreamyStructures\DataList.h" />
@@ -428,8 +426,11 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="..\DreamyJSON\DreamyStructures\DataTemplates.h" />
     <ClInclude Include="..\DreamyJSON\Parser\ConfigParser.h" />
     <ClInclude Include="..\DreamyJSON\Parser\ParserToken.h" />
+    <ClInclude Include="..\DreamyJSON\Values\ConfigBlock.h" />
+    <ClInclude Include="..\DreamyJSON\Values\ConfigElement.h" />
     <ClInclude Include="..\DreamyJSON\Values\ConfigValue.h" />
     <ClInclude Include="Common\Common.h" />
+    <ClInclude Include="Common\ConfigFunc.h" />
     <ClInclude Include="Common\ExtraFunc.h" />
     <ClInclude Include="Common\Flags.h" />
     <ClInclude Include="Common\GameInterface.h" />

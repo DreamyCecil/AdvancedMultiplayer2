@@ -11,9 +11,16 @@
 #define DECL_DLL 
 #endif
 
-#include "..\Global.h"
-#include "..\Common\Flags.h"
-#include "..\Common\Common.h"
-#include "..\Common\Particles.h"
-#include "..\Common\EmanatingParticles.h"
-#include "..\Common\GameInterface.h"
+// [Cecil] Standard string
+#include <string>
+typedef std::string string;
+
+// [Cecil] Config parser
+#include "DreamyJSON/DreamyJSON.h"
+
+#include "../Global.h"
+#include "../Common/Flags.h"
+#include "../Common/Common.h"
+#include "../Common/Particles.h"
+#include "../Common/EmanatingParticles.h"
+#include "../Common/GameInterface.h"

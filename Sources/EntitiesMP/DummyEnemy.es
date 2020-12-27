@@ -7,29 +7,7 @@
 #include "Models/Weapons/Colt/ColtItem.h"
 
 // [Cecil] Patch parser
-#include "DreamyJSON/DreamyJSON.h"
-
-// [Cecil] Hook functions
-extern void (*_pJSON_ErrorFunction)(const char *);
-extern JSON_String (*_pJSON_LoadConfigFile)(JSON_String);
-
-JSON_String LoadConfigFile(JSON_String strFile) {
-  CTFileStream strm;
-  strm.Open_t(CTString(strFile.c_str()));
-
-  // read until the end
-  CTString strConfig = "";
-  strConfig.ReadUntilEOF_t(strm);
-  strm.Close();
-
-  // return config
-  return strConfig;
-};
-
-void HookFunctions(void) {
-  _pJSON_ErrorFunction = (void (*)(const char *))FatalError;
-  _pJSON_LoadConfigFile = (JSON_String (*)(JSON_String))LoadConfigFile;
-};
+#include "EntitiesMP/Common/ConfigFunc.h"
 %}
 
 uses "EntitiesMP/EnemyBase";
@@ -182,7 +160,7 @@ functions:
     }
 
     CConfigBlock cbPatch;
-    HookFunctions();
+    HookConfigFunctions();
 
     // couldn't parse
     if (ParseConfig(fnPatch, cbPatch) != DJSON_OK) {
@@ -190,147 +168,48 @@ functions:
       return;
     }
 
-    // name
-    JSON_String strName;
-
-    if (cbPatch.GetValue("Name", strName)) {
-      m_strName = strName.c_str();
-    }
-
     // appearance
-    JSON_String strPath;
-
-    // legs texture
-    if (cbPatch.GetValue("Legs", strPath)) {
-      CTFileName fnTex = CTString(strPath.c_str());
-
-      if (FileExists(fnTex)) {
-        GetModelObject()->mo_toTexture.SetData_t(fnTex);
-      } else {
-        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex.str_String);
-      }
+    if (!SetConfigTexture(cbPatch, "Legs", GetModelObject()->mo_toTexture)) {
+      CPrintF("Invalid legs texture for the dummy!\n");
     }
 
-    // body texture
-    if (cbPatch.GetValue("Body", strPath)) {
-      CTFileName fnTex = CTString(strPath.c_str());
-
-      if (FileExists(fnTex)) {
-        GetBody().mo_toTexture.SetData_t(fnTex);
-      } else {
-        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex.str_String);
-      }
+    if (!SetConfigTexture(cbPatch, "Body", GetBody().mo_toTexture)) {
+      CPrintF("Invalid body texture for the dummy!\n");
     }
 
-    // head texture
-    if (cbPatch.GetValue("Head", strPath)) {
-      CTFileName fnTex = CTString(strPath.c_str());
-
-      if (FileExists(fnTex)) {
-        GetHead().mo_toTexture.SetData_t(fnTex);
-      } else {
-        CPrintF("Invalid legs texture for the dummy: '%s'\n", fnTex.str_String);
-      }
+    if (!SetConfigTexture(cbPatch, "Head", GetHead().mo_toTexture)) {
+      CPrintF("Invalid head texture for the dummy!\n");
     }
 
     // custom sounds
-    if (cbPatch.GetValue("SightSound", strPath)) {
-      CTString strSound = strPath.c_str();
+    GetConfigPath(cbPatch, "SightSound", m_fnSight);
+    GetConfigPath(cbPatch, "WoundSound", m_fnWound);
+    GetConfigPath(cbPatch, "DeathSound", m_fnDeath);
+    GetConfigPath(cbPatch, "FireSound",  m_fnFireSound);
+    GetConfigPath(cbPatch, "HitSound",   m_fnHitSound);
 
-      if (FileExists(strSound)) {
-        m_fnSight = strSound;
-      } else {
-        CPrintF("Invalid sight sound for the dummy: '%s'\n", strSound);
-      }
-    }
+    // custom projectile
+    ProjectileType ePrt;
 
-    if (cbPatch.GetValue("WoundSound", strPath)) {
-      CTString strSound = strPath.c_str();
-
-      if (FileExists(strSound)) {
-        m_fnWound = strSound;
-      } else {
-        CPrintF("Invalid wound sound for the dummy: '%s'\n", strSound);
-      }
-    }
-
-    if (cbPatch.GetValue("DeathSound", strPath)) {
-      CTString strSound = strPath.c_str();
-
-      if (FileExists(strSound)) {
-        m_fnDeath = strSound;
-      } else {
-        CPrintF("Invalid death sound for the dummy: '%s'\n", strSound);
-      }
-    }
-
-    // attack sounds
-    if (cbPatch.GetValue("FireSound", strPath)) {
-      CTString strSound = strPath.c_str();
-
-      if (FileExists(strSound)) {
-        m_fnFireSound = strSound;
-      } else {
-        CPrintF("Invalid fire sound for the dummy: '%s'\n", strSound);
-      }
-    }
-
-    if (cbPatch.GetValue("HitSound", strPath)) {
-      CTString strSound = strPath.c_str();
-
-      if (FileExists(strSound)) {
-        m_fnHitSound = strSound;
-      } else {
-        CPrintF("Invalid hit sound for the dummy: '%s'\n", strSound);
-      }
-    }
-
-    // float properties
-    float fProp;
-
-    if (cbPatch.GetValue("BlowupDamage", fProp)) {
-      m_fBlowupDamage = fProp;
-    }
-
-    if (cbPatch.GetValue("WoundDamage", fProp)) {
-      m_fWoundDamage = fProp;
-    }
-
-    if (cbPatch.GetValue("ReflexDist", fProp)) {
-      m_fSetReflexDist = fProp;
-    }
-
-    if (cbPatch.GetValue("FireRate", fProp)) {
-      m_fFireRate = fProp;
-    }
-
-    if (cbPatch.GetValue("FireFrequency", fProp)) {
-      m_fFireFrequency = fProp;
-    }
-
-    if (cbPatch.GetValue("HitDamage", fProp)) {
-      m_fAttackHit = fProp;
-    }
-
-    // integer properties
-    int iProp;
-
-    if (cbPatch.GetValue("FireCount", iProp)) {
-      m_iAttackFire = iProp;
-    }
-
-    if (cbPatch.GetValue("Projectile", iProp)) {
+    if (cbPatch.GetValue("Projectile", (int&)ePrt)) {
       // check for valid projectiles
-      if (ProjectileType_enum.NameForValue(iProp) != "") {
-        m_prtProjectile = (ProjectileType)iProp;
+      if (ProjectileType_enum.NameForValue(ePrt) != "") {
+        m_prtProjectile = ePrt;
       } else {
-        CPrintF("Invalid projectile index for the dummy: %d\n", iProp);
+        CPrintF("Invalid projectile index for the dummy: %d\n", ePrt);
       }
     }
 
-    if (cbPatch.GetValue("WoundAnim", iProp)) {
-      m_bWoundAnim = iProp;
-    }
+    // other properties
+    GetConfigString(cbPatch, "Name", m_strName);
+    cbPatch.GetValue("BlowupDamage",  (float&)m_fBlowupDamage);
+    cbPatch.GetValue("WoundDamage",   (float&)m_fWoundDamage);
+    cbPatch.GetValue("ReflexDist",    (float&)m_fSetReflexDist);
+    cbPatch.GetValue("FireRate",      (float&)m_fFireRate);
+    cbPatch.GetValue("FireFrequency", (float&)m_fFireFrequency);
+    cbPatch.GetValue("HitDamage",     (float&)m_fAttackHit);
+    cbPatch.GetValue("FireCount",     (int&)m_iAttackFire);
+    cbPatch.GetValue("WoundAnim",     (int&)m_bWoundAnim);
   };
 
   // [Cecil] Patching for enemy replacements

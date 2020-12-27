@@ -568,17 +568,20 @@
     <ClCompile Include="..\DreamyJSON\Parser\ConfigParser.cpp">
       <Filter>Source Files\DreamyJSON sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Containers\ConfigArray.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Containers\ConfigBlock.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
     <ClCompile Include="..\DreamyJSON\Base\Compatibility.cpp">
       <Filter>Source Files\DreamyJSON sources</Filter>
     </ClCompile>
     <ClCompile Include="..\DreamyJSON\Base\Formatting.cpp">
       <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Values\ConfigBlock.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DreamyJSON\Values\ConfigElement.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\ConfigFunc.cpp">
+      <Filter>Source Files\Common sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1560,9 +1563,6 @@
     <ClInclude Include="..\DreamyJSON\ConfigBase.h">
       <Filter>Header Files\DreamyJSON headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\DreamyJSON\ConfigElement.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\DreamyJSON\DreamyJSON.h">
       <Filter>Header Files\DreamyJSON headers</Filter>
     </ClInclude>
@@ -1570,12 +1570,6 @@
       <Filter>Header Files\DreamyJSON headers</Filter>
     </ClInclude>
     <ClInclude Include="..\DreamyJSON\Base\Formatting.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Containers\ConfigArray.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Containers\ConfigBlock.h">
       <Filter>Header Files\DreamyJSON headers</Filter>
     </ClInclude>
     <ClInclude Include="..\DreamyJSON\Parser\ConfigParser.h">
@@ -1586,6 +1580,15 @@
     </ClInclude>
     <ClInclude Include="..\DreamyJSON\Values\ConfigValue.h">
       <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Values\ConfigBlock.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DreamyJSON\Values\ConfigElement.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\ConfigFunc.h">
+      <Filter>Header Files\Common headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
