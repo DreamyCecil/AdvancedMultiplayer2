@@ -9,6 +9,9 @@ DECL_DLL DJSON_String LoadConfigFile(DJSON_String strFile);
 // [Cecil] Function hooking
 DECL_DLL void HookConfigFunctions(void);
 
+// [Cecil] Get entity patch config
+DECL_DLL CTString GetPatchConfig(CEntity *pen, const CTString &strType);
+
 // [Cecil] Get CTString value
 DECL_DLL BOOL GetConfigString(CConfigBlock &cb, DJSON_String strKey, CTString &strValue);
 // [Cecil] Get CTFileName value

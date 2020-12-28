@@ -264,15 +264,9 @@ functions:
     m_fSetAttackDist = m_fAttackDistance;
     m_fSetCloseDist = m_fCloseDistance;
 
-    // load dummy patch
+    // get dummy patch
     if (m_fnPatch == CTString("")) {
-      CTString strWorld = GetWorld()->wo_fnmFileName.FileName();
-      m_fnPatch.PrintF("LevelPatches\\Dummies\\%s_%d.json", strWorld, en_ulID);
-
-      // load global one if no specific one
-      if (!FileExists(m_fnPatch)) {
-        m_fnPatch.PrintF("LevelPatches\\Dummies\\%s.json", strWorld);
-      }
+      m_fnPatch = GetPatchConfig(this, "Dummies");
     }
 
     // reset custom model

@@ -294,7 +294,7 @@ functions:
     if (FileExists(m_fnCustomModel)) {
       pmo->SetData_t(m_fnCustomModel);
     }
-    if (FileExists(m_fnCustomModel)) {
+    if (FileExists(m_fnCustomTexture)) {
       pmo->mo_toTexture.SetData_t(m_fnCustomTexture);
     }
   };

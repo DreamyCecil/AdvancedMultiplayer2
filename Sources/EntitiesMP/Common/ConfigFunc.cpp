@@ -22,6 +22,25 @@ void HookConfigFunctions(void) {
   DJSON_pLoadConfigFile = (DJSON_String (*)(DJSON_String))LoadConfigFile;
 };
 
+// [Cecil] Get entity patch config
+CTString GetPatchConfig(CEntity *pen, const CTString &strType) {
+  CTString strWorld = pen->GetWorld()->wo_fnmFileName.FileName();
+
+  // get specific config
+  CTString strConfigFile;
+  strConfigFile.PrintF("LevelPatches\\%s\\%s_%d.json", strType, strWorld, pen->en_ulID);
+
+  // get global config if no specific one
+  if (!FileExists(strConfigFile)) {
+    strConfigFile.PrintF("LevelPatches\\%s\\%s.json", strType, strWorld);
+
+    return (FileExists(strConfigFile) ? strConfigFile : "");
+  }
+
+  // return specific config
+  return strConfigFile;
+};
+
 // [Cecil] Get CTString value
 BOOL GetConfigString(CConfigBlock &cb, DJSON_String strKey, CTString &strValue) {
   string strGet;
