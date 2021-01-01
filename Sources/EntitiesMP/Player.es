@@ -1725,10 +1725,10 @@ functions:
     } else {
       return "no prediction";
     }
-  }
-  /* Write to stream. */
-  void Write_t( CTStream *ostr) // throw char *
-  {
+  };
+
+  // Write to stream
+  void Write_t(CTStream *ostr) {
     CPlayerEntity::Write_t(ostr);
     // save array of messages
     ostr->WriteID_t("MSGS");
@@ -1739,12 +1739,12 @@ functions:
     }
     ostr->Write_t(&m_psLevelStats, sizeof(m_psLevelStats));
     ostr->Write_t(&m_psLevelTotal, sizeof(m_psLevelTotal));
-    ostr->Write_t(&m_psGameStats , sizeof(m_psGameStats ));
-    ostr->Write_t(&m_psGameTotal , sizeof(m_psGameTotal ));
-  }
-  /* Read from stream. */
-  void Read_t( CTStream *istr) // throw char *
-  { 
+    ostr->Write_t(&m_psGameStats , sizeof(m_psGameStats));
+    ostr->Write_t(&m_psGameTotal , sizeof(m_psGameTotal));
+  };
+
+  // Read from stream
+  void Read_t(CTStream *istr) { 
     CPlayerEntity::Read_t(istr);
     // clear flying shells data array
     ClearShellLaunchData();
@@ -1768,8 +1768,8 @@ functions:
 
     istr->Read_t(&m_psLevelStats, sizeof(m_psLevelStats));
     istr->Read_t(&m_psLevelTotal, sizeof(m_psLevelTotal));
-    istr->Read_t(&m_psGameStats , sizeof(m_psGameStats ));
-    istr->Read_t(&m_psGameTotal , sizeof(m_psGameTotal ));
+    istr->Read_t(&m_psGameStats , sizeof(m_psGameStats));
+    istr->Read_t(&m_psGameTotal , sizeof(m_psGameTotal));
 
     // set your real appearance if possible
     ValidateCharacter();

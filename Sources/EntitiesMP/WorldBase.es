@@ -5,6 +5,10 @@
 #include "EntitiesMP/WorldSettingsController.h"
 // for error checking:
 #include "EntitiesMP/SoundHolder.h"
+
+// [Cecil] Custom weapons and ammo
+extern void LoadWorldWeapons(CWorld *pwo);
+extern void ClearWorldWeapons(void);
 %}
 
 uses "EntitiesMP\FogMarker";
@@ -267,8 +271,7 @@ void SetPyramidMorphRoomAlpha(CWorld *pwo, INDEX iBlending, TIME tmActivated)
   }
 }
     
-void CWorldBase_OnWorldInit(CWorld *pwo)
-{
+void CWorldBase_OnWorldInit(CWorld *pwo) {
   pwo->wo_attTextureTransformations[0].tt_strName = "None";
   pwo->wo_attTextureTransformations[1].tt_strName = "R Extremly Slow";
   pwo->wo_attTextureTransformations[2].tt_strName = "R Very Slow";
@@ -322,7 +325,7 @@ void CWorldBase_OnWorldInit(CWorld *pwo)
   pwo->wo_attTextureTransformations[44].tt_strName = "D Super Fast";
   pwo->wo_attTextureTransformations[45].tt_strName = "D Abnormaly Fast";
 
-// static
+  // static
   pwo->wo_atbTextureBlendings[0].tb_strName         = "Opaque";
   pwo->wo_atbTextureBlendings[0].tb_ubBlendingType  = STXF_BLEND_OPAQUE;
 
@@ -334,7 +337,7 @@ void CWorldBase_OnWorldInit(CWorld *pwo)
 
   pwo->wo_atbTextureBlendings[3].tb_strName         = "Add";
   pwo->wo_atbTextureBlendings[3].tb_ubBlendingType  = STXF_BLEND_ADD;
-// pulsating
+  // pulsating
   pwo->wo_atbTextureBlendings[4].tb_strName         = "Shade pulsating";
   pwo->wo_atbTextureBlendings[4].tb_ubBlendingType  = STXF_BLEND_SHADE;
   pwo->wo_atbTextureBlendings[4].tb_colMultiply     = 0x808080FF;
@@ -395,7 +398,6 @@ void CWorldBase_OnWorldInit(CWorld *pwo)
   pwo->wo_aitIlluminationTypes[9].it_strName = "Misc 3";
 
   // surfaces
-
   pwo->wo_astSurfaceTypes[0].st_strName = "Standard";
   pwo->wo_astSurfaceTypes[0].st_fFriction = 1.0f;
   pwo->wo_astSurfaceTypes[0].st_fStairsHeight = 1.0f;
@@ -683,10 +685,17 @@ void CWorldBase_OnWorldInit(CWorld *pwo)
   _pShell->DeclareSymbol("user void MakeWorldStatistics(void);",  &MakeWorldStatistics);
   _pShell->DeclareSymbol("user void ReoptimizeAllBrushes(void);", &ReoptimizeAllBrushes);
   _pShell->DeclareSymbol("user void DoLevelSafetyChecks(void);", &DoLevelSafetyChecks);
-}
 
-void CWorldBase_OnWorldRender(CWorld *pwo)
-{
+  // [Cecil] Load weapons and ammo
+  LoadWorldWeapons(pwo);
+};
+
+// [Cecil] Weapons and ammo cleanup
+void CWorldBase_OnWorldEnd(CWorld *pwo) {
+  ClearWorldWeapons();
+};
+
+void CWorldBase_OnWorldRender(CWorld *pwo) {
   // get current tick
   TIME tmNow = _pTimer->GetLerpedCurrentTick();
   // wrap time to prevent texture coordinates to get unprecise
@@ -919,6 +928,7 @@ name      "WorldBase";
 thumbnail "Thumbnails\\WorldBase.tbn";
 features  "HasName", "HasDescription", 
   "ImplementsOnWorldRender", "ImplementsOnWorldInit",
+  "ImplementsOnWorldEnd", // [Cecil] For weapons and ammo cleanup
   "ImplementsOnInitClass", "ImplementsOnEndClass";
 
 properties:

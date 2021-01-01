@@ -27,9 +27,20 @@
 #define AMMO_GRENADES      3
 #define AMMO_NAPALM        4
 #define AMMO_ELECTRICITY   5
-//#define AMMO_NUKEBALLS   6
 #define AMMO_IRONBALLS     7
 #define AMMO_SNIPERBULLETS 8
+
+// [Cecil] Ammo bits in order
+static const INDEX _aiTakeAmmoBits[8] = {
+  AMMO_SHELLS,
+  AMMO_BULLETS,
+  AMMO_ROCKETS,
+  AMMO_GRENADES,
+  AMMO_NAPALM,
+  AMMO_SNIPERBULLETS,
+  AMMO_ELECTRICITY,
+  AMMO_IRONBALLS,
+};
 
 #define BLOOD_SPILL_RED RGBAToColor(250,20,20,255)
 #define BLOOD_SPILL_GREEN RGBAToColor(0,250,0,255)

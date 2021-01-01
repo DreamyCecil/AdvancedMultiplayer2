@@ -1,4 +1,4 @@
-#include <Engine\Engine.h>
+#include <Engine/Engine.h>
 #include <GameMP/SessionProperties.h>
 #include <GameMP/PlayerSettings.h>
 
@@ -24,3 +24,6 @@ typedef std::string string;
 #include "../Common/Particles.h"
 #include "../Common/EmanatingParticles.h"
 #include "../Common/GameInterface.h"
+
+// [Cecil] Ammo and weapon structures
+#include "../Common/Weapons/PlayerArsenal.h"

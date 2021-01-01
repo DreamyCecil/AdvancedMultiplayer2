@@ -10,6 +10,9 @@
 #include <EntitiesMP/EnemyBase.h>
 #include <EntitiesMP/EnemyCounter.h>
 
+// [Cecil] Extra functions
+#include "EntitiesMP/Common/ExtraFunc.h"
+
 #define ENTITY_DEBUG
 
 // cheats
@@ -55,8 +58,6 @@ enum BarOrientations {
   BO_DOWN  = 4,
 };
 
-extern const INDEX aiWeaponsRemap[19];
-
 // maximal mana for master status
 #define MANA_MASTER 10000
 
@@ -73,6 +74,10 @@ static COLOR _colHUDText;
 static TIME  _tmNow = -1.0f;
 static TIME  _tmLast = -1.0f;
 static CFontData _fdNumbersFont;
+
+// [Cecil] Local copies of the arsenal
+static CWeaponArsenal _aWeapons;
+static CAmmunition _aAmmo;
 
 // array for pointers of all players
 extern CPlayer *_apenPlayers[NET_MAXGAMEPLAYERS] = {0};
@@ -91,17 +96,17 @@ static CTextureObject _toArmorMedium;
 static CTextureObject _toArmorLarge;
 
 // ammo textures                    
-static CTextureObject _toAShells;
+/*static CTextureObject _toAShells;
 static CTextureObject _toABullets;
 static CTextureObject _toARockets;
 static CTextureObject _toAGrenades;
 static CTextureObject _toANapalm;
 static CTextureObject _toAElectricity;
 static CTextureObject _toAIronBall;
-static CTextureObject _toASniperBullets;
+static CTextureObject _toASniperBullets;*/
 static CTextureObject _toASeriousBomb;
 // weapon textures
-static CTextureObject _toWKnife;
+/*static CTextureObject _toWKnife;
 static CTextureObject _toWColt;
 static CTextureObject _toWSingleShotgun;
 static CTextureObject _toWDoubleShotgun;
@@ -113,7 +118,7 @@ static CTextureObject _toWRocketLauncher;
 static CTextureObject _toWGrenadeLauncher;
 static CTextureObject _toWFlamer;
 static CTextureObject _toWLaser;
-static CTextureObject _toWIronCannon;
+static CTextureObject _toWIronCannon;*/
 
 // powerup textures (ORDER IS THE SAME AS IN PLAYER.ES!)
 #define MAX_POWERUPS 4
@@ -143,9 +148,8 @@ struct ColorTransitionTable {
 };
 static struct ColorTransitionTable _cttHUD;
 
-
 // ammo's info structure
-struct AmmoInfo {
+/*struct AmmoInfo {
   CTextureObject    *ai_ptoAmmo;
   struct WeaponInfo *ai_pwiWeapon1;
   struct WeaponInfo *ai_pwiWeapon2;
@@ -199,8 +203,7 @@ struct WeaponInfo _awiWeapons[18] = {
   { WEAPON_NONE,            NULL,                 NULL,         FALSE },   // 15
   { WEAPON_NONE,            NULL,                 NULL,         FALSE },   // 16
   { WEAPON_NONE,            NULL,                 NULL,         FALSE },   // 17
-};
-
+};*/
 
 // compare functions for qsort()
 static int qsort_CompareNames( const void *ppPEN0, const void *ppPEN1) {
@@ -665,45 +668,11 @@ static void HUD_DrawSniperMask( void )
   }
 }
 
-
-// helper functions
-
-// fill weapon and ammo table with current state
-static void FillWeaponAmmoTables(void)
-{
-  // ammo quantities
-  _aaiAmmo[0].ai_iAmmoAmmount    = _penWeapons->m_iShells;
-  _aaiAmmo[0].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxShells;
-  _aaiAmmo[1].ai_iAmmoAmmount    = _penWeapons->m_iBullets;
-  _aaiAmmo[1].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxBullets;
-  _aaiAmmo[2].ai_iAmmoAmmount    = _penWeapons->m_iRockets;
-  _aaiAmmo[2].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxRockets;
-  _aaiAmmo[3].ai_iAmmoAmmount    = _penWeapons->m_iGrenades;
-  _aaiAmmo[3].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxGrenades;
-  _aaiAmmo[4].ai_iAmmoAmmount    = _penWeapons->m_iNapalm;
-  _aaiAmmo[4].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxNapalm;
-  _aaiAmmo[5].ai_iAmmoAmmount    = _penWeapons->m_iElectricity;
-  _aaiAmmo[5].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxElectricity;
-  _aaiAmmo[6].ai_iAmmoAmmount    = _penWeapons->m_iIronBalls;
-  _aaiAmmo[6].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxIronBalls;
-  _aaiAmmo[7].ai_iAmmoAmmount    = _penWeapons->m_iSniperBullets;
-  _aaiAmmo[7].ai_iMaxAmmoAmmount = _penWeapons->m_iMaxSniperBullets;
-
-  // prepare ammo table for weapon possesion
-  INDEX i, iAvailableWeapons = _penWeapons->m_iAvailableWeapons;
-  for( i=0; i<8; i++) _aaiAmmo[i].ai_bHasWeapon = FALSE;
-  // weapon possesion
-  for( i=WEAPON_NONE+1; i<WEAPON_LAST; i++)
-  {
-    if( _awiWeapons[i].wi_wtWeapon!=WEAPON_NONE)
-    {
-      // regular weapons
-      _awiWeapons[i].wi_bHasWeapon = (iAvailableWeapons&(1<<(_awiWeapons[i].wi_wtWeapon-1)));
-      if( _awiWeapons[i].wi_paiAmmo!=NULL) _awiWeapons[i].wi_paiAmmo->ai_bHasWeapon |= _awiWeapons[i].wi_bHasWeapon;
-    }
-  }
-}
-
+// [Cecil] Local copies of the arsenal
+static void CopyArsenal(void) {
+  _aWeapons = _penWeapons->m_aWeapons;
+  _aAmmo = _penWeapons->m_aAmmo;
+};
 
 //<<<<<<< DEBUG FUNCTIONS >>>>>>>
 
@@ -806,7 +775,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   if (((CPlayerWeapons*)&*penPlayerOwner->m_penWeapons)->m_iCurrentWeapon==WEAPON_SNIPER
     &&((CPlayerWeapons*)&*penPlayerOwner->m_penWeapons)->m_bSniping) {
     HUD_DrawSniperMask();
-  } 
+  }
    
   // prepare font and text dimensions
   CTString strValue;
@@ -890,43 +859,52 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // prepare and draw ammo and weapon info
-  CTextureObject *ptoCurrentAmmo=NULL, *ptoWantedWeapon=NULL;
+  CTextureObject *ptoWantedWeapon = NULL;
   INDEX iCurrentWeapon = _penWeapons->m_iCurrentWeapon;
   INDEX iWantedWeapon  = _penWeapons->m_iWantedWeapon;
+
+  // [Cecil] Copy weapons and ammo
+  CopyArsenal();
+
   // determine corresponding ammo and weapon texture component
-  ptoWantedWeapon  = _awiWeapons[iWantedWeapon].wi_ptoWeapon;
+  ptoWantedWeapon = _aWeapons[iWantedWeapon].pWeapon->ptoIcon;
 
-  AmmoInfo *paiCurrent = _awiWeapons[iCurrentWeapon].wi_paiAmmo;
-  if( paiCurrent!=NULL) ptoCurrentAmmo = paiCurrent->ai_ptoAmmo;
+  // [Cecil] New system
+  SPlayerWeapon &pwCurrent = _aWeapons[iCurrentWeapon];
+  SWeaponAmmo *pAmmo = pwCurrent.GetAmmo();
+  SWeaponAmmo *pAltAmmo = pwCurrent.GetAlt();
+  
+  CTextureObject *ptoAmmo = NULL;
+  FLOAT fAmmo = 0.0f;
+  FLOAT fMaxAmmo = 1.0f;
 
-  // [Cecil] Alt ammo
   CTextureObject *ptoAltAmmo = NULL;
   FLOAT fAltAmmo = 0.0f;
   FLOAT fAltMaxAmmo = 1.0f;
 
-  if (_penWeapons->AltFireExists(iCurrentWeapon)) {
-    switch (iCurrentWeapon) {
-      case WEAPON_SINGLESHOTGUN:
-        ptoAltAmmo = _awiWeapons[WEAPON_GRENADELAUNCHER].wi_paiAmmo->ai_ptoAmmo;
-        fAltAmmo = _penWeapons->m_iGrenades;
-        fAltMaxAmmo = _penWeapons->m_iMaxGrenades;
-        break;
-    }
+  if (pAmmo != NULL) {
+    ptoAmmo = pAmmo->ptoIcon;
+    fAmmo = pwCurrent.CurrentAmmo();
+    fMaxAmmo = pAmmo->iAmount;
+  }
+
+  if (pAltAmmo != NULL) {
+    ptoAltAmmo = pAltAmmo->ptoIcon;
+    fAltAmmo = pwCurrent.CurrentAlt();
+    fAltMaxAmmo = pAltAmmo->iAmount;
   }
 
   // [Cecil] Adjust size based on max ammo
-  FLOAT fMaxAmmoAltNormal = Max(FLOAT(_penWeapons->GetMaxAmmo()), fAltMaxAmmo);
+  FLOAT fMaxAmmoAltNormal = Max(fMaxAmmo, fAltMaxAmmo);
   fWidth = Max(FLOAT(Floor(log10(fMaxAmmoAltNormal)+1.0f)), 3.0f);
 
   // [Cecil] Removed weapon icons and centered ammo
   if (!GetSP()->sp_bInfiniteAmmo) {
     // draw complete weapon info if knife isn't current weapon
-    if (ptoCurrentAmmo != NULL) {
+    if (ptoAmmo != NULL) {
       // determine ammo quantities
-      FLOAT fMaxValue = _penWeapons->GetMaxAmmo();
-      fValue = _penWeapons->GetAmmo();
-      fNormValue = fValue / fMaxValue;
-      strValue.PrintF("%d", (SLONG)ceil(fValue));
+      fNormValue = fAmmo / fMaxAmmo;
+      strValue.PrintF("%d", (SLONG)ceil(fAmmo));
       PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.30f, 0.15f, FALSE);
 
       // draw ammo, value and weapon
@@ -934,7 +912,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       fCol = 320.0f - fAdvUnit - fChrUnit*(fWidth/2.0f) - fHalfUnit;
     
       HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
-      HUD_DrawIcon(fCol, fRow, *ptoCurrentAmmo, C_WHITE, fNormValue, TRUE, 1.0f);
+      HUD_DrawIcon(fCol, fRow, *ptoAmmo, C_WHITE, fNormValue, TRUE, 1.0f);
 
       fCol += fAdvUnit+fChrUnit*(fWidth/2.0f) - fHalfUnit;
       HUD_DrawBorder(fCol, fRow, fChrUnit * fWidth, fOneUnit, colBorder);
@@ -944,9 +922,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     // [Cecil] Draw alt ammo
     if (ptoAltAmmo != NULL) {
       // determine ammo quantities
-      fValue = fAltAmmo;
-      fNormValue = fValue / fAltMaxAmmo;
-      strValue.PrintF("%d", (SLONG)ceil(fValue));
+      fNormValue = fAltAmmo / fAltMaxAmmo;
+      strValue.PrintF("%d", (SLONG)ceil(fAltAmmo));
       PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.30f, 0.15f, FALSE);
 
       // draw ammo, value and weapon
@@ -966,7 +943,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   INDEX i;
   FLOAT fAdv;
   COLOR colIcon, colBar;
-  PrepareColorTransitions( colMax, colTop, colMid, C_RED, 0.5f, 0.25f, FALSE);
+  PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.5f, 0.25f, FALSE);
   // reduce the size of icon slightly
   _fCustomScaling = ClampDn( _fCustomScaling*0.8f, 0.5f);
   const FLOAT fOneUnitS  = fOneUnit  *0.8f;
@@ -978,28 +955,35 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   fRow = pixBottomBound-fHalfUnitS;
   fCol = pixRightBound -fHalfUnitS;
   const FLOAT fBarPos = fHalfUnitS*0.7f;
-  FillWeaponAmmoTables();
 
   FLOAT fBombCount = penPlayerCurrent->m_iSeriousBombCount;
   BOOL  bBombFiring = FALSE;
+
   // draw serious bomb
-#define BOMB_FIRE_TIME 1.5f
-  if (penPlayerCurrent->m_tmSeriousBombFired+BOMB_FIRE_TIME>_pTimer->GetLerpedCurrentTick()) {
-    fBombCount++;
-    if (fBombCount>3) { fBombCount = 3; }
+  #define BOMB_FIRE_TIME 1.5f
+
+  if (penPlayerCurrent->m_tmSeriousBombFired + BOMB_FIRE_TIME > _pTimer->GetLerpedCurrentTick()) {
+    fBombCount = ClampUp(fBombCount + 1.0f, 3.0f);
     bBombFiring = TRUE;
   }
-  if (fBombCount>0) {
+
+  if (fBombCount > 0) {
     fNormValue = (FLOAT) fBombCount / 3.0f;
     COLOR colBombBorder = _colHUD;
     COLOR colBombIcon = C_WHITE;
-    COLOR colBombBar = _colHUDText; if (fBombCount==1) { colBombBar = C_RED; }
+    COLOR colBombBar = _colHUDText;
+
+    if (fBombCount == 1) {
+      colBombBar = C_RED;
+    }
+
     if (bBombFiring) { 
-      FLOAT fFactor = (_pTimer->GetLerpedCurrentTick() - penPlayerCurrent->m_tmSeriousBombFired)/BOMB_FIRE_TIME;
+      FLOAT fFactor = (_pTimer->GetLerpedCurrentTick() - penPlayerCurrent->m_tmSeriousBombFired) / BOMB_FIRE_TIME;
       colBombBorder = LerpColor(colBombBorder, C_RED, fFactor);
       colBombIcon = LerpColor(colBombIcon, C_RED, fFactor);
       colBombBar = LerpColor(colBombBar, C_RED, fFactor);
     }
+
     HUD_DrawBorder( fCol,         fRow, fOneUnitS, fOneUnitS, colBombBorder);
     HUD_DrawIcon(   fCol,         fRow, _toASeriousBomb, colBombIcon, fNormValue, FALSE, 1.0f);
     HUD_DrawBar(    fCol+fBarPos, fRow, fOneUnitS/5, fOneUnitS-2, BO_DOWN, colBombBar, fNormValue);
@@ -1009,21 +993,29 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // loop thru all ammo types
   if (!GetSP()->sp_bInfiniteAmmo) {
-    for( INDEX ii=7; ii>=0; ii--) {
-      i = aiAmmoRemap[ii];
+    for (INDEX iAmmo = _aAmmo.Count()-1; iAmmo >= 0; iAmmo--) {
       // if no ammo and hasn't got that weapon - just skip this ammo
-      AmmoInfo &ai = _aaiAmmo[i];
-      ASSERT( ai.ai_iAmmoAmmount>=0);
-      if( ai.ai_iAmmoAmmount==0 && !ai.ai_bHasWeapon) continue;
+      SPlayerAmmo &pa = _aAmmo[iAmmo];
+
+      if (pa.iAmount == 0 && !pa.bWeapon) {
+        continue;
+      }
+
       // display ammo info
-      colIcon = C_WHITE /*_colHUD*/;
-      if( ai.ai_iAmmoAmmount==0) colIcon = C_mdGRAY;
-      if( ptoCurrentAmmo == ai.ai_ptoAmmo) colIcon = C_WHITE; 
-      fNormValue = (FLOAT)ai.ai_iAmmoAmmount / ai.ai_iMaxAmmoAmmount;
-      colBar = AddShaker( 4, ai.ai_iAmmoAmmount, ai.ai_iLastAmmoAmmount, ai.ai_tmAmmoChanged, fMoverX, fMoverY);
-      HUD_DrawBorder( fCol,         fRow+fMoverY, fOneUnitS, fOneUnitS, colBorder);
-      HUD_DrawIcon(   fCol,         fRow+fMoverY, *_aaiAmmo[i].ai_ptoAmmo, colIcon, fNormValue, FALSE, 1.0f);
-      HUD_DrawBar(    fCol+fBarPos, fRow+fMoverY, fOneUnitS/5, fOneUnitS-2, BO_DOWN, colBar, fNormValue);
+      colIcon = (pa.iAmount == 0) ? C_mdGRAY : C_WHITE;
+
+      CTextureObject *ptoDrawIcon = pa.pAmmo->ptoIcon;
+
+      if (ptoAmmo == ptoDrawIcon) {
+        colIcon = C_WHITE;
+      }
+       
+      fNormValue = (FLOAT)pa.iAmount / pa.Max();
+      colBar = AddShaker(4, pa.iAmount, pa.iLastAmount, pa.tmChanged, fMoverX, fMoverY);
+
+      HUD_DrawBorder(fCol,         fRow+fMoverY, fOneUnitS, fOneUnitS, colBorder);
+      HUD_DrawIcon(  fCol,         fRow+fMoverY, *ptoDrawIcon, colIcon, fNormValue, FALSE, 1.0f);
+      HUD_DrawBar(   fCol+fBarPos, fRow+fMoverY, fOneUnitS/5, fOneUnitS-2, BO_DOWN, colBar, fNormValue);
       // advance to next position
       fCol -= fAdvUnitS;  
     }
@@ -1035,10 +1027,13 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   TIME *ptmPowerupsMax = (TIME*)&_penPlayer->m_tmInvisibilityMax;
   fRow = pixBottomBound-fOneUnitS-fAdvUnitS;
   fCol = pixRightBound -fHalfUnitS;
+
   for (i = 0; i < MAX_POWERUPS; i++) {
     // skip if not active
     const TIME tmDelta = ptmPowerups[i] - _tmNow;
-    if( tmDelta<=0) continue;
+    if (tmDelta <= 0.0f) {
+      continue;
+    }
 
     // [Cecil] Power Up Time Multiplier
     fNormValue = tmDelta / (ptmPowerupsMax[i] * GetSP()->sp_fPowerupTimeMul);
@@ -1065,44 +1060,57 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   // if weapon change is in progress
   _fCustomScaling = hud_fScaling;
   hud_tmWeaponsOnScreen = Clamp( hud_tmWeaponsOnScreen, 0.0f, 10.0f);   
-  if( (_tmNow - _penWeapons->m_tmWeaponChangeRequired) < hud_tmWeaponsOnScreen) {
+
+  if (_tmNow - _penWeapons->m_tmWeaponChangeRequired < hud_tmWeaponsOnScreen) {
     // determine number of weapons that player has
     INDEX ctWeapons = 0;
-    for( i=WEAPON_NONE+1; i<WEAPON_LAST; i++) {
-      if( _awiWeapons[i].wi_wtWeapon!=WEAPON_NONE && _awiWeapons[i].wi_wtWeapon!=WEAPON_DOUBLECOLT &&
-          _awiWeapons[i].wi_bHasWeapon) ctWeapons++;
+    
+    // [Cecil] Count existing weapons
+    for (INDEX iCount = WEAPON_NONE+1; iCount < WEAPON_LAST; iCount++) {
+      if (WeaponExists(_penWeapons->m_iAvailableWeapons, iCount)) {
+        ctWeapons++;
+      }
     }
+
     // display all available weapons
     fRow = pixBottomBound - fHalfUnit - 3*fNextUnit;
     fCol = 320.0f - (ctWeapons*fAdvUnit-fHalfUnit)/2.0f;
-    // display all available weapons
-    for( INDEX ii=WEAPON_NONE+1; ii<WEAPON_LAST; ii++) {
-      i = aiWeaponsRemap[ii];
-      // skip if hasn't got this weapon
-      if( _awiWeapons[i].wi_wtWeapon==WEAPON_NONE || _awiWeapons[i].wi_wtWeapon==WEAPON_DOUBLECOLT
-         || !_awiWeapons[i].wi_bHasWeapon) continue;
+
+    for (INDEX iWeapon = WEAPON_NONE+1; iWeapon < WEAPON_LAST; iWeapon++) {
+      SPlayerWeapon &pw = _aWeapons[iWeapon];
+
+      // [Cecil] Skip unexistent weapons
+      if (!WeaponExists(_penWeapons->m_iAvailableWeapons, iWeapon)) {
+        continue;
+      }
+
       // display weapon icon
       COLOR colBorder = _colHUD;
       colIcon = 0xccddff00;
-      // weapon that is currently selected has different colors
-      if( ptoWantedWeapon == _awiWeapons[i].wi_ptoWeapon) {
+
+      // [Cecil] Highlight wanted weapon
+      if (iWantedWeapon == iWeapon) {
         colIcon = 0xffcc0000;
         colBorder = 0xffcc0000;
       }
+
+      CTextureObject *ptoDrawIcon = pw.pWeapon->ptoIcon;
+
       // no ammo
-      if( _awiWeapons[i].wi_paiAmmo!=NULL && _awiWeapons[i].wi_paiAmmo->ai_iAmmoAmmount==0) {
-        HUD_DrawBorder( fCol, fRow, fOneUnit, fOneUnit, 0x22334400);
-        HUD_DrawIcon(   fCol, fRow, *_awiWeapons[i].wi_ptoWeapon, 0x22334400, 1.0f, FALSE, 1.0f);
-      // yes ammo
+      if (!pw.HasAmmo(_penWeapons->AltFireExists(iWeapon))) {
+        HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, 0x22334400);
+        HUD_DrawIcon(fCol, fRow, *ptoDrawIcon, 0x22334400, 1.0f, FALSE, 1.0f);
+
+      // has ammo
       } else {
-        HUD_DrawBorder( fCol, fRow, fOneUnit, fOneUnit, colBorder);
-        HUD_DrawIcon(   fCol, fRow, *_awiWeapons[i].wi_ptoWeapon, colIcon, 1.0f, FALSE, 1.0f);
+        HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
+        HUD_DrawIcon(fCol, fRow, *ptoDrawIcon, colIcon, 1.0f, FALSE, 1.0f);
       }
+
       // advance to next position
       fCol += fAdvUnit;
     }
   }
-
 
   // reduce icon sizes a bit
   const FLOAT fUpperSize = ClampDn(_fCustomScaling*0.5f, 0.5f)/_fCustomScaling;
@@ -1472,17 +1480,17 @@ extern void InitHUD(void)
     _toArmorLarge.SetData_t(   CTFILENAME("TexturesMP\\Interface\\ArStrong.tex"));
 
     // initialize ammo textures                    
-    _toAShells.SetData_t(        CTFILENAME("TexturesMP\\Interface\\AmShells.tex"));
+    /*_toAShells.SetData_t(        CTFILENAME("TexturesMP\\Interface\\AmShells.tex"));
     _toABullets.SetData_t(       CTFILENAME("TexturesMP\\Interface\\AmBullets.tex"));
     _toARockets.SetData_t(       CTFILENAME("TexturesMP\\Interface\\AmRockets.tex"));
     _toAGrenades.SetData_t(      CTFILENAME("TexturesMP\\Interface\\AmGrenades.tex"));
     _toANapalm.SetData_t(        CTFILENAME("TexturesMP\\Interface\\AmFuelReservoir.tex"));
     _toAElectricity.SetData_t(   CTFILENAME("TexturesMP\\Interface\\AmElectricity.tex"));
     _toAIronBall.SetData_t(      CTFILENAME("TexturesMP\\Interface\\AmCannonBall.tex"));
-    _toASniperBullets.SetData_t( CTFILENAME("TexturesMP\\Interface\\AmSniperBullets.tex"));
+    _toASniperBullets.SetData_t( CTFILENAME("TexturesMP\\Interface\\AmSniperBullets.tex"));*/
     _toASeriousBomb.SetData_t(   CTFILENAME("TexturesMP\\Interface\\AmSeriousBomb.tex"));
     // initialize weapon textures
-    _toWKnife.SetData_t(           CTFILENAME("TexturesMP\\Interface\\WKnife.tex"));
+    /*_toWKnife.SetData_t(           CTFILENAME("TexturesMP\\Interface\\WKnife.tex"));
     _toWColt.SetData_t(            CTFILENAME("TexturesMP\\Interface\\WColt.tex"));
     _toWSingleShotgun.SetData_t(   CTFILENAME("TexturesMP\\Interface\\WSingleShotgun.tex"));
     _toWDoubleShotgun.SetData_t(   CTFILENAME("TexturesMP\\Interface\\WDoubleShotgun.tex"));
@@ -1494,7 +1502,7 @@ extern void InitHUD(void)
     _toWIronCannon.SetData_t(      CTFILENAME("TexturesMP\\Interface\\WCannon.tex"));
     _toWChainsaw.SetData_t(        CTFILENAME("TexturesMP\\Interface\\WChainsaw.tex"));
     _toWSniper.SetData_t(          CTFILENAME("TexturesMP\\Interface\\WSniper.tex"));
-    _toWFlamer.SetData_t(          CTFILENAME("TexturesMP\\Interface\\WFlamer.tex"));
+    _toWFlamer.SetData_t(          CTFILENAME("TexturesMP\\Interface\\WFlamer.tex"));*/
         
     // initialize powerup textures (DO NOT CHANGE ORDER!)
     _atoPowerups[0].SetData_t( CTFILENAME("TexturesMP\\Interface\\PInvisibility.tex"));
@@ -1524,17 +1532,17 @@ extern void InitHUD(void)
     ((CTextureData*)_toArmorMedium.GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toArmorLarge.GetData())->Force(TEX_CONSTANT);
 
-    ((CTextureData*)_toAShells       .GetData())->Force(TEX_CONSTANT);
+    /*((CTextureData*)_toAShells       .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toABullets      .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toARockets      .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toAGrenades     .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toANapalm       .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toAElectricity  .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toAIronBall     .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toASniperBullets.GetData())->Force(TEX_CONSTANT);
+    ((CTextureData*)_toASniperBullets.GetData())->Force(TEX_CONSTANT);*/
     ((CTextureData*)_toASeriousBomb  .GetData())->Force(TEX_CONSTANT);
 
-    ((CTextureData*)_toWKnife          .GetData())->Force(TEX_CONSTANT);
+    /*((CTextureData*)_toWKnife          .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toWColt           .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toWSingleShotgun  .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toWDoubleShotgun  .GetData())->Force(TEX_CONSTANT);
@@ -1546,7 +1554,7 @@ extern void InitHUD(void)
     ((CTextureData*)_toWIronCannon     .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toWSniper         .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toWMinigun        .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWFlamer         .GetData())->Force(TEX_CONSTANT);
+    ((CTextureData*)_toWFlamer         .GetData())->Force(TEX_CONSTANT);*/
     
     ((CTextureData*)_atoPowerups[0].GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_atoPowerups[1].GetData())->Force(TEX_CONSTANT);
@@ -1568,13 +1576,7 @@ extern void InitHUD(void)
   catch( char *strError) {
     FatalError( strError);
   }
-
-}
-
+};
 
 // clean up
-extern void EndHUD(void)
-{
-
-}
-
+extern void EndHUD(void) {};

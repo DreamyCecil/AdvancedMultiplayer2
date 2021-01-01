@@ -201,6 +201,8 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClCompile Include="Common\HUD.cpp" />
     <ClCompile Include="Common\Particles.cpp" />
     <ClCompile Include="Common\PathFinding.cpp" />
+    <ClCompile Include="Common\Weapons\PlayerArsenal.cpp" />
+    <ClCompile Include="Common\Weapons\WeaponStruct.cpp" />
     <ClCompile Include="DummyEnemy.cpp" />
     <ClCompile Include="PoisonCloud.cpp" />
     <ClCompile Include="StdH\StdH.cpp">
@@ -436,6 +438,8 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="Common\GameInterface.h" />
     <ClInclude Include="Common\Particles.h" />
     <ClInclude Include="Common\PathFinding.h" />
+    <ClInclude Include="Common\Weapons\PlayerArsenal.h" />
+    <ClInclude Include="Common\Weapons\WeaponStruct.h" />
     <ClInclude Include="DummyEnemy.h" />
     <ClInclude Include="DummyEnemy_tables.h" />
     <ClInclude Include="PoisonCloud.h" />

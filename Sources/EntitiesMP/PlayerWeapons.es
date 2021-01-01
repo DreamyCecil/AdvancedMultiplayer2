@@ -54,11 +54,24 @@ extern INDEX hud_bShowWeapon;
 // [Cecil] AMP 2 customization
 extern INDEX amp_bPowerUpParticles;
 
-extern const INDEX aiWeaponsRemap[19] = { 0,  1,  10,  2,  3,  4,  5,  6,  7,
-                                          8,  9,  11, 13, 12, 14, 15, 16, 17, 18 };
-
 // [Cecil] Tesla lightning
 #include "EntitiesMP/TeslaLightning.h"
+
+// [Cecil] Ammo types to default ammo set
+static const _aiAmmoSetTypes[] = {
+  -1, // invalid
+   0, // AIT_SHELLS
+   1, // AIT_BULLETS
+   2, // AIT_ROCKETS
+   3, // AIT_GRENADES
+   6, // AIT_ELECTRICITY
+  -1, // AIT_NUKEBALL (invalid)
+   7, // AIT_IRONBALLS
+  -1, // AIT_SERIOUSPACK (invalid)
+  -1, // AIT_BACKPACK (invalid)
+   4, // AIT_NAPALM
+   5, // AIT_SNIPERBULLETS
+};
 %}
 
 uses "EntitiesMP/Player";
@@ -467,7 +480,7 @@ void DecAmmo(INDEX &ctAmmo, INDEX iDec = 1)
 class export CPlayerWeapons : CRationalEntity {
 name      "Player Weapons";
 thumbnail "";
-features "CanBePredictable";
+features  "CanBePredictable";
 
 properties:
   1 CEntityPointer m_penPlayer,       // player which owns it
@@ -506,26 +519,6 @@ properties:
  34 FLOAT3D m_vRayHitLast = FLOAT3D(0,0,0), // for lerping
  35 FLOAT3D m_vBulletSource = FLOAT3D(0,0,0), // bullet launch position remembered here
  36 FLOAT3D m_vBulletTarget = FLOAT3D(0,0,0), // bullet hit (if hit) position remembered here
-
- // ammo for all weapons
- 40 INDEX m_iBullets        = 0,
- 41 INDEX m_iMaxBullets     = MAX_BULLETS,
- 42 INDEX m_iShells         = 0,
- 43 INDEX m_iMaxShells      = MAX_SHELLS,
- 44 INDEX m_iRockets        = 0,
- 45 INDEX m_iMaxRockets     = MAX_ROCKETS,
- 46 INDEX m_iGrenades       = 0,
- 47 INDEX m_iMaxGrenades    = MAX_GRENADES,
- 48 INDEX m_iNapalm         = 0,
- 49 INDEX m_iMaxNapalm      = MAX_NAPALM,
- 50 INDEX m_iElectricity    = 0,
- 51 INDEX m_iMaxElectricity = MAX_ELECTRICITY,
- 52 INDEX m_iIronBalls      = 0,
- 53 INDEX m_iMaxIronBalls   = MAX_IRONBALLS,
-// 54 INDEX m_iNukeBalls      = 0,
-// 55 INDEX m_iMaxNukeBalls   = MAX_NUKEBALLS,
- 54 INDEX m_iSniperBullets    = 0,
- 55 INDEX m_iMaxSniperBullets = MAX_SNIPERBULLETS,
 
 // weapons specific
 // knife
@@ -579,6 +572,10 @@ properties:
   CEntity *penBullet;
   CPlacement3D plBullet;
   FLOAT3D vBulletDestination;
+
+  // [Cecil] Player's personal arsenal
+  CWeaponArsenal m_aWeapons;
+  CAmmunition m_aAmmo;
 }
 
 components:
@@ -889,6 +886,92 @@ functions:
         pamo->amo_plRelative.pl_PositionVector(3) += 0.1f;
       }
     }
+  };
+
+  // [Cecil] Constructor
+  void CPlayerWeapons(void) {
+    // copy ammo
+    INDEX ctAmmo = _aWeaponAmmo.Count();
+    m_aAmmo.New(ctAmmo);
+
+    for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
+      m_aAmmo[iAmmo].pAmmo = &_aWeaponAmmo[iAmmo];
+    }
+
+    // copy weapons
+    INDEX ctWeapons = _aPlayerWeapons.Count();
+    m_aWeapons.New(ctWeapons);
+
+    for (INDEX iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
+      SPlayerWeapon &pw = m_aWeapons[iWeapon];
+      pw.pWeapon = &_aPlayerWeapons[iWeapon];
+
+      // set ammo
+      ULONG *pulID = pw.GetAmmoID();
+
+      if (pulID != NULL) {
+        pw.pAmmo = &m_aAmmo[*pulID];
+      }
+      
+      // set alt ammo
+      pulID = pw.GetAltID();
+
+      if (pulID != NULL) {
+        pw.pAlt = &m_aAmmo[*pulID];
+      }
+    }
+
+    // [Cecil] TEMP: See copied weapons
+    /*CTString str = "";
+    for (iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
+      SPlayerWeapon &pw = m_aWeapons[iWeapon];
+
+      str.PrintF("%s%d: ammo: %d, alt %d\n", str, pw.pWeapon->ulID, (pw.GetAmmoID() != NULL ? *pw.GetAmmoID() : -1), (pw.GetAltID() != NULL ? *pw.GetAltID() : -1));
+    }
+    FatalError(str);*/
+  };
+
+  // [Cecil] Write weapons and ammo
+  void Write_t(CTStream *ostr) {
+    //INDEX ctWeapons = m_aWeapons.Count();
+    INDEX ctAmmo = m_aAmmo.Count();
+
+    //*ostr << ctWeapons;
+    *ostr << ctAmmo;
+
+    /*for (INDEX iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
+      m_aWeapons[iWeapon].Write(ostr);
+    }*/
+
+    for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
+      m_aAmmo[iAmmo].Write(ostr);
+    }
+  };
+
+  // [Cecil] Read weapons and ammo
+  void Read_t(CTStream *istr) {
+    //INDEX ctWeapons = 0;
+    INDEX ctAmmo = 0;
+    
+    //*istr >> ctWeapons;
+    *istr >> ctAmmo;
+
+    /*for (INDEX iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
+      m_aWeapons[iWeapon].Read(istr);
+    }*/
+
+    for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
+      m_aAmmo[iAmmo].Read(istr);
+    }
+  };
+
+  // [Cecil] Get current ammo
+  INDEX &CurrentAmmo(void) {
+    return m_aWeapons[m_iCurrentWeapon].pAmmo->iAmount;
+  };
+
+  INDEX &CurrentAlt(void) {
+    return m_aWeapons[m_iCurrentWeapon].pAlt->iAmount;
   };
   
   // add to prediction any entities that this entity depends on
@@ -2562,14 +2645,11 @@ functions:
     }
 
     m_iColtBullets = 6;
-    m_iBullets = 0;
-    m_iShells = 0;
-    m_iRockets = 0;
-    m_iGrenades = 0;
-    m_iNapalm = 0;
-    m_iElectricity = 0;
-    m_iIronBalls = 0;
-    m_iSniperBullets = 0;
+
+    // [Cecil] Clear ammo amounts
+    for (INDEX i = 0; i < m_aAmmo.Count(); i++) {
+      m_aAmmo[i].iAmount = 0;
+    }
   };
 
   void ResetWeaponMovingOffset(void) {
@@ -2603,21 +2683,6 @@ functions:
 
     m_iAvailableWeapons &= WEAPONS_ALLAVAILABLEMASK;
 
-    // [Cecil] Moved max ammo setting above AddDefaultAmmoForWeapon()
-    FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f) * AmmoMul();
-
-    // [Cecil] Top ammo (999 -> 1000)
-    INDEX iTopAmmo = Floor(1000.0f * AmmoMul());
-
-    m_iMaxBullets       = ClampUp((INDEX)ceil(MAX_BULLETS       * fModifier), iTopAmmo);
-    m_iMaxShells        = ClampUp((INDEX)ceil(MAX_SHELLS        * fModifier), iTopAmmo);
-    m_iMaxRockets       = ClampUp((INDEX)ceil(MAX_ROCKETS       * fModifier), iTopAmmo);
-    m_iMaxGrenades      = ClampUp((INDEX)ceil(MAX_GRENADES      * fModifier), iTopAmmo);
-    m_iMaxNapalm        = ClampUp((INDEX)ceil(MAX_NAPALM        * fModifier), iTopAmmo);
-    m_iMaxElectricity   = ClampUp((INDEX)ceil(MAX_ELECTRICITY   * fModifier), iTopAmmo);
-    m_iMaxIronBalls     = ClampUp((INDEX)ceil(MAX_IRONBALLS     * fModifier), iTopAmmo);
-    m_iMaxSniperBullets = ClampUp((INDEX)ceil(MAX_SNIPERBULLETS * fModifier), iTopAmmo);
-
     // find which weapons are new
     ULONG ulNewWeapons = m_iAvailableWeapons & ~ulOldWeapons;
 
@@ -2635,15 +2700,14 @@ functions:
 
     // [Cecil] Don't take starting ammo
     if (!bStartAmmo) {
-      // take away ammo
-      if (iTakeAmmo & (1<<AMMO_BULLETS))       { m_iBullets       = 0; }
-      if (iTakeAmmo & (1<<AMMO_SHELLS))        { m_iShells        = 0; }
-      if (iTakeAmmo & (1<<AMMO_ROCKETS))       { m_iRockets       = 0; }
-      if (iTakeAmmo & (1<<AMMO_GRENADES))      { m_iGrenades      = 0; }
-      if (iTakeAmmo & (1<<AMMO_NAPALM))        { m_iNapalm        = 0; }
-      if (iTakeAmmo & (1<<AMMO_ELECTRICITY))   { m_iElectricity   = 0; }
-      if (iTakeAmmo & (1<<AMMO_IRONBALLS))     { m_iIronBalls     = 0; }
-      if (iTakeAmmo & (1<<AMMO_SNIPERBULLETS)) { m_iSniperBullets = 0; }
+      // [Cecil] Take away first 8 ammo types
+      for (INDEX iTake = 0; iTake < 8; iTake++) {
+        INDEX iAmmoBit = (1 << _aiTakeAmmoBits[iTake]);
+
+        if (iTakeAmmo & iAmmoBit) {
+          m_aAmmo[iTake].iAmount = 0;
+        }
+      }
     }
 
     // precache eventual new weapons
@@ -2668,53 +2732,6 @@ functions:
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).SetWeapon();
   };
 
-  // get weapon ammo
-  INDEX GetAmmo(void) {
-    switch (m_iCurrentWeapon) {
-      case WEAPON_NONE:            return 0;
-      case WEAPON_KNIFE:           return 0;
-      case WEAPON_COLT:            return m_iColtBullets;
-      case WEAPON_DOUBLECOLT:      return m_iColtBullets;
-      case WEAPON_SINGLESHOTGUN:   return m_iShells;
-      case WEAPON_DOUBLESHOTGUN:   return m_iShells;
-      case WEAPON_TOMMYGUN:        return m_iBullets;
-      case WEAPON_MINIGUN:         return m_iBullets;
-      case WEAPON_ROCKETLAUNCHER:  return m_iRockets;
-      case WEAPON_GRENADELAUNCHER: return m_iGrenades;
-      case WEAPON_SNIPER:          return m_iSniperBullets;
-      case WEAPON_FLAMER:          return m_iNapalm;
-      case WEAPON_CHAINSAW:        return 0;
-      case WEAPON_LASER:           return m_iElectricity;
-      case WEAPON_IRONCANNON:      return m_iIronBalls;
-    }
-    return 0;
-  };
-
-  // get weapon max ammo (capacity)
-  INDEX GetMaxAmmo(void) {
-    switch (m_iCurrentWeapon) {
-      case WEAPON_NONE:            return 0;
-      case WEAPON_KNIFE:           return 0;
-      case WEAPON_COLT:            return 6;
-      case WEAPON_DOUBLECOLT:      return 6;
-      case WEAPON_SINGLESHOTGUN:   return m_iMaxShells;
-      case WEAPON_DOUBLESHOTGUN:   return m_iMaxShells;
-      case WEAPON_TOMMYGUN:        return m_iMaxBullets;
-      case WEAPON_MINIGUN:         return m_iMaxBullets;
-      case WEAPON_ROCKETLAUNCHER:  return m_iMaxRockets;
-      case WEAPON_GRENADELAUNCHER: return m_iMaxGrenades;
-      case WEAPON_SNIPER:          return m_iMaxSniperBullets;
-      case WEAPON_FLAMER:          return m_iMaxNapalm;
-
-      // [Cecil] Replaced napalm with nothing
-      case WEAPON_CHAINSAW:        return 0;
-
-      case WEAPON_LASER:           return m_iMaxElectricity;
-      case WEAPON_IRONCANNON:      return m_iMaxIronBalls;
-    }
-    return 0;
-  };
-
   void CheatOpen(void) {
     if (IsOfClass(m_penRayHit, "Moving Brush")) {
       m_penRayHit->SendEvent(ETrigger());
@@ -2726,17 +2743,12 @@ functions:
     // all weapons
     m_iAvailableWeapons = WEAPONS_ALLAVAILABLEMASK;
 
-    // ammo for all weapons
-    m_iBullets = m_iMaxBullets;
-    m_iShells = m_iMaxShells;
-    m_iRockets = m_iMaxRockets;
-    m_iGrenades = m_iMaxGrenades;
-    m_iNapalm = m_iMaxNapalm;
-    m_iElectricity = m_iMaxElectricity;
-    m_iIronBalls = m_iMaxIronBalls;
+    // [Cecil] Give all ammo
+    for (INDEX i = 0; i < m_aAmmo.Count(); i++) {
+      m_aAmmo[i].iAmount = m_aAmmo[i].Max();
+    }
 
     // precache eventual new weapons
-    m_iSniperBullets = m_iMaxSniperBullets;
     Precache();
   };
 
@@ -2751,126 +2763,35 @@ functions:
    */
 
   // clamp ammounts of all ammunition to maximum values
-  void ClampAllAmmo(void)
-  {
-    m_iBullets       = ClampUp(m_iBullets,       m_iMaxBullets);
-    m_iShells        = ClampUp(m_iShells,        m_iMaxShells);
-    m_iRockets       = ClampUp(m_iRockets,       m_iMaxRockets);
-    m_iGrenades      = ClampUp(m_iGrenades,      m_iMaxGrenades);
-    m_iNapalm        = ClampUp(m_iNapalm,        m_iMaxNapalm);
-    m_iElectricity   = ClampUp(m_iElectricity,   m_iMaxElectricity);
-    m_iIronBalls     = ClampUp(m_iIronBalls,     m_iMaxIronBalls);
-    m_iSniperBullets = ClampUp(m_iSniperBullets, m_iMaxSniperBullets);
-  }
+  void ClampAllAmmo(void) {
+    // [Cecil] Limit all ammo
+    for (INDEX i = 0; i < m_aAmmo.Count(); i++) {
+      INDEX &iAmmo = m_aAmmo[i].iAmount;
+
+      iAmmo = ClampUp(iAmmo, m_aAmmo[i].Max());
+    }
+  };
 
   // add default ammount of ammunition when receiving a weapon
   void AddDefaultAmmoForWeapon(INDEX iWeapon, FLOAT fMaxAmmoRatio) {
-    // [Cecil] Multiply ammo
-    FLOAT fMul = AmmoMul();
+    // [Cecil] Define ammo amounts
+    FLOAT fPickupAmmo = Max(FLOAT(m_aWeapons[iWeapon].pWeapon->iPickup), m_aWeapons[iWeapon].MaxAmmo() * fMaxAmmoRatio);
+    FLOAT fPickupAlt = Max(FLOAT(m_aWeapons[iWeapon].pWeapon->iPickupAlt), m_aWeapons[iWeapon].MaxAlt() * fMaxAmmoRatio);
 
-    // [Cecil] Define ammo amounts here
-    FLOAT iShotgun   = Max((FLOAT)ceil( 10.0f * fMul), m_iMaxShells        * fMaxAmmoRatio);
-    FLOAT iDShotgun  = Max((FLOAT)ceil( 20.0f * fMul), m_iMaxShells        * fMaxAmmoRatio);
-    FLOAT iTommygun  = Max((FLOAT)ceil( 50.0f * fMul), m_iMaxBullets       * fMaxAmmoRatio);
-    FLOAT iMinigun   = Max((FLOAT)ceil(100.0f * fMul), m_iMaxBullets       * fMaxAmmoRatio);
-    FLOAT iRLauncher = Max((FLOAT)ceil(  5.0f * fMul), m_iMaxRockets       * fMaxAmmoRatio);
-    FLOAT iGLauncher = Max((FLOAT)ceil(  5.0f * fMul), m_iMaxGrenades      * fMaxAmmoRatio);
-    FLOAT iFlamer    = Max((FLOAT)ceil( 50.0f * fMul), m_iMaxNapalm        * fMaxAmmoRatio);
-    FLOAT iSniper    = Max((FLOAT)ceil( 15.0f * fMul), m_iMaxSniperBullets * fMaxAmmoRatio);
-    FLOAT iLaser     = Max((FLOAT)ceil( 50.0f * fMul), m_iMaxElectricity   * fMaxAmmoRatio);
-    FLOAT iCannon    = Max((FLOAT)ceil(  1.0f * fMul), m_iMaxIronBalls     * fMaxAmmoRatio);
+    // [Cecil] Ammo references
+    SPlayerAmmo *pAmmo = m_aWeapons[iWeapon].pAmmo;
+    SPlayerAmmo *pAlt = m_aWeapons[iWeapon].pAlt;
 
-    INDEX iAmmoPicked;
+    // [Cecil] Add ammo
+    if (pAmmo != NULL) {
+      pAmmo->iAmount += fPickupAmmo;
+      AddManaToPlayer(fPickupAmmo * m_aWeapons[iWeapon].pWeapon->fMana * MANA_AMMO);
+    }
 
-    // add ammo
-    switch (iWeapon) {
-      // unlimited ammo
-      case WEAPON_NONE:
-      case WEAPON_KNIFE:
-      case WEAPON_CHAINSAW:
-      case WEAPON_COLT:
-      case WEAPON_DOUBLECOLT:
-        break;
-
-      // shells
-      case WEAPON_SINGLESHOTGUN:
-        iAmmoPicked = iShotgun;
-        m_iShells += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*70.0f*MANA_AMMO);
-
-        // [Cecil] Grenades for alt fire
-        if (AltFireExists(iWeapon)) {
-          INDEX iGrenades = ceil(FLOAT(iGLauncher) / 2.0f);
-          m_iGrenades += iGrenades;
-          AddManaToPlayer(iGrenades*100.0f*MANA_AMMO);
-        }
-        break;
-
-      case WEAPON_DOUBLESHOTGUN:
-        iAmmoPicked = iDShotgun;
-        m_iShells += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*70.0f*MANA_AMMO);
-        break;
-
-      // bullets
-      case WEAPON_TOMMYGUN:
-        iAmmoPicked = iTommygun;
-        m_iBullets += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*10.0f*MANA_AMMO);
-        break;
-
-      case WEAPON_SNIPER:
-        iAmmoPicked = iSniper;
-        m_iSniperBullets += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*10.0f*MANA_AMMO);
-        break;
-
-      case WEAPON_MINIGUN:
-        iAmmoPicked = iMinigun;
-        m_iBullets += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*10.0f*MANA_AMMO);
-        break;
-
-      // rockets
-      case WEAPON_ROCKETLAUNCHER:
-        iAmmoPicked = iRLauncher;
-        m_iRockets += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*150.0f*MANA_AMMO);
-        break;
-
-      // grenades
-      case WEAPON_GRENADELAUNCHER:
-        iAmmoPicked = iGLauncher;
-        m_iGrenades += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*100.0f*MANA_AMMO);
-        break;
-
-      // electricity
-      case WEAPON_LASER:
-        iAmmoPicked = iLaser;
-        m_iElectricity += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*15.0f*MANA_AMMO);
-        break;
-
-      // cannon balls
-      case WEAPON_IRONCANNON:
-        // for iron ball
-        iAmmoPicked = iCannon;
-        m_iIronBalls += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*700.0f*MANA_AMMO);
-        break;
-
-      // flamer
-      case WEAPON_FLAMER:
-        iAmmoPicked = iFlamer;
-        m_iNapalm += iAmmoPicked;
-        AddManaToPlayer(iAmmoPicked*15.0f*MANA_AMMO);
-        break;
-
-      // error
-      default:
-      ASSERTALWAYS("Uknown weapon type");
-        break;
+    // [Cecil] NOTE: Crashes around here
+    if (pAlt != NULL) {
+      pAlt->iAmount += fPickupAlt;
+      AddManaToPlayer(fPickupAlt * m_aWeapons[iWeapon].pWeapon->fMana * MANA_AMMO);
     }
 
     // make sure we don't have more ammo than maximum
@@ -3072,7 +2993,8 @@ functions:
         bAutoSelect = TRUE;
       }
     } else if (iSelectionSetting==PS_WAS_BETTER) {
-      if (FindRemapedPos(m_iCurrentWeapon)<FindRemapedPos((WeaponType)iReceiveType)) {
+      // [Cecil] No position remapping
+      if (m_iCurrentWeapon < iReceiveType) {
         bAutoSelect = TRUE;
       }
     }
@@ -3099,85 +3021,58 @@ functions:
 
     EAmmoItem &Eai = (EAmmoItem&)ee;
 
+    // [Cecil] Find proper ammo type
+    INDEX iType = _aiAmmoSetTypes[Eai.EaitType];
+
+    // [Cecil] Invalid type
+    if (iType == -1) {
+      CPrintF("^cff0000Warning: Picking invalid ammo type: %d^r\n", Eai.EaitType);
+      return TRUE;
+    }
+
     // [Cecil] Ammo amount
     INDEX iAmmo = ceil(FLOAT(Eai.iQuantity) * AmmoMul());
+
+    // [Cecil] Ammo reference
+    SPlayerAmmo &paAmmo = m_aAmmo[iType];
+
+    // [Cecil] Enough ammo
+    if (paAmmo.iAmount >= paAmmo.Max()) {
+      paAmmo.iAmount = paAmmo.Max();
+      return FALSE;
+    }
+    
+    // [Cecil] Add ammo
+    paAmmo.iAmount += iAmmo;
+    ((CPlayer&)*m_penPlayer).ItemPicked(Translate(paAmmo.pAmmo->strPickup.str_String), iAmmo);
+    AddManaToPlayer(iAmmo * paAmmo.pAmmo->fMana * MANA_AMMO);
     
     // add ammo
     switch (Eai.EaitType) {
-      // shells
-      case AIT_SHELLS:
-        if (m_iShells>=m_iMaxShells) { m_iShells = m_iMaxShells; return FALSE; }
-        m_iShells += iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Shells"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_SHELLS*MANA_AMMO);
-        break;
-      // bullets
-      case AIT_BULLETS:
-        if (m_iBullets>=m_iMaxBullets) { m_iBullets = m_iMaxBullets; return FALSE; }
-        m_iBullets += iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Bullets"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_BULLETS *MANA_AMMO);
-        break;
-      // rockets
-      case AIT_ROCKETS:
-        if (m_iRockets>=m_iMaxRockets) { m_iRockets = m_iMaxRockets; return FALSE; }
-        m_iRockets += iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Rockets"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_ROCKETS *MANA_AMMO);
-        break;
-      // grenades
-      case AIT_GRENADES:
-        if (m_iGrenades>=m_iMaxGrenades) { m_iGrenades = m_iMaxGrenades; return FALSE; }
-        m_iGrenades += iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Grenades"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_GRENADES *MANA_AMMO);
-        break;
-      // electicity
-      case AIT_ELECTRICITY:
-        if (m_iElectricity>=m_iMaxElectricity) { m_iElectricity = m_iMaxElectricity; return FALSE; }
-        m_iElectricity += iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Cells"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_ELECTRICITY *MANA_AMMO);
-        break;
-      // cannon balls
-      case AIT_IRONBALLS:
-        if (m_iIronBalls>=m_iMaxIronBalls) { m_iIronBalls = m_iMaxIronBalls; return FALSE; }
-        m_iIronBalls+= iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Cannonballs"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_IRONBALLS *MANA_AMMO);
-        break;
-      case AIT_NAPALM:
-        if (m_iNapalm>=m_iMaxNapalm) { m_iNapalm = m_iMaxNapalm; return FALSE; }
-        m_iNapalm+= iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Napalm"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_NAPALM*MANA_AMMO);
-        break;
-      case AIT_SNIPERBULLETS:
-        if (m_iSniperBullets>=m_iMaxSniperBullets) { m_iSniperBullets = m_iMaxSniperBullets; return FALSE; }
-        m_iSniperBullets+= iAmmo;
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Sniper bullets"), iAmmo);
-        AddManaToPlayer(iAmmo*AV_SNIPERBULLETS*MANA_AMMO);
-        break;
       case AIT_BACKPACK:
-        m_iShells  += 20*GetSP()->sp_fAmmoQuantity;
-        m_iBullets += 200*GetSP()->sp_fAmmoQuantity;
-        m_iRockets += 5*GetSP()->sp_fAmmoQuantity;
+        m_aAmmo[0].iAmount +=  20 * GetSP()->sp_fAmmoQuantity * AmmoMul();
+        m_aAmmo[1].iAmount += 200 * GetSP()->sp_fAmmoQuantity * AmmoMul();
+        m_aAmmo[2].iAmount +=   5 * GetSP()->sp_fAmmoQuantity * AmmoMul();
+
         ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Ammo pack"), 0);
-        AddManaToPlayer(100000000.0f *MANA_AMMO); // adjust mana value!!!!
+        // [Cecil] Set to 100
+        AddManaToPlayer(100.0f * MANA_AMMO);
         break;
-      case AIT_SERIOUSPACK:
-        m_iShells   += MAX_SHELLS*GetSP()->sp_fAmmoQuantity;
-        m_iBullets  += MAX_BULLETS*GetSP()->sp_fAmmoQuantity;
-        m_iGrenades += MAX_GRENADES*GetSP()->sp_fAmmoQuantity;
-        m_iRockets  += MAX_ROCKETS*GetSP()->sp_fAmmoQuantity;
-        m_iElectricity += MAX_ELECTRICITY*GetSP()->sp_fAmmoQuantity;
-        m_iIronBalls += MAX_IRONBALLS*GetSP()->sp_fAmmoQuantity;
+
+      case AIT_SERIOUSPACK: {
+        // [Cecil] Give all ammo
+        for (INDEX i = 0; i < m_aAmmo.Count(); i++) {
+          m_aAmmo[i].iAmount = m_aAmmo[i].Max();
+        }
+
         ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("All Ammo"), 0);
-        AddManaToPlayer(100000000.0f *MANA_AMMO); // adjust mana value!!!!
-        break;
+
+        // [Cecil] Set to 1000
+        AddManaToPlayer(1000.0f * MANA_AMMO);
+      } break;
+
       // error
-      default:
-        ASSERTALWAYS("Uknown ammo type");
+      default: ASSERTALWAYS("Uknown ammo type");
     }
 
     // make sure we don't have more ammo than maximum
@@ -3196,51 +3091,59 @@ functions:
 
     ASSERT(ee.ee_slEvent == EVENTCODE_EAmmoPackItem);
     EAmmoPackItem &eapi = (EAmmoPackItem &)ee;
-    if( (eapi.iShells>0 && m_iShells<m_iMaxShells) ||
-        (eapi.iBullets>0 && m_iBullets<m_iMaxBullets) ||
-        (eapi.iRockets>0 && m_iRockets<m_iMaxRockets) ||
-        (eapi.iGrenades>0 && m_iGrenades<m_iMaxGrenades) ||
-        (eapi.iNapalm>0 && m_iNapalm<m_iMaxNapalm) ||
-        (eapi.iElectricity>0 && m_iElectricity<m_iMaxElectricity) ||
-        (eapi.iIronBalls>0 && m_iIronBalls<m_iMaxIronBalls) ||
-        (eapi.iSniperBullets>0 && m_iSniperBullets<m_iMaxSniperBullets))
-    {
-      // [Cecil] Multiply given ammo
-      FLOAT fAmmoMul = AmmoMul();
 
-      // add ammo from back pack
-      m_iShells        += ceil(fAmmoMul * FLOAT(eapi.iShells));
-      m_iBullets       += ceil(fAmmoMul * FLOAT(eapi.iBullets));
-      m_iRockets       += ceil(fAmmoMul * FLOAT(eapi.iRockets));
-      m_iGrenades      += ceil(fAmmoMul * FLOAT(eapi.iGrenades));
-      m_iNapalm        += ceil(fAmmoMul * FLOAT(eapi.iNapalm));
-      m_iElectricity   += ceil(fAmmoMul * FLOAT(eapi.iElectricity));
-      m_iIronBalls     += ceil(fAmmoMul * FLOAT(eapi.iIronBalls));
-      m_iSniperBullets += ceil(fAmmoMul * FLOAT(eapi.iSniperBullets));
+    // [Cecil] Default ammo set
+    INDEX aiSet[8];
+    aiSet[0] = eapi.iShells;
+    aiSet[1] = eapi.iBullets;
+    aiSet[2] = eapi.iRockets;
+    aiSet[3] = eapi.iGrenades;
+    aiSet[4] = eapi.iNapalm;
+    aiSet[5] = eapi.iSniperBullets;
+    aiSet[6] = eapi.iElectricity;
+    aiSet[7] = eapi.iIronBalls;
+
+    // [Cecil] Check if lacking some ammo
+    BOOL bLacking = FALSE;
+    INDEX iTypes = 0;
+
+    for (INDEX iCheck = 0; iCheck < 8; iCheck++) {
+      if (aiSet[iCheck] > 0) {
+        // count types
+        iTypes++;
+
+        bLacking |= !m_aAmmo[iCheck].Full();
+      }
+    }
+
+    if (bLacking) {
+      // [Cecil] Add ammo
+      for (INDEX iAdd = 0; iAdd < 8; iAdd++) {
+        m_aAmmo[iAdd].iAmount += ceil(FLOAT(aiSet[iAdd]) * AmmoMul());
+      }
 
       // make sure we don't have more ammo than maximum
       ClampAllAmmo();
 
-      // preapare message string and count different types of ammo
-      INDEX iAmmoTypes = 0;
+      // preapare message string
       CTString strMessage;
-      if( eapi.iShells != 0)        { strMessage.PrintF("%s %d %s,", strMessage, eapi.iShells, TRANS("Shells")); iAmmoTypes++; }
-      if( eapi.iBullets != 0)       { strMessage.PrintF("%s %d %s,", strMessage, eapi.iBullets, TRANS("Bullets")); iAmmoTypes++; }
-      if( eapi.iRockets != 0)       { strMessage.PrintF("%s %d %s,", strMessage, eapi.iRockets, TRANS("Rockets")); iAmmoTypes++; }
-      if( eapi.iGrenades != 0)      { strMessage.PrintF("%s %d %s,", strMessage, eapi.iGrenades, TRANS("Grenades")); iAmmoTypes++; }
-      if( eapi.iNapalm != 0)        { strMessage.PrintF("%s %d %s,", strMessage, eapi.iNapalm, TRANS("Napalm")); iAmmoTypes++; }
-      if( eapi.iElectricity != 0)   { strMessage.PrintF("%s %d %s,", strMessage, eapi.iElectricity, TRANS("Cells")); iAmmoTypes++; }
-      if( eapi.iIronBalls != 0)     { strMessage.PrintF("%s %d %s,", strMessage, eapi.iIronBalls, TRANS("Cannonballs")); iAmmoTypes++; }
-      if( eapi.iSniperBullets != 0) { strMessage.PrintF("%s %d %s,", strMessage, eapi.iSniperBullets, TRANS("Sniper bullets")); iAmmoTypes++; }
 
-      INDEX iLen = strlen(strMessage);
-      if( iLen>0 && strMessage[iLen-1]==',')
-      {
-        strMessage.DeleteChar(iLen-1);
-      };
-      if( iAmmoTypes>4 ) {
+      // [Cecil] Print simple message
+      if (iTypes > 4) {
         strMessage.PrintF(TRANS("Ammo pack"));
-      };
+
+      // [Cecil] Print each type
+      } else {
+        for (INDEX i = 0; i < 8; i++) {
+          // [Cecil] Next type
+          if (strMessage != "") {
+            strMessage += ", ";
+          }
+
+          // [Cecil] Print the type
+          strMessage.PrintF("%s%s %d", strMessage, Translate(m_aAmmo[i].pAmmo->strPickup.str_String), aiSet[i]);
+        }
+      }
 
       ((CPlayer&)*m_penPlayer).ItemPicked(strMessage, 0);
       return TRUE;
@@ -3385,31 +3288,7 @@ functions:
 
   // does weapon have ammo
   BOOL HasAmmo(WeaponType EwtWeapon) {
-    switch (EwtWeapon) {
-      // [Cecil] Always has ammo
-      case WEAPON_NONE: case WEAPON_KNIFE:
-      case WEAPON_COLT: case WEAPON_DOUBLECOLT: return TRUE;
-
-      // [Cecil] Alt ammo
-      case WEAPON_SINGLESHOTGUN:
-        if (AltFireExists(EwtWeapon)) {
-          return (m_iShells > 0) || (m_iGrenades > 0);
-        } else {
-          return (m_iShells > 0);
-        }
-
-      case WEAPON_DOUBLESHOTGUN: return (m_iShells > 1);
-      case WEAPON_TOMMYGUN: return (m_iBullets > 0);
-      case WEAPON_SNIPER: return (m_iSniperBullets > 0);
-      case WEAPON_MINIGUN: return (m_iBullets > 0);
-      case WEAPON_ROCKETLAUNCHER: return (m_iRockets > 0);
-      case WEAPON_GRENADELAUNCHER: return (m_iGrenades > 0);
-      case WEAPON_FLAMER: return (m_iNapalm > 0);
-      case WEAPON_CHAINSAW: return TRUE;
-      case WEAPON_LASER: return (m_iElectricity > 0);
-      case WEAPON_IRONCANNON: return (m_iIronBalls > 0);
-    }
-    return FALSE;
+    return m_aWeapons[EwtWeapon].HasAmmo(AltFireExists(EwtWeapon));
   };
 
   /*
@@ -3620,27 +3499,17 @@ functions:
     m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
     return m_moWeapon.GetAnimLength(iAnim);
   };
-
-  // find the weapon position in the remap array
-  WeaponType FindRemapedPos(WeaponType wt) {
-    for (INDEX i=0; i<18; i++) {
-      if (aiWeaponsRemap[i]==wt) {
-        return (WeaponType)i;
-      }
-    }
-    ASSERT("Non-existant weapon in remap array!");
-    return (WeaponType)0;
-  };
   
   /*
    *  >>>---   WEAPON CHANGE FUNCTIONS   ---<<<
    */
 
   // find first possible weapon in given direction
-  WeaponType FindWeaponInDirection(INDEX iDir)
-  {
-    INDEX wtOrg = FindRemapedPos(m_iWantedWeapon);
+  WeaponType FindWeaponInDirection(INDEX iDir) {
+    // [Cecil] No position remapping
+    INDEX wtOrg = m_iWantedWeapon;
     INDEX wti = wtOrg;
+
     FOREVER {
       (INDEX&)wti += iDir;
 
@@ -3658,7 +3527,8 @@ functions:
         break;
       }
 
-      WeaponType wt = (WeaponType) aiWeaponsRemap[wti];
+      // [Cecil] No position remapping
+      WeaponType wt = (WeaponType)wti;
       if ((1<<(wt - 1)) & m_iAvailableWeapons && HasAmmo(wt)) {
         return wt;
       }
@@ -3727,27 +3597,23 @@ functions:
     }
   };
 
-
-
-  void MinigunSmoke()
-  {
-    if( !hud_bShowWeapon)
-    {
+  void MinigunSmoke(void) {
+    if (!hud_bShowWeapon) {
       return;
     }
+
     // smoke
     CPlayer &pl = (CPlayer&)*m_penPlayer;
-    if( pl.m_pstState!=PST_DIVE)
-    {
+    if (pl.m_pstState != PST_DIVE) {
       BOOL b3rdPersonView = TRUE;
-      if(pl.m_penCamera==NULL && pl.m_pen3rdPersonView==NULL)
-      {
+
+      if (pl.m_penCamera == NULL && pl.m_pen3rdPersonView == NULL) {
         b3rdPersonView = FALSE;
       }
 
-      INDEX ctBulletsFired = ClampUp(m_iBulletsOnFireStart-m_iBullets, INDEX(200));
-      for( INDEX iSmoke=0; iSmoke<ctBulletsFired/10; iSmoke++)
-      {
+      INDEX ctBulletsFired = ClampUp(m_iBulletsOnFireStart - CurrentAmmo(), INDEX(200));
+
+      for (INDEX iSmoke = 0; iSmoke < ctBulletsFired/10; iSmoke++) {
         ShellLaunchData *psldSmoke = &pl.m_asldData[pl.m_iFirstEmptySLD];
         CPlacement3D plPipe;
         if( b3rdPersonView)
@@ -4403,16 +4269,18 @@ procedures:
   // ***************** FIRE SINGLESHOTGUN *****************
   FireSingleShotgun() {
     // fire one shell
-    if (m_iShells > 0) {
+    if (CurrentAmmo() > 0) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
       FireBullets(wpn_fFX[WEAPON_SINGLESHOTGUN], wpn_fFY[WEAPON_SINGLESHOTGUN], 500.0f, 10.0f, 7, afSingleShotgunPellets, 0.2f, 0.03f, 0.0f);
       DoRecoil();
       SpawnRangeSound(60.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Snglshotgun_fire");}
-      DecAmmo(m_iShells, 1);
+
+      DecAmmo(CurrentAmmo(), 1);
       SetFlare(0, FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST, 0);
+
       // sound
       CPlayer &pl = (CPlayer&)*m_penPlayer;
       PlaySound(pl.m_soWeapon0, SOUND_SINGLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
@@ -4501,7 +4369,7 @@ procedures:
 
   FireShotgunGrenade() {
     // release spring and fire one grenade
-    if (m_iGrenades > 0) {
+    if (CurrentAlt() > 0) {
       // remember time for spring release
       F_TEMP = _pTimer->CurrentTick();
 
@@ -4516,7 +4384,7 @@ procedures:
       SpawnRangeSound(10.0f);
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Gnadelauncher");}
-      DecAmmo(m_iGrenades, 1);
+      DecAmmo(CurrentAlt(), 1);
 
       // sound
       CPlayer &pl = (CPlayer&)*m_penPlayer;
@@ -4554,17 +4422,19 @@ procedures:
   // ***************** FIRE DOUBLESHOTGUN *****************
   FireDoubleShotgun() {
     // fire two shell
-    if (m_iShells > 1) {
+    if (CurrentAmmo() > 1) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
       FireBullets(wpn_fFX[WEAPON_DOUBLESHOTGUN], wpn_fFY[WEAPON_DOUBLESHOTGUN], 500.0f, 10.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 0.0f);
       DoRecoil();
       SpawnRangeSound(70.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
-      DecAmmo(m_iShells, 2);
+
+      DecAmmo(CurrentAmmo(), 2);
       SetFlare(0, FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST, 0);
       m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
+
       // sound
       CPlayer &pl = (CPlayer&)*m_penPlayer;
       pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);      // fire
@@ -4619,7 +4489,7 @@ procedures:
       // [Cecil] Multiply speed
       autowait((GetSP()->sp_bCooperative ? 0.25f : 0.15f) * FireSpeedMul());
 
-      if (m_iShells >= 2) {
+      if (CurrentAmmo() >= 2) {
         CPlayer &pl = (CPlayer&)*m_penPlayer;
         PlaySound(pl.m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
       }
@@ -4629,7 +4499,7 @@ procedures:
                 - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)) * FireSpeedMul());
 
       // no ammo -> change weapon
-      if (m_iShells <= 1) {
+      if (CurrentAmmo() <= 1) {
         SelectNewWeapon();
       }
     } else {
@@ -4642,17 +4512,19 @@ procedures:
   // [Cecil] Double shotgun alt fire
   FirePunchShotgun() {
     // fire two shell
-    if (m_iShells > 1) {
+    if (CurrentAmmo() > 1) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
       FireBullets(wpn_fFX[WEAPON_DOUBLESHOTGUN], wpn_fFY[WEAPON_DOUBLESHOTGUN], 500.0f, 3.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 70.0f);
       DoRecoil();
       SpawnRangeSound(70.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
-      DecAmmo(m_iShells, 2);
+
+      DecAmmo(CurrentAmmo(), 2);
       SetFlare(0, FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST, 0);
       m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
+
       // sound
       CPlayer &pl = (CPlayer&)*m_penPlayer;
       pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);      // fire
@@ -4707,7 +4579,7 @@ procedures:
       // [Cecil] Multiply speed
       autowait((GetSP()->sp_bCooperative ? 0.25f : 0.15f) * FireSpeedMul());
 
-      if (m_iShells >= 2) {
+      if (CurrentAmmo() >= 2) {
         CPlayer &pl = (CPlayer&)*m_penPlayer;
         PlaySound(pl.m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
       }
@@ -4717,7 +4589,7 @@ procedures:
                 - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)) * FireSpeedMul());
 
       // no ammo -> change weapon
-      if (m_iShells <= 1) {
+      if (CurrentAmmo() <= 1) {
         SelectNewWeapon();
       }
     } else {
@@ -4729,7 +4601,7 @@ procedures:
 
   // ***************** FIRE TOMMYGUN *****************
   TommyGunStart() {
-    m_iBulletsOnFireStart = m_iBullets;
+    m_iBulletsOnFireStart = CurrentAmmo();
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC);      // stop possible sounds
     pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);      // fire
@@ -4744,9 +4616,9 @@ procedures:
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     if( pl.m_pstState!=PST_DIVE && hud_bShowWeapon)
     {
-      INDEX ctBulletsFired = ClampUp(m_iBulletsOnFireStart-m_iBullets, INDEX(100));
-      for( INDEX iSmoke=0; iSmoke<ctBulletsFired/6.0; iSmoke++)
-      {
+      INDEX ctBulletsFired = ClampUp(m_iBulletsOnFireStart - CurrentAmmo(), INDEX(100));
+
+      for (INDEX iSmoke = 0; iSmoke < ctBulletsFired/6.0f; iSmoke++) {
         ShellLaunchData *psldSmoke = &pl.m_asldData[pl.m_iFirstEmptySLD];
         CPlacement3D plPipe;
         CalcWeaponPosition(FLOAT3D(afTommygunPipe[0], afTommygunPipe[1], afTommygunPipe[2]), plPipe, FALSE);
@@ -4772,14 +4644,15 @@ procedures:
 
   FireTommyGun() {
     // fire one bullet
-    if (m_iBullets>0) {
+    if (CurrentAmmo() > 0) {
       // [Cecil] Multiply damage
       FireMachineBullet(wpn_fFX[WEAPON_TOMMYGUN], wpn_fFY[WEAPON_TOMMYGUN],
         500.0f, 10.0f * FireSpeed(), ((GetSP()->sp_bCooperative) ? 0.01f : 0.03f),
         ((GetSP()->sp_bCooperative) ? 0.5f : 0.0f));
       SpawnRangeSound(50.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
-      DecAmmo(m_iBullets, 1);
+
+      DecAmmo(CurrentAmmo(), 1);
       SetFlare(0, FLARE_ADD);
       m_moWeapon.PlayAnim(TOMMYGUN_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
 
@@ -4825,7 +4698,9 @@ procedures:
       autowait(0.05f);
 
       // no ammo -> change weapon
-      if (m_iBullets<=0) { SelectNewWeapon(); }
+      if (CurrentAmmo() <= 0) {
+        SelectNewWeapon();
+      }
     } else {
       ASSERTALWAYS("TommyGun - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
@@ -4835,7 +4710,7 @@ procedures:
 
   // [Cecil] Tommygun alt fire
   TommygunBurst() {
-    if (m_iBullets > 0) {
+    if (CurrentAmmo() > 0) {
       // remember time for spring release
       F_TEMP = _pTimer->CurrentTick();
 
@@ -4844,8 +4719,8 @@ procedures:
       m_tmDrawStartTime = 0.0f;
 
       // fire some bullets
-      m_iAmmoLeft = ClampUp(m_iBullets, (INDEX)5);
-      DecAmmo(m_iBullets, m_iAmmoLeft);
+      m_iAmmoLeft = ClampUp(CurrentAmmo(), (INDEX)5);
+      DecAmmo(CurrentAmmo(), m_iAmmoLeft);
 
       while (--m_iAmmoLeft >= 0) {
         FireMachineBullet(wpn_fFX[WEAPON_TOMMYGUN], wpn_fFY[WEAPON_TOMMYGUN], 500.0f, 10.0f, 0.2f, 0.1f);
@@ -4915,7 +4790,7 @@ procedures:
       ResetWeaponMovingOffset();
 
       // no ammo -> change weapon
-      if (m_iBullets <= 0) {
+      if (CurrentAmmo() <= 0) {
         SelectNewWeapon();
       }
     } else {
@@ -4927,7 +4802,7 @@ procedures:
 
   // ***************** FIRE SNIPER *****************
   FireSniper() {
-    if (m_iSniperBullets>0) {
+    if (CurrentAmmo() > 0) {
       // fire one bullet
       if (m_bSniping) {
         FireSniperBullet(0.0f, 0.0f, 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f), 0.0f);
@@ -4937,7 +4812,8 @@ procedures:
       m_tmLastSniperFire = _pTimer->CurrentTick();
 
       SpawnRangeSound(50.0f);
-      DecAmmo(m_iSniperBullets, 1);
+      DecAmmo(CurrentAmmo(), 1);
+
       if (!m_bSniping) {
         SetFlare(0, FLARE_ADD);
       }
@@ -5001,7 +4877,9 @@ procedures:
       autowait(0.35f * FireSpeedMul());
       
       // no ammo -> change weapon
-      if (m_iSniperBullets<=0) { SelectNewWeapon(); }
+      if (CurrentAmmo() <= 0) {
+        SelectNewWeapon();
+      }
     } 
     else {
       ASSERTALWAYS("Sniper - Auto weapon change not working.");
@@ -5011,7 +4889,7 @@ procedures:
   };
   
   FireAccurateSniper() {
-    if (m_iSniperBullets > 0) {
+    if (CurrentAmmo() > 0) {
       // fire one bullet
       if (m_bSniping) {
         FireSniperBullet(0.0f, 0.0f, 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f) * 1.5f, 0.0f);
@@ -5021,7 +4899,7 @@ procedures:
       m_tmLastSniperFire = _pTimer->CurrentTick();
 
       SpawnRangeSound(50.0f);
-      DecAmmo(m_iSniperBullets, 1);
+      DecAmmo(CurrentAmmo(), 1);
       if (!m_bSniping) {
         SetFlare(0, FLARE_ADD);
       }
@@ -5085,7 +4963,9 @@ procedures:
       autowait(0.7f * FireSpeedMul());
       
       // no ammo -> change weapon
-      if (m_iSniperBullets <= 0) { SelectNewWeapon(); }
+      if (CurrentAmmo() <= 0) {
+        SelectNewWeapon();
+      }
     } 
     else {
       ASSERTALWAYS("Sniper - Auto weapon change not working.");
@@ -5149,18 +5029,19 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotate");}
 
     // if firing
-    if(HoldingFire() && m_iBullets>0) {
+    if(HoldingFire() && CurrentAmmo() > 0) {
       // play fire sound
       PlaySound(pl.m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
       PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRESHORT, AOF_LOOPING);
     }
 
-    m_iBulletsOnFireStart = m_iBullets;
+    m_iBulletsOnFireStart = CurrentAmmo();
+
     // while holding fire
     while (HoldingFire()) {
       // check for ammo pickup during empty spinning
-      if (!m_bHasAmmo && m_iBullets>0) {
+      if (!m_bHasAmmo && CurrentAmmo() > 0) {
         CPlayer &pl = (CPlayer&)*m_penPlayer;
         PlaySound(pl.m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
         if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_fire");}
@@ -5170,14 +5051,14 @@ procedures:
       }
 
       // if has ammo
-      if (m_iBullets>0) {
+      if (CurrentAmmo() > 0) {
         // [Cecil] Multiply damage
         // fire a bullet
         FireMachineBullet(wpn_fFX[WEAPON_MINIGUN], wpn_fFY[WEAPON_MINIGUN], 750.0f, (AltFireExists(WEAPON_MINIGUN) ? 20.0f : 10.0f) * FireSpeed(),
                           (GetSP()->sp_bCooperative) ? 0.01f : 0.03f, (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
         DoRecoil();
         SpawnRangeSound(60.0f);
-        DecAmmo(m_iBullets, 1);
+        DecAmmo(CurrentAmmo(), 1);
         SetFlare(0, FLARE_ADD);
 
         /* add one empty bullet shell */
@@ -5306,14 +5187,14 @@ procedures:
     //pl.m_soWeapon1.SetOffset((1-m_aMiniGunSpeed/MINIGUN_FULLSPEED)*MINIGUN_SPINDNSOUND);
 
     // while still spinning and should not fire
-    while ( m_aMiniGunSpeed>0 && (!HoldingFire() || m_iBullets<=0)) {
+    while (m_aMiniGunSpeed > 0 && (!HoldingFire() || CurrentAmmo() <= 0)) {
       autowait(MINIGUN_TICKTIME);
       // spin
       m_aMiniGunLast = m_aMiniGun;
-      m_aMiniGun+=m_aMiniGunSpeed*MINIGUN_TICKTIME;
+      m_aMiniGun += m_aMiniGunSpeed*MINIGUN_TICKTIME;
       m_aMiniGunSpeed-=MINIGUN_SPINDNACC*MINIGUN_TICKTIME;
 
-      if (m_iBullets<=0) {
+      if (CurrentAmmo() <= 0) {
         SelectNewWeapon();
       }
 
@@ -5331,7 +5212,7 @@ procedures:
     m_aMiniGunLast = m_aMiniGun;
 
     // if should fire
-    if (HoldingFire() && m_iBullets>0) {
+    if (HoldingFire() && CurrentAmmo() > 0) {
       // start spinup
       jump MiniGunSpinUp();
     }
@@ -5340,14 +5221,15 @@ procedures:
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).m_fLastActionTime = _pTimer->CurrentTick();
 
     // if out of ammo
-    if (m_iBullets<=0) { 
+    if (CurrentAmmo() <= 0) { 
       // can wait without changing while holding fire - specific for movie sequence
-      while(HoldingFire() && m_iBullets<=0) {
+      while (HoldingFire() && CurrentAmmo() <= 0) {
         // [Cecil] Slowdown bug fix
         autowait(0.05f);
         autowait(0.05f);
       }
-      if (m_iBullets<=0) {
+
+      if (CurrentAmmo() <= 0) {
         // select new weapon
         SelectNewWeapon(); 
       }
@@ -5358,7 +5240,7 @@ procedures:
   // ***************** FIRE ROCKETLAUNCHER *****************
   FireRocketLauncher() {
     // fire one grenade
-    if (m_iRockets > 0) {
+    if (CurrentAmmo() > 0) {
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
       m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_FIRE, 0);
 
@@ -5369,7 +5251,7 @@ procedures:
       SpawnRangeSound(20.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Rocketlauncher_fire");}
 
-      DecAmmo(m_iRockets, 1);
+      DecAmmo(CurrentAmmo(), 1);
       // sound
       CPlayer &pl = (CPlayer&)*m_penPlayer;
 
@@ -5391,7 +5273,9 @@ procedures:
       StretchRocket(FLOAT3D(1.0f, 1.0f, 1.0f));
 
       // no ammo -> change weapon
-      if (m_iRockets<=0) { SelectNewWeapon(); }
+      if (CurrentAmmo() <= 0) {
+        SelectNewWeapon();
+      }
     } else {
       ASSERTALWAYS("RocketLauncher - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
@@ -5490,7 +5374,7 @@ procedures:
     m_tmDrawStartTime = 0.0f;
 
     // release spring and fire one grenade
-    if (m_iGrenades > 0) {
+    if (CurrentAmmo() > 0) {
       // [Cecil] Multiply power
       INDEX iPower = INDEX((_pTimer->CurrentTick() - F_TEMP) / _pTimer->TickQuantum * FireSpeed());
 
@@ -5498,7 +5382,7 @@ procedures:
       FireGrenade(iPower, FALSE);
       SpawnRangeSound(10.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Gnadelauncher");}
-      DecAmmo(m_iGrenades, 1);
+      DecAmmo(CurrentAmmo(), 1);
       // sound
       CPlayer &pl = (CPlayer&)*m_penPlayer;
       PlaySound(pl.m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
@@ -5520,13 +5404,14 @@ procedures:
       ResetWeaponMovingOffset();
 
       // no ammo -> change weapon
-      if (m_iGrenades<=0)
-      {
+      if (CurrentAmmo() <= 0) {
         SelectNewWeapon();
+
       } else if (TRUE) {
         // [Cecil] Multiply speed
         autowait(0.25f * FireSpeedMul());
       }
+
     } else {
       ASSERTALWAYS("GrenadeLauncher - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
@@ -5558,7 +5443,7 @@ procedures:
     m_tmDrawStartTime = 0.0f;
 
     // release spring and fire one grenade
-    if (m_iGrenades > 0) {
+    if (CurrentAmmo() > 0) {
       // [Cecil] Multiply power
       INDEX iPower = INDEX((_pTimer->CurrentTick() - F_TEMP) / _pTimer->TickQuantum * FireSpeed());
 
@@ -5566,7 +5451,9 @@ procedures:
       FireGrenade(iPower, TRUE);
       SpawnRangeSound(10.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Gnadelauncher");}
-      DecAmmo(m_iGrenades, 1);
+
+      DecAmmo(CurrentAmmo(), 1);
+
       // sound
       CPlayer &pl = (CPlayer&)*m_penPlayer;
       PlaySound(pl.m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
@@ -5588,9 +5475,9 @@ procedures:
       ResetWeaponMovingOffset();
 
       // no ammo -> change weapon
-      if (m_iGrenades<=0)
-      {
+      if (CurrentAmmo() <= 0) {
         SelectNewWeapon();
+
       } else if (TRUE) {
         // [Cecil] Multiply speed
         autowait(0.25f * FireSpeedMul());
@@ -5624,7 +5511,7 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerStart");}
 
     FireFlame();
-    DecAmmo(m_iNapalm, 1);
+    DecAmmo(CurrentAmmo(), 1);
 
     autowait(0.05f);
     jump FlamerFire();
@@ -5632,10 +5519,10 @@ procedures:
 
   FlamerFire() {
     // while holding fire
-    while (HoldingFire() && m_iNapalm > 0) {
+    while (HoldingFire() && CurrentAmmo() > 0) {
       FireFlame();
 
-      DecAmmo(m_iNapalm, 1);
+      DecAmmo(CurrentAmmo(), 1);
       SpawnRangeSound(30.0f);
       
       // [Cecil] Slowdown bug fix
@@ -5643,7 +5530,7 @@ procedures:
       autowait(0.05f);
     }
 
-    if (m_iNapalm <= 0) {
+    if (CurrentAmmo() <= 0) {
       m_bHasAmmo = FALSE;
     }
 
@@ -5673,7 +5560,7 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIREEND) * FireSpeedMul());
     
     // select new weapon
-    if (m_iNapalm <= 0) {
+    if (CurrentAmmo() <= 0) {
       SelectNewWeapon(); 
     }
 
@@ -5682,7 +5569,7 @@ procedures:
 
   // [Cecil] Tesla gun
   FireTeslaGun() {
-    if (m_iNapalm >= 10) {
+    if (CurrentAmmo() >= 10) {
       m_moWeapon.PlayAnim(FLAMER_ANIM_FIRESTART, 0);
       autowait(0.25f * FireSpeedMul());
 
@@ -5721,7 +5608,7 @@ procedures:
 
       // take ammo
       SpawnRangeSound(30.0f);
-      DecAmmo(m_iNapalm, 10);
+      DecAmmo(CurrentAmmo(), 10);
 
       autowait(0.25f * FireSpeedMul());
 
@@ -5729,7 +5616,7 @@ procedures:
     }
 
     // select new weapon
-    if (m_iNapalm <= 0) {
+    if (CurrentAmmo() <= 0) {
       SelectNewWeapon();
     }
     
@@ -5824,7 +5711,7 @@ procedures:
   // ***************** FIRE LASER *****************
   FireLaser() {
     // fire one cell
-    if (m_iElectricity>0) {
+    if (CurrentAmmo() > 0) {
       // [Cecil] Slowdown bug fix
       autowait(0.05f);
       autowait(0.05f);
@@ -5832,7 +5719,7 @@ procedures:
       m_moWeapon.PlayAnim(LASER_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
       FireLaserRay();
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Laser_fire");}
-      DecAmmo(m_iElectricity, 1);
+      DecAmmo(CurrentAmmo(), 1);
 
       // sound
       SpawnRangeSound(20.0f);
@@ -5863,8 +5750,11 @@ procedures:
 
       // next barrel
       m_iLaserBarrel = (m_iLaserBarrel+1)&3;
+
       // no electricity -> change weapon
-      if (m_iElectricity<=0) { SelectNewWeapon(); }
+      if (CurrentAmmo() <= 0) {
+        SelectNewWeapon();
+      }
     } else {
       ASSERTALWAYS("Laser - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
@@ -5874,7 +5764,7 @@ procedures:
 
   // [Cecil] Laser death ray
   FireDeathRay() {
-    if (m_iElectricity > 0) {
+    if (CurrentAmmo() > 0) {
       m_penGhostBusterRay = CreateEntity(GetPlacement(), CLASS_GHOSTBUSTERRAY);
       EGhostBusterRay egbr;
       egbr.penOwner = this;
@@ -5887,11 +5777,11 @@ procedures:
       autowait(0.05f);
 
       // while holding fire
-      while (HoldingAlt() && m_iElectricity > 0) {
-        INDEX iAmmo = Clamp(m_iElectricity, (INDEX)1, (INDEX)2);
+      while (HoldingAlt() && CurrentAmmo() > 0) {
+        INDEX iAmmo = Clamp(CurrentAmmo(), (INDEX)1, (INDEX)2);
         GhostBusterHit(FLOAT(iAmmo) / 2.0f);
 
-        DecAmmo(m_iElectricity, iAmmo);
+        DecAmmo(CurrentAmmo(), iAmmo);
 
         SpawnRangeSound(30.0f);
         autowait(0.05f);
@@ -5903,7 +5793,7 @@ procedures:
     }
 
     // select new weapon
-    if (m_iElectricity <= 0) {
+    if (CurrentAmmo() <= 0) {
       SelectNewWeapon();
     }
     
@@ -5919,7 +5809,7 @@ procedures:
     m_fWeaponDrawPower = 0.0f;
     CPlayer &pl = (CPlayer&)*m_penPlayer;
 
-    if (m_iIronBalls & 1) {
+    if (CurrentAmmo() & 1) {
       pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
       PlaySound(pl.m_soWeapon0, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
     } else {
@@ -5943,7 +5833,7 @@ procedures:
     m_tmDrawStartTime = 0.0f;
     CPlayer &pl = (CPlayer&)*m_penPlayer;
 
-    if (m_iIronBalls & 1) {
+    if (CurrentAmmo() & 1) {
       // turn off the sound
       pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
     } else {
@@ -5952,7 +5842,7 @@ procedures:
     }
     
     // fire one ball
-    if (m_iIronBalls > 0) {
+    if (CurrentAmmo() > 0) {
       // [Cecil] Multiply power
       INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeed());
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
@@ -5967,7 +5857,7 @@ procedures:
       }
 
       // adjust volume of cannon firing acording to launch power
-      if (m_iIronBalls & 1) {
+      if (CurrentAmmo() & 1) {
         pl.m_soWeapon2.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
         PlaySound(pl.m_soWeapon2, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       } else {
@@ -5980,7 +5870,7 @@ procedures:
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon");}
 
-      DecAmmo(m_iIronBalls, 1);
+      DecAmmo(CurrentAmmo(), 1);
       SpawnRangeSound(30.0f);
 
       TM_START = _pTimer->CurrentTick();
@@ -5999,7 +5889,7 @@ procedures:
       ResetWeaponMovingOffset();
 
       // no cannon balls -> change weapon
-      if (m_iIronBalls <= 0) {
+      if (CurrentAmmo() <= 0) {
         SelectNewWeapon();
       }
 
@@ -6018,7 +5908,7 @@ procedures:
     m_fWeaponDrawPower = 0.0f;
     CPlayer &pl = (CPlayer&)*m_penPlayer;
 
-    if (m_iIronBalls & 1) {
+    if (CurrentAmmo() & 1) {
       pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 0.67f);
       PlaySound(pl.m_soWeapon0, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
     } else {
@@ -6042,7 +5932,7 @@ procedures:
     m_tmDrawStartTime = 0.0f;
     CPlayer &pl = (CPlayer&)*m_penPlayer;
 
-    if (m_iIronBalls & 1) {
+    if (CurrentAmmo() & 1) {
       // turn off the sound
       pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
     } else {
@@ -6051,7 +5941,7 @@ procedures:
     }
     
     // fire one ball
-    if (m_iIronBalls > 0) {
+    if (CurrentAmmo() > 0) {
       // [Cecil] Multiply power
       INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeed());
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
@@ -6066,7 +5956,7 @@ procedures:
       }
 
       // adjust volume of cannon firing acording to launch power
-      if (m_iIronBalls & 1) {
+      if (CurrentAmmo() & 1) {
         pl.m_soWeapon2.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
         PlaySound(pl.m_soWeapon2, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       } else {
@@ -6079,7 +5969,7 @@ procedures:
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon");}
 
-      DecAmmo(m_iIronBalls, 1);
+      DecAmmo(CurrentAmmo(), 1);
       SpawnRangeSound(30.0f);
 
       TM_START = _pTimer->CurrentTick();
@@ -6098,7 +5988,7 @@ procedures:
       ResetWeaponMovingOffset();
 
       // no cannon balls -> change weapon
-      if (m_iIronBalls <= 0) {
+      if (CurrentAmmo() <= 0) {
         SelectNewWeapon();
       }
 

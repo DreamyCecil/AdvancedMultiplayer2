@@ -71,6 +71,12 @@
     <Filter Include="Source Files\DreamyJSON sources">
       <UniqueIdentifier>{3da357b5-a4e7-4003-aa04-60c904cb2cb9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Weapons">
+      <UniqueIdentifier>{7f29b799-7cbd-4d82-985d-0c9e99e6ae6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Weapons headers">
+      <UniqueIdentifier>{2fada064-952a-4ee0-92f2-81ce96096ae0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Common.cpp">
@@ -582,6 +588,12 @@
     </ClCompile>
     <ClCompile Include="Common\ConfigFunc.cpp">
       <Filter>Source Files\Common sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\PlayerArsenal.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\WeaponStruct.cpp">
+      <Filter>Source Files\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1589,6 +1601,12 @@
     </ClInclude>
     <ClInclude Include="Common\ConfigFunc.h">
       <Filter>Header Files\Common headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\PlayerArsenal.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\WeaponStruct.h">
+      <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -30,17 +30,16 @@ name      "Ammo Pack";
 thumbnail "Thumbnails\\AmmoPack.tbn";
 
 properties:
-  1 enum AmmoPackType  m_aptPackType    "Type" 'Y' = APT_CUSTOM,     // pack type
+  1 enum AmmoPackType  m_aptPackType "Type" 'Y' = APT_CUSTOM, // pack type
 
- 10 INDEX m_iShells                "Shells"         'S'   = MAX_SHELLS,
- 11 INDEX m_iBullets               "Bullets"        'B'   = MAX_BULLETS, 
- 12 INDEX m_iRockets               "Rockets"        'C'   = MAX_ROCKETS, 
- 13 INDEX m_iGrenades              "Grenades"       'G'   = MAX_GRENADES,
- 14 INDEX m_iNapalm                "Napalm"         'P'   = MAX_NAPALM,
- 15 INDEX m_iElectricity           "Electricity"    'E'   = MAX_ELECTRICITY,
- 16 INDEX m_iIronBalls             "Iron balls"     'I'   = MAX_IRONBALLS,
-// 17 INDEX m_iNukeBalls             "Nuke balls"    'U'   = MAX_NUKEBALLS,
- 17 INDEX m_iSniperBullets         "Sniper bullets" 'N'   = MAX_SNIPERBULLETS,
+ 10 INDEX m_iShells        "1. Shells"         'S' = MAX_SHELLS,
+ 11 INDEX m_iBullets       "2. Bullets"        'B' = MAX_BULLETS,
+ 12 INDEX m_iRockets       "3. Rockets"        'C' = MAX_ROCKETS,
+ 13 INDEX m_iGrenades      "4. Grenades"       'G' = MAX_GRENADES,
+ 14 INDEX m_iNapalm        "5. Napalm"         'P' = MAX_NAPALM,
+ 15 INDEX m_iElectricity   "7. Electricity"    'E' = MAX_ELECTRICITY,
+ 16 INDEX m_iIronBalls     "8. Iron balls"     'I' = MAX_IRONBALLS,
+ 17 INDEX m_iSniperBullets "6. Sniper bullets" 'N' = MAX_SNIPERBULLETS,
 
 components:
   0 class   CLASS_BASE        "Classes\\Item.ecl",
