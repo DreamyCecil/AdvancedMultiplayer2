@@ -799,7 +799,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fMaxAmmo = pAmmo->iAmount;
   }
 
-  if (pAltAmmo != NULL) {
+  if (_penWeapons->AltFireExists(iCurrentWeapon) && pAltAmmo != NULL) {
     ptoAltAmmo = pAltAmmo->ptoIcon;
     fAltAmmo = pwCurrent.CurrentAlt();
     fAltMaxAmmo = pAltAmmo->iAmount;

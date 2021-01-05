@@ -134,17 +134,20 @@ BOOL ParseAmmoConfig(SWeaponAmmo &wa, CTString strConfig) {
     return FALSE;
   }
 
+
   // ammo properties
   GetConfigString(cb, "Name", wa.strPickup);
   GetConfigString(cb, "Icon", wa.strIcon);
 
   // pickup values
   int iAmmo = 0;
+  CConfigValue valMana;
 
   cb.GetValue("Ammo", iAmmo);
-  cb.GetValue("Mana", wa.fMana);
+  cb.GetValue("Mana", valMana);
 
   wa.SetAmmo(iAmmo);
+  wa.fMana = valMana.GetNumber();
 
   // included configs
   if (GetConfigString(cb, "Include", strConfig)) {
@@ -162,14 +165,17 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
     return FALSE;
   }
 
+  CConfigValue val;
+
   // get weapon positions
   GetConfigVector(cb, "Pos1", ws.wpsPos.Pos1());
   GetConfigVector(cb, "Rot1", ws.wpsPos.Rot1());
   GetConfigVector(cb, "Pos3", ws.wpsPos.Pos3());
   GetConfigVector(cb, "Rot3", ws.wpsPos.Rot3());
-
   GetConfigVector(cb, "PosFire", ws.wpsPos.vFire);
-  cb.GetValue("FOV", ws.wpsPos.fFOV);
+
+  cb.GetValue("FOV", val);
+  ws.wpsPos.fFOV = val.GetNumber();
 
   // get ammo
   int iAmmo = -1;
@@ -190,7 +196,9 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
   // other
   GetConfigString(cb, "Name", ws.strPickup);
   GetConfigString(cb, "Icon", ws.strIcon);
-  cb.GetValue("Mana", ws.fMana);
+
+  cb.GetValue("Mana", val);
+  ws.fMana = val.GetNumber();
 
   // included configs
   if (GetConfigString(cb, "Include", strConfig)) {

@@ -791,6 +791,11 @@ functions:
 
   // [Cecil] Check the alt fire
   BOOL AltFireExists(const INDEX &iWeapon) {
+    // no alt fire
+    if (GetSP()->AltMode() == 0) {
+      return FALSE;
+    }
+
     switch (iWeapon) {
       // doesn't have alt fire
       case WEAPON_KNIFE: case WEAPON_CHAINSAW:
