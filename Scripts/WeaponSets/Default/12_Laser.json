@@ -1,0 +1,20 @@
+{
+  "Name" : "XL2 Lasergun",
+  "Icon" : "TexturesMP\\Interface\\WLaser.tex",
+  
+  "Ammo" : 6,
+  "AltAmmo": -1,
+  
+  "Pos1" : [0.141, -0.174, -0.175],
+  "Rot1" : [1.0, 3.0, 0.0],
+  
+  "Pos3" : [0.0, 0.0, 0.0],
+  "Rot3" : [0.0, 0.0, 0.0],
+  
+  "FOV" : 70.5,
+  "PosFire" : [-0.1, -0.4],
+  
+  "PickupAmmo" : 50,
+  "PickupAlt"  : 0,
+  "Mana" : 15.0,
+}

@@ -1,0 +1,20 @@
+{
+  "Name" : "'Bonecracker' P-LAH Chainsaw",
+  "Icon" : "TexturesMP\\Interface\\WChainsaw.tex",
+  
+  "Ammo" : -1,
+  "AltAmmo": -1,
+  
+  "Pos1" : [0.125, -0.29, -0.405],
+  "Rot1" : [5.0, 6.0, 0.0],
+  
+  "Pos3" : [0.0, 0.0, 0.0],
+  "Rot3" : [0.0, 0.0, 0.0],
+  
+  "FOV" : 73.5,
+  "PosFire" : [0.0, 0.0],
+  
+  "PickupAmmo" : 0,
+  "PickupAlt"  : 0,
+  "Mana" : 0.0,
+}

@@ -172,27 +172,8 @@ enum WeaponType {
 // mana for ammo adjustment (multiplier)
 #define MANA_AMMO (0.1f)
 
-// position of weapon model -- weapon 0 is never used
-static FLOAT wpn_fH[MAX_WEAPONS+1];
-static FLOAT wpn_fP[MAX_WEAPONS+1];
-static FLOAT wpn_fB[MAX_WEAPONS+1];
-static FLOAT wpn_fX[MAX_WEAPONS+1];
-static FLOAT wpn_fY[MAX_WEAPONS+1];
-static FLOAT wpn_fZ[MAX_WEAPONS+1];
-static FLOAT wpn_fFOV[MAX_WEAPONS+1];
-static FLOAT wpn_fClip[MAX_WEAPONS+1];
-static FLOAT wpn_fFX[MAX_WEAPONS+1];  // firing source
-static FLOAT wpn_fFY[MAX_WEAPONS+1];
-//static FLOAT wpn_fFZ[MAX_WEAPONS+1];
 static INDEX wpn_iCurrent;
 extern FLOAT hud_tmWeaponsOnScreen;
-extern FLOAT wpn_fRecoilSpeed[17];
-extern FLOAT wpn_fRecoilLimit[17];
-extern FLOAT wpn_fRecoilDampUp[17];
-extern FLOAT wpn_fRecoilDampDn[17];
-extern FLOAT wpn_fRecoilOffset[17];
-extern FLOAT wpn_fRecoilFactorP[17];
-extern FLOAT wpn_fRecoilFactorZ[17];
 
 // bullet positions
 static FLOAT afSingleShotgunPellets[] =
@@ -407,8 +388,6 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
 void CPlayerWeapons_Init(void) {
   // declare weapon position controls
   _pShell->DeclareSymbol("user INDEX wpn_iCurrent;", &wpn_iCurrent);
-
-  #include "Common/WeaponPositions.h"
   
   // declare crosshair and its coordinates
   _pShell->DeclareSymbol("persistent user INDEX hud_bCrosshairFixed;",    &hud_bCrosshairFixed);
@@ -963,12 +942,23 @@ functions:
       return;
     }
 
+    SPlayerWeapon &pw = m_aWeapons[m_iCurrentWeapon];
+
     if (bAlt) {
-      m_aWeapons[m_iCurrentWeapon].pAlt->iAmount -= iDec;
-    } else {
-      m_aWeapons[m_iCurrentWeapon].pAmmo->iAmount -= iDec;
+      if (pw.pAlt != NULL) {
+        pw.pAlt->iAmount -= iDec;
+      }
+
+    } else if (pw.pAmmo != NULL) {
+      pw.pAmmo->iAmount -= iDec;
     }
-  }
+  };
+
+  // [Cecil] Get fire position
+  FLOAT3D FirePos(INDEX iWeapon) {
+    SWeaponPos wps = m_aWeapons[iWeapon].GetPosition();
+    return wps.vFire;
+  };
   
   // add to prediction any entities that this entity depends on
   void AddDependentsToPrediction(void) {
@@ -1049,29 +1039,26 @@ functions:
     plView = ((CPlayer&)*m_penPlayer).en_plViewpoint;
     plView.RelativeToAbsolute(m_penPlayer->GetPlacement());
 
+    // [Cecil] Weapon position
+    SWeaponPos wps = m_aWeapons[iWeaponData].GetPosition();
+
     // [Cecil] Weapon position shift
-    FLOAT fXShift = wpn_fX[iWeaponData];
     if (iWeaponData == WEAPON_MINIGUN && AltFireExists(WEAPON_MINIGUN)) {
-      fXShift += 0.1f;
+      wps.Pos1(1) += 0.1f;
     }
 
     // added: chainsaw shaking
     CPlacement3D plWeapon;
-    if (m_iCurrentWeapon==WEAPON_CHAINSAW) {
-      CPlayer *plPlayer = (CPlayer*)&*m_penPlayer; 
-      plWeapon = CPlacement3D ( FLOAT3D(fXShift            +plPlayer->m_fChainsawShakeDX*0.35f,
-                                        wpn_fY[iWeaponData]+plPlayer->m_fChainsawShakeDY*0.35f,
-                                        wpn_fZ[iWeaponData]),
-                                ANGLE3D(AngleDeg(wpn_fH[iWeaponData]),
-                                        AngleDeg(wpn_fP[iWeaponData]),
-                                        AngleDeg(wpn_fB[iWeaponData])));
+    if (m_iCurrentWeapon == WEAPON_CHAINSAW) {
+      CPlayer *plPlayer = (CPlayer*)&*m_penPlayer;
+
+      FLOAT3D vPos = wps.Pos1();
+      vPos(1) += plPlayer->m_fChainsawShakeDX*0.35f;
+      vPos(2) += plPlayer->m_fChainsawShakeDY*0.35f;
+
+      plWeapon = CPlacement3D(vPos, wps.Rot1());
     } else {
-      plWeapon = CPlacement3D ( FLOAT3D(fXShift,
-                                        wpn_fY[iWeaponData],
-                                        wpn_fZ[iWeaponData]),
-                                ANGLE3D(AngleDeg(wpn_fH[iWeaponData]),
-                                        AngleDeg(wpn_fP[iWeaponData]),
-                                        AngleDeg(wpn_fB[iWeaponData])));
+      plWeapon = wps.plPos;
     }
 
     // make sure that weapon will be bright enough
@@ -1098,12 +1085,12 @@ functions:
     FLOAT tmInvisibility = ((CPlayer *)&*m_penPlayer)->m_tmInvisibility;
     FLOAT tmSeriousDamage = ((CPlayer *)&*m_penPlayer)->m_tmSeriousDamage;
     FLOAT tmInvulnerability = ((CPlayer *)&*m_penPlayer)->m_tmInvulnerability;
-    if (tmInvisibility>tmNow) {
-      FLOAT fIntensity=0.0f;      
-      if((tmInvisibility-tmNow)<3.0f)
-      {
+
+    if (tmInvisibility > tmNow) {
+      FLOAT fIntensity = 0.0f;
+      if (tmInvisibility - tmNow < 3.0f) {
         fIntensity = 0.5f-0.5f*cos((tmInvisibility-tmNow)*(6.0f*3.1415927f/3.0f));
-        ubBlend =(INDEX)(INVISIBILITY_ALPHA_LOCAL+(FLOAT)(254-INVISIBILITY_ALPHA_LOCAL)*fIntensity);      
+        ubBlend = (INDEX)(INVISIBILITY_ALPHA_LOCAL+(FLOAT)(254-INVISIBILITY_ALPHA_LOCAL)*fIntensity);      
       }      
     }
 
@@ -1117,22 +1104,20 @@ functions:
       // prepare render model structure and projection
       CRenderModel rmMain;
       CPerspectiveProjection3D prMirror = prProjection;
-      prMirror.ViewerPlacementL() =  plView;
-      prMirror.FrontClipDistanceL() = wpn_fClip[iWeaponData];
+      prMirror.ViewerPlacementL() = plView;
+      prMirror.FrontClipDistanceL() = 0.1f; // [Cecil] 0.1 for every weapon
       prMirror.DepthBufferNearL() = 0.0f;
       prMirror.DepthBufferFarL() = 0.1f;
-      CPlacement3D plWeaponMirror( FLOAT3D(fXShift, wpn_fY[iWeaponData], wpn_fZ[iWeaponData]),
-                                   ANGLE3D(AngleDeg(wpn_fH[iWeaponData]), AngleDeg(wpn_fP[iWeaponData]),
-                                           AngleDeg(wpn_fB[iWeaponData])));
+
+      CPlacement3D plWeaponMirror = wps.plPos;
+
       if (iWeaponData == WEAPON_DOUBLECOLT || bMinigun) {
-        FLOATmatrix3D mRotation;
-        MakeRotationMatrixFast(mRotation, plView.pl_OrientationAngle);
         plWeaponMirror.pl_PositionVector(1) = -plWeaponMirror.pl_PositionVector(1);
         plWeaponMirror.pl_OrientationAngle(1) = -plWeaponMirror.pl_OrientationAngle(1);
         plWeaponMirror.pl_OrientationAngle(3) = -plWeaponMirror.pl_OrientationAngle(3);
       }
 
-      ((CPerspectiveProjection3D &)prMirror).FOVL() = AngleDeg(wpn_fFOV[iWeaponData]);
+      ((CPerspectiveProjection3D &)prMirror).FOVL() = AngleDeg(wps.fFOV);
       CAnyProjection3D apr;
       apr = prMirror;
       Stereo_AdjustProjection(*apr, iEye, 0.1f);
@@ -1184,11 +1169,11 @@ functions:
 
     // prepare render model structure
     CRenderModel rmMain;
-    prProjection.ViewerPlacementL() =  plView;
-    prProjection.FrontClipDistanceL() = wpn_fClip[iWeaponData];
+    prProjection.ViewerPlacementL() = plView;
+    prProjection.FrontClipDistanceL() = 0.1f; // [Cecil] 0.1 for every weapon
     prProjection.DepthBufferNearL() = 0.0f;
     prProjection.DepthBufferFarL() = 0.1f;
-    ((CPerspectiveProjection3D &)prProjection).FOVL() = AngleDeg(wpn_fFOV[iWeaponData]);
+    ((CPerspectiveProjection3D &)prProjection).FOVL() = AngleDeg(wps.fFOV);
 
     CAnyProjection3D apr;
     apr = prProjection;
@@ -1358,11 +1343,15 @@ functions:
   {
     // crosshair start position from weapon
     CPlacement3D plCrosshair;
-    FLOAT fFX = wpn_fFX[m_iCurrentWeapon];  // get weapon firing position
-    FLOAT fFY = wpn_fFY[m_iCurrentWeapon];
+
+    // [Cecil] Get weapon fire position
+    FLOAT fFX = FirePos(m_iCurrentWeapon)(1);
+    FLOAT fFY = FirePos(m_iCurrentWeapon)(2);
+
     if (GetPlayer()->m_iViewState == PVT_3RDPERSONVIEW) {
       fFX = fFY = 0;
     }
+
     CalcWeaponPosition(FLOAT3D(fFX, fFY, 0), plCrosshair, FALSE);
     // cast ray
     CCastRay crRay( m_penPlayer, plCrosshair);
@@ -1902,24 +1891,24 @@ functions:
 
   // calc weapon position for 3rd person view
   void CalcWeaponPosition3rdPersonView(FLOAT3D vPos, CPlacement3D &plPos, BOOL bResetZ) {
+    // [Cecil] Weapon position
+    SWeaponPos wps = m_aWeapons[m_iCurrentWeapon].GetPosition();
+
     plPos.pl_OrientationAngle = ANGLE3D(0, 0, 0);
     // weapon handle
     if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = FLOAT3D( wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                         wpn_fZ[m_iCurrentWeapon]);
+      plPos.pl_PositionVector = wps.Pos1();
     } else {
-      plPos.pl_PositionVector = FLOAT3D( -wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                          wpn_fZ[m_iCurrentWeapon]);
+      wps.Pos1(1) *= -1;
+      plPos.pl_PositionVector = wps.Pos1();
     }
+
     // weapon offset
-    if (!m_bMirrorFire) {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    } else {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    }
-    plPos.pl_PositionVector(1) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(2) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(3) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+
+    plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(3) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
 
     if (bResetZ) {
       plPos.pl_PositionVector(3) = 0.0f;
@@ -1934,27 +1923,29 @@ functions:
 
   // calc weapon position
   void CalcWeaponPosition(FLOAT3D vPos, CPlacement3D &plPos, BOOL bResetZ) {
+    // [Cecil] Weapon position
+    SWeaponPos wps = m_aWeapons[m_iCurrentWeapon].GetPosition();
+
     plPos.pl_OrientationAngle = ANGLE3D(0, 0, 0);
     // weapon handle
     if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = FLOAT3D( wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                         wpn_fZ[m_iCurrentWeapon]);
+      plPos.pl_PositionVector = wps.Pos1();
+
       if (m_bSniping) {
-        plPos.pl_PositionVector = FLOAT3D( 0.0f, 0.0f, 0.0f );
+        plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
       }
+
     } else {
-      plPos.pl_PositionVector = FLOAT3D( -wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                          wpn_fZ[m_iCurrentWeapon]);
+      wps.Pos1(1) *= -1;
+      plPos.pl_PositionVector = wps.Pos1();
     }
+
     // weapon offset
-    if (!m_bMirrorFire) {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    } else {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    }
-    plPos.pl_PositionVector(1) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(2) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(3) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+
+    plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(3) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
 
     if (bResetZ) {
       plPos.pl_PositionVector(3) = 0.0f;
@@ -1970,27 +1961,29 @@ functions:
 
   // [Cecil] Calculate position with added angle
   void CalcWeaponPositionAngle(FLOAT3D vPos, ANGLE3D aAngle, CPlacement3D &plPos, BOOL bResetZ) {
+    // [Cecil] Weapon position
+    SWeaponPos wps = m_aWeapons[m_iCurrentWeapon].GetPosition();
+
     plPos.pl_OrientationAngle = ANGLE3D(0, 0, 0);
     // weapon handle
     if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = FLOAT3D( wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                         wpn_fZ[m_iCurrentWeapon]);
+      plPos.pl_PositionVector = wps.Pos1();
+
       if (m_bSniping) {
-        plPos.pl_PositionVector = FLOAT3D( 0.0f, 0.0f, 0.0f );
+        plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
       }
+
     } else {
-      plPos.pl_PositionVector = FLOAT3D( -wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                          wpn_fZ[m_iCurrentWeapon]);
+      wps.Pos1(1) *= -1;
+      plPos.pl_PositionVector = wps.Pos1();
     }
+
     // weapon offset
-    if (!m_bMirrorFire) {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, aAngle));
-    } else {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, aAngle));
-    }
-    plPos.pl_PositionVector(1) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(2) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(3) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, aAngle));
+
+    plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(3) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
 
     if (bResetZ) {
       plPos.pl_PositionVector(3) = 0.0f;
@@ -2005,29 +1998,30 @@ functions:
   };
 
   // calc lerped weapon position
-  void CalcLerpedWeaponPosition(FLOAT3D vPos, CPlacement3D &plPos, BOOL bResetZ)
-  {
+  void CalcLerpedWeaponPosition(FLOAT3D vPos, CPlacement3D &plPos, BOOL bResetZ) {
+    // [Cecil] Weapon position
+    SWeaponPos wps = m_aWeapons[m_iCurrentWeapon].GetPosition();
+
     plPos.pl_OrientationAngle = ANGLE3D(0, 0, 0);
     // weapon handle
     if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = FLOAT3D( wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                         wpn_fZ[m_iCurrentWeapon]);
+      plPos.pl_PositionVector = wps.Pos1();
+
       if (m_bSniping) {
-        plPos.pl_PositionVector = FLOAT3D( 0.0f, 0.0f, 0.0f );
+        plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
       }
+
     } else {
-      plPos.pl_PositionVector = FLOAT3D( -wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                          wpn_fZ[m_iCurrentWeapon]);
+      wps.Pos1(1) *= -1;
+      plPos.pl_PositionVector = wps.Pos1();
     }
+
     // weapon offset
-    if (!m_bMirrorFire) {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    } else {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    }
-    plPos.pl_PositionVector(1) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(2) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(3) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+
+    plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(3) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
 
     if (bResetZ) {
       plPos.pl_PositionVector(3) = 0.0f;
@@ -2040,28 +2034,31 @@ functions:
   };
 
   // calc weapon position
-  void CalcWeaponPositionImprecise (FLOAT3D vPos, CPlacement3D &plPos, BOOL bResetZ, FLOAT fImprecissionAngle) {
+  void CalcWeaponPositionImprecise(FLOAT3D vPos, CPlacement3D &plPos, BOOL bResetZ, FLOAT fImprecissionAngle) {
+    // [Cecil] Weapon position
+    SWeaponPos wps = m_aWeapons[m_iCurrentWeapon].GetPosition();
+
     plPos.pl_OrientationAngle = ANGLE3D((FRnd()-0.5f)*fImprecissionAngle, (FRnd()-0.5f)*fImprecissionAngle, 0);
+
     // weapon handle
     if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = FLOAT3D( wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                         wpn_fZ[m_iCurrentWeapon]);
+      plPos.pl_PositionVector = wps.Pos1();
+
       if (m_bSniping) {
-        plPos.pl_PositionVector = FLOAT3D( 0.0f, 0.0f, 0.0f );
+        plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
       }
+
     } else {
-      plPos.pl_PositionVector = FLOAT3D( -wpn_fX[m_iCurrentWeapon], wpn_fY[m_iCurrentWeapon],
-                                          wpn_fZ[m_iCurrentWeapon]);
+      wps.Pos1(1) *= -1;
+      plPos.pl_PositionVector = wps.Pos1();
     }
+
     // weapon offset
-    if (!m_bMirrorFire) {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    } else {
-      plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
-    }
-    plPos.pl_PositionVector(1) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(2) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
-    plPos.pl_PositionVector(3) *= SinFast(wpn_fFOV[m_iCurrentWeapon]/2) / SinFast(90.0f/2);
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+
+    plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
+    plPos.pl_PositionVector(3) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
 
     if (bResetZ) {
       plPos.pl_PositionVector(3) = 0.0f;
@@ -2358,10 +2355,11 @@ functions:
     eInit.fDamage = fDamage;
     penBullet->Initialize(eInit);
   };
-
+  
+  // [Cecil] X & Y -> Vector
   // fire one bullet
-  void FireSniperBullet(FLOAT fX, FLOAT fY, FLOAT fRange, FLOAT fDamage, FLOAT fImprecission) {
-    PrepareSniperBullet(fX, fY, fDamage, fImprecission);
+  void FireSniperBullet(FLOAT3D vPos, FLOAT fRange, FLOAT fDamage, FLOAT fImprecission) {
+    PrepareSniperBullet(vPos(1), vPos(2), fDamage, fImprecission);
     ((CBullet&)*penBullet).CalcTarget(fRange);
     ((CBullet&)*penBullet).m_fBulletSize = 0.1f;
     // launch bullet
@@ -2373,25 +2371,15 @@ functions:
       m_vBulletTarget = m_vBulletSource + FLOAT3D(0.0f, 0.0f, -500.0f)*((CBullet&)*penBullet).GetRotationMatrix();
       
     }
-
-    // spawn bullet effect
-    /*ESpawnEffect ese;
-    ese.colMuliplier = C_WHITE|CT_OPAQUE;
-    ese.betType = BET_SNIPER_RESIDUE;
-    ese.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
-    ese.vNormal = m_vBulletSource;
-    ese.vDirection = ((CBullet&)*penBullet).m_vHitPoint;
-    CPlacement3D pl = CPlacement3D(GetPlacement().pl_PositionVector, ANGLE3D(0.0f, 0.0f, 0.0f));
-    CEntityPointer penFX = CreateEntity(pl, CLASS_BASIC_EFFECT);
-    penFX->Initialize(ese);*/
     
     // bullet no longer needed
     ((CBullet&)*penBullet).DestroyBullet();
   };
 
+  // [Cecil] X & Y -> Vector
   // fire one bullet
-  void FireOneBullet(FLOAT fX, FLOAT fY, FLOAT fRange, FLOAT fDamage) {
-    PrepareBullet(fX, fY, fDamage);
+  void FireOneBullet(FLOAT3D vPos, FLOAT fRange, FLOAT fDamage) {
+    PrepareBullet(vPos(1), vPos(2), fDamage);
     ((CBullet&)*penBullet).CalcTarget(fRange);
     ((CBullet&)*penBullet).m_fBulletSize = 0.1f;
     // launch bullet
@@ -2399,37 +2387,38 @@ functions:
     ((CBullet&)*penBullet).DestroyBullet();
   };
 
-  // [Cecil] Added bullet punch
+  // [Cecil] X & Y -> Vector; added bullet punch
   // fire bullets (x offset is used for double shotgun)
-  void FireBullets(FLOAT fX, FLOAT fY, FLOAT fRange, FLOAT fDamage, INDEX iBullets,
+  void FireBullets(FLOAT3D vPos, FLOAT fRange, FLOAT fDamage, INDEX iBullets,
     FLOAT *afPositions, FLOAT fStretch, FLOAT fJitter, FLOAT fPunch)
   {
-    PrepareBullet(fX, fY, fDamage);
+    PrepareBullet(vPos(1), vPos(2), fDamage);
     ((CBullet&)*penBullet).CalcTarget(fRange);
-    ((CBullet&)*penBullet).m_fBulletSize = GetSP()->sp_bCooperative ? 0.1f : 0.3f;
+    ((CBullet&)*penBullet).m_fBulletSize = (GetSP()->sp_bCooperative ? 0.1f : 0.3f);
 
     // [Cecil] Bullet punch
     ((CBullet&)*penBullet).m_fPunch = fPunch;
 
     // launch slugs
     INDEX iSlug;
-    for (iSlug=0; iSlug<iBullets; iSlug++) {
+    for (iSlug = 0; iSlug < iBullets; iSlug++) {
       // launch bullet
       ((CBullet&)*penBullet).CalcJitterTargetFixed(
         afPositions[iSlug*2+0]*fRange*fStretch, afPositions[iSlug*2+1]*fRange*fStretch,
         fJitter*fRange*fStretch);
-      ((CBullet&)*penBullet).LaunchBullet(iSlug<2, FALSE, TRUE);
+      ((CBullet&)*penBullet).LaunchBullet(iSlug < 2, FALSE, TRUE);
     }
 
     ((CBullet&)*penBullet).DestroyBullet();
   };
-
+  
+  // [Cecil] X & Y -> Vector
   // fire one bullet for machine guns (tommygun and minigun)
-  void FireMachineBullet(FLOAT fX, FLOAT fY, FLOAT fRange, FLOAT fDamage, 
+  void FireMachineBullet(FLOAT3D vPos, FLOAT fRange, FLOAT fDamage, 
     FLOAT fJitter, FLOAT fBulletSize)
   {
-    fJitter*=fRange;  // jitter relative to range
-    PrepareBullet(fX, fY, fDamage);
+    fJitter *= fRange; // jitter relative to range
+    PrepareBullet(vPos(1), vPos(2), fDamage);
     ((CBullet&)*penBullet).CalcTarget(fRange);
     ((CBullet&)*penBullet).m_fBulletSize = fBulletSize;
     ((CBullet&)*penBullet).CalcJitterTarget(fJitter);
@@ -2442,9 +2431,8 @@ functions:
   void FireGrenade(INDEX iPower, BOOL bPoison) {
     // grenade start position
     CPlacement3D plGrenade;
-    CalcWeaponPosition(
-      FLOAT3D(wpn_fFX[WEAPON_GRENADELAUNCHER],wpn_fFY[WEAPON_GRENADELAUNCHER], 0), 
-      plGrenade, TRUE);
+    CalcWeaponPosition(FirePos(WEAPON_GRENADELAUNCHER), plGrenade, TRUE);
+
     // create grenade
     CEntityPointer penGrenade = CreateEntity(plGrenade, CLASS_PROJECTILE);
     // init and launch grenade
@@ -2475,7 +2463,7 @@ functions:
     // [Cecil] Apply the spread angle
     // rocket start position
     CPlacement3D plRocket;
-    CalcWeaponPositionAngle(FLOAT3D(wpn_fFX[WEAPON_ROCKETLAUNCHER], wpn_fFY[WEAPON_ROCKETLAUNCHER], 0.0f) + vShift, aSpread, plRocket, TRUE);
+    CalcWeaponPositionAngle(FirePos(WEAPON_ROCKETLAUNCHER) + vShift, aSpread, plRocket, TRUE);
 
     // create rocket
     CEntityPointer penRocket= CreateEntity(plRocket, CLASS_PROJECTILE);
@@ -2488,10 +2476,10 @@ functions:
 
   // flamer source
   void GetFlamerSourcePlacement(CPlacement3D &plSource, CPlacement3D &plInFrontOfPipe) {
-    CalcLerpedWeaponPosition(
-      FLOAT3D(wpn_fFX[WEAPON_FLAMER],wpn_fFY[WEAPON_FLAMER], -0.15f), 
-      plSource, FALSE);
-    plInFrontOfPipe=plSource;
+    CalcLerpedWeaponPosition(FirePos(WEAPON_FLAMER) + FLOAT3D(0.0f, 0.0f, -0.15f), plSource, FALSE);
+
+    plInFrontOfPipe = plSource;
+
     FLOAT3D vFront;
     AnglesToDirectionVector( plSource.pl_OrientationAngle, vFront);
     plInFrontOfPipe.pl_PositionVector=plSource.pl_PositionVector+vFront*1.0f;
@@ -2502,7 +2490,7 @@ functions:
     // flame start position
     CPlacement3D plFlame;
 
-    CalcWeaponPosition(FLOAT3D(wpn_fFX[WEAPON_FLAMER],wpn_fFY[WEAPON_FLAMER], -0.15f), plFlame, TRUE);
+    CalcWeaponPosition(FirePos(WEAPON_FLAMER) + FLOAT3D(0.0f, 0.0f, -0.15f), plFlame, TRUE);
 
     // create flame
     CEntityPointer penFlame = CreateEntity(plFlame, CLASS_PROJECTILE);
@@ -2540,8 +2528,8 @@ functions:
   void FireLaserRay(void) {
     // laser start position
     CPlacement3D plLaserRay;
-    FLOAT fFX = wpn_fFX[WEAPON_LASER];  // get laser center position
-    FLOAT fFY = wpn_fFY[WEAPON_LASER];
+    FLOAT fFX = FirePos(WEAPON_LASER)(1);  // get laser center position
+    FLOAT fFY = FirePos(WEAPON_LASER)(2);
     FLOAT fLUX = 0.0f;
     FLOAT fRUX = 0.8f;
     FLOAT fLUY = 0.0f;
@@ -2550,28 +2538,33 @@ functions:
     FLOAT fRDX = 0.9f;
     FLOAT fLDY = -0.3f;
     FLOAT fRDY = -0.3f;
-    if (((CPlayer *)&*m_penPlayer)->m_pstState==PST_CROUCH) {
+
+    if (GetPlayer()->m_pstState == PST_CROUCH) {
       fLDY = -0.1f;
       fRDY = -0.1f;
     }
 
-    switch(m_iLaserBarrel) {
-      case 0:   // barrel lu (*o-oo)
+    switch (m_iLaserBarrel) {
+      case 0: // barrel lu (*o-oo)
         CalcWeaponPosition(FLOAT3D(fFX+fLUX, fFY+fLUY, 0), plLaserRay, TRUE);
         break;
-      case 1:   // barrel ld (oo-*o)
+
+      case 1: // barrel ld (oo-*o)
         CalcWeaponPosition(FLOAT3D(fFX+fLDX, fFY+fLDY, 0), plLaserRay, TRUE);
         break;
-      case 2:   // barrel ru (o*-oo)
+
+      case 2: // barrel ru (o*-oo)
         CalcWeaponPosition(FLOAT3D(fFX+fRUX, fFY+fRUY, 0), plLaserRay, TRUE);
         break;
-      case 3:   // barrel rd (oo-o*)
+
+      case 3: // barrel rd (oo-o*)
         CalcWeaponPosition(FLOAT3D(fFX+fRDX, fFY+fRDY, 0), plLaserRay, TRUE);
         break;
     }
 
     // create laser projectile
     CEntityPointer penLaser = CreateEntity(plLaserRay, CLASS_PROJECTILE);
+
     // init and launch laser projectile
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = m_penPlayer;
@@ -2581,12 +2574,12 @@ functions:
 
   // [Cecil] Use Laser position
   void GetGhostBusterSourcePlacement(CPlacement3D &plSource) {
-    CalcWeaponPosition(FLOAT3D(wpn_fFX[WEAPON_LASER] + 0.2f, wpn_fFY[WEAPON_LASER] + 0.1f, 0.0f), plSource, TRUE);
+    CalcWeaponPosition(FirePos(WEAPON_LASER) + FLOAT3D(0.2f, 0.1f, 0.0f), plSource, TRUE);
   };
 
   // [Cecil] Tesla gun position
   void GetTeslaPlacement(CPlacement3D &plSource) {
-    CalcWeaponPosition(FLOAT3D(wpn_fFX[WEAPON_FLAMER] + 0.2f, wpn_fFY[WEAPON_FLAMER] - 0.2f, -1.5f), plSource, FALSE);
+    CalcWeaponPosition(FirePos(WEAPON_FLAMER) + FLOAT3D(0.2f, -0.2f, -1.5f), plSource, FALSE);
   };
 
   // [Cecil] Ray power
@@ -2603,9 +2596,8 @@ functions:
   void FireCannonBall(INDEX iPower, BOOL bNuke) {
     // cannon ball start position
     CPlacement3D plBall;
-    CalcWeaponPosition(
-      FLOAT3D(wpn_fFX[WEAPON_IRONCANNON],wpn_fFY[WEAPON_IRONCANNON], 0), 
-      plBall, TRUE);
+    CalcWeaponPosition(FirePos(WEAPON_IRONCANNON), plBall, TRUE);
+
     // create cannon ball
     CEntityPointer penBall = CreateEntity(plBall, CLASS_CANNONBALL);
     // init and launch cannon ball
@@ -4142,9 +4134,7 @@ procedures:
     GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0);
 
     // fire bullet
-    FireOneBullet(wpn_fFX[WEAPON_COLT], wpn_fFY[WEAPON_COLT], 500.0f,
-      ((GetSP()->sp_bCooperative) ? 10.0f : 20.0f));
-
+    FireOneBullet(FirePos(WEAPON_COLT), 500.0f, (GetSP()->sp_bCooperative ? 10.0f : 20.0f));
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
     DoRecoil();
@@ -4197,7 +4187,8 @@ procedures:
   FireDoubleColt() {
     // fire first colt - one bullet less in colt
     GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0);
-    FireOneBullet(wpn_fFX[WEAPON_DOUBLECOLT], wpn_fFY[WEAPON_DOUBLECOLT], 500.0f, 10.0f);
+    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, 10.0f);
+
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
 
     DoRecoil();
@@ -4222,7 +4213,8 @@ procedures:
     // fire second colt
     GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRELEFT, 0);
     m_bMirrorFire = TRUE;
-    FireOneBullet(wpn_fFX[WEAPON_DOUBLECOLT], wpn_fFY[WEAPON_DOUBLECOLT], 500.0f, 10.0f);
+    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, 10.0f);
+
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
 
     DoRecoil();
@@ -4278,7 +4270,8 @@ procedures:
     // fire one shell
     if (CurrentAmmo() > 0) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
-      FireBullets(wpn_fFX[WEAPON_SINGLESHOTGUN], wpn_fFY[WEAPON_SINGLESHOTGUN], 500.0f, 10.0f, 7, afSingleShotgunPellets, 0.2f, 0.03f, 0.0f);
+      FireBullets(FirePos(WEAPON_SINGLESHOTGUN), 500.0f, 10.0f, 7, afSingleShotgunPellets, 0.2f, 0.03f, 0.0f);
+
       DoRecoil();
       SpawnRangeSound(60.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Snglshotgun_fire");}
@@ -4431,7 +4424,8 @@ procedures:
     // fire two shell
     if (CurrentAmmo() > 1) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
-      FireBullets(wpn_fFX[WEAPON_DOUBLESHOTGUN], wpn_fFY[WEAPON_DOUBLESHOTGUN], 500.0f, 10.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 0.0f);
+      FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, 10.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 0.0f);
+
       DoRecoil();
       SpawnRangeSound(70.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
@@ -4521,7 +4515,8 @@ procedures:
     // fire two shell
     if (CurrentAmmo() > 1) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
-      FireBullets(wpn_fFX[WEAPON_DOUBLESHOTGUN], wpn_fFY[WEAPON_DOUBLESHOTGUN], 500.0f, 3.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 70.0f);
+      FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, 3.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 70.0f);
+
       DoRecoil();
       SpawnRangeSound(70.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
@@ -4653,9 +4648,8 @@ procedures:
     // fire one bullet
     if (CurrentAmmo() > 0) {
       // [Cecil] Multiply damage
-      FireMachineBullet(wpn_fFX[WEAPON_TOMMYGUN], wpn_fFY[WEAPON_TOMMYGUN],
-        500.0f, 10.0f * FireSpeed(), ((GetSP()->sp_bCooperative) ? 0.01f : 0.03f),
-        ((GetSP()->sp_bCooperative) ? 0.5f : 0.0f));
+      FireMachineBullet(FirePos(WEAPON_TOMMYGUN), 500.0f, 10.0f * FireSpeed(), (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
+
       SpawnRangeSound(50.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
 
@@ -4730,7 +4724,7 @@ procedures:
       DecAmmo(FALSE, m_iAmmoLeft);
 
       while (--m_iAmmoLeft >= 0) {
-        FireMachineBullet(wpn_fFX[WEAPON_TOMMYGUN], wpn_fFY[WEAPON_TOMMYGUN], 500.0f, 10.0f, 0.15f, 0.1f);
+        FireMachineBullet(FirePos(WEAPON_TOMMYGUN), 500.0f, 10.0f, 0.15f, 0.1f);
 
         // firing FX
         CPlacement3D plShell;
@@ -4812,9 +4806,9 @@ procedures:
     if (CurrentAmmo() > 0) {
       // fire one bullet
       if (m_bSniping) {
-        FireSniperBullet(0.0f, 0.0f, 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f), 0.0f);
+        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f), 0.0f);
       } else {
-        FireSniperBullet(wpn_fFX[WEAPON_SNIPER], wpn_fFY[WEAPON_SNIPER], 1000.0f, (GetSP()->sp_bCooperative ? 75.0f : 30.0f), 5.0f);
+        FireSniperBullet(FirePos(WEAPON_SNIPER), 1000.0f, (GetSP()->sp_bCooperative ? 75.0f : 30.0f), 5.0f);
       }
       m_tmLastSniperFire = _pTimer->CurrentTick();
 
@@ -4899,9 +4893,9 @@ procedures:
     if (CurrentAmmo() > 0) {
       // fire one bullet
       if (m_bSniping) {
-        FireSniperBullet(0.0f, 0.0f, 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f) * 1.5f, 0.0f);
+        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f) * 1.5f, 0.0f);
       } else {
-        FireSniperBullet(0.0f, 0.0f, 1000.0f, (GetSP()->sp_bCooperative ? 150.0f : 60.0f) * 1.5f, 0.0f);
+        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1000.0f, (GetSP()->sp_bCooperative ? 150.0f : 60.0f) * 1.5f, 0.0f);
       }
       m_tmLastSniperFire = _pTimer->CurrentTick();
 
@@ -5062,8 +5056,8 @@ procedures:
       if (CurrentAmmo() > 0) {
         // [Cecil] Multiply damage
         // fire a bullet
-        FireMachineBullet(wpn_fFX[WEAPON_MINIGUN], wpn_fFY[WEAPON_MINIGUN], 750.0f, (AltFireExists(WEAPON_MINIGUN) ? 20.0f : 10.0f) * FireSpeed(),
-                          (GetSP()->sp_bCooperative) ? 0.01f : 0.03f, (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
+        FireMachineBullet(FirePos(WEAPON_MINIGUN), 750.0f, (AltFireExists(WEAPON_MINIGUN) ? 20.0f : 10.0f) * FireSpeed(),
+                          (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
         DoRecoil();
         SpawnRangeSound(60.0f);
         DecAmmo(FALSE, 1);
@@ -5078,11 +5072,11 @@ procedures:
         CPlayer &pl = (CPlayer&)*m_penPlayer;
         if (pl.m_penCamera == NULL && pl.m_pen3rdPersonView == NULL) {
           CalcWeaponPosition(FLOAT3D(afMinigunShellPos[0], afMinigunShellPos[1], afMinigunShellPos[2]), plShell, FALSE);
-          CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - wpn_fX[WEAPON_MINIGUN]*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
+          CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - FirePos(WEAPON_MINIGUN)(1)*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
         // if 3rd person view
         } else {
           CalcWeaponPosition3rdPersonView(FLOAT3D(afMinigunShellPos3rdView[0], afMinigunShellPos3rdView[1], afMinigunShellPos3rdView[2]), plShell, FALSE);
-          CalcWeaponPosition3rdPersonView(FLOAT3D(-afMinigunShellPos3rdView[0] - wpn_fX[WEAPON_MINIGUN]*2.0f, afMinigunShellPos3rdView[1], afMinigunShellPos3rdView[2]), plShell2, FALSE);
+          CalcWeaponPosition3rdPersonView(FLOAT3D(-afMinigunShellPos3rdView[0] - FirePos(WEAPON_MINIGUN)(1)*2.0f, afMinigunShellPos3rdView[1], afMinigunShellPos3rdView[2]), plShell2, FALSE);
         }
 
         FLOATmatrix3D mRot;
@@ -5139,7 +5133,7 @@ procedures:
           // bubble
           if (pl.m_pstState == PST_DIVE) {
             ShellLaunchData &sldBubble = pl.m_asldData[pl.m_iFirstEmptySLD];
-            CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - wpn_fX[WEAPON_MINIGUN]*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
+            CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - FirePos(WEAPON_MINIGUN)(1)*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
 
             MakeRotationMatrixFast(mRot2, plShell2.pl_OrientationAngle);
             sldBubble.sld_vPos = plShell2.pl_PositionVector;

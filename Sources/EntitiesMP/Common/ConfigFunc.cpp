@@ -63,6 +63,22 @@ BOOL GetConfigPath(CConfigBlock &cb, DJSON_String strKey, CTFileName &fnValue) {
   return FALSE;
 };
 
+// [Cecil] Get 3D vector value
+BOOL GetConfigVector(CConfigBlock &cb, DJSON_String strKey, FLOAT3D &vValue) {
+  DJSON_Array aVector;
+  vValue = FLOAT3D(0.0f, 0.0f, 0.0f);
+
+  if (cb.GetValue(strKey, aVector)) {
+    // copy values
+    for (INDEX i = 0; i < Min(aVector.Count(), 3); i++) {
+      vValue(i+1) = aVector[i].GetNumber();
+    }
+
+    return TRUE;
+  }
+  return FALSE;
+};
+
 // [Cecil] Load model from a path
 BOOL SetConfigModel(CConfigBlock &cb, DJSON_String strKey, CModelObject &mo) {
   CTFileName fnPath;

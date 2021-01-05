@@ -1,0 +1,20 @@
+{
+  "Name" : "XM214-A Minigun",
+  "Icon" : "TexturesMP\\Interface\\WMinigun.tex",
+  
+  "Ammo" : 1,
+  "AltAmmo": -1,
+  
+  "Pos1" : [0.137, -0.24, -0.328],
+  "Rot1" : [2.0, 0.0, 0.0],
+  
+  "Pos3" : [0.0, 0.0, 0.0],
+  "Rot3" : [0.0, 0.0, 0.0],
+  
+  "FOV" : 66.9,
+  "PosFire" : [0.0, 0.0],
+  
+  "PickupAmmo" : 100,
+  "PickupAlt"  : 0,
+  "Mana" : 10.0,
+}

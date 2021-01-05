@@ -17,6 +17,9 @@ DECL_DLL BOOL GetConfigString(CConfigBlock &cb, DJSON_String strKey, CTString &s
 // [Cecil] Get CTFileName value
 DECL_DLL BOOL GetConfigPath(CConfigBlock &cb, DJSON_String strKey, CTFileName &fnValue);
 
+// [Cecil] Get 3D vector value
+DECL_DLL BOOL GetConfigVector(CConfigBlock &cb, DJSON_String strKey, FLOAT3D &vValue);
+
 // [Cecil] Load model from a path
 DECL_DLL BOOL SetConfigModel(CConfigBlock &cb, DJSON_String strKey, CModelObject &mo);
 // [Cecil] Load texture from a path

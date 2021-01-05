@@ -57,20 +57,11 @@ enum AnimatorAction {
 #define FLARE_REMOVE 1
 #define FLARE_ADD 2
 
-
 extern FLOAT plr_fBreathingStrength;
 extern FLOAT plr_fViewDampFactor;
 extern FLOAT plr_fViewDampLimitGroundUp;
 extern FLOAT plr_fViewDampLimitGroundDn;
 extern FLOAT plr_fViewDampLimitWater;
-extern FLOAT wpn_fRecoilSpeed[17];
-extern FLOAT wpn_fRecoilLimit[17];
-extern FLOAT wpn_fRecoilDampUp[17];
-extern FLOAT wpn_fRecoilDampDn[17];
-extern FLOAT wpn_fRecoilOffset[17];
-extern FLOAT wpn_fRecoilFactorP[17];
-extern FLOAT wpn_fRecoilFactorZ[17];
-
 
 void CPlayerAnimator_Precache(ULONG ulAvailable)
 {
@@ -932,35 +923,6 @@ functions:
     }
   };
 
-  /*
-  // animate view pitch (for recoil)
-  void AnimateRecoilPitch(void)
-  {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    INDEX iWeapon = ((CPlayerWeapons&)*pl.m_penWeapons).m_iCurrentWeapon;
-
-    wpn_fRecoilDampUp[iWeapon] = Clamp(wpn_fRecoilDampUp[iWeapon],0.0f,1.0f);
-    wpn_fRecoilDampDn[iWeapon] = Clamp(wpn_fRecoilDampDn[iWeapon],0.0f,1.0f);
-
-    FLOAT fDamp;
-    if (m_fRecoilSpeed>0) {
-      fDamp = wpn_fRecoilDampUp[iWeapon];
-    } else {
-      fDamp = wpn_fRecoilDampDn[iWeapon];
-    }
-    m_fRecoilSpeed = (m_fRecoilSpeed - m_fRecoilOffset*fDamp)* (1.0f-fDamp);
-
-    m_fRecoilOffset += m_fRecoilSpeed;
-
-    if (m_fRecoilOffset<0.0f) {
-      m_fRecoilOffset = 0.0f;
-    }
-    if (m_fRecoilOffset>wpn_fRecoilLimit[iWeapon]) {
-      m_fRecoilOffset = wpn_fRecoilLimit[iWeapon];
-      m_fRecoilSpeed = 0.0f;
-    }
-  };
-  */
   // change view
   void ChangeView(CPlacement3D &pl) {
     TIME tmNow = _pTimer->GetLerpedCurrentTick();
@@ -974,20 +936,6 @@ functions:
       pl.pl_OrientationAngle(3) += fBanking;
     }
 
-/*
-    // recoil pitch
-    INDEX iWeapon = ((CPlayerWeapons&)*((CPlayer&)*m_penPlayer).m_penWeapons).m_iCurrentWeapon;
-    FLOAT fRecoil = Lerp(m_fRecoilLastOffset, m_fRecoilOffset, _pTimer->GetLerpFactor());
-    FLOAT fRecoilP = wpn_fRecoilFactorP[iWeapon]*fRecoil;
-    pl.pl_OrientationAngle(2) += fRecoilP;
-    // adjust recoil pitch handle
-    FLOAT fRecoilH = wpn_fRecoilOffset[iWeapon];
-    FLOAT fDY = fRecoilH*(1.0f-Cos(fRecoilP));
-    FLOAT fDZ = fRecoilH*Sin(fRecoilP);
-    pl.pl_PositionVector(2)-=fDY;
-    pl.pl_PositionVector(3)+=fDZ+wpn_fRecoilFactorZ[iWeapon]*fRecoil;
-    */
-
     // swimming
     if (m_bSwim) {
       pl.pl_OrientationAngle(1) += sin(tmNow*0.9)*2.0f;
@@ -1000,8 +948,6 @@ functions:
     fEyesOffsetY = Clamp(fEyesOffsetY, -1.0f, 1.0f);
     pl.pl_PositionVector(2) += fEyesOffsetY;
   }
-
-
 
 /************************************************************
  *                     ANIMATE PLAYER                       *

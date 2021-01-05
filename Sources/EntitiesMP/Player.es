@@ -385,14 +385,6 @@ INDEX cht_bDumpFinalBossData = FALSE;
 INDEX cht_bDebugFinalBossAnimations = FALSE;
 INDEX cht_bDumpPlayerShading = FALSE;
 
-extern FLOAT wpn_fRecoilSpeed[17]   = {0};
-extern FLOAT wpn_fRecoilLimit[17]   = {0};
-extern FLOAT wpn_fRecoilDampUp[17]  = {0};
-extern FLOAT wpn_fRecoilDampDn[17]  = {0};
-extern FLOAT wpn_fRecoilOffset[17]  = {0};
-extern FLOAT wpn_fRecoilFactorP[17] = {0};
-extern FLOAT wpn_fRecoilFactorZ[17] = {0};
-
 // misc
 static FLOAT plr_fAcceleration  = 100.0f;
 static FLOAT plr_fDeceleration  = 60.0f;
@@ -803,14 +795,6 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("INDEX cht_bDebugFinalBossAnimations;", &cht_bDebugFinalBossAnimations);
   _pShell->DeclareSymbol("INDEX cht_bDumpPlayerShading;", &cht_bDumpPlayerShading);
   _pShell->DeclareSymbol("persistent user INDEX hud_bShowMatchInfo;", &hud_bShowMatchInfo);
-
-  _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilSpeed[17];",   &wpn_fRecoilSpeed);
-  _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilLimit[17];",   &wpn_fRecoilLimit);
-  _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilDampUp[17];",  &wpn_fRecoilDampUp);
-  _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilDampDn[17];",  &wpn_fRecoilDampDn);
-  _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilOffset[17];",  &wpn_fRecoilOffset);
-  _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilFactorP[17];", &wpn_fRecoilFactorP);
-  _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilFactorZ[17];", &wpn_fRecoilFactorZ);
 
   // [Cecil] AMP 2 customization
   _pShell->DeclareSymbol("persistent user INDEX amp_bBloodScreen;", &amp_bBloodScreen);

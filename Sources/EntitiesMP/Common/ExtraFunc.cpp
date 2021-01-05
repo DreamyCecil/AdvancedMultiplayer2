@@ -13,19 +13,16 @@ void ConvertWeapon(INDEX &iFlags, const INDEX &iWeapon) {
     // Laser
     case 14:
       iFlags |= WeaponFlag(WEAPON_LASER);
-      //iFlags &= ~WeaponFlag(14);
       break;
 
     // Cannon
     case 16:
       iFlags |= WeaponFlag(WEAPON_IRONCANNON);
-      //iFlags &= ~WeaponFlag(16);
       break;
 
     // non-existent weapons
     case 10: case 12: case 15: case 17:
     case WEAPON_FLAMER: case WEAPON_SNIPER:
-      //iFlags &= ~WeaponFlag(iWeapon);
       break;
 
     default: iFlags |= WeaponFlag(iWeapon);
@@ -166,7 +163,7 @@ extern void ConvertWorld(CEntity *penWorld) {
 };
 
 // [Cecil] Properly remove decorations from the string
-DECL_DLL void ProperUndecorate(CTString &str) {
+void ProperUndecorate(CTString &str) {
   // make a copy of the string to hold the result - we will rewrite it without the codes
   CTString strResult = str;
 

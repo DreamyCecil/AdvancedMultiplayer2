@@ -1,0 +1,20 @@
+{
+  "Name" : "Double Barrel Coach Gun",
+  "Icon" : "TexturesMP\\Interface\\WDoubleShotgun.tex",
+  
+  "Ammo" : 0,
+  "AltAmmo": -1,
+  
+  "Pos1" : [0.13, -0.21, -0.364],
+  "Rot1" : [2.0, 1.0, 0.0],
+  
+  "Pos3" : [0.0, 0.0, 0.0],
+  "Rot3" : [0.0, 0.0, 0.0],
+  
+  "FOV" : 52.5,
+  "PosFire" : [0.0, 0.0],
+  
+  "PickupAmmo" : 20,
+  "PickupAlt"  : 0,
+  "Mana" : 70.0,
+}

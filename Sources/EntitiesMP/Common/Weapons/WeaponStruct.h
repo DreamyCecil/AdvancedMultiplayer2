@@ -6,6 +6,7 @@
 #define DEF_WPOS FLOAT3D(0.0f, 0.0f, 0.0f)
 #define DEF_WROT ANGLE3D(0.0f, 0.0f, 0.0f)
 #define DEF_PLACE CPlacement3D(DEF_WPOS, DEF_WROT)
+#define DEF_FOV 90.0f
 
 // Icon list
 typedef CDList<CTextureObject *> CWeaponIcons;
@@ -50,23 +51,32 @@ struct SWeaponPos {
   CPlacement3D plPos; // first person position
   CPlacement3D plThird; // third person position
   FLOAT3D vFire; // attack offset
+  FLOAT fFOV; // first person FOV
 
   // Constructor
-  SWeaponPos(CPlacement3D plSetFirst, CPlacement3D plSetThird, FLOAT3D vSetFire) :
-    plPos(plSetFirst), plThird(plSetThird), vFire(vSetFire) {};
+  SWeaponPos(CPlacement3D plSetFirst, CPlacement3D plSetThird, FLOAT3D vSetFire, FLOAT fSetFOV) :
+    plPos(plSetFirst), plThird(plSetThird), vFire(vSetFire), fFOV(fSetFOV) {};
 
   // Get position
   inline FLOAT3D &Pos1(void) { return plPos.pl_PositionVector; };
   inline FLOAT3D &Pos3(void) { return plThird.pl_PositionVector; };
+  
+  // Get specific position
+  inline FLOAT &Pos1(const INDEX &iPos) { return plPos.pl_PositionVector(iPos); };
+  inline FLOAT &Pos3(const INDEX &iPos) { return plThird.pl_PositionVector(iPos); };
 
   // Get rotation
   inline ANGLE3D &Rot1(void) { return plPos.pl_OrientationAngle; };
   inline ANGLE3D &Rot3(void) { return plThird.pl_OrientationAngle; };
+  
+  // Get specific rotation
+  inline FLOAT &Rot1(const INDEX &iPos) { return plPos.pl_OrientationAngle(iPos); };
+  inline FLOAT &Rot3(const INDEX &iPos) { return plThird.pl_OrientationAngle(iPos); };
 };
 
 // Weapon properties
 struct SWeaponStruct : public SWeaponBase {
-  SWeaponPos wpPos; // weapon position
+  SWeaponPos wpsPos; // weapon position
 
   SWeaponAmmo *pAmmo; // ammo
   SWeaponAmmo *pAlt; // alt ammo
@@ -75,12 +85,14 @@ struct SWeaponStruct : public SWeaponBase {
   INDEX iPickupAlt; // alt ammo in a weapon pickup
 
   // Constructors
-  SWeaponStruct(void) : SWeaponBase(0, "", 0.0f, ""), wpPos(DEF_PLACE, DEF_PLACE, DEF_WPOS),
+  SWeaponStruct(void) : SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
                         pAmmo(NULL), pAlt(NULL), iPickup(0), iPickupAlt(0) {};
 
-  SWeaponStruct(CPlacement3D plSetFirst, CPlacement3D plSetThird, FLOAT3D vSetFire,
+  SWeaponStruct(CPlacement3D plSetFirst, CPlacement3D plSetThird, FLOAT3D vSetFire, FLOAT fSetFOV,
                 SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon,
-                INDEX iSetPickup, INDEX iSetPickupAlt, FLOAT fSetMana, CTString strSetPickup);
+                INDEX iSetPickup, INDEX iSetPickupAlt, FLOAT fSetMana, CTString strSetPickup) :
+    SWeaponBase(0, strSetIcon, fSetMana, strSetPickup), wpsPos(plSetFirst, plSetThird, vSetFire, fSetFOV),
+    pAmmo(pSetAmmo), pAlt(pSetAlt), iPickup(iSetPickup), iPickupAlt(iSetPickupAlt) {};
 
   // Write and read
   void Write(CTStream *strm);

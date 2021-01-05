@@ -1,6 +1,9 @@
 #include "StdH.h"
 #include "WeaponStruct.h"
 
+// Config parser
+#include "EntitiesMP/Common/ConfigFunc.h"
+
 // Weapon ammo and properties for the world
 extern CDList<SWeaponAmmo> _aWeaponAmmo = CDList<SWeaponAmmo>();
 extern CDList<SWeaponStruct> _aPlayerWeapons = CDList<SWeaponStruct>();
@@ -44,11 +47,11 @@ SWeaponAmmo::SWeaponAmmo(CTString strSetIcon, INDEX iSetAmmo, FLOAT fSetMana, CT
 {
   AddIcon(strSetIcon, _aAmmoIcons);
 
-  // Ammo multiplier
+  // ammo multiplier
   FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f) * AmmoMul();
   INDEX iTopAmmo = Floor(1000.0f * AmmoMul());
 
-  // Set max ammo and in a pack
+  // set max ammo and in a pack
   iAmount = ClampUp(INDEX(ceil(iSetAmmo * fModifier)), iTopAmmo);
 };
 
@@ -65,25 +68,11 @@ void SWeaponAmmo::Read(CTStream *strm) {
   AddIcon(strIcon, _aAmmoIcons);
 };
 
-// Constructor
-SWeaponStruct::SWeaponStruct(CPlacement3D plSetFirst, CPlacement3D plSetThird, FLOAT3D vSetFire,
-                             SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon,
-                             INDEX iSetPickup, INDEX iSetPickupAlt, FLOAT fSetMana, CTString strSetPickup) :
-  SWeaponBase(0, strSetIcon, fSetMana, strSetPickup), wpPos(plSetFirst, plSetThird, vSetFire),
-  pAmmo(pSetAmmo), pAlt(pSetAlt)
-{
-  AddIcon(strSetIcon, _aWeaponIcons);
-
-  // Set pickup ammo
-  iPickup = ceil(iSetPickup * AmmoMul());
-  iPickupAlt = ceil(iSetPickupAlt * AmmoMul());
-};
-
 // Write and read weapon properties
 void SWeaponStruct::Write(CTStream *strm) {
-  *strm << wpPos.plPos;
-  *strm << wpPos.plThird;
-  *strm << wpPos.vFire;
+  *strm << wpsPos.plPos;
+  *strm << wpsPos.plThird;
+  *strm << wpsPos.vFire;
   *strm << strPickup;
 
   // ammo position in the list
@@ -101,9 +90,9 @@ void SWeaponStruct::Write(CTStream *strm) {
 };
 
 void SWeaponStruct::Read(CTStream *strm) {
-  *strm >> wpPos.plPos;
-  *strm >> wpPos.plThird;
-  *strm >> wpPos.vFire;
+  *strm >> wpsPos.plPos;
+  *strm >> wpsPos.plThird;
+  *strm >> wpsPos.vFire;
   *strm >> strPickup;
 
   INDEX iAmmo, iAlt;
@@ -133,8 +122,57 @@ void AddWeapon(SWeaponStruct &wp) {
   int iWeapon = _aPlayerWeapons.Add(wp);
 
   // set ID of the added weapon
-  SWeaponStruct &wpAdded = _aPlayerWeapons[iWeapon];
-  wpAdded.ulID = iWeapon;
+  SWeaponStruct &wsAdded = _aPlayerWeapons[iWeapon];
+  wsAdded.ulID = iWeapon;
+
+  // create the icon
+  wsAdded.AddIcon(wsAdded.strIcon, _aWeaponIcons);
+};
+
+// Parse weapon config
+BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
+  // parse the config
+  CConfigBlock cb;
+  if (ParseConfig(strConfig, cb) != DJSON_OK) {
+    return FALSE;
+  }
+
+  // get weapon positions
+  GetConfigVector(cb, "Pos1", ws.wpsPos.Pos1());
+  GetConfigVector(cb, "Rot1", ws.wpsPos.Rot1());
+  GetConfigVector(cb, "Pos3", ws.wpsPos.Pos3());
+  GetConfigVector(cb, "Rot3", ws.wpsPos.Rot3());
+
+  GetConfigVector(cb, "PosFire", ws.wpsPos.vFire);
+  cb.GetValue("FOV", ws.wpsPos.fFOV);
+
+  // get ammo
+  int iAmmo = -1;
+  int iAlt = -1;
+  int iPickupAmmo = -1;
+  int iPickupAlt = -1;
+
+  cb.GetValue("Ammo", iAmmo);
+  cb.GetValue("AltAmmo", iAlt);
+  cb.GetValue("PickupAmmo", iPickupAmmo);
+  cb.GetValue("PickupAlt", iPickupAlt);
+  
+  ws.pAmmo = (iAmmo != -1 ? AP(iAmmo) : NULL);
+  ws.pAlt = (iAlt != -1 ? AP(iAlt) : NULL);
+  ws.iPickup = ceil(iPickupAmmo * AmmoMul());
+  ws.iPickupAlt = ceil(iPickupAlt * AmmoMul());
+
+  // other
+  GetConfigString(cb, "Name", ws.strPickup);
+  GetConfigString(cb, "Icon", ws.strIcon);
+  cb.GetValue("Mana", ws.fMana);
+
+  // included configs
+  if (GetConfigString(cb, "Include", strConfig)) {
+    ParseWeaponConfig(ws, strConfig);
+  }
+
+  return TRUE;
 };
 
 // Load weapons and ammo for this world
@@ -148,21 +186,26 @@ extern void LoadWorldWeapons(CWorld *pwo) {
   AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmElectricity.tex",   MAX_ELECTRICITY,   AV_ELECTRICITY,   "Electricity"));
   AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmCannonBall.tex",    MAX_IRONBALLS,     AV_IRONBALLS,     "Cannon Balls"));
   
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS,  NULL,  NULL, "", 0, 0, 0.0f, ""));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS,  NULL,  NULL, "TexturesMP\\Interface\\WKnife.tex",             0, 0,   0.0f, "Military Knife"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS,  NULL,  NULL, "TexturesMP\\Interface\\WColt.tex",              0, 0,   0.0f, "Shofield .45 w/ TMAR"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS,  NULL,  NULL, "TexturesMP\\Interface\\WColt.tex",              0, 0,   0.0f, "Shofield .45 w/ TMAR"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(0), AP(3), "TexturesMP\\Interface\\WSingleShotgun.tex",    10, 3,  70.0f, "12 Gauge Pump Action Shotgun"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(0),  NULL, "TexturesMP\\Interface\\WDoubleShotgun.tex",    20, 0,  70.0f, "Double Barrel Coach Gun"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(1),  NULL, "TexturesMP\\Interface\\WTommygun.tex",         50, 0,  10.0f, "M1-A2 Tommygun"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(1),  NULL, "TexturesMP\\Interface\\WMinigun.tex",         100, 0,  10.0f, "XM214-A Minigun"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(2),  NULL, "TexturesMP\\Interface\\WRocketLauncher.tex",    5, 0, 150.0f, "XPML21 Rocket Launcher"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(3),  NULL, "TexturesMP\\Interface\\WGrenadeLauncher.tex",   5, 0, 100.0f, "MKIII Grenade Launcher"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS,  NULL,  NULL, "TexturesMP\\Interface\\WChainsaw.tex",          0, 0,   0.0f, "'Bonecracker' P-LAH Chainsaw"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(4),  NULL, "TexturesMP\\Interface\\WFlamer.tex",           50, 0,  15.0f, "XOP Flamethrower"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(6),  NULL, "TexturesMP\\Interface\\WLaser.tex",            50, 0,  15.0f, "XL2 Lasergun"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(5),  NULL, "TexturesMP\\Interface\\WSniper.tex",           15, 0,  10.0f, "RAPTOR 16mm Sniper"));
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, AP(7),  NULL, "TexturesMP\\Interface\\WCannon.tex",            1, 0, 700.0f, "SBC Cannon"));
+  // add empty weapon
+  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV, NULL, NULL, "", 0, 0, 0.0f, ""));
+  
+  // load the default set
+  CDynamicStackArray<CTFileName> aList;
+  MakeDirList(aList, CTFILENAME("Scripts\\WeaponSets\\Default\\"), "*.json", 0);
+
+  // go through the files
+  HookConfigFunctions();
+
+  for (INDEX iWeapon = 0; iWeapon < aList.Count(); iWeapon++) {
+    CTString strFile = aList[iWeapon].str_String;
+
+    // parse the config
+    SWeaponStruct wsStruct;
+    ParseWeaponConfig(wsStruct, strFile);
+
+    // add the weapon
+    AddWeapon(wsStruct);
+  }
 };
 
 // Weapons and ammo cleanup

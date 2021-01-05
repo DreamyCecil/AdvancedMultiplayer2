@@ -1,0 +1,20 @@
+{
+  "Name" : "RAPTOR 16mm Sniper",
+  "Icon" : "TexturesMP\\Interface\\WSniper.tex",
+  
+  "Ammo" : 5,
+  "AltAmmo": -1,
+  
+  "Pos1" : [0.095, -0.26, -0.85],
+  "Rot1" : [4.0, 2.5, -0.5],
+  
+  "Pos3" : [0.0, 0.0, 0.0],
+  "Rot3" : [0.0, 0.0, 0.0],
+  
+  "FOV" : 23.0,
+  "PosFire" : [0.0, 0.0],
+  
+  "PickupAmmo" : 15,
+  "PickupAlt"  : 0,
+  "Mana" : 10.0,
+}

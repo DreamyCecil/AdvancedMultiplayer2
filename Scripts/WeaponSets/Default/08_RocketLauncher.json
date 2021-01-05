@@ -1,0 +1,20 @@
+{
+  "Name" : "XPML21 Rocket Launcher",
+  "Icon" : "TexturesMP\\Interface\\WRocketLauncher.tex",
+  
+  "Ammo" : 2,
+  "AltAmmo": -1,
+  
+  "Pos1" : [0.17, -0.325, -0.24],
+  "Rot1" : [2.0, 1.0, 0.0],
+  
+  "Pos3" : [0.0, 0.0, 0.0],
+  "Rot3" : [0.0, 0.0, 0.0],
+  
+  "FOV" : 66.0,
+  "PosFire" : [-0.1, 0.11],
+  
+  "PickupAmmo" : 5,
+  "PickupAlt"  : 0,
+  "Mana" : 150.0,
+}

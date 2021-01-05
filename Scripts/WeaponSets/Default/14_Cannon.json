@@ -1,0 +1,20 @@
+{
+  "Name" : "SBC Cannon",
+  "Icon" : "TexturesMP\\Interface\\WCannon.tex",
+  
+  "Ammo" : 7,
+  "AltAmmo": -1,
+  
+  "Pos1" : [0.17, -0.3, -0.625],
+  "Rot1" : [2.5, 6.0, 0.0],
+  
+  "Pos3" : [0.0, 0.0, 0.0],
+  "Rot3" : [0.0, 0.0, 0.0],
+  
+  "FOV" : 50.0,
+  "PosFire" : [0.25, -0.5],
+  
+  "PickupAmmo" : 1,
+  "PickupAlt"  : 0,
+  "Mana" : 700.0,
+}

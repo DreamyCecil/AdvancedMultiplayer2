@@ -85,6 +85,11 @@ struct SPlayerWeapon {
 
   // Check for ammo
   BOOL HasAmmo(BOOL bCheckAlt);
+
+  // Get weapon position
+  inline SWeaponPos GetPosition(void) {
+    return (pWeaponStruct == NULL ? SWeaponPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV) : pWeaponStruct->wpsPos);
+  };
 };
 
 // Player's arsenal
