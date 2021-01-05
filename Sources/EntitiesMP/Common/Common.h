@@ -386,14 +386,3 @@ inline COLOR ChristmasColor(INDEX iRandom, UBYTE ubFactor, UBYTE ubAlpha) {
 
 // [Cecil] Get blood type
 DECL_DLL INDEX GetBloodType(void);
-
-// [Cecil] Seasonal events
-enum ESpecialEvent {
-  ESE_NONE,
-  ESE_VALENTINE, // 14th of February / a week with 14th on the 4th day
-  ESE_BIRTHDAY,  // 21st of March / the whole of March
-  ESE_HALLOWEEN, // the whole of october
-  ESE_CHRISTMAS, // from 15th of December to 15th of January
-};
-
-DECL_DLL ESpecialEvent GetCurrentEvent(void);

@@ -1416,7 +1416,7 @@ class CWorldSettingsController *GetWSC(CEntity *pen)
 // [Cecil] Get blood type
 DECL_DLL INDEX GetBloodType(void) {
   // base off the current event
-  switch (GetCurrentEvent()) {
+  switch (GetSP()->sp_eEvent) {
     case ESE_VALENTINE: return 4;
     case ESE_BIRTHDAY: return 0; // [Cecil] TEMP
     case ESE_HALLOWEEN: return 5;
@@ -1424,53 +1424,4 @@ DECL_DLL INDEX GetBloodType(void) {
   }
 
   return _pShell->GetINDEX("amp_iBloodType");
-};
-
-// [Cecil] Seasonal events
-DECL_DLL ESpecialEvent GetCurrentEvent(void) {
-  // get current time
-  struct tm *tmNow;
-  time_t slTime;
-  time(&slTime);
-  tmNow = localtime(&slTime);
-
-  // current day
-  const int iMonth = tmNow->tm_mon;
-  const int iDay = tmNow->tm_mday;
-
-  // get month
-  switch (iMonth) {
-    // February (Valentine's day)
-    case 1:
-      if (iDay >= 10 && iDay <= 17) {
-        return ESE_VALENTINE;
-      }
-      break;
-
-    // March (Sam's birthday)
-    case 2:
-      if (iDay >= 19 && iDay <= 23) {
-        return ESE_BIRTHDAY;
-      }
-      break;
-
-    // October (Halloween)
-    case 9: return ESE_HALLOWEEN;
-
-    // December (Christmas)
-    case 11:
-      if (tmNow->tm_mday >= 15) {
-        return ESE_CHRISTMAS;
-      }
-      break;
-
-    // January (Christmas)
-    case 0:
-      if (tmNow->tm_mday <= 15) {
-        return ESE_CHRISTMAS;
-      }
-      break;
-  }
-
-  return ESE_NONE;
 };

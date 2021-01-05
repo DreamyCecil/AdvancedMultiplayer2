@@ -3544,7 +3544,7 @@ functions:
     }
 
     // [Cecil] Christmas fireworks
-    if (GetCurrentEvent() == ESE_CHRISTMAS) {
+    if (GetSP()->sp_eEvent == ESE_CHRISTMAS) {
       ESpawnEffect eSpawnEffect;
       eSpawnEffect.colMuliplier = 0xFFFFFFFF;
       eSpawnEffect.betType = BET_FIREWORKS;

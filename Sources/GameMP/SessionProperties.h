@@ -47,6 +47,15 @@
 #define WAF_SNIPER    (1 << 12)
 #define WAF_CANNON    (1 << 13)
 
+// [Cecil] Seasonal events
+enum ESpecialEvent {
+  ESE_NONE,
+  ESE_VALENTINE, // 14th of February / a week with 14th on the 4th day
+  ESE_BIRTHDAY,  // 21st of March / the whole of March
+  ESE_HALLOWEEN, // the whole of october
+  ESE_CHRISTMAS, // from 15th of December to 15th of January
+};
+
 /*
  * Class responsible for describing game session
  */
@@ -108,9 +117,6 @@ public:
   INDEX sp_ctCreditsLeft;       // number of credits left on this level
   FLOAT sp_tmSpawnInvulnerability;   // how many seconds players are invunerable after respawning
 
-  // [Cecil] Doesn't depend on the game
-  //INDEX sp_iBlood; // blood/gibs type (0=none, 1=green, 2=red, 3=hippie)
-
   BOOL  sp_bGibs; // enable/disable gibbing
   BOOL  sp_bEndOfGame; // marked when dm game is finished (any of the limits reached)
   ULONG sp_ulLevelsMask; // mask of visited levels so far
@@ -140,6 +146,8 @@ public:
   INDEX sp_iWeaponGiver; // weapon giver flags
   INDEX sp_iItemRemoval; // item removal flags
   FLOAT sp_fBossResistance;
+
+  ESpecialEvent sp_eEvent;
 
   // [Cecil] Get alt fire mode
   INDEX AltMode(void) const {

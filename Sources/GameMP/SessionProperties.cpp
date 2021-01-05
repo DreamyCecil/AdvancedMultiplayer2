@@ -124,6 +124,55 @@ extern INDEX amp_bInvisItem;
 extern INDEX amp_bDamageItem;
 extern INDEX amp_bSpeedItem;
 
+// [Cecil] Get seasonal event
+ESpecialEvent CurrentSeasonalEvent(void) {
+  // get current time
+  struct tm *tmNow;
+  time_t slTime;
+  time(&slTime);
+  tmNow = localtime(&slTime);
+
+  // current day
+  const int iMonth = tmNow->tm_mon;
+  const int iDay = tmNow->tm_mday;
+
+  // get month
+  switch (iMonth) {
+    // February (Valentine's day)
+    case 1:
+      if (iDay >= 10 && iDay <= 17) {
+        return ESE_VALENTINE;
+      }
+      break;
+
+    // March (Sam's birthday)
+    case 2:
+      if (iDay >= 19 && iDay <= 23) {
+        return ESE_BIRTHDAY;
+      }
+      break;
+
+    // October (Halloween)
+    case 9: return ESE_HALLOWEEN;
+
+    // December (Christmas)
+    case 11:
+      if (tmNow->tm_mday >= 15) {
+        return ESE_CHRISTMAS;
+      }
+      break;
+
+    // January (Christmas)
+    case 0:
+      if (tmNow->tm_mday <= 15) {
+        return ESE_CHRISTMAS;
+      }
+      break;
+  }
+
+  return ESE_NONE;
+};
+
 // [Cecil] Set new options
 static void SetAdvancedParameters(CSessionProperties &sp) {
   const BOOL bOpt = amp_bEnableOptions;
@@ -215,6 +264,9 @@ static void SetAdvancedParameters(CSessionProperties &sp) {
                      | (amp_bInvisItem  ? IRF_INVIS : 0)
                      | (amp_bDamageItem ? IRF_DAMAGE : 0)
                      | (amp_bSpeedItem  ? IRF_SPEED : 0);
+  
+  // seasonal event
+  sp.sp_eEvent = CurrentSeasonalEvent();
 };
 
 static void SetGameModeParameters(CSessionProperties &sp) {
@@ -328,8 +380,6 @@ void CGame::SetSinglePlayerSession(CSessionProperties &sp) {
   sp.sp_fExtraEnemyStrength          = 0;
   sp.sp_fExtraEnemyStrengthPerPlayer = 0;
 
-  // [Cecil] Doesn't depend on the game
-  //sp.sp_iBlood = Clamp( gam_iBlood, 0L, 3L);
   sp.sp_bGibs  = gam_bGibs;
 
   SetAdvancedParameters(sp);
@@ -390,8 +440,6 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp) {
   sp.sp_fExtraEnemyStrengthPerPlayer = gam_fExtraEnemyStrengthPerPlayer;
   sp.sp_iInitialMana        = gam_iInitialMana;
 
-  // [Cecil] Doesn't depend on the game
-  //sp.sp_iBlood = Clamp( gam_iBlood, 0L, 3L);
   sp.sp_bGibs  = gam_bGibs;
   sp.sp_tmSpawnInvulnerability = gam_tmSpawnInvulnerability;
 
