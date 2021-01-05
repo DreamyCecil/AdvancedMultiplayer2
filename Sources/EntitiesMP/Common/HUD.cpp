@@ -75,10 +75,6 @@ static TIME  _tmNow = -1.0f;
 static TIME  _tmLast = -1.0f;
 static CFontData _fdNumbersFont;
 
-// [Cecil] Local copies of the arsenal
-static CWeaponArsenal _aWeapons;
-static CAmmunition _aAmmo;
-
 // array for pointers of all players
 extern CPlayer *_apenPlayers[NET_MAXGAMEPLAYERS] = {0};
 
@@ -96,29 +92,7 @@ static CTextureObject _toArmorMedium;
 static CTextureObject _toArmorLarge;
 
 // ammo textures                    
-/*static CTextureObject _toAShells;
-static CTextureObject _toABullets;
-static CTextureObject _toARockets;
-static CTextureObject _toAGrenades;
-static CTextureObject _toANapalm;
-static CTextureObject _toAElectricity;
-static CTextureObject _toAIronBall;
-static CTextureObject _toASniperBullets;*/
 static CTextureObject _toASeriousBomb;
-// weapon textures
-/*static CTextureObject _toWKnife;
-static CTextureObject _toWColt;
-static CTextureObject _toWSingleShotgun;
-static CTextureObject _toWDoubleShotgun;
-static CTextureObject _toWTommygun;
-static CTextureObject _toWSniper;
-static CTextureObject _toWChainsaw;
-static CTextureObject _toWMinigun;
-static CTextureObject _toWRocketLauncher;
-static CTextureObject _toWGrenadeLauncher;
-static CTextureObject _toWFlamer;
-static CTextureObject _toWLaser;
-static CTextureObject _toWIronCannon;*/
 
 // powerup textures (ORDER IS THE SAME AS IN PLAYER.ES!)
 #define MAX_POWERUPS 4
@@ -147,63 +121,6 @@ struct ColorTransitionTable {
   BOOL  ctt_bSmooth;      // should colors have smooth transition
 };
 static struct ColorTransitionTable _cttHUD;
-
-// ammo's info structure
-/*struct AmmoInfo {
-  CTextureObject    *ai_ptoAmmo;
-  struct WeaponInfo *ai_pwiWeapon1;
-  struct WeaponInfo *ai_pwiWeapon2;
-  INDEX ai_iAmmoAmmount;
-  INDEX ai_iMaxAmmoAmmount;
-  INDEX ai_iLastAmmoAmmount;
-  TIME  ai_tmAmmoChanged;
-  BOOL  ai_bHasWeapon;
-};
-
-// weapons' info structure
-struct WeaponInfo {
-  enum WeaponType  wi_wtWeapon;
-  CTextureObject  *wi_ptoWeapon;
-  struct AmmoInfo *wi_paiAmmo;
-  BOOL wi_bHasWeapon;
-};
-
-extern struct WeaponInfo _awiWeapons[18];
-static struct AmmoInfo _aaiAmmo[8] = {
-  { &_toAShells,        &_awiWeapons[4],  &_awiWeapons[5],  0, 0, 0, -9, FALSE }, //  0
-  { &_toABullets,       &_awiWeapons[6],  &_awiWeapons[7],  0, 0, 0, -9, FALSE }, //  1
-  { &_toARockets,       &_awiWeapons[8],  NULL,             0, 0, 0, -9, FALSE }, //  2
-  { &_toAGrenades,      &_awiWeapons[9],  NULL,             0, 0, 0, -9, FALSE }, //  3
-  { &_toANapalm,        &_awiWeapons[11], NULL,             0, 0, 0, -9, FALSE }, //  4
-  { &_toAElectricity,   &_awiWeapons[12], NULL,             0, 0, 0, -9, FALSE }, //  5
-  { &_toAIronBall,      &_awiWeapons[14], NULL,             0, 0, 0, -9, FALSE }, //  6
-  { &_toASniperBullets, &_awiWeapons[13], NULL,             0, 0, 0, -9, FALSE }, //  7
-};
-static const INDEX aiAmmoRemap[8] = { 0, 1, 2, 3, 4, 7, 5, 6 };
-
-struct WeaponInfo _awiWeapons[18] = {
-  { WEAPON_NONE,            NULL,                 NULL,         FALSE },   //  0
-  { WEAPON_KNIFE,           &_toWKnife,           NULL,         FALSE },   //  1
-  { WEAPON_COLT,            &_toWColt,            NULL,         FALSE },   //  2
-  { WEAPON_DOUBLECOLT,      &_toWColt,            NULL,         FALSE },   //  3
-  { WEAPON_SINGLESHOTGUN,   &_toWSingleShotgun,   &_aaiAmmo[0], FALSE },   //  4
-  { WEAPON_DOUBLESHOTGUN,   &_toWDoubleShotgun,   &_aaiAmmo[0], FALSE },   //  5
-  { WEAPON_TOMMYGUN,        &_toWTommygun,        &_aaiAmmo[1], FALSE },   //  6
-  { WEAPON_MINIGUN,         &_toWMinigun,         &_aaiAmmo[1], FALSE },   //  7
-  { WEAPON_ROCKETLAUNCHER,  &_toWRocketLauncher,  &_aaiAmmo[2], FALSE },   //  8
-  { WEAPON_GRENADELAUNCHER, &_toWGrenadeLauncher, &_aaiAmmo[3], FALSE },   //  9
-  { WEAPON_CHAINSAW,        &_toWChainsaw,        NULL,         FALSE },   // 10
-  { WEAPON_FLAMER,          &_toWFlamer,          &_aaiAmmo[4], FALSE },   // 11
-  { WEAPON_LASER,           &_toWLaser,           &_aaiAmmo[5], FALSE },   // 12
-  { WEAPON_SNIPER,          &_toWSniper,          &_aaiAmmo[7], FALSE },   // 13
-  { WEAPON_IRONCANNON,      &_toWIronCannon,      &_aaiAmmo[6], FALSE },   // 14
-//{ WEAPON_PIPEBOMB,        &_toWPipeBomb,        &_aaiAmmo[3], FALSE },   // 15
-//{ WEAPON_GHOSTBUSTER,     &_toWGhostBuster,     &_aaiAmmo[5], FALSE },   // 16
-//{ WEAPON_NUKECANNON,      &_toWNukeCannon,      &_aaiAmmo[7], FALSE },   // 17
-  { WEAPON_NONE,            NULL,                 NULL,         FALSE },   // 15
-  { WEAPON_NONE,            NULL,                 NULL,         FALSE },   // 16
-  { WEAPON_NONE,            NULL,                 NULL,         FALSE },   // 17
-};*/
 
 // compare functions for qsort()
 static int qsort_CompareNames( const void *ppPEN0, const void *ppPEN1) {
@@ -668,12 +585,6 @@ static void HUD_DrawSniperMask( void )
   }
 }
 
-// [Cecil] Local copies of the arsenal
-static void CopyArsenal(void) {
-  _aWeapons = _penWeapons->m_aWeapons;
-  _aAmmo = _penWeapons->m_aAmmo;
-};
-
 //<<<<<<< DEBUG FUNCTIONS >>>>>>>
 
 #ifdef ENTITY_DEBUG
@@ -863,14 +774,14 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   INDEX iCurrentWeapon = _penWeapons->m_iCurrentWeapon;
   INDEX iWantedWeapon  = _penWeapons->m_iWantedWeapon;
 
-  // [Cecil] Copy weapons and ammo
-  CopyArsenal();
+  CWeaponArsenal &aWeapons = _penWeapons->GetWeapons();
+  CAmmunition &aAmmo = _penWeapons->GetAmmo();
 
   // determine corresponding ammo and weapon texture component
-  ptoWantedWeapon = _aWeapons[iWantedWeapon].pWeapon->ptoIcon;
+  ptoWantedWeapon = aWeapons[iWantedWeapon].pWeaponStruct->ptoIcon;
 
   // [Cecil] New system
-  SPlayerWeapon &pwCurrent = _aWeapons[iCurrentWeapon];
+  SPlayerWeapon &pwCurrent = aWeapons[iCurrentWeapon];
   SWeaponAmmo *pAmmo = pwCurrent.GetAmmo();
   SWeaponAmmo *pAltAmmo = pwCurrent.GetAlt();
   
@@ -993,9 +904,9 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // loop thru all ammo types
   if (!GetSP()->sp_bInfiniteAmmo) {
-    for (INDEX iAmmo = _aAmmo.Count()-1; iAmmo >= 0; iAmmo--) {
+    for (INDEX iAmmo = aAmmo.Count()-1; iAmmo >= 0; iAmmo--) {
       // if no ammo and hasn't got that weapon - just skip this ammo
-      SPlayerAmmo &pa = _aAmmo[iAmmo];
+      SPlayerAmmo &pa = aAmmo[iAmmo];
 
       if (pa.iAmount == 0 && !pa.bWeapon) {
         continue;
@@ -1004,7 +915,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       // display ammo info
       colIcon = (pa.iAmount == 0) ? C_mdGRAY : C_WHITE;
 
-      CTextureObject *ptoDrawIcon = pa.pAmmo->ptoIcon;
+      CTextureObject *ptoDrawIcon = pa.pAmmoStruct->ptoIcon;
 
       if (ptoAmmo == ptoDrawIcon) {
         colIcon = C_WHITE;
@@ -1077,7 +988,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fCol = 320.0f - (ctWeapons*fAdvUnit-fHalfUnit)/2.0f;
 
     for (INDEX iWeapon = WEAPON_NONE+1; iWeapon < WEAPON_LAST; iWeapon++) {
-      SPlayerWeapon &pw = _aWeapons[iWeapon];
+      SPlayerWeapon &pw = aWeapons[iWeapon];
 
       // [Cecil] Skip unexistent weapons
       if (!WeaponExists(_penWeapons->m_iAvailableWeapons, iWeapon)) {
@@ -1094,7 +1005,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
         colBorder = 0xffcc0000;
       }
 
-      CTextureObject *ptoDrawIcon = pw.pWeapon->ptoIcon;
+      CTextureObject *ptoDrawIcon = pw.pWeaponStruct->ptoIcon;
 
       // no ammo
       if (!pw.HasAmmo(_penWeapons->AltFireExists(iWeapon))) {
@@ -1451,73 +1362,45 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // in the end, remember the current time so it can be used in the next frame
   _tmLast = _tmNow;
-
-}
-
-
+};
 
 // initialize all that's needed for drawing the HUD
-extern void InitHUD(void)
-{
+extern void InitHUD(void) {
   // try to
   try {
     // initialize and load HUD numbers font
-    DECLARE_CTFILENAME( fnFont, "Fonts\\Numbers3.fnt");
-    _fdNumbersFont.Load_t( fnFont);
-    //_fdNumbersFont.SetCharSpacing(0);
+    DECLARE_CTFILENAME(fnFont, "Fonts\\Numbers3.fnt");
+    _fdNumbersFont.Load_t(fnFont);
 
     // initialize status bar textures
-    _toHealth.SetData_t(  CTFILENAME("TexturesMP\\Interface\\HSuper.tex"));
-    _toOxygen.SetData_t(  CTFILENAME("TexturesMP\\Interface\\Oxygen-2.tex"));
-    _toFrags.SetData_t(   CTFILENAME("TexturesMP\\Interface\\IBead.tex"));
-    _toDeaths.SetData_t(  CTFILENAME("TexturesMP\\Interface\\ISkull.tex"));
-    _toScore.SetData_t(   CTFILENAME("TexturesMP\\Interface\\IScore.tex"));
-    _toHiScore.SetData_t( CTFILENAME("TexturesMP\\Interface\\IHiScore.tex"));
-    _toMessage.SetData_t( CTFILENAME("TexturesMP\\Interface\\IMessage.tex"));
-    _toMana.SetData_t(    CTFILENAME("TexturesMP\\Interface\\IValue.tex"));
-    _toArmorSmall.SetData_t(  CTFILENAME("TexturesMP\\Interface\\ArSmall.tex"));
-    _toArmorMedium.SetData_t(   CTFILENAME("TexturesMP\\Interface\\ArMedium.tex"));
-    _toArmorLarge.SetData_t(   CTFILENAME("TexturesMP\\Interface\\ArStrong.tex"));
+    _toHealth.SetData_t(CTFILENAME("TexturesMP\\Interface\\HSuper.tex"));
+    _toOxygen.SetData_t(CTFILENAME("TexturesMP\\Interface\\Oxygen-2.tex"));
+    _toFrags.SetData_t(CTFILENAME("TexturesMP\\Interface\\IBead.tex"));
+    _toDeaths.SetData_t(CTFILENAME("TexturesMP\\Interface\\ISkull.tex"));
+    _toScore.SetData_t(CTFILENAME("TexturesMP\\Interface\\IScore.tex"));
+    _toHiScore.SetData_t(CTFILENAME("TexturesMP\\Interface\\IHiScore.tex"));
+    _toMessage.SetData_t(CTFILENAME("TexturesMP\\Interface\\IMessage.tex"));
+    _toMana.SetData_t(CTFILENAME("TexturesMP\\Interface\\IValue.tex"));
+    _toArmorSmall.SetData_t(CTFILENAME("TexturesMP\\Interface\\ArSmall.tex"));
+    _toArmorMedium.SetData_t(CTFILENAME("TexturesMP\\Interface\\ArMedium.tex"));
+    _toArmorLarge.SetData_t(CTFILENAME("TexturesMP\\Interface\\ArStrong.tex"));
 
-    // initialize ammo textures                    
-    /*_toAShells.SetData_t(        CTFILENAME("TexturesMP\\Interface\\AmShells.tex"));
-    _toABullets.SetData_t(       CTFILENAME("TexturesMP\\Interface\\AmBullets.tex"));
-    _toARockets.SetData_t(       CTFILENAME("TexturesMP\\Interface\\AmRockets.tex"));
-    _toAGrenades.SetData_t(      CTFILENAME("TexturesMP\\Interface\\AmGrenades.tex"));
-    _toANapalm.SetData_t(        CTFILENAME("TexturesMP\\Interface\\AmFuelReservoir.tex"));
-    _toAElectricity.SetData_t(   CTFILENAME("TexturesMP\\Interface\\AmElectricity.tex"));
-    _toAIronBall.SetData_t(      CTFILENAME("TexturesMP\\Interface\\AmCannonBall.tex"));
-    _toASniperBullets.SetData_t( CTFILENAME("TexturesMP\\Interface\\AmSniperBullets.tex"));*/
-    _toASeriousBomb.SetData_t(   CTFILENAME("TexturesMP\\Interface\\AmSeriousBomb.tex"));
-    // initialize weapon textures
-    /*_toWKnife.SetData_t(           CTFILENAME("TexturesMP\\Interface\\WKnife.tex"));
-    _toWColt.SetData_t(            CTFILENAME("TexturesMP\\Interface\\WColt.tex"));
-    _toWSingleShotgun.SetData_t(   CTFILENAME("TexturesMP\\Interface\\WSingleShotgun.tex"));
-    _toWDoubleShotgun.SetData_t(   CTFILENAME("TexturesMP\\Interface\\WDoubleShotgun.tex"));
-    _toWTommygun.SetData_t(        CTFILENAME("TexturesMP\\Interface\\WTommygun.tex"));
-    _toWMinigun.SetData_t(         CTFILENAME("TexturesMP\\Interface\\WMinigun.tex"));
-    _toWRocketLauncher.SetData_t(  CTFILENAME("TexturesMP\\Interface\\WRocketLauncher.tex"));
-    _toWGrenadeLauncher.SetData_t( CTFILENAME("TexturesMP\\Interface\\WGrenadeLauncher.tex"));
-    _toWLaser.SetData_t(           CTFILENAME("TexturesMP\\Interface\\WLaser.tex"));
-    _toWIronCannon.SetData_t(      CTFILENAME("TexturesMP\\Interface\\WCannon.tex"));
-    _toWChainsaw.SetData_t(        CTFILENAME("TexturesMP\\Interface\\WChainsaw.tex"));
-    _toWSniper.SetData_t(          CTFILENAME("TexturesMP\\Interface\\WSniper.tex"));
-    _toWFlamer.SetData_t(          CTFILENAME("TexturesMP\\Interface\\WFlamer.tex"));*/
+    _toASeriousBomb.SetData_t(CTFILENAME("TexturesMP\\Interface\\AmSeriousBomb.tex"));
         
     // initialize powerup textures (DO NOT CHANGE ORDER!)
-    _atoPowerups[0].SetData_t( CTFILENAME("TexturesMP\\Interface\\PInvisibility.tex"));
-    _atoPowerups[1].SetData_t( CTFILENAME("TexturesMP\\Interface\\PInvulnerability.tex"));
-    _atoPowerups[2].SetData_t( CTFILENAME("TexturesMP\\Interface\\PSeriousDamage.tex"));
-    _atoPowerups[3].SetData_t( CTFILENAME("TexturesMP\\Interface\\PSeriousSpeed.tex"));
+    _atoPowerups[0].SetData_t(CTFILENAME("TexturesMP\\Interface\\PInvisibility.tex"));
+    _atoPowerups[1].SetData_t(CTFILENAME("TexturesMP\\Interface\\PInvulnerability.tex"));
+    _atoPowerups[2].SetData_t(CTFILENAME("TexturesMP\\Interface\\PSeriousDamage.tex"));
+    _atoPowerups[3].SetData_t(CTFILENAME("TexturesMP\\Interface\\PSeriousSpeed.tex"));
     // initialize sniper mask texture
-    _toSniperMask.SetData_t(       CTFILENAME("TexturesMP\\Interface\\SniperMask.tex"));
-    _toSniperWheel.SetData_t(       CTFILENAME("TexturesMP\\Interface\\SniperWheel.tex"));
-    _toSniperArrow.SetData_t(       CTFILENAME("TexturesMP\\Interface\\SniperArrow.tex"));
-    _toSniperEye.SetData_t(       CTFILENAME("TexturesMP\\Interface\\SniperEye.tex"));
-    _toSniperLed.SetData_t(       CTFILENAME("TexturesMP\\Interface\\SniperLed.tex"));
+    _toSniperMask.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperMask.tex"));
+    _toSniperWheel.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperWheel.tex"));
+    _toSniperArrow.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperArrow.tex"));
+    _toSniperEye.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperEye.tex"));
+    _toSniperLed.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperLed.tex"));
 
     // initialize tile texture
-    _toTile.SetData_t( CTFILENAME("Textures\\Interface\\Tile.tex"));
+    _toTile.SetData_t(CTFILENAME("Textures\\Interface\\Tile.tex"));
     
     // set all textures as constant
     ((CTextureData*)_toHealth .GetData())->Force(TEX_CONSTANT);
@@ -1532,34 +1415,12 @@ extern void InitHUD(void)
     ((CTextureData*)_toArmorMedium.GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toArmorLarge.GetData())->Force(TEX_CONSTANT);
 
-    /*((CTextureData*)_toAShells       .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toABullets      .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toARockets      .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toAGrenades     .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toANapalm       .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toAElectricity  .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toAIronBall     .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toASniperBullets.GetData())->Force(TEX_CONSTANT);*/
-    ((CTextureData*)_toASeriousBomb  .GetData())->Force(TEX_CONSTANT);
-
-    /*((CTextureData*)_toWKnife          .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWColt           .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWSingleShotgun  .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWDoubleShotgun  .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWTommygun       .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWRocketLauncher .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWGrenadeLauncher.GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWChainsaw       .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWLaser          .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWIronCannon     .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWSniper         .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWMinigun        .GetData())->Force(TEX_CONSTANT);
-    ((CTextureData*)_toWFlamer         .GetData())->Force(TEX_CONSTANT);*/
-    
+    ((CTextureData*)_toASeriousBomb.GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_atoPowerups[0].GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_atoPowerups[1].GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_atoPowerups[2].GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_atoPowerups[3].GetData())->Force(TEX_CONSTANT);
+
     ((CTextureData*)_toTile      .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toSniperMask.GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toSniperWheel.GetData())->Force(TEX_CONSTANT);
@@ -1572,9 +1433,9 @@ extern void InitHUD(void)
     ((CTextureData*)_toEnemyCount.GetData())->Force(TEX_CONSTANT);
     _toComboToken.SetData_t(CTFILENAME("Textures\\Interface\\Token.tex"));
     ((CTextureData*)_toComboToken.GetData())->Force(TEX_CONSTANT);
-  }
-  catch( char *strError) {
-    FatalError( strError);
+
+  } catch (char *strError) {
+    FatalError(strError);
   }
 };
 

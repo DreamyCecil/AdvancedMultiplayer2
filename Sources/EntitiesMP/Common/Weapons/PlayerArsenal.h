@@ -4,22 +4,24 @@
 
 // Player's ammo
 struct SPlayerAmmo {
-  SWeaponAmmo *pAmmo; // ammo reference
-  BOOL bWeapon; // has weapons for this ammo
-
+  SWeaponAmmo *pAmmoStruct; // ammo reference
   INDEX iAmount; // current amount
+  
+  // Local variables for HUD
+  BOOL bWeapon; // has weapons for this ammo
   INDEX iLastAmount; // last amount
   FLOAT tmChanged; // when changed amount
 
   // Constructors
-  SPlayerAmmo(void) : pAmmo(NULL), iAmount(0), iLastAmount(0), tmChanged(0.0f), bWeapon(FALSE) {};
-  SPlayerAmmo(SWeaponAmmo *pSetAmmo) : pAmmo(pSetAmmo), iAmount(0), iLastAmount(0), tmChanged(0.0f), bWeapon(FALSE) {};
+  SPlayerAmmo(void) : pAmmoStruct(NULL), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
+  SPlayerAmmo(SWeaponAmmo *pSetAmmo) : pAmmoStruct(pSetAmmo), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
 
   // Assignment
   SPlayerAmmo &operator=(const SPlayerAmmo &paOther) {
-    this->pAmmo = paOther.pAmmo;
-    this->bWeapon = paOther.bWeapon;
+    this->pAmmoStruct = paOther.pAmmoStruct;
     this->iAmount = paOther.iAmount;
+
+    this->bWeapon = paOther.bWeapon;
     this->iLastAmount = paOther.iLastAmount;
     this->tmChanged = paOther.tmChanged;
 
@@ -28,44 +30,39 @@ struct SPlayerAmmo {
 
   // Write and read
   void Write(CTStream *strm) {
-    *strm << bWeapon;
     *strm << iAmount;
-    *strm << iLastAmount;
-    *strm << tmChanged;
   };
 
   void Read(CTStream *strm) {
-    *strm >> bWeapon;
     *strm >> iAmount;
-    *strm >> iLastAmount;
-    *strm >> tmChanged;
   };
 
   // Get max ammo
-  inline INDEX Max(void) { return (pAmmo == NULL ? 1 : pAmmo->iAmount); };
+  inline INDEX Max(void) { return (pAmmoStruct == NULL ? 1 : pAmmoStruct->iAmount); };
 
   // Check max ammo
   inline BOOL Full(void) {
-    if (pAmmo == NULL) {
+    if (pAmmoStruct == NULL) {
       return TRUE;
     }
-    return (iAmount >= pAmmo->iAmount);
+    return (iAmount >= pAmmoStruct->iAmount);
   };
 };
 
 // Player's weapon
 struct SPlayerWeapon {
-  SWeaponStruct *pWeapon; // weapon reference
+  SWeaponStruct *pWeaponStruct; // weapon reference
   SPlayerAmmo *pAmmo; // current ammo for this weapon
   SPlayerAmmo *pAlt; // current alt ammo for this weapon
 
   // Constructors
-  SPlayerWeapon(void) : pWeapon(NULL), pAmmo(NULL), pAlt(NULL) {};
-  SPlayerWeapon(SWeaponStruct *pSetWeapon, SPlayerAmmo *pSetAmmo, SPlayerAmmo *pSetAlt) : pWeapon(pSetWeapon), pAmmo(pSetAmmo), pAlt(pSetAlt) {};
+  SPlayerWeapon(void) : pWeaponStruct(NULL), pAmmo(NULL), pAlt(NULL) {};
+  SPlayerWeapon(SWeaponStruct *pSetWeapon, SPlayerAmmo *pSetAmmo, SPlayerAmmo *pSetAlt) :
+    pWeaponStruct(pSetWeapon), pAmmo(pSetAmmo), pAlt(pSetAlt) {};
 
   // Assignment
   SPlayerWeapon &operator=(const SPlayerWeapon &pwOther) {
-    this->pWeapon = pwOther.pWeapon;
+    this->pWeaponStruct = pwOther.pWeaponStruct;
     this->pAmmo = pwOther.pAmmo;
     this->pAlt = pwOther.pAlt;
 
@@ -73,8 +70,8 @@ struct SPlayerWeapon {
   };
 
   // Get ammo structures
-  inline SWeaponAmmo *GetAmmo(void) { return (pWeapon == NULL ? NULL : pWeapon->pAmmo); };
-  inline SWeaponAmmo *GetAlt(void)  { return (pWeapon == NULL ? NULL : pWeapon->pAlt); };
+  inline SWeaponAmmo *GetAmmo(void) { return (pWeaponStruct == NULL ? NULL : pWeaponStruct->pAmmo); };
+  inline SWeaponAmmo *GetAlt(void)  { return (pWeaponStruct == NULL ? NULL : pWeaponStruct->pAlt); };
 
   // Get ammo ID
   ULONG *GetAmmoID(void);
