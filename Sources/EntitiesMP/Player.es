@@ -61,9 +61,10 @@ extern void ConvertWorld(CEntity *);
 // [Cecil] Enemy counter
 extern INDEX _iAliveEnemies;
 
-// [Cecil] Player tags
+// [Cecil] Player visibility
 static CTextureObject _toPlayerMarker;
 static INDEX amp_iPlayerTags = 2; // 0 - no tag, 1 - only marker, 2 - with name, 3 - with distance
+static FLOAT amp_fPlayerBrightness = 0.1f; // player model brightness
 %}
 
 enum PlayerViewType {
@@ -817,6 +818,7 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("persistent user INDEX amp_bEnemyCounter;", &amp_bEnemyCounter);
   _pShell->DeclareSymbol("persistent user INDEX amp_iComboText;", &amp_iComboText);
   _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerTags;", &amp_iPlayerTags);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fPlayerBrightness;", &amp_fPlayerBrightness);
 
   // cheats
   _pShell->DeclareSymbol("user INDEX cht_bGod;",       &cht_bGod);
@@ -2272,11 +2274,8 @@ functions:
     }
   };
 
-
-  BOOL AdjustShadingParameters(FLOAT3D &vLightDirection, COLOR &colLight, COLOR &colAmbient) 
-  {
-    if( cht_bDumpPlayerShading)
-    {
+  BOOL AdjustShadingParameters(FLOAT3D &vLightDirection, COLOR &colLight, COLOR &colAmbient) {
+    if (cht_bDumpPlayerShading) {
       ANGLE3D a3dHPB;
       DirectionVectorToAngles(-vLightDirection, a3dHPB);
       UBYTE ubAR, ubAG, ubAB;
@@ -2288,13 +2287,23 @@ functions:
     }
 
     // make models at least a bit bright in deathmatch
+    UBYTE ubH, ubS, ubV;
+    ColorToHSV(colAmbient, ubH, ubS, ubV);
+
     if (!GetSP()->sp_bCooperative) {
-      UBYTE ubH, ubS, ubV;
-      ColorToHSV(colAmbient, ubH, ubS, ubV);
-      if (ubV<22) {
+      if (ubV < 22) {
         ubV = 22;
         colAmbient = HSVToColor(ubH, ubS, ubV);
-      }      
+      }
+      
+    // [Cecil] Adjustable brightness in coop
+    } else {
+      UBYTE ubBrightness = UBYTE(Clamp(amp_fPlayerBrightness, 0.0f, 1.0f) * 255.0f);
+
+      if (ubV < ubBrightness) {
+        ubV = ubBrightness;
+        colAmbient = HSVToColor(ubH, ubS, ubV);
+      }
     }
 
     return CPlayerEntity::AdjustShadingParameters(vLightDirection, colLight, colAmbient);

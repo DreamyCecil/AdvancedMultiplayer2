@@ -4730,7 +4730,7 @@ procedures:
       DecAmmo(FALSE, m_iAmmoLeft);
 
       while (--m_iAmmoLeft >= 0) {
-        FireMachineBullet(wpn_fFX[WEAPON_TOMMYGUN], wpn_fFY[WEAPON_TOMMYGUN], 500.0f, 10.0f, 0.2f, 0.1f);
+        FireMachineBullet(wpn_fFX[WEAPON_TOMMYGUN], wpn_fFY[WEAPON_TOMMYGUN], 500.0f, 10.0f, 0.15f, 0.1f);
 
         // firing FX
         CPlacement3D plShell;
@@ -5297,6 +5297,10 @@ procedures:
 
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     PlaySound(pl.m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
+
+    // print current type
+    CTString strType(0, "Type: %s", (m_bChainLauncher ? TRANS("Chainsaw Launcher") : TRANS("Rocket Launcher")));
+    PrintCenterMessage(this, m_penPlayer, Translate(strType.str_String), 1.0f, MSS_NONE);
 
     // reset model
     SetCurrentWeaponModel();
