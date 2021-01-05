@@ -1,0 +1,7 @@
+{
+  "Name" : "Cannon Balls",
+  "Icon" : "TexturesMP\\Interface\\AmCannonBall.tex",
+  
+  "Ammo" : 30,
+  "Mana" : 700.0,
+}

@@ -1,0 +1,7 @@
+{
+  "Name" : "Sniper Bullets",
+  "Icon" : "TexturesMP\\Interface\\AmSniperBullets.tex",
+  
+  "Ammo" : 50,
+  "Mana" : 200.0,
+}

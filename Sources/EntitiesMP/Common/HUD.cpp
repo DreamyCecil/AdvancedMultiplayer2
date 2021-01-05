@@ -385,9 +385,9 @@ static void HUD_DrawIcon( FLOAT fCenterX, FLOAT fCenterY, CTextureObject &toIcon
   // determine dimensions
   CTextureData *ptd = (CTextureData*)toIcon.GetData();
 
-  // [Cecil] Icon scale
-  const FLOAT fHalfSizeI = _fResolutionScaling*_fCustomScaling * ptd->GetPixWidth()  * 0.5f * fScale;
-  const FLOAT fHalfSizeJ = _fResolutionScaling*_fCustomScaling * ptd->GetPixHeight() * 0.5f * fScale;
+  // [Cecil] Replaced texture size with constant size (16), added extra scaling
+  const FLOAT fHalfSizeI = _fResolutionScaling*_fCustomScaling * 16 * fScale;
+  const FLOAT fHalfSizeJ = _fResolutionScaling*_fCustomScaling * 16 * fScale;
 
   // done
   _pDP->InitTexture( &toIcon);
@@ -1292,7 +1292,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
     HUD_DrawBorder(fCol+fAdv, fRow, fChrUnit*fWidthAdj, fOneUnit, colBorder);
     HUD_DrawText(fCol+fAdv, fRow, strValue, C_lGRAY, 1.0f);
-    HUD_DrawIcon(fCol, fRow, _toComboToken, C_WHITE, 1.0f, FALSE, 0.2f);
+    HUD_DrawIcon(fCol, fRow, _toComboToken, C_WHITE, 1.0f, FALSE, 0.8f);
   }
 
   // if single player or cooperative mode

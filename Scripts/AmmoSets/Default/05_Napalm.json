@@ -1,0 +1,7 @@
+{
+  "Name" : "Napalm",
+  "Icon" : "TexturesMP\\Interface\\AmFuelReservoir.tex",
+  
+  "Ammo" : 500,
+  "Mana" : 200.0,
+}

@@ -39,11 +39,16 @@ struct SWeaponAmmo : public SWeaponBase {
 
   // Constructors
   SWeaponAmmo(void) : SWeaponBase(0, "", 0.0f, ""), iAmount(0) {};
-  SWeaponAmmo(CTString strSetIcon, INDEX iSetAmmo, FLOAT fSetMana, CTString strSetPickup);
+
+  SWeaponAmmo(CTString strSetIcon, INDEX iSetAmmo, FLOAT fSetMana, CTString strSetPickup) :
+    SWeaponBase(0, strSetIcon, fSetMana, strSetPickup), iAmount(iSetAmmo) {};
 
   // Write and read
   void Write(CTStream *strm);
   void Read(CTStream *strm);
+
+  // Set max ammo
+  void SetAmmo(INDEX iSet);
 };
 
 // Weapon position

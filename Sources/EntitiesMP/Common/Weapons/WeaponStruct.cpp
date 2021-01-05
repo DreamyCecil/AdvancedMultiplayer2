@@ -11,7 +11,7 @@ extern CWeaponIcons _aAmmoIcons = CWeaponIcons();
 extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 
 // Ammo pointer
-#define AP(_Ammo) (&_aWeaponAmmo[_Ammo])
+#define AP(_Ammo) (_Ammo < _aWeaponAmmo.Count() ? &_aWeaponAmmo[_Ammo] : NULL)
 
 // Set icon
 void SWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
@@ -41,20 +41,6 @@ void SWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
   }
 };
 
-// Constructor
-SWeaponAmmo::SWeaponAmmo(CTString strSetIcon, INDEX iSetAmmo, FLOAT fSetMana, CTString strSetPickup) :
-  SWeaponBase(0, strSetIcon, fSetMana, strSetPickup)
-{
-  AddIcon(strSetIcon, _aAmmoIcons);
-
-  // ammo multiplier
-  FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f) * AmmoMul();
-  INDEX iTopAmmo = Floor(1000.0f * AmmoMul());
-
-  // set max ammo and in a pack
-  iAmount = ClampUp(INDEX(ceil(iSetAmmo * fModifier)), iTopAmmo);
-};
-
 // Write and read
 void SWeaponAmmo::Write(CTStream *strm) {
   *strm << strIcon;
@@ -64,8 +50,16 @@ void SWeaponAmmo::Write(CTStream *strm) {
 void SWeaponAmmo::Read(CTStream *strm) {
   *strm >> strIcon;
   *strm >> iAmount;
+};
 
-  AddIcon(strIcon, _aAmmoIcons);
+// Set max ammo
+void SWeaponAmmo::SetAmmo(INDEX iSet) {
+  // ammo multiplier
+  FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f) * AmmoMul();
+  INDEX iTopAmmo = Floor(1000.0f * AmmoMul());
+
+  // set max ammo
+  iAmount = ClampUp(INDEX(ceil(iSet * fModifier)), iTopAmmo);
 };
 
 // Write and read weapon properties
@@ -115,6 +109,9 @@ void AddAmmo(SWeaponAmmo &wa) {
   // set ID of the added ammo
   SWeaponAmmo &waAdded = _aWeaponAmmo[iAmmo];
   waAdded.ulID = iAmmo;
+
+  // create the icon
+  waAdded.AddIcon(waAdded.strIcon, _aWeaponIcons);
 };
 
 // Add new weapon to the list
@@ -127,6 +124,34 @@ void AddWeapon(SWeaponStruct &wp) {
 
   // create the icon
   wsAdded.AddIcon(wsAdded.strIcon, _aWeaponIcons);
+};
+
+// Parse ammo config
+BOOL ParseAmmoConfig(SWeaponAmmo &wa, CTString strConfig) {
+  // parse the config
+  CConfigBlock cb;
+  if (ParseConfig(strConfig, cb) != DJSON_OK) {
+    return FALSE;
+  }
+
+  // ammo properties
+  GetConfigString(cb, "Name", wa.strPickup);
+  GetConfigString(cb, "Icon", wa.strIcon);
+
+  // pickup values
+  int iAmmo = 0;
+
+  cb.GetValue("Ammo", iAmmo);
+  cb.GetValue("Mana", wa.fMana);
+
+  wa.SetAmmo(iAmmo);
+
+  // included configs
+  if (GetConfigString(cb, "Include", strConfig)) {
+    ParseAmmoConfig(wa, strConfig);
+  }
+
+  return TRUE;
 };
 
 // Parse weapon config
@@ -177,23 +202,28 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
 
 // Load weapons and ammo for this world
 extern void LoadWorldWeapons(CWorld *pwo) {
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmShells.tex",        MAX_SHELLS,        AV_SHELLS,        "Shells"));
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmBullets.tex",       MAX_BULLETS,       AV_BULLETS,       "Bullets"));
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmRockets.tex",       MAX_ROCKETS,       AV_ROCKETS,       "Rockets"));
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmGrenades.tex",      MAX_GRENADES,      AV_GRENADES,      "Grenades"));
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmFuelReservoir.tex", MAX_NAPALM,        AV_NAPALM,        "Napalm"));
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmSniperBullets.tex", MAX_SNIPERBULLETS, AV_SNIPERBULLETS, "Sniper Bullets"));
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmElectricity.tex",   MAX_ELECTRICITY,   AV_ELECTRICITY,   "Electricity"));
-  AddAmmo(SWeaponAmmo("TexturesMP\\Interface\\AmCannonBall.tex",    MAX_IRONBALLS,     AV_IRONBALLS,     "Cannon Balls"));
+  // load default sets
+  CDynamicStackArray<CTFileName> aList;
+
+  // go through ammo configs
+  MakeDirList(aList, CTFILENAME("Scripts\\AmmoSets\\Default\\"), "*.json", 0);
+
+  for (INDEX iAmmo = 0; iAmmo < aList.Count(); iAmmo++) {
+    CTString strFile = aList[iAmmo].str_String;
+
+    // parse the config
+    SWeaponAmmo waAmmo;
+    ParseAmmoConfig(waAmmo, strFile);
+
+    // add the ammo
+    AddAmmo(waAmmo);
+  }
   
   // add empty weapon
   AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV, NULL, NULL, "", 0, 0, 0.0f, ""));
   
-  // load the default set
-  CDynamicStackArray<CTFileName> aList;
+  // go through weapon configs
   MakeDirList(aList, CTFILENAME("Scripts\\WeaponSets\\Default\\"), "*.json", 0);
-
-  // go through the files
   HookConfigFunctions();
 
   for (INDEX iWeapon = 0; iWeapon < aList.Count(); iWeapon++) {

@@ -919,12 +919,14 @@ functions:
   };
 
   // [Cecil] Get current ammo
-  INDEX &CurrentAmmo(void) {
-    return GetWeapons()[m_iCurrentWeapon].pAmmo->iAmount;
+  INDEX CurrentAmmo(void) {
+    SPlayerAmmo *pAmmo = GetWeapons()[m_iCurrentWeapon].pAmmo;
+    return (pAmmo == NULL ? 0 : pAmmo->iAmount);
   };
 
-  INDEX &CurrentAlt(void) {
-    return GetWeapons()[m_iCurrentWeapon].pAlt->iAmount;
+  INDEX CurrentAlt(void) {
+    SPlayerAmmo *pAlt = GetWeapons()[m_iCurrentWeapon].pAlt;
+    return (pAlt == NULL ? 0 : pAlt->iAmount);
   };
 
   // [Cecil] Get weapon arsenal and ammunition
@@ -2764,11 +2766,11 @@ functions:
   void AddDefaultAmmoForWeapon(INDEX iWeapon, FLOAT fMaxAmmoRatio) {
     // [Cecil] Get weapon
     SPlayerWeapon &pw = GetWeapons()[iWeapon];
-    SWeaponStruct &wp = *pw.pWeaponStruct;
+    SWeaponStruct &ws = *pw.pWeaponStruct;
 
     // [Cecil] Define ammo amounts
-    FLOAT fPickupAmmo = Max(FLOAT(wp.iPickup), pw.MaxAmmo() * fMaxAmmoRatio);
-    FLOAT fPickupAlt = Max(FLOAT(wp.iPickupAlt), pw.MaxAlt() * fMaxAmmoRatio);
+    FLOAT fPickupAmmo = Max(FLOAT(ws.iPickup), pw.MaxAmmo() * fMaxAmmoRatio);
+    FLOAT fPickupAlt = Max(FLOAT(ws.iPickupAlt), pw.MaxAlt() * fMaxAmmoRatio);
 
     // [Cecil] Ammo references
     SPlayerAmmo *pAmmo = pw.pAmmo;
@@ -2777,13 +2779,13 @@ functions:
     // [Cecil] Add ammo
     if (pAmmo != NULL) {
       pAmmo->iAmount += fPickupAmmo;
-      AddManaToPlayer(fPickupAmmo * wp.fMana * MANA_AMMO);
+      AddManaToPlayer(fPickupAmmo * ws.fMana * MANA_AMMO);
     }
 
     // [Cecil] NOTE: Crashes around here
     if (pAlt != NULL) {
       pAlt->iAmount += fPickupAlt;
-      AddManaToPlayer(fPickupAlt * wp.fMana * MANA_AMMO);
+      AddManaToPlayer(fPickupAlt * ws.fMana * MANA_AMMO);
     }
 
     // make sure we don't have more ammo than maximum
@@ -5031,7 +5033,7 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotate");}
 
     // if firing
-    if(HoldingFire() && CurrentAmmo() > 0) {
+    if (HoldingFire() && CurrentAmmo() > 0) {
       // play fire sound
       PlaySound(pl.m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
       PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
@@ -5068,15 +5070,18 @@ procedures:
         // [Cecil] Dual minigun
         CPlacement3D plShell2;
 
+        // [Cecil] Horizontal position
+        FLOAT fPosX = m_aWeapons[WEAPON_MINIGUN].GetPosition().Pos1(1);
+
         // if 1st person view
         CPlayer &pl = (CPlayer&)*m_penPlayer;
         if (pl.m_penCamera == NULL && pl.m_pen3rdPersonView == NULL) {
           CalcWeaponPosition(FLOAT3D(afMinigunShellPos[0], afMinigunShellPos[1], afMinigunShellPos[2]), plShell, FALSE);
-          CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - FirePos(WEAPON_MINIGUN)(1)*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
+          CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - fPosX*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
         // if 3rd person view
         } else {
           CalcWeaponPosition3rdPersonView(FLOAT3D(afMinigunShellPos3rdView[0], afMinigunShellPos3rdView[1], afMinigunShellPos3rdView[2]), plShell, FALSE);
-          CalcWeaponPosition3rdPersonView(FLOAT3D(-afMinigunShellPos3rdView[0] - FirePos(WEAPON_MINIGUN)(1)*2.0f, afMinigunShellPos3rdView[1], afMinigunShellPos3rdView[2]), plShell2, FALSE);
+          CalcWeaponPosition3rdPersonView(FLOAT3D(-afMinigunShellPos3rdView[0] - fPosX*2.0f, afMinigunShellPos3rdView[1], afMinigunShellPos3rdView[2]), plShell2, FALSE);
         }
 
         FLOATmatrix3D mRot;
@@ -5133,7 +5138,7 @@ procedures:
           // bubble
           if (pl.m_pstState == PST_DIVE) {
             ShellLaunchData &sldBubble = pl.m_asldData[pl.m_iFirstEmptySLD];
-            CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - FirePos(WEAPON_MINIGUN)(1)*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
+            CalcWeaponPosition(FLOAT3D(-afMinigunShellPos[0] - fPosX*2.0f, afMinigunShellPos[1], afMinigunShellPos[2]), plShell2, FALSE);
 
             MakeRotationMatrixFast(mRot2, plShell2.pl_OrientationAngle);
             sldBubble.sld_vPos = plShell2.pl_PositionVector;

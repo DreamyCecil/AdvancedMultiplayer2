@@ -1,0 +1,7 @@
+{
+  "Name" : "Electricity",
+  "Icon" : "TexturesMP\\Interface\\AmElectricity.tex",
+  
+  "Ammo" : 400,
+  "Mana" : 250.0,
+}
