@@ -777,6 +777,29 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   CWeaponArsenal &aWeapons = _penWeapons->GetWeapons();
   CAmmunition &aAmmo = _penWeapons->GetAmmo();
 
+  // [Cecil] Reset weapons on ammunition
+  for (INDEX iResetAmmo = 0; iResetAmmo < aAmmo.Count(); iResetAmmo++) {
+    aAmmo[iResetAmmo].bWeapon = FALSE;
+  }
+
+  // [Cecil] Check if any weapons for certain ammo type
+  for (INDEX iCheckWeapon = WEAPON_KNIFE; iCheckWeapon < WEAPON_LAST; iCheckWeapon++) {
+    if (!WeaponExists(_penWeapons->m_iAvailableWeapons, iCheckWeapon)) {
+      continue;
+    }
+
+    SPlayerAmmo *pAmmo = aWeapons[iCheckWeapon].pAmmo;
+    SPlayerAmmo *pAlt = aWeapons[iCheckWeapon].pAlt;
+
+    // have weapons for this ammo type
+    if (pAmmo != NULL) {
+      pAmmo->bWeapon = TRUE;
+    }
+    if (pAlt != NULL) {
+      pAlt->bWeapon = TRUE;
+    }
+  }
+
   // determine corresponding ammo and weapon texture component
   ptoWantedWeapon = aWeapons[iWantedWeapon].pWeaponStruct->ptoIcon;
 
