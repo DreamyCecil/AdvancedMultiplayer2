@@ -7,7 +7,7 @@ struct SPlayerAmmo {
   SWeaponAmmo *pAmmoStruct; // ammo reference
   INDEX iAmount; // current amount
   
-  // Local variables for HUD
+  // Local variables for the HUD
   BOOL bWeapon; // has weapons for this ammo
   INDEX iLastAmount; // last amount
   FLOAT tmChanged; // when changed amount
@@ -38,14 +38,16 @@ struct SPlayerAmmo {
   };
 
   // Get max ammo
-  inline INDEX Max(void) { return (pAmmoStruct == NULL ? 1 : pAmmoStruct->iAmount); };
+  inline INDEX &Max(void) { return pAmmoStruct->iMaxAmount; };
 
   // Check max ammo
   inline BOOL Full(void) {
-    if (pAmmoStruct == NULL) {
-      return TRUE;
-    }
-    return (iAmount >= pAmmoStruct->iAmount);
+    return (iAmount >= pAmmoStruct->iMaxAmount);
+  };
+
+  // Set max ammo
+  inline void SetMax(void) {
+    iAmount = Max();
   };
 };
 
@@ -54,24 +56,35 @@ struct SPlayerWeapon {
   SWeaponStruct *pWeaponStruct; // weapon reference
   SPlayerAmmo *pAmmo; // current ammo for this weapon
   SPlayerAmmo *pAlt; // current alt ammo for this weapon
+  INDEX iMag; // current ammo in the magazine
 
   // Constructors
-  SPlayerWeapon(void) : pWeaponStruct(NULL), pAmmo(NULL), pAlt(NULL) {};
+  SPlayerWeapon(void) : pWeaponStruct(NULL), pAmmo(NULL), pAlt(NULL), iMag(0) {};
   SPlayerWeapon(SWeaponStruct *pSetWeapon, SPlayerAmmo *pSetAmmo, SPlayerAmmo *pSetAlt) :
-    pWeaponStruct(pSetWeapon), pAmmo(pSetAmmo), pAlt(pSetAlt) {};
+    pWeaponStruct(pSetWeapon), pAmmo(pSetAmmo), pAlt(pSetAlt), iMag(0) {};
 
   // Assignment
   SPlayerWeapon &operator=(const SPlayerWeapon &pwOther) {
     this->pWeaponStruct = pwOther.pWeaponStruct;
     this->pAmmo = pwOther.pAmmo;
     this->pAlt = pwOther.pAlt;
+    this->iMag = pwOther.iMag;
 
     return *this;
   };
 
+  // Write and read
+  void Write(CTStream *strm) {
+    *strm << iMag;
+  };
+
+  void Read(CTStream *strm) {
+    *strm >> iMag;
+  };
+
   // Get ammo structures
-  inline SWeaponAmmo *GetAmmo(void) { return (pWeaponStruct == NULL ? NULL : pWeaponStruct->pAmmo); };
-  inline SWeaponAmmo *GetAlt(void)  { return (pWeaponStruct == NULL ? NULL : pWeaponStruct->pAlt); };
+  inline SWeaponAmmo *GetAmmo(void) { return pWeaponStruct->pAmmo; };
+  inline SWeaponAmmo *GetAlt(void)  { return pWeaponStruct->pAlt; };
 
   // Get ammo ID
   ULONG *GetAmmoID(void);
@@ -86,10 +99,17 @@ struct SPlayerWeapon {
   // Check for ammo
   BOOL HasAmmo(BOOL bCheckAlt);
 
+  // Check full mag
+  inline BOOL FullMag(void) { return (iMag >= pWeaponStruct->iMaxMag); };
+
+  // Reload magazine
+  void Reload(BOOL bMax = FALSE);
+
+  // Can reload magazine
+  inline BOOL CanReload(void) { return (!FullMag() && CurrentAmmo() > iMag); };
+
   // Get weapon position
-  inline SWeaponPos GetPosition(void) {
-    return (pWeaponStruct == NULL ? SWeaponPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV) : pWeaponStruct->wpsPos);
-  };
+  inline SWeaponPos GetPosition(void) { return pWeaponStruct->wpsPos; };
 };
 
 // Player's arsenal

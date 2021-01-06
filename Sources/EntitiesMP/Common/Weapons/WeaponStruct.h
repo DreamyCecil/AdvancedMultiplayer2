@@ -35,13 +35,11 @@ struct SWeaponBase {
 
 // Weapon ammo
 struct SWeaponAmmo : public SWeaponBase {
-  INDEX iAmount; // maximum ammo amount
+  INDEX iMaxAmount; // maximum ammo amount
+  BOOL bDisplay; // display in the ammo list
 
   // Constructors
-  SWeaponAmmo(void) : SWeaponBase(0, "", 0.0f, ""), iAmount(0) {};
-
-  SWeaponAmmo(CTString strSetIcon, INDEX iSetAmmo, FLOAT fSetMana, CTString strSetPickup) :
-    SWeaponBase(0, strSetIcon, fSetMana, strSetPickup), iAmount(iSetAmmo) {};
+  SWeaponAmmo(void) : SWeaponBase(0, "", 0.0f, ""), iMaxAmount(0), bDisplay(TRUE) {};
 
   // Write and read
   void Write(CTStream *strm);
@@ -85,19 +83,18 @@ struct SWeaponStruct : public SWeaponBase {
 
   SWeaponAmmo *pAmmo; // ammo
   SWeaponAmmo *pAlt; // alt ammo
+  INDEX iMaxMag; // magazine size
 
   INDEX iPickup; // ammo in a weapon pickup
   INDEX iPickupAlt; // alt ammo in a weapon pickup
 
   // Constructors
   SWeaponStruct(void) : SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-                        pAmmo(NULL), pAlt(NULL), iPickup(0), iPickupAlt(0) {};
+                        pAmmo(NULL), pAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0) {};
 
-  SWeaponStruct(CPlacement3D plSetFirst, CPlacement3D plSetThird, FLOAT3D vSetFire, FLOAT fSetFOV,
-                SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon,
-                INDEX iSetPickup, INDEX iSetPickupAlt, FLOAT fSetMana, CTString strSetPickup) :
-    SWeaponBase(0, strSetIcon, fSetMana, strSetPickup), wpsPos(plSetFirst, plSetThird, vSetFire, fSetFOV),
-    pAmmo(pSetAmmo), pAlt(pSetAlt), iPickup(iSetPickup), iPickupAlt(iSetPickupAlt) {};
+  SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
+    SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
+    pAmmo(NULL), pAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0) {};
 
   // Write and read
   void Write(CTStream *strm);

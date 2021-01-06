@@ -2,8 +2,9 @@
   "Name" : "Shofield .45 w/ TMAR",
   "Icon" : "TexturesMP\\Interface\\WColt.tex",
   
-  "Ammo" : -1,
+  "Ammo" : 0,
   "AltAmmo": -1,
+  "Mag" : 6,
   
   "Pos1" : [0.19, -0.21, -0.1],
   "Rot1" : [-1.0, 0.0, 0.0],
@@ -14,7 +15,7 @@
   "FOV" : 57.0,
   "PosFire" : [0.0, 0.0],
   
-  "PickupAmmo" : 0,
+  "PickupAmmo" : 6,
   "PickupAlt"  : 0,
   "Mana" : 0.0,
 }

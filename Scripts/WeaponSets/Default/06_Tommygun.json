@@ -2,7 +2,7 @@
   "Name" : "M1-A2 Tommygun",
   "Icon" : "TexturesMP\\Interface\\WTommygun.tex",
   
-  "Ammo" : 1,
+  "Ammo" : 2,
   "AltAmmo": -1,
   
   "Pos1" : [0.121, -0.213, -0.285],

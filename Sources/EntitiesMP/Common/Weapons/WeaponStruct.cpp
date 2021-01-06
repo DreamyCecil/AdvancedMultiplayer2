@@ -44,12 +44,14 @@ void SWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
 // Write and read
 void SWeaponAmmo::Write(CTStream *strm) {
   *strm << strIcon;
-  *strm << iAmount;
+  *strm << iMaxAmount;
+  *strm << bDisplay;
 };
 
 void SWeaponAmmo::Read(CTStream *strm) {
   *strm >> strIcon;
-  *strm >> iAmount;
+  *strm >> iMaxAmount;
+  *strm >> bDisplay;
 };
 
 // Set max ammo
@@ -59,11 +61,12 @@ void SWeaponAmmo::SetAmmo(INDEX iSet) {
   INDEX iTopAmmo = Floor(1000.0f * AmmoMul());
 
   // set max ammo
-  iAmount = ClampUp(INDEX(ceil(iSet * fModifier)), iTopAmmo);
+  iMaxAmount = ClampUp(INDEX(ceil(iSet * fModifier)), iTopAmmo);
 };
 
 // Write and read weapon properties
 void SWeaponStruct::Write(CTStream *strm) {
+  *strm << strIcon;
   *strm << wpsPos.plPos;
   *strm << wpsPos.plThird;
   *strm << wpsPos.vFire;
@@ -84,6 +87,7 @@ void SWeaponStruct::Write(CTStream *strm) {
 };
 
 void SWeaponStruct::Read(CTStream *strm) {
+  *strm >> strIcon;
   *strm >> wpsPos.plPos;
   *strm >> wpsPos.plThird;
   *strm >> wpsPos.vFire;
@@ -133,25 +137,30 @@ BOOL ParseAmmoConfig(SWeaponAmmo &wa, CTString strConfig) {
   if (ParseConfig(strConfig, cb) != DJSON_OK) {
     return FALSE;
   }
-
+  
+  // included config
+  if (GetConfigString(cb, "Include", strConfig)) {
+    ParseAmmoConfig(wa, strConfig);
+  }
 
   // ammo properties
   GetConfigString(cb, "Name", wa.strPickup);
   GetConfigString(cb, "Icon", wa.strIcon);
 
+  int iDisplay = 1;
+  if (cb.GetValue("Display", iDisplay)) {
+    wa.bDisplay = iDisplay;
+  }
+
   // pickup values
   int iAmmo = 0;
   CConfigValue valMana;
 
-  cb.GetValue("Ammo", iAmmo);
-  cb.GetValue("Mana", valMana);
-
-  wa.SetAmmo(iAmmo);
-  wa.fMana = valMana.GetNumber();
-
-  // included configs
-  if (GetConfigString(cb, "Include", strConfig)) {
-    ParseAmmoConfig(wa, strConfig);
+  if (cb.GetValue("Ammo", iAmmo)) {
+    wa.SetAmmo(iAmmo);
+  }
+  if (cb.GetValue("Mana", valMana)) {
+    wa.fMana = valMana.GetNumber();
   }
 
   return TRUE;
@@ -165,6 +174,11 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
     return FALSE;
   }
 
+  // included config
+  if (GetConfigString(cb, "Include", strConfig)) {
+    ParseWeaponConfig(ws, strConfig);
+  }
+
   CConfigValue val;
 
   // get weapon positions
@@ -174,35 +188,39 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
   GetConfigVector(cb, "Rot3", ws.wpsPos.Rot3());
   GetConfigVector(cb, "PosFire", ws.wpsPos.vFire);
 
-  cb.GetValue("FOV", val);
-  ws.wpsPos.fFOV = val.GetNumber();
+  if (cb.GetValue("FOV", val)) {
+    ws.wpsPos.fFOV = val.GetNumber();
+  }
 
   // get ammo
   int iAmmo = -1;
   int iAlt = -1;
+  int iMag = 0;
   int iPickupAmmo = -1;
   int iPickupAlt = -1;
 
-  cb.GetValue("Ammo", iAmmo);
-  cb.GetValue("AltAmmo", iAlt);
-  cb.GetValue("PickupAmmo", iPickupAmmo);
-  cb.GetValue("PickupAlt", iPickupAlt);
-  
-  ws.pAmmo = (iAmmo != -1 ? AP(iAmmo) : NULL);
-  ws.pAlt = (iAlt != -1 ? AP(iAlt) : NULL);
-  ws.iPickup = ceil(iPickupAmmo * AmmoMul());
-  ws.iPickupAlt = ceil(iPickupAlt * AmmoMul());
+  if (cb.GetValue("Ammo", iAmmo)) {
+    ws.pAmmo = (iAmmo != -1 ? AP(iAmmo) : NULL);
+  }
+  if (cb.GetValue("AltAmmo", iAlt)) {
+    ws.pAlt = (iAlt != -1 ? AP(iAlt) : NULL);
+  }
+  if (cb.GetValue("Mag", iMag)) {
+    ws.iMaxMag = ceil(iMag * AmmoMul());
+  }
+  if (cb.GetValue("PickupAmmo", iPickupAmmo)) {
+    ws.iPickup = ceil(iPickupAmmo * AmmoMul());
+  }
+  if (cb.GetValue("PickupAlt", iPickupAlt)) {
+    ws.iPickupAlt = ceil(iPickupAlt * AmmoMul());
+  }
 
   // other
   GetConfigString(cb, "Name", ws.strPickup);
   GetConfigString(cb, "Icon", ws.strIcon);
 
-  cb.GetValue("Mana", val);
-  ws.fMana = val.GetNumber();
-
-  // included configs
-  if (GetConfigString(cb, "Include", strConfig)) {
-    ParseWeaponConfig(ws, strConfig);
+  if (cb.GetValue("Mana", val)) {
+    ws.fMana = val.GetNumber();
   }
 
   return TRUE;
@@ -228,7 +246,7 @@ extern void LoadWorldWeapons(CWorld *pwo) {
   }
   
   // add empty weapon
-  AddWeapon(SWeaponStruct(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV, NULL, NULL, "", 0, 0, 0.0f, ""));
+  AddWeapon(SWeaponStruct(NULL, NULL, "", ""));
   
   // go through weapon configs
   MakeDirList(aList, CTFILENAME("Scripts\\WeaponSets\\Default\\"), "*.json", 0);

@@ -2,7 +2,7 @@
   "Name" : "Double Barrel Coach Gun",
   "Icon" : "TexturesMP\\Interface\\WDoubleShotgun.tex",
   
-  "Ammo" : 0,
+  "Ammo" : 1,
   "AltAmmo": -1,
   
   "Pos1" : [0.13, -0.21, -0.364],

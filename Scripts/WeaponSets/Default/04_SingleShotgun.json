@@ -2,8 +2,8 @@
   "Name" : "12 Gauge Pump Action Shotgun",
   "Icon" : "TexturesMP\\Interface\\WSingleShotgun.tex",
   
-  "Ammo" : 0,
-  "AltAmmo": 3,
+  "Ammo" : 1,
+  "AltAmmo": 4,
   
   "Pos1" : [0.12, -0.22, -0.34],
   "Rot1" : [2.0, 2.0, 0.0],

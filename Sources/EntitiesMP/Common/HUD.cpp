@@ -774,8 +774,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   INDEX iCurrentWeapon = _penWeapons->m_iCurrentWeapon;
   INDEX iWantedWeapon  = _penWeapons->m_iWantedWeapon;
 
-  CWeaponArsenal &aWeapons = _penWeapons->GetWeapons();
-  CAmmunition &aAmmo = _penWeapons->GetAmmo();
+  CWeaponArsenal &aWeapons = _penWeapons->PredTail()->m_aWeapons;
+  CAmmunition &aAmmo = _penWeapons->PredTail()->m_aAmmo;
 
   // [Cecil] Reset weapons on ammunition
   for (INDEX iResetAmmo = 0; iResetAmmo < aAmmo.Count(); iResetAmmo++) {
@@ -816,16 +816,29 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   FLOAT fAltAmmo = 0.0f;
   FLOAT fAltMaxAmmo = 1.0f;
 
+  // [Cecil] Ammo available
   if (pAmmo != NULL) {
     ptoAmmo = pAmmo->ptoIcon;
-    fAmmo = pwCurrent.CurrentAmmo();
-    fMaxAmmo = pAmmo->iAmount;
+
+    // display magazine
+    INDEX iMaxMag = pwCurrent.pWeaponStruct->iMaxMag;
+
+    if (iMaxMag > 0) {
+      fAmmo = pwCurrent.iMag;
+      fMaxAmmo = iMaxMag;
+
+    // display ammo
+    } else {
+      fAmmo = pwCurrent.CurrentAmmo();
+      fMaxAmmo = pAmmo->iMaxAmount;
+    }
   }
 
+  // [Cecil] Alt ammo available
   if (_penWeapons->AltFireExists(iCurrentWeapon) && pAltAmmo != NULL) {
     ptoAltAmmo = pAltAmmo->ptoIcon;
     fAltAmmo = pwCurrent.CurrentAlt();
-    fAltMaxAmmo = pAltAmmo->iAmount;
+    fAltMaxAmmo = pAltAmmo->iMaxAmount;
   }
 
   // [Cecil] Adjust size based on max ammo
@@ -928,9 +941,14 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   // loop thru all ammo types
   if (!GetSP()->sp_bInfiniteAmmo) {
     for (INDEX iAmmo = aAmmo.Count()-1; iAmmo >= 0; iAmmo--) {
-      // if no ammo and hasn't got that weapon - just skip this ammo
       SPlayerAmmo &pa = aAmmo[iAmmo];
 
+      // [Cecil] Don't display
+      if (!pa.pAmmoStruct->bDisplay) {
+        continue;
+      }
+
+      // [Cecil] No weapons for ammo and no ammo
       if (pa.iAmount == 0 && !pa.bWeapon) {
         continue;
       }
@@ -940,16 +958,22 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
       CTextureObject *ptoDrawIcon = pa.pAmmoStruct->ptoIcon;
 
-      if (ptoAmmo == ptoDrawIcon) {
+      // [Cecil] This icon matches the current ammo/alt icon
+      if (ptoDrawIcon != NULL && (ptoAmmo == ptoDrawIcon || ptoAltAmmo == ptoDrawIcon)) {
         colIcon = C_WHITE;
       }
        
       fNormValue = (FLOAT)pa.iAmount / pa.Max();
       colBar = AddShaker(4, pa.iAmount, pa.iLastAmount, pa.tmChanged, fMoverX, fMoverY);
 
-      HUD_DrawBorder(fCol,         fRow+fMoverY, fOneUnitS, fOneUnitS, colBorder);
-      HUD_DrawIcon(  fCol,         fRow+fMoverY, *ptoDrawIcon, colIcon, fNormValue, FALSE, 1.0f);
-      HUD_DrawBar(   fCol+fBarPos, fRow+fMoverY, fOneUnitS/5, fOneUnitS-2, BO_DOWN, colBar, fNormValue);
+      HUD_DrawBorder(fCol, fRow+fMoverY, fOneUnitS, fOneUnitS, colBorder);
+
+      if (ptoDrawIcon != NULL) {
+        HUD_DrawIcon(fCol, fRow+fMoverY, *ptoDrawIcon, colIcon, fNormValue, FALSE, 1.0f);
+      }
+
+      HUD_DrawBar(fCol+fBarPos, fRow+fMoverY, fOneUnitS/5, fOneUnitS-2, BO_DOWN, colBar, fNormValue);
+
       // advance to next position
       fCol -= fAdvUnitS;  
     }

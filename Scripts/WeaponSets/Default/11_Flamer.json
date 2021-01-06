@@ -2,7 +2,7 @@
   "Name" : "XOP Flamethrower",
   "Icon" : "TexturesMP\\Interface\\WFlamer.tex",
   
-  "Ammo" : 4,
+  "Ammo" : 5,
   "AltAmmo": -1,
   
   "Pos1" : [0.204, -0.306, -0.57],

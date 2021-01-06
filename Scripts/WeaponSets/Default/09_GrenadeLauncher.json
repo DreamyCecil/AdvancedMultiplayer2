@@ -2,7 +2,7 @@
   "Name" : "MKIII Grenade Launcher",
   "Icon" : "TexturesMP\\Interface\\WGrenadeLauncher.tex",
   
-  "Ammo" : 3,
+  "Ammo" : 4,
   "AltAmmo": -1,
   
   "Pos1" : [0.14, -0.41, -0.335],

@@ -2,7 +2,7 @@
   "Name" : "XL2 Lasergun",
   "Icon" : "TexturesMP\\Interface\\WLaser.tex",
   
-  "Ammo" : 6,
+  "Ammo" : 7,
   "AltAmmo": -1,
   
   "Pos1" : [0.141, -0.174, -0.175],

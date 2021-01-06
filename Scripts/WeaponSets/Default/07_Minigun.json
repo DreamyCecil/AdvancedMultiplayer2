@@ -2,7 +2,7 @@
   "Name" : "XM214-A Minigun",
   "Icon" : "TexturesMP\\Interface\\WMinigun.tex",
   
-  "Ammo" : 1,
+  "Ammo" : 2,
   "AltAmmo": -1,
   
   "Pos1" : [0.137, -0.24, -0.328],

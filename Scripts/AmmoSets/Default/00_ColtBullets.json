@@ -1,0 +1,8 @@
+{
+  "Name" : "Colt Bullets",
+  "Icon" : "TexturesMP\\Interface\\WColt.tex",
+  "Display" : false,
+  
+  "Ammo" : 6,
+  "Mana" : 0.0,
+}

@@ -34,3 +34,15 @@ BOOL SPlayerWeapon::HasAmmo(BOOL bCheckAlt) {
 
   return (iAmmo > 0);
 };
+
+// Reload magazine
+void SPlayerWeapon::Reload(BOOL bMax) {
+  INDEX iAmmo = CurrentAmmo();
+
+  if (bMax || iAmmo < 0) {
+    iMag = pWeaponStruct->iMaxMag;
+    return;
+  }
+
+  iMag = Min(iAmmo, pWeaponStruct->iMaxMag);
+};
