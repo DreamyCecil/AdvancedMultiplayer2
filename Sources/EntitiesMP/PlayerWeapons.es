@@ -52,7 +52,10 @@
 extern INDEX hud_bShowWeapon;
 
 // [Cecil] AMP 2 customization
-extern INDEX amp_bPowerUpParticles;
+static INDEX amp_bPowerUpParticles = TRUE;
+static FLOAT amp_afWeaponPos[3] = {1.0f, 1.0f, 1.0f};
+static FLOAT amp_afWeaponRot[3] = {1.0f, 1.0f, 1.0f};
+static FLOAT amp_fWeaponFOV = 1.0f;
 
 // [Cecil] Tesla lightning
 #include "EntitiesMP/TeslaLightning.h"
@@ -136,9 +139,6 @@ enum WeaponType {
 %{
 // AVAILABLE WEAPON MASK
 #define WEAPONS_ALLAVAILABLEMASK 0x3FFF
-
-#define MAX_WEAPONS 30
-
 
 // MiniGun specific
 #define MINIGUN_STATIC      0
@@ -402,6 +402,12 @@ void CPlayerWeapons_Init(void) {
   _pShell->DeclareSymbol("persistent user FLOAT plr_tmSnoopingTime;",  &plr_tmSnoopingTime);
   _pShell->DeclareSymbol("persistent user FLOAT plr_tmSnoopingDelay;", &plr_tmSnoopingDelay);
 
+  // [Cecil] AMP 2 Customization
+  _pShell->DeclareSymbol("persistent user INDEX amp_bPowerUpParticles;", &amp_bPowerUpParticles);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_afWeaponPos[3];", &amp_afWeaponPos);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_afWeaponRot[3];", &amp_afWeaponRot);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fWeaponFOV;", &amp_fWeaponFOV);
+
   // precache base weapons
   CPlayerWeapons_Precache(0x03);
 }
@@ -470,8 +476,6 @@ properties:
  36 FLOAT3D m_vBulletTarget = FLOAT3D(0,0,0), // bullet hit (if hit) position remembered here
 
 // weapons specific
-// knife
-210 INDEX m_iKnifeStand = 1,
 // colt
 215 INDEX m_iColtBullets = 6,
 // minigun
@@ -482,6 +486,7 @@ properties:
 // lerped bullets fire
 230 FLOAT3D m_iLastBulletPosition = FLOAT3D(32000.0f, 32000.0f, 32000.0f),
 231 INDEX m_iBulletsOnFireStart = 0,
+
 // sniper
 233 FLOAT m_fSniperMaxFOV = 90.0f,
 234 FLOAT m_fSniperMinFOV = 14.2f,
@@ -489,18 +494,24 @@ properties:
 236 BOOL  m_bSniping = FALSE,
 237 FLOAT m_fMinimumZoomFOV  = 53.1f,
 238 FLOAT m_tmLastSniperFire = 0.0f,
+
 // pipebomb
 //235 CEntityPointer m_penPipebomb,
 //236 INDEX m_bPipeBombDropped = FALSE,
+
 // flamer
 240 CEntityPointer m_penFlame,
+
 // laser
 245 INDEX m_iLaserBarrel = 0,
+
 // ghostbuster
 250 CEntityPointer m_penGhostBusterRay,
+
 // fire flare
 251 INDEX m_iFlare = FLARE_REMOVE,       // 0-none, 1-remove, 2-add
 252 INDEX m_iSecondFlare = FLARE_REMOVE, // 0-none, 1-remove, 2-add
+
 // cannon
 260 FLOAT m_fWeaponDrawPowerOld = 0,
 261 FLOAT m_fWeaponDrawPower = 0,
@@ -1052,6 +1063,24 @@ functions:
     // [Cecil] Weapon position shift
     if (iWeaponData == WEAPON_MINIGUN && AltFireExists(WEAPON_MINIGUN)) {
       wps.Pos1(1) += 0.1f;
+    }
+
+    // [Cecil] Customizable position
+    wps.Pos1(1) *= amp_afWeaponPos[0];
+    wps.Pos1(2) *= amp_afWeaponPos[1];
+    wps.Pos1(3) *= amp_afWeaponPos[2];
+
+    wps.Rot1(1) *= amp_afWeaponRot[0];
+    wps.Rot1(2) *= amp_afWeaponRot[1];
+    wps.Rot1(3) *= amp_afWeaponRot[2];
+
+    if (amp_fWeaponFOV < 1.0f) {
+      // [Cecil] Lower FOV (0..1 = 20..OG)
+      wps.fFOV = Lerp(20.0f, wps.fFOV, ClampDn(amp_fWeaponFOV, 0.0f));
+
+    } else {
+      // [Cecil] Upper FOV (1..2 = OG..120)
+      wps.fFOV = Lerp(wps.fFOV, 120.0f, ClampUp(amp_fWeaponFOV-1.0f, 1.0f));
     }
 
     // added: chainsaw shaking
@@ -1728,16 +1757,15 @@ functions:
   void SetCurrentWeaponModel(void) {
     // WARNING !!! ---> Order of attachment must be the same with order in RenderWeaponModel()
     switch (m_iCurrentWeapon) {
-      case WEAPON_NONE:
-        break;
-      // knife
+      case WEAPON_NONE: break;
+
       case WEAPON_KNIFE:
         SetComponents(this, m_moWeapon, MODEL_KNIFE, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, KNIFE_ATTACHMENT_KNIFEITEM, MODEL_KNIFEITEM, 
                              TEXTURE_KNIFEITEM, TEX_REFL_BWRIPLES02, TEX_SPEC_WEAK, 0);
         m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, 0);
         break;
-      // colt
+
       case WEAPON_DOUBLECOLT: {
         SetComponents(this, m_moWeaponSecond, MODEL_COLT, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeaponSecond, COLT_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -1747,6 +1775,7 @@ functions:
         AddAttachmentToModel(this, mo, COLTMAIN_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0); }
         m_moWeaponSecond.StretchModel(FLOAT3D(-1,1,1));
         m_moWeaponSecond.PlayAnim(COLT_ANIM_WAIT1, 0);
+
       case WEAPON_COLT: {
         SetComponents(this, m_moWeapon, MODEL_COLT, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -1756,6 +1785,7 @@ functions:
         AddAttachmentToModel(this, mo, COLTMAIN_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
         m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, 0);
         break; }
+
       case WEAPON_SINGLESHOTGUN: {
         SetComponents(this, m_moWeapon, MODEL_SINGLESHOTGUN, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, SINGLESHOTGUN_ATTACHMENT_BARRELS, MODEL_SS_BARRELS, TEXTURE_SS_BARRELS, TEX_REFL_DARKMETAL, TEX_SPEC_WEAK, 0);
@@ -1765,18 +1795,22 @@ functions:
         AddAttachmentToModel(this, mo, BARRELS_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
         m_moWeapon.PlayAnim(SINGLESHOTGUN_ANIM_WAIT1, 0);
         break; }
+
       case WEAPON_DOUBLESHOTGUN: {
         SetComponents(this, m_moWeapon, MODEL_DOUBLESHOTGUN, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_BARRELS, MODEL_DS_BARRELS, TEXTURE_DS_BARRELS, TEX_REFL_BWRIPLES01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_HANDLE, MODEL_DS_HANDLE, TEXTURE_DS_HANDLE, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_SWITCH, MODEL_DS_SWITCH, TEXTURE_DS_SWITCH, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_AMMO, MODEL_DS_AMMO, TEXTURE_DS_AMMO, 0 ,0, 0);
-        SetComponents(this, m_moWeaponSecond, MODEL_DS_HANDWITHAMMO, TEXTURE_HAND, 0, 0, 0);
         CModelObject &mo = m_moWeapon.GetAttachmentModel(DOUBLESHOTGUN_ATTACHMENT_BARRELS)->amo_moModelObject;
         AddAttachmentToModel(this, mo, DSHOTGUNBARRELS_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-        m_moWeaponSecond.StretchModel(FLOAT3D(1,1,1));
         m_moWeapon.PlayAnim(DOUBLESHOTGUN_ANIM_WAIT1, 0);
+
+        SetComponents(this, m_moWeaponSecond, MODEL_DS_HANDWITHAMMO, TEXTURE_HAND, 0, 0, 0);
+        // [Cecil] Hide by default
+        m_moWeaponSecond.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
         break; }
+
       case WEAPON_TOMMYGUN: {
         SetComponents(this, m_moWeapon, MODEL_TOMMYGUN, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, TOMMYGUN_ATTACHMENT_BODY, MODEL_TG_BODY, TEXTURE_TG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -1784,6 +1818,7 @@ functions:
         CModelObject &mo = m_moWeapon.GetAttachmentModel(TOMMYGUN_ATTACHMENT_BODY)->amo_moModelObject;
         AddAttachmentToModel(this, mo, BODY_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
         break; }
+
       case WEAPON_SNIPER: {
         SetComponents(this, m_moWeapon, MODEL_SNIPER, TEXTURE_SNIPER_BODY, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, SNIPER_ATTACHMENT_BODY, MODEL_SNIPER_BODY, TEXTURE_SNIPER_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -1839,18 +1874,21 @@ functions:
           AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROCKET3, MODEL_RL_ROCKET, TEXTURE_RL_ROCKET, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         }
         break;
+
       case WEAPON_GRENADELAUNCHER:
         SetComponents(this, m_moWeapon, MODEL_GRENADELAUNCHER, TEXTURE_GL_BODY, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, GRENADELAUNCHER_ATTACHMENT_BODY, MODEL_GL_BODY, TEXTURE_GL_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, GRENADELAUNCHER_ATTACHMENT_MOVING_PART, MODEL_GL_MOVINGPART, TEXTURE_GL_MOVINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, GRENADELAUNCHER_ATTACHMENT_GRENADE, MODEL_GL_GRENADE, TEXTURE_GL_MOVINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         break;
+
       case WEAPON_FLAMER:
         SetComponents(this, m_moWeapon, MODEL_FLAMER, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, FLAMER_ATTACHMENT_BODY, MODEL_FL_BODY, TEXTURE_FL_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, FLAMER_ATTACHMENT_FUEL, MODEL_FL_RESERVOIR, TEXTURE_FL_FUELRESERVOIR, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, FLAMER_ATTACHMENT_FLAME, MODEL_FL_FLAME, TEXTURE_FL_FLAME, 0, 0, 0);
         break;
+
       case WEAPON_CHAINSAW: {
         SetComponents(this, m_moWeapon, MODEL_CHAINSAW, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, CHAINSAW_ATTACHMENT_CHAINSAW, MODEL_CS_BODY, TEXTURE_CS_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -1859,6 +1897,7 @@ functions:
         pmo = &(m_moWeapon.GetAttachmentModel(CHAINSAW_ATTACHMENT_BLADE)->amo_moModelObject);
         AddAttachmentToModel(this, *pmo, BLADE_ATTACHMENT_TEETH, MODEL_CS_TEETH, TEXTURE_CS_TEETH, 0, 0, 0);
         break; }
+
       case WEAPON_LASER:
         SetComponents(this, m_moWeapon, MODEL_LASER, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_BODY, MODEL_LS_BODY, TEXTURE_LS_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -1867,6 +1906,7 @@ functions:
         AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_RIGHTUP,   MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_RIGHTDOWN, MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         break;
+
       case WEAPON_IRONCANNON:
         SetComponents(this, m_moWeapon, MODEL_CANNON, TEXTURE_CANNON, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, CANNON_ATTACHMENT_BODY, MODEL_CN_BODY, TEXTURE_CANNON, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -3302,27 +3342,36 @@ functions:
    */
   void PlayDefaultAnim(void) {
     switch(m_iCurrentWeapon) {
-      case WEAPON_NONE:
-        break;
+      case WEAPON_NONE: break;
+
       case WEAPON_KNIFE:
-        switch (m_iKnifeStand) {
-          case 1: m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
-          case 3: m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
-          default: ASSERTALWAYS("Unknown knife stand.");
-        }
+        m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
         break;
+
       case WEAPON_DOUBLECOLT:
         m_moWeaponSecond.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
       case WEAPON_COLT:
-        m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_SINGLESHOTGUN:
-        m_moWeapon.PlayAnim(SINGLESHOTGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(SINGLESHOTGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_DOUBLESHOTGUN:
-        m_moWeapon.PlayAnim(DOUBLESHOTGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(DOUBLESHOTGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        // [Cecil] Hide the hand
+        m_moWeaponSecond.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
+        break;
+
       case WEAPON_TOMMYGUN:
-        m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_SNIPER:
-        m_moWeapon.PlayAnim(SNIPER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(SNIPER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_MINIGUN:
         m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
 
@@ -3331,20 +3380,32 @@ functions:
           m_moWeaponSecond.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
         }
         break;
+
       case WEAPON_ROCKETLAUNCHER:
-        m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_GRENADELAUNCHER:
-        m_moWeapon.PlayAnim(GRENADELAUNCHER_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(GRENADELAUNCHER_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_FLAMER:
-        m_moWeapon.PlayAnim(FLAMER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(FLAMER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_CHAINSAW:
-        m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_LASER:
-        m_moWeapon.PlayAnim(LASER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
+        m_moWeapon.PlayAnim(LASER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
       case WEAPON_IRONCANNON:
-        m_moWeapon.PlayAnim(CANNON_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE); break;
-      default:
-        ASSERTALWAYS("Unknown weapon.");
+        m_moWeapon.PlayAnim(CANNON_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        break;
+
+      default: ASSERTALWAYS("Unknown weapon.");
     }
   };
 
@@ -3353,11 +3414,7 @@ functions:
    */
   FLOAT KnifeBoring(void) {
     // play boring anim
-    INDEX iAnim;
-    switch (m_iKnifeStand) {
-      case 1: iAnim = KNIFE_ANIM_WAIT1; break;
-      case 3: iAnim = KNIFE_ANIM_WAIT1; break;
-    }
+    INDEX iAnim = KNIFE_ANIM_WAIT1;
     m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
     return m_moWeapon.GetAnimLength(iAnim);
   };
@@ -3723,11 +3780,7 @@ procedures:
         break;
       // knife have different stands
       case WEAPON_KNIFE: 
-        if (m_iKnifeStand==1) {
-          m_iAnim = KNIFE_ANIM_PULLOUT;
-        } else if (m_iKnifeStand==3) {
-          m_iAnim = KNIFE_ANIM_PULLOUT;
-        }
+        m_iAnim = KNIFE_ANIM_PULLOUT;
         break;
       case WEAPON_DOUBLECOLT: case WEAPON_COLT:
         m_iAnim = COLT_ANIM_DEACTIVATE;
@@ -3778,25 +3831,26 @@ procedures:
     }
       
     // --->>>  COLT -> DOUBLE COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon==WEAPON_COLT && m_iWantedWeapon==WEAPON_DOUBLECOLT) {
+    if (m_iCurrentWeapon == WEAPON_COLT && m_iWantedWeapon == WEAPON_DOUBLECOLT) {
       return EEnd();
     }
 
     // --->>>  DOUBLE COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon==WEAPON_DOUBLECOLT) {
+    if (m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
       m_moWeaponSecond.PlayAnim(m_iAnim, 0);
     }
 
     // --->>>  DOUBLE COLT -> COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon==WEAPON_DOUBLECOLT && m_iWantedWeapon==WEAPON_COLT) {
+    if (m_iCurrentWeapon == WEAPON_DOUBLECOLT && m_iWantedWeapon == WEAPON_COLT) {
       autowait(m_moWeapon.GetAnimLength(m_iAnim));
       return EEnd();
     }
 
     // reload colts automagicaly when puting them away
-    BOOL bNowColt = m_iCurrentWeapon==WEAPON_COLT || m_iCurrentWeapon==WEAPON_DOUBLECOLT;
-    BOOL bWantedColt = m_iWantedWeapon==WEAPON_COLT || m_iWantedWeapon==WEAPON_DOUBLECOLT;
-    if (bNowColt&&!bWantedColt) {
+    BOOL bNowColt = m_iCurrentWeapon == WEAPON_COLT || m_iCurrentWeapon == WEAPON_DOUBLECOLT;
+    BOOL bWantedColt = m_iWantedWeapon == WEAPON_COLT || m_iWantedWeapon == WEAPON_DOUBLECOLT;
+
+    if (bNowColt && !bWantedColt) {
       m_iColtBullets = 6;
     }
 
@@ -3820,7 +3874,6 @@ procedures:
     switch (m_iCurrentWeapon) {
       case WEAPON_KNIFE: 
         m_iAnim = KNIFE_ANIM_PULL;
-        m_iKnifeStand = 1;
         break;
       case WEAPON_COLT: case WEAPON_DOUBLECOLT:
         m_iAnim = COLT_ANIM_ACTIVATE;
@@ -3879,19 +3932,19 @@ procedures:
     plan.BodyPullAnimation();
 
     // --->>>  DOUBLE COLT -> COLT SPECIFIC  <<<---
-    if (m_iPreviousWeapon==WEAPON_DOUBLECOLT && m_iCurrentWeapon==WEAPON_COLT) {
+    if (m_iPreviousWeapon == WEAPON_DOUBLECOLT && m_iCurrentWeapon == WEAPON_COLT) {
       // mark that weapon change has ended
       m_tmWeaponChangeRequired -= hud_tmWeaponsOnScreen/2;
       return EEnd();
     }
 
     // --->>>  DOUBLE COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon==WEAPON_DOUBLECOLT) {
+    if (m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
       m_moWeaponSecond.PlayAnim(m_iAnim, 0);
     }
 
     // --->>>  COLT -> COLT DOUBLE SPECIFIC  <<<---
-    if (m_iPreviousWeapon==WEAPON_COLT && m_iCurrentWeapon==WEAPON_DOUBLECOLT) {
+    if (m_iPreviousWeapon == WEAPON_COLT && m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
       autowait(m_moWeapon.GetAnimLength(m_iAnim));
       // mark that weapon change has ended
       m_tmWeaponChangeRequired -= hud_tmWeaponsOnScreen/2;
@@ -4082,42 +4135,28 @@ procedures:
     
   // ***************** SWING KNIFE *****************
   SwingKnife() {
-    INDEX iSwing;
-
     // animator swing
     GetAnimator()->FireAnimation(BODY_ANIM_KNIFE_ATTACK, 0);
     // sound
     CPlayer &pl = (CPlayer&)*m_penPlayer;
-    // depending on stand choose random attack
-    switch (m_iKnifeStand) {
-      case 1:
-        iSwing = IRnd()%2;
-        switch (iSwing) {
-          case 0: m_iAnim = KNIFE_ANIM_ATTACK01; m_fAnimWaitTime = 0.25f;
-            PlaySound(pl.m_soWeapon0, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
-            if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
-            break;
-          case 1: m_iAnim = KNIFE_ANIM_ATTACK02; m_fAnimWaitTime = 0.35f;
-            PlaySound(pl.m_soWeapon1, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
-            if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
-            break;
-        }
+
+    // [Cecil] Simplified by removing repeating code
+    switch (IRnd() % 2) {
+      case 0:
+        m_iAnim = KNIFE_ANIM_ATTACK01;
+        m_fAnimWaitTime = 0.25f;
         break;
-      case 3:
-        iSwing = IRnd()%2;
-        switch (iSwing) {
-          case 0: m_iAnim = KNIFE_ANIM_ATTACK01; m_fAnimWaitTime = 0.50f;
-            PlaySound(pl.m_soWeapon1, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
-            if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
-            break;
-          case 1: m_iAnim = KNIFE_ANIM_ATTACK02; m_fAnimWaitTime = 0.50f;
-            PlaySound(pl.m_soWeapon3, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
-            if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
-            break;
-        }
+
+      case 1:
+        m_iAnim = KNIFE_ANIM_ATTACK02;
+        m_fAnimWaitTime = 0.35f;
         break;
     }
+    
     m_moWeapon.PlayAnim(m_iAnim, 0);
+    PlaySound(pl.m_soWeapon0, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
+    if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
+
     if (CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, ((GetSP()->sp_bCooperative) ? 100.0f : 50.0f))) {
       // [Cecil] Multiply speed
       autowait(m_fAnimWaitTime * FireSpeedMul());
@@ -4129,7 +4168,7 @@ procedures:
       autowait(m_fAnimWaitTime/2 * FireSpeedMul());
     }
 
-    if (m_moWeapon.GetAnimLength(m_iAnim)-m_fAnimWaitTime>=_pTimer->TickQuantum) {
+    if (m_moWeapon.GetAnimLength(m_iAnim)-m_fAnimWaitTime >= _pTimer->TickQuantum) {
       // [Cecil] Multiply speed
       autowait((m_moWeapon.GetAnimLength(m_iAnim) - m_fAnimWaitTime) * FireSpeedMul());
     }
@@ -4167,7 +4206,7 @@ procedures:
     m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
 
     // no more bullets in colt -> reload
-    if (m_iColtBullets == 0) {
+    if (m_iColtBullets <= 0) {
       jump ReloadColt();
     }
     return EEnd();
@@ -4238,7 +4277,7 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(m_iAnim)/2 * FireSpeedMul()); // wait half of the anim
 
     // no more bullets in colt -> reload
-    if (m_iColtBullets == 0) {
+    if (m_iColtBullets <= 0) {
       jump ReloadDoubleColt();
     }
     return EEnd();
@@ -4361,8 +4400,8 @@ procedures:
       // [Cecil] Multiply speed
       autowait((m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST)
                 - (GetSP()->sp_bCooperative ? 0.5f : 0.375f)) * FireSpeedMul());
+
     } else if (TRUE) {
-      //ASSERTALWAYS("SingleShotgun - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
       autowait(0.05f);
     }
@@ -4440,6 +4479,10 @@ procedures:
       DecAmmo(FALSE, 2);
       SetFlare(0, FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
+
+      // [Cecil] Show the hand
+      m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
+
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST, 0);
       m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
 
@@ -4510,10 +4553,11 @@ procedures:
       if (CurrentAmmo() <= 1) {
         SelectNewWeapon();
       }
+
     } else {
-      ASSERTALWAYS("DoubleShotgun - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
     }
+
     return EEnd();
   };
 
@@ -4531,6 +4575,10 @@ procedures:
       DecAmmo(FALSE, 2);
       SetFlare(0, FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
+
+      // [Cecil] Show the hand
+      m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
+
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST, 0);
       m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
 
@@ -4601,10 +4649,11 @@ procedures:
       if (CurrentAmmo() <= 1) {
         SelectNewWeapon();
       }
+
     } else {
-      ASSERTALWAYS("DoubleShotgun - Auto weapon change not working.");
       m_bAltFire = m_bHasAmmo = FALSE;
     }
+
     return EEnd();
   };
 

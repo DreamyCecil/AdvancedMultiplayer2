@@ -373,7 +373,6 @@ extern INDEX hud_bShowMatchInfo = TRUE;
 
 // [Cecil] AMP 2 customization
 static INDEX amp_bBloodScreen = TRUE;
-extern INDEX amp_bPowerUpParticles = TRUE;
 extern INDEX amp_bEnemyCounter = TRUE;
 static INDEX amp_iComboText = 2;
 
@@ -546,8 +545,8 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   paAction.pa_ulButtons = 0;
 
   // set weapon selection bits
-  for(INDEX i=1; i<MAX_WEAPONS; i++) {
-    if(pctlCurrent.bSelectWeapon[i]) {
+  for (INDEX i = 1; i < MAX_WEAPONS; i++) {
+    if (pctlCurrent.bSelectWeapon[i]) {
       paAction.pa_ulButtons = i<<PLACT_SELECT_WEAPON_SHIFT;
       break;
     }
@@ -798,7 +797,6 @@ void CPlayer_OnInitClass(void)
 
   // [Cecil] AMP 2 customization
   _pShell->DeclareSymbol("persistent user INDEX amp_bBloodScreen;", &amp_bBloodScreen);
-  _pShell->DeclareSymbol("persistent user INDEX amp_bPowerUpParticles;", &amp_bPowerUpParticles);
   _pShell->DeclareSymbol("persistent user INDEX amp_bEnemyCounter;", &amp_bEnemyCounter);
   _pShell->DeclareSymbol("persistent user INDEX amp_iComboText;", &amp_iComboText);
   _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerTags;", &amp_iPlayerTags);
