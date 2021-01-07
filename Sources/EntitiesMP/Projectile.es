@@ -858,62 +858,61 @@ functions:
       case PRT_FLAME: {
         // elapsed time
         FLOAT fLeaderLiving, fFollowerLiving, fInFrontLiving;
-        fInFrontLiving=0.05f;
+        fInFrontLiving = 0.05f;
         fLeaderLiving = _pTimer->GetLerpedCurrentTick() - m_fStartTime;
+
         // not NULL or deleted
-        if (m_penParticles!=NULL && !(m_penParticles->GetFlags()&ENF_DELETED)) {
-          FLOAT3D vDirLeader=en_vCurrentTranslationAbsolute;
+        if (m_penParticles != NULL && !(m_penParticles->GetFlags() & ENF_DELETED)) {
+          FLOAT3D vDirLeader = en_vCurrentTranslationAbsolute;
           vDirLeader.Normalize();
+
           // if last is not flame thrower pipe
-          if(IsOfClass(m_penParticles, "Projectile"))
-          {
-            CProjectile &prLast=(CProjectile &)*m_penParticles;
+          if (IsOfClass(m_penParticles, "Projectile")) {
+            CProjectile &prLast = (CProjectile &)*m_penParticles;
+
             // if pre last is flame thrower pipe
-            if( IsOfClass(prLast.m_penParticles, "Player Weapons"))
-            {
-              CPlayerWeapons &plw=(CPlayerWeapons&)*prLast.m_penParticles;
-              if(!(plw.GetPlayer()->GetFlags()&ENF_ALIVE))
-              {
+            if (IsOfClass(prLast.m_penParticles, "Player Weapons")) {
+              CPlayerWeapons &plw = (CPlayerWeapons&)*prLast.m_penParticles;
+
+              if (!(plw.GetPlayer()->GetFlags() & ENF_ALIVE)) {
                 return;
               }
+
               CPlacement3D plPipe, plInFrontOfPipe;
               ((CPlayerWeapons&)*prLast.m_penParticles).GetFlamerSourcePlacement(plPipe, plInFrontOfPipe);
               fFollowerLiving = _pTimer->GetLerpedCurrentTick() - ((CProjectile&)*m_penParticles).m_fStartTime;
               FLOAT3D vDirPipeFront;
               AnglesToDirectionVector( plInFrontOfPipe.pl_OrientationAngle, vDirPipeFront);
               vDirPipeFront.Normalize();
-              Particles_FlameThrower(GetLerpedPlacement(), plInFrontOfPipe,
-                                     vDirLeader, vDirPipeFront,
+              Particles_FlameThrower(GetLerpedPlacement(), plInFrontOfPipe, vDirLeader, vDirPipeFront,
                                      fLeaderLiving, fInFrontLiving, en_ulID, FALSE);
-            }
+
             // draw particles with another projectile
-            else
-            {
+            } else {
               fFollowerLiving = _pTimer->GetLerpedCurrentTick() - ((CProjectile&)*m_penParticles).m_fStartTime;
               FLOAT3D vDirFollower = ((CMovableModelEntity*)(CEntity*)m_penParticles)->en_vCurrentTranslationAbsolute;
               vDirFollower.Normalize();
               Particles_FlameThrower(GetLerpedPlacement(), m_penParticles->GetLerpedPlacement(),
                                      vDirLeader, vDirFollower, fLeaderLiving, fFollowerLiving, en_ulID, FALSE);
             }
+
           // draw particles with player weapons
           } else if (IsOfClass(m_penParticles, "Player Weapons")) {
-            CPlayerWeapons &plw=(CPlayerWeapons&)*m_penParticles;
-            if(!(plw.GetPlayer()->GetFlags()&ENF_ALIVE))
-            {
+            CPlayerWeapons &plw = (CPlayerWeapons&)*m_penParticles;
+
+            if (!(plw.GetPlayer()->GetFlags() & ENF_ALIVE)) {
               return;
             }
+
             CPlacement3D plPipe, plInFrontOfPipe;
             plw.GetFlamerSourcePlacement(plPipe, plInFrontOfPipe);
             FLOAT3D vDirPipeFront;
-            AnglesToDirectionVector( plInFrontOfPipe.pl_OrientationAngle, vDirPipeFront);
+            AnglesToDirectionVector(plInFrontOfPipe.pl_OrientationAngle, vDirPipeFront);
             FLOAT3D vViewDir;
-            AnglesToDirectionVector( plPipe.pl_OrientationAngle, vViewDir);
+            AnglesToDirectionVector(plPipe.pl_OrientationAngle, vViewDir);
             FLOAT3D vDirFollower = vViewDir.Normalize();
             
-            Particles_FlameThrower(plInFrontOfPipe, plPipe,
-              vDirPipeFront, vDirFollower,
-              fInFrontLiving, 0.0f, en_ulID, TRUE);
-
+            Particles_FlameThrower(plInFrontOfPipe, plPipe, vDirPipeFront, vDirFollower, fInFrontLiving, 0.0f, en_ulID, TRUE);
             Particles_FlameThrowerStart(plPipe, plw.m_tmFlamerStart, plw.m_tmFlamerStop);
           }
         }

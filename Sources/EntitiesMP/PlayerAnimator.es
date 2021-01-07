@@ -927,7 +927,7 @@ functions:
   void ChangeView(CPlacement3D &pl) {
     TIME tmNow = _pTimer->GetLerpedCurrentTick();
 
-    if (!(GetPlayer()->GetSettings()->ps_ulFlags&PSF_NOBOBBING)) {
+    if (!(GetPlayer()->GetSettings()->ps_ulFlags & PSF_NOBOBBING)) {
       // banking
       FLOAT fBanking = Lerp(m_fMoveLastBanking, m_fMoveBanking, _pTimer->GetLerpFactor());
       fBanking = fBanking * fBanking * Sgn(fBanking) * 0.25f;
@@ -942,6 +942,7 @@ functions:
       pl.pl_OrientationAngle(2) += sin(tmNow*1.7)*2.0f;
       pl.pl_OrientationAngle(3) += sin(tmNow*2.5)*2.0f;
     }
+
     // eyes up/down for jumping and breathing
     FLOAT fEyesOffsetY = Lerp(m_fEyesYLastOffset, m_fEyesYOffset, _pTimer->GetLerpFactor());
     fEyesOffsetY+= sin(tmNow*1.5)*0.05f * plr_fBreathingStrength;
@@ -957,9 +958,11 @@ functions:
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     CAttachmentModelObject *pamoBody = pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
     ANGLE3D a = plView.pl_OrientationAngle;
+
     if (!(pl.GetFlags()&ENF_ALIVE)) {
       a = ANGLE3D(0,0,0);
     }
+
     pamoBody->amo_plRelative.pl_OrientationAngle = a;
     pamoBody->amo_plRelative.pl_OrientationAngle(3) *= 4.0f;
     
@@ -1418,7 +1421,8 @@ functions:
       CPlayer &pl = (CPlayer&)*m_penPlayer;
       CAttachmentModelObject *pamo = pl.GetModelObject()->GetAttachmentModelList(
         PLAYER_ATTACHMENT_TORSO, BODY_ATTACHMENT_MINIGUN, MINIGUNITEM_ATTACHMENT_BARRELS, -1);
-      if (pamo!=NULL) {
+
+      if (pamo != NULL) {
         pamo->amo_plRelative.pl_OrientationAngle(3) = aAngle;
       }
     }

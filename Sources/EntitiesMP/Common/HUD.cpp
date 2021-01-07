@@ -40,6 +40,10 @@ extern INDEX amp_bEnemyCounter;
 // [Cecil] Enemy counter
 extern INDEX _iAliveEnemies;
 
+// [Cecil] Voice commands menu
+extern INDEX ctl_bVoiceCommands;
+extern INDEX _iVoiceCommand;
+
 // player statistics sorting keys
 enum SortKeys {
   PSK_NAME    = 1,
@@ -1099,7 +1103,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // draw boss energy if needed
-  if( _penPlayer->m_penMainMusicHolder!=NULL) {
+  if (_penPlayer->m_penMainMusicHolder != NULL) {
     CMusicHolder &mh = (CMusicHolder&)*_penPlayer->m_penMainMusicHolder;
     fNormValue = 0;
 
@@ -1132,7 +1136,6 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     }
   }
 
-
   // determine scaling of normal text and play mode
   const FLOAT fTextScale  = (_fResolutionScaling+1) *0.5f;
   const BOOL bSinglePlay  =  GetSP()->sp_bSinglePlayer;
@@ -1144,8 +1147,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   INDEX iScoreSum = 0;
 
   // if not in single player mode, we'll have to calc (and maybe printout) other players' info
-  if( !bSinglePlay)
-  {
+  if (!bSinglePlay) {
     // set font and prepare font parameters
     _pfdDisplayFont->SetVariableWidth();
     _pDP->SetFont( _pfdDisplayFont);
@@ -1262,14 +1264,39 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // printout player latency if needed
   if (hud_bShowLatency) {
+    _pfdDisplayFont->SetFixedWidth();
+    _pDP->SetFont(_pfdDisplayFont);
+    _pDP->SetTextScaling(fTextScale);
+    _pDP->SetTextCharSpacing(-2.0f * fTextScale);
+
     CTString strLatency;
     strLatency.PrintF( "%4.0fms", _penPlayer->m_tmLatency*1000.0f);
     PIX pixFontHeight = (PIX)(_pfdDisplayFont->GetHeight() *fTextScale +fTextScale+1);
-    _pfdDisplayFont->SetFixedWidth();
-    _pDP->SetFont( _pfdDisplayFont);
-    _pDP->SetTextScaling( fTextScale);
-    _pDP->SetTextCharSpacing( -2.0f*fTextScale);
-    _pDP->PutTextR( strLatency, _pixDPWidth, _pixDPHeight-pixFontHeight, C_WHITE|CT_OPAQUE);
+    _pDP->PutTextR(strLatency, _pixDPWidth, _pixDPHeight-pixFontHeight, C_WHITE|CT_OPAQUE);
+  }
+
+  // [Cecil] Voice commands menu
+  if (ctl_bVoiceCommands) {
+    _pfdDisplayFont->SetVariableWidth();
+    _pDP->SetFont(_pfdDisplayFont);
+    _pDP->SetTextScaling(fTextScale);
+    _pDP->SetTextCharSpacing(fTextScale);
+
+    for (INDEX iVC = 0; iVC < 8; iVC++) {
+      if (_iVoiceCommand == iVC) {
+        _pDP->Fill(2 * _fResolutionScaling, (144 + 24*iVC) * _fResolutionScaling, 96 * _fResolutionScaling, 20 * _fResolutionScaling, 0xFFCC007F);
+      } else {
+        _pDP->Fill(2 * _fResolutionScaling, (144 + 24*iVC) * _fResolutionScaling, 96 * _fResolutionScaling, 20 * _fResolutionScaling, 0x0000007F);
+      }
+
+      CTString strCommand = "None";
+
+      if (iVC > 0) {
+        strCommand.PrintF("Domination %d", iVC);
+      }
+
+      _pDP->PutTextCXY(strCommand, 50 * _fResolutionScaling, (156 + 24*iVC) * _fResolutionScaling, 0xFFFFFFFF);
+    }
   }
 
   // restore font defaults
@@ -1356,7 +1383,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     HUD_DrawIcon(   fCol,      fRow, _toHiScore, C_WHITE, 1.0f, FALSE, 1.0f);
 
     // prepare and draw unread messages
-    if( hud_bShowMessages && _penPlayer->m_ctUnreadMessages>0) {
+    if (hud_bShowMessages && _penPlayer->m_ctUnreadMessages > 0) {
       strValue.PrintF( "%d", _penPlayer->m_ctUnreadMessages);
       fRow = pixTopBound+fHalfUnit;
       fCol = pixRightBound-fHalfUnit-fAdvUnit-fChrUnit*4;

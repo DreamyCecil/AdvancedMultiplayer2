@@ -65,6 +65,18 @@ extern INDEX _iAliveEnemies;
 static CTextureObject _toPlayerMarker;
 static INDEX amp_iPlayerTags = 2; // 0 - no tag, 1 - only marker, 2 - with name, 3 - with distance
 static FLOAT amp_fPlayerBrightness = 0.1f; // player model brightness
+
+// [Cecil] Voice commands menu
+static struct SVoiceCommandsKey {
+  BOOL bPressed; // pressed the key
+  BOOL bHolding; // holding the key
+  BOOL bReleased; // released the key
+
+  SVoiceCommandsKey(void) : bPressed(FALSE), bHolding(FALSE), bReleased(FALSE) {};
+} _vcMenu;
+
+extern INDEX ctl_bVoiceCommands = FALSE; // show voice commands menu
+extern INDEX _iVoiceCommand = 0; // current voice command
 %}
 
 enum PlayerViewType {
@@ -242,48 +254,46 @@ static void KillAllEnemies(CEntity *penKiller)
   }}
 }
 
-
-#define HEADING_MAX      45.0f
-#define PITCH_MAX        90.0f
-#define BANKING_MAX      45.0f
+#define HEADING_MAX 45.0f
+#define PITCH_MAX   90.0f
 
 // player flags
-#define PLF_INITIALIZED           (1UL<<0)   // set when player entity is ready to function
-#define PLF_VIEWROTATIONCHANGED   (1UL<<1)   // for adjusting view rotation separately from legs
-#define PLF_JUMPALLOWED           (1UL<<2)   // if jumping is allowed
-#define PLF_SYNCWEAPON            (1UL<<3)   // weapon model needs to be synchronized before rendering
-#define PLF_AUTOMOVEMENTS         (1UL<<4)   // complete automatic control of movements
-#define PLF_DONTRENDER            (1UL<<5)   // don't render view (used at end of level)
-#define PLF_CHANGINGLEVEL         (1UL<<6)   // mark that we next are to appear at start of new level
-#define PLF_APPLIEDACTION         (1UL<<7)   // used to detect when player is not connected
-#define PLF_NOTCONNECTED          (1UL<<8)   // set if the player is not connected
-#define PLF_LEVELSTARTED          (1UL<<9)   // marks that level start time was recorded
-#define PLF_ISZOOMING             (1UL<<10)  // marks that player is zoomed in with the sniper
-#define PLF_RESPAWNINPLACE        (1UL<<11)  // don't move to marker when respawning (for current death only)
+#define PLF_INITIALIZED         (1UL<<0)  // set when player entity is ready to function
+#define PLF_VIEWROTATIONCHANGED (1UL<<1)  // for adjusting view rotation separately from legs
+#define PLF_JUMPALLOWED         (1UL<<2)  // if jumping is allowed
+#define PLF_SYNCWEAPON          (1UL<<3)  // weapon model needs to be synchronized before rendering
+#define PLF_AUTOMOVEMENTS       (1UL<<4)  // complete automatic control of movements
+#define PLF_DONTRENDER          (1UL<<5)  // don't render view (used at end of level)
+#define PLF_CHANGINGLEVEL       (1UL<<6)  // mark that we next are to appear at start of new level
+#define PLF_APPLIEDACTION       (1UL<<7)  // used to detect when player is not connected
+#define PLF_NOTCONNECTED        (1UL<<8)  // set if the player is not connected
+#define PLF_LEVELSTARTED        (1UL<<9)  // marks that level start time was recorded
+#define PLF_ISZOOMING           (1UL<<10) // marks that player is zoomed in with the sniper
+#define PLF_RESPAWNINPLACE      (1UL<<11) // don't move to marker when respawning (for current death only)
 
 // defines representing flags used to fill player buttoned actions
-#define PLACT_FIRE                (1L<<0)
-#define PLACT_RELOAD              (1L<<1)
-#define PLACT_WEAPON_NEXT         (1L<<2)
-#define PLACT_WEAPON_PREV         (1L<<3)
-#define PLACT_WEAPON_FLIP         (1L<<4)
-#define PLACT_USE                 (1L<<5)
-#define PLACT_COMPUTER            (1L<<6)
-#define PLACT_3RD_PERSON_VIEW     (1L<<7)
-#define PLACT_CENTER_VIEW         (1L<<8)
-#define PLACT_USE_HELD            (1L<<9)
-#define PLACT_SNIPER_ZOOMIN       (1L<<10)
-#define PLACT_SNIPER_ZOOMOUT      (1L<<11)
-#define PLACT_SNIPER_USE          (1L<<12)
-#define PLACT_FIREBOMB            (1L<<13)
-#define PLACT_ALTFIRE (1L<<14) // [Cecil] Alt fire button
-#define PLACT_TOKENS  (1L<<15) // [Cecil] Token spending button
+#define PLACT_FIRE            (1L<<0)
+#define PLACT_RELOAD          (1L<<1)
+#define PLACT_WEAPON_NEXT     (1L<<2)
+#define PLACT_WEAPON_PREV     (1L<<3)
+#define PLACT_WEAPON_FLIP     (1L<<4)
+#define PLACT_USE             (1L<<5)
+#define PLACT_COMPUTER        (1L<<6)
+#define PLACT_3RD_PERSON_VIEW (1L<<7)
+#define PLACT_CENTER_VIEW     (1L<<8)
+#define PLACT_USE_HELD        (1L<<9)
+#define PLACT_SNIPER_ZOOMIN   (1L<<10)
+#define PLACT_SNIPER_ZOOMOUT  (1L<<11)
+#define PLACT_SNIPER_USE      (1L<<12)
+#define PLACT_FIREBOMB        (1L<<13)
+#define PLACT_ALTFIRE         (1L<<14) // [Cecil] Alt fire button
+#define PLACT_TOKENS          (1L<<15) // [Cecil] Token spending button
 #define PLACT_SELECT_WEAPON_SHIFT (16)
 #define PLACT_SELECT_WEAPON_MASK  (0x1FL<<PLACT_SELECT_WEAPON_SHIFT)
                                      
 #define MAX_WEAPONS 30
 
-#define PICKEDREPORT_TIME   (2.0f)  // how long (picked-up) message stays on screen
+#define PICKEDREPORT_TIME (2.0f) // how long (picked-up) message stays on screen
 
 // is player spying another player
 //extern TIME _tmSnoopingStarted;
@@ -452,19 +462,19 @@ DECL_DLL extern void *ctl_pvPlayerControls = &pctlCurrent;
 DECL_DLL extern const SLONG ctl_slPlayerControlsSize = sizeof(pctlCurrent);
 
 // called to compose action packet from current controls
-DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction &paAction, BOOL bPreScan)
-{
+DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction &paAction, BOOL bPreScan) {
   // allow double axis controls
   paAction.pa_aRotation += paAction.pa_aViewRotation;
 
   CPlayerSettings *pps = (CPlayerSettings *)pc.pc_aubAppearance;
-//  CPrintF("compose: prescan %d, x:%g\n", bPreScan, paAction.pa_aRotation(1));
+
   // if strafing
   if (pctlCurrent.bStrafe) {
     // move rotation left/right into translation left/right
     paAction.pa_vTranslation(1) = -paAction.pa_aRotation(1)*ctl_fAxisStrafingModifier;
     paAction.pa_aRotation(1) = 0;
   }
+
   // if centering view
   if (pctlCurrent.bCenterView) {
     // don't allow moving view up/down
@@ -474,7 +484,8 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   // multiply axis actions with speed
   paAction.pa_vTranslation(1) *= plr_fSpeedSide;
   paAction.pa_vTranslation(2) *= plr_fSpeedUp;
-  if (paAction.pa_vTranslation(3)<0) {
+
+  if (paAction.pa_vTranslation(3) < 0.0f) {
     paAction.pa_vTranslation(3) *= plr_fSpeedForward;
   } else {
     paAction.pa_vTranslation(3) *= plr_fSpeedBackward;
@@ -483,22 +494,26 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   // find local player, if any
   CPlayer *penThis = NULL;
   INDEX ctPlayers = CEntity::GetMaxPlayers();
-  for (INDEX iPlayer = 0; iPlayer<ctPlayers; iPlayer++) {
-    CPlayer *pen=(CPlayer *)CEntity::GetPlayerEntity(iPlayer);
-    if (pen!=NULL && pen->en_pcCharacter==pc) {
+
+  for (INDEX iPlayer = 0; iPlayer < ctPlayers; iPlayer++) {
+    CPlayer *pen = (CPlayer*)CEntity::GetPlayerEntity(iPlayer);
+
+    if (pen != NULL && pen->en_pcCharacter == pc) {
       penThis = pen;
       break;
     }
   }
+
   // if not found
-  if (penThis==NULL) {
+  if (penThis == NULL) {
     // do nothing
     return;
   }
+
   // accumulate local rotation
-  penThis->m_aLocalRotation    +=paAction.pa_aRotation;
-  penThis->m_aLocalViewRotation+=paAction.pa_aViewRotation;
-  penThis->m_vLocalTranslation +=paAction.pa_vTranslation;
+  penThis->m_aLocalRotation     += paAction.pa_aRotation;
+  penThis->m_aLocalViewRotation += paAction.pa_aViewRotation;
+  penThis->m_vLocalTranslation  += paAction.pa_vTranslation;
 
   // if prescanning
   if (bPreScan) {
@@ -517,28 +532,46 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   const FLOAT fQuantum = _pTimer->TickQuantum;
   if(pctlCurrent.bTurnLeft  && !pctlCurrent.bStrafe) penThis->m_aLocalRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
   if(pctlCurrent.bTurnRight && !pctlCurrent.bStrafe) penThis->m_aLocalRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
-  if(pctlCurrent.bTurnUp           ) penThis->m_aLocalRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
-  if(pctlCurrent.bTurnDown         ) penThis->m_aLocalRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
-  if(pctlCurrent.bTurnBankingLeft  ) penThis->m_aLocalRotation(3) += ctl_fButtonRotationSpeedB*fQuantum;
-  if(pctlCurrent.bTurnBankingRight ) penThis->m_aLocalRotation(3) -= ctl_fButtonRotationSpeedB*fQuantum;
+  if(pctlCurrent.bTurnUp  ) penThis->m_aLocalRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
+  if(pctlCurrent.bTurnDown) penThis->m_aLocalRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
 
-  if(pctlCurrent.bLookLeft         ) penThis->m_aLocalViewRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
-  if(pctlCurrent.bLookRight        ) penThis->m_aLocalViewRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
-  if(pctlCurrent.bLookUp           ) penThis->m_aLocalViewRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
-  if(pctlCurrent.bLookDown         ) penThis->m_aLocalViewRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
-  if(pctlCurrent.bLookBankingLeft  ) penThis->m_aLocalViewRotation(3) += ctl_fButtonRotationSpeedB*fQuantum;
-  if(pctlCurrent.bLookBankingRight ) penThis->m_aLocalViewRotation(3) -= ctl_fButtonRotationSpeedB*fQuantum;
+  if(pctlCurrent.bLookLeft ) penThis->m_aLocalViewRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
+  if(pctlCurrent.bLookRight) penThis->m_aLocalViewRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
+  if(pctlCurrent.bLookUp   ) penThis->m_aLocalViewRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
+  if(pctlCurrent.bLookDown ) penThis->m_aLocalViewRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
 
   // use current accumulated rotation
   paAction.pa_aRotation     = penThis->m_aLocalRotation;
   paAction.pa_aViewRotation = penThis->m_aLocalViewRotation;
-  //paAction.pa_vTranslation  = penThis->m_vLocalTranslation;
 
   // if walking
-  if(pctlCurrent.bWalk) {
+  if (pctlCurrent.bWalk) {
     // make forward/backward and sidestep speeds slower
     paAction.pa_vTranslation(3) /= 2.0f;
     paAction.pa_vTranslation(1) /= 2.0f;
+  }
+
+  // [Cecil] Reserve banking rotation for more buttons
+  paAction.pa_aRotation(3) = 0.0f;
+  paAction.pa_aViewRotation(3) = 0.0f;
+  
+  // [Cecil] Make button masks
+  ULONG &ulButtons1 = *reinterpret_cast<ULONG*>(&paAction.pa_aRotation(3));
+  ULONG &ulButtons2 = *reinterpret_cast<ULONG*>(&paAction.pa_aViewRotation(3));
+
+  // [Cecil] Voice commands menu button
+  _vcMenu.bPressed  = (ctl_bVoiceCommands && !_vcMenu.bHolding);
+  _vcMenu.bReleased = (!ctl_bVoiceCommands && _vcMenu.bHolding);
+  _vcMenu.bHolding = ctl_bVoiceCommands;
+
+  // [Cecil] Reset the voice command
+  if (_vcMenu.bPressed) {
+    _iVoiceCommand = 0;
+  }
+
+  // [Cecil] Add selected voice command
+  if (_vcMenu.bReleased && _iVoiceCommand > 0) {
+    ulButtons1 += _iVoiceCommand;
   }
   
   // reset all button actions
@@ -551,9 +584,31 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
       break;
     }
   }
+
+  // [Cecil] Change voice command if opened the menu
+  if (_vcMenu.bHolding) {
+    if (pctlCurrent.bWeaponNext) {
+      _iVoiceCommand = (_iVoiceCommand+1) % 8;
+    }
+
+    if (pctlCurrent.bWeaponPrev) {
+      if (_iVoiceCommand <= 0) {
+        _iVoiceCommand = 7;
+      } else {
+        _iVoiceCommand--;
+      }
+    }
+
+  } else {
+    if (pctlCurrent.bWeaponNext) {
+      paAction.pa_ulButtons |= PLACT_WEAPON_NEXT;
+    }
+    if (pctlCurrent.bWeaponPrev) {
+      paAction.pa_ulButtons |= PLACT_WEAPON_PREV;
+    }
+  }
+  
   // set button pressed flags
-  if(pctlCurrent.bWeaponNext) paAction.pa_ulButtons |= PLACT_WEAPON_NEXT;
-  if(pctlCurrent.bWeaponPrev) paAction.pa_ulButtons |= PLACT_WEAPON_PREV;
   if(pctlCurrent.bWeaponFlip) paAction.pa_ulButtons |= PLACT_WEAPON_FLIP;
   if(pctlCurrent.bFire)       paAction.pa_ulButtons |= PLACT_FIRE;
   if(pctlCurrent.bReload)     paAction.pa_ulButtons |= PLACT_RELOAD;
@@ -561,6 +616,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   if(pctlCurrent.bComputer)      paAction.pa_ulButtons |= PLACT_COMPUTER;
   if(pctlCurrent.b3rdPersonView) paAction.pa_ulButtons |= PLACT_3RD_PERSON_VIEW;
   if(pctlCurrent.bCenterView)    paAction.pa_ulButtons |= PLACT_CENTER_VIEW;
+
   // is 'use' being held?
   if(pctlCurrent.bUseOrComputer) paAction.pa_ulButtons |= PLACT_USE_HELD|PLACT_SNIPER_USE;
   if(pctlCurrent.bSniperZoomIn)  paAction.pa_ulButtons |= PLACT_SNIPER_ZOOMIN;
@@ -737,7 +793,7 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("user INDEX ctl_bLookUp;",           &pctlCurrent.bLookUp);
   _pShell->DeclareSymbol("user INDEX ctl_bLookDown;",         &pctlCurrent.bLookDown);
   _pShell->DeclareSymbol("user INDEX ctl_bLookBankingLeft;",  &pctlCurrent.bLookBankingLeft);
-  _pShell->DeclareSymbol("user INDEX ctl_bLookBankingRight;", &pctlCurrent.bLookBankingRight );
+  _pShell->DeclareSymbol("user INDEX ctl_bLookBankingRight;", &pctlCurrent.bLookBankingRight);
   _pShell->DeclareSymbol("user INDEX ctl_bWalk;",           &pctlCurrent.bWalk);
   _pShell->DeclareSymbol("user INDEX ctl_bStrafe;",         &pctlCurrent.bStrafe);
   _pShell->DeclareSymbol("user INDEX ctl_bFire;",           &pctlCurrent.bFire);
@@ -763,6 +819,7 @@ void CPlayer_OnInitClass(void)
   // [Cecil] New buttons
   _pShell->DeclareSymbol("user INDEX ctl_bAltFire;", &pctlCurrent.bAltFire);
   _pShell->DeclareSymbol("user INDEX ctl_bTokens;",  &pctlCurrent.bTokens);
+  _pShell->DeclareSymbol("user INDEX ctl_bVoiceCommands;", &ctl_bVoiceCommands);
 
   _pShell->DeclareSymbol("user FLOAT plr_fSwimSoundDelay;", &plr_fSwimSoundDelay);
   _pShell->DeclareSymbol("user FLOAT plr_fDiveSoundDelay;", &plr_fDiveSoundDelay);
@@ -1230,6 +1287,10 @@ properties:
   PlayerStats m_psGameTotal;
 
   CModelObject m_moRender; // model object to render - this one can be customized
+
+  // [Cecil] Extra buttons
+  ULONG m_ulButtons1;
+  ULONG m_ulButtons2;
 }
 
 components:
@@ -1278,7 +1339,6 @@ components:
  90 sound SOUND_WALK_SNOW_L     "SoundsMP\\Player\\WalkSnowL.wav",
  91 sound SOUND_WALK_SNOW_R     "SoundsMP\\Player\\WalkSnowR.wav",
  92 sound SOUND_BLOWUP          "SoundsMP\\Player\\BlowUp.wav",
- 
 
 150 sound SOUND_F_WATER_ENTER   "SoundsMP\\Player\\Female\\WaterEnter.wav",
 151 sound SOUND_F_WATER_LEAVE   "SoundsMP\\Player\\Female\\WaterLeave.wav",
@@ -1577,6 +1637,10 @@ functions:
     ClearBulletSprayLaunchData();
     ClearGoreSprayLaunchData();
     m_tmPredict = 0;
+
+    // [Cecil] Reset extra buttons
+    m_ulButtons1 = 0;
+    m_ulButtons2 = 0;
 
     // [Cecil] Load player marker texture
     _toPlayerMarker.SetData_t(CTFILENAME("Textures\\Interface\\PlayerMarker.tex"));
@@ -2171,14 +2235,13 @@ functions:
     }
   }
 
-  void SayVoiceMessage(const CTFileName &fnmMessage)
-  {
+  void SayVoiceMessage(const CTFileName &fnmMessage) {
     if (GetSettings()->ps_ulFlags&PSF_NOQUOTES) {
       return;
     }
     SetSpeakMouthPitch();
-    PlaySound( m_soSpeech, fnmMessage, SOF_3D|SOF_VOLUMETRIC);
-  }
+    PlaySound(m_soSpeech, fnmMessage, SOF_3D|SOF_VOLUMETRIC);
+  };
 
   // receive all messages in one directory - cheat
   void CheatAllMessagesDir(const CTString &strDir, ULONG ulFlags)
@@ -2409,18 +2472,17 @@ functions:
     return ((CMusicHolder*)&*m_penMainMusicHolder)->m_cenFussMakers.Count()>0;
   }
 
-  void SetDefaultMouthPitch(void)
-  {
+  void SetDefaultMouthPitch(void) {
     m_soMouth.Set3DParameters(50.0f, 10.0f, 1.0f, 1.0f);
-  }
-  void SetRandomMouthPitch(FLOAT fMin, FLOAT fMax)
-  {
+  };
+
+  void SetRandomMouthPitch(FLOAT fMin, FLOAT fMax) {
     m_soMouth.Set3DParameters(50.0f, 10.0f, 1.0f, Lerp(fMin, fMax, FRnd()));
-  }
-  void SetSpeakMouthPitch(void)
-  {
+  };
+
+  void SetSpeakMouthPitch(void) {
     m_soSpeech.Set3DParameters(50.0f, 10.0f, 2.0f, 1.0f);
-  }
+  };
 
   // added: also shake view because of chainsaw firing
   void ApplyShaking(CPlacement3D &plViewer)
@@ -2539,7 +2601,7 @@ functions:
   {
     // read the exact placement of the view for this tick
     GetLerpedAbsoluteViewPlacement(plViewer);
-    ASSERT(IsValidFloat(plViewer.pl_OrientationAngle(1))&&IsValidFloat(plViewer.pl_OrientationAngle(2))&&IsValidFloat(plViewer.pl_OrientationAngle(3)) );
+    ASSERT(IsValidFloat(plViewer.pl_OrientationAngle(1)) && IsValidFloat(plViewer.pl_OrientationAngle(2)) && IsValidFloat(plViewer.pl_OrientationAngle(3)));
     // get current entity that the player views from
     penViewer = GetViewEntity();
 
@@ -3926,40 +3988,45 @@ functions:
   }
 
   // Called to apply player action to player entity each tick.
-  void ApplyAction( const CPlayerAction &paOriginal, FLOAT tmLatency)
-  {
-    if(!(m_ulFlags&PLF_INITIALIZED)) { return; }
-//    CPrintF("---APPLY: %g\n", paOriginal.pa_aRotation(1));
+  void ApplyAction(const CPlayerAction &paOriginal, FLOAT tmLatency) {
+    if (!(m_ulFlags & PLF_INITIALIZED)) {
+      return;
+    }
     
     // if was not connected
-    if (m_ulFlags&PLF_NOTCONNECTED) {
+    if (m_ulFlags & PLF_NOTCONNECTED) {
       // set connected state
       SetConnected();
     }
+
     // mark that the player is connected
     m_ulFlags |= PLF_APPLIEDACTION;
 
     // make a copy of action for adjustments
     CPlayerAction paAction = paOriginal;
-    //CPrintF("applying(%s-%08x): %g\n", GetPredictName(), int(paAction.pa_llCreated),
-    //  paAction.pa_vTranslation(3));
+
+    // [Cecil] Copy extra buttons
+    m_ulButtons1 = *reinterpret_cast<ULONG*>(&paAction.pa_aRotation(3));
+    m_ulButtons2 = *reinterpret_cast<ULONG*>(&paAction.pa_aViewRotation(3));
+
+    paAction.pa_aRotation(3) = 0.0f;
+    paAction.pa_aViewRotation(3) = 0.0f;
 
     // calculate delta from last received actions
-    ANGLE3D aDeltaRotation     = paAction.pa_aRotation    -m_aLastRotation;
-    ANGLE3D aDeltaViewRotation = paAction.pa_aViewRotation-m_aLastViewRotation;
+    ANGLE3D aDeltaRotation     = paAction.pa_aRotation     - m_aLastRotation;
+    ANGLE3D aDeltaViewRotation = paAction.pa_aViewRotation - m_aLastViewRotation;
     
     if (m_ulFlags&PLF_ISZOOMING) {
       FLOAT fRotationDamping = ((CPlayerWeapons &)*m_penWeapons).m_fSniperFOV/((CPlayerWeapons &)*m_penWeapons).m_fSniperMaxFOV;
       aDeltaRotation *= fRotationDamping;
       aDeltaViewRotation *= fRotationDamping;
     }
-    //FLOAT3D vDeltaTranslation  = paAction.pa_vTranslation -m_vLastTranslation;
+
     m_aLastRotation     = paAction.pa_aRotation;
     m_aLastViewRotation = paAction.pa_aViewRotation;
-    //m_vLastTranslation  = paAction.pa_vTranslation;
+
     paAction.pa_aRotation     = aDeltaRotation;
     paAction.pa_aViewRotation = aDeltaViewRotation;
-    //paAction.pa_vTranslation  = vDeltaTranslation;
 
     // adjust rotations per tick
     paAction.pa_aRotation /= _pTimer->TickQuantum;
@@ -3978,13 +4045,13 @@ functions:
     }
 
     // limit speeds against abusing
-    paAction.pa_vTranslation(1) = Clamp( paAction.pa_vTranslation(1), -plr_fSpeedSide,    plr_fSpeedSide);
-    paAction.pa_vTranslation(2) = Clamp( paAction.pa_vTranslation(2), -plr_fSpeedUp,      plr_fSpeedUp);
-    paAction.pa_vTranslation(3) = Clamp( paAction.pa_vTranslation(3), -plr_fSpeedForward, plr_fSpeedBackward);
+    paAction.pa_vTranslation(1) = Clamp(paAction.pa_vTranslation(1), -plr_fSpeedSide,    plr_fSpeedSide);
+    paAction.pa_vTranslation(2) = Clamp(paAction.pa_vTranslation(2), -plr_fSpeedUp,      plr_fSpeedUp);
+    paAction.pa_vTranslation(3) = Clamp(paAction.pa_vTranslation(3), -plr_fSpeedForward, plr_fSpeedBackward);
 
     // if speeds are like walking
-    if (Abs(paAction.pa_vTranslation(3))< plr_fSpeedForward/1.99f
-      &&Abs(paAction.pa_vTranslation(1))< plr_fSpeedSide/1.99f) {
+    if (Abs(paAction.pa_vTranslation(3)) < plr_fSpeedForward/1.99f
+     && Abs(paAction.pa_vTranslation(1)) < plr_fSpeedSide/1.99f) {
       // don't allow falling
       en_fStepDnHeight = 1.5f;
 
@@ -4196,21 +4263,22 @@ functions:
 
 
   // Alive actions
-  void AliveActions(const CPlayerAction &pa) 
-  {
+  void AliveActions(const CPlayerAction &pa) {
     CPlayerAction paAction = pa;
 
     // if camera is active
-    if (m_penCamera!=NULL) {
+    if (m_penCamera != NULL) {
       // ignore keyboard/mouse/joystick commands
-      paAction.pa_vTranslation  = FLOAT3D(0,0,0);
-      paAction.pa_aRotation     = ANGLE3D(0,0,0);
-      paAction.pa_aViewRotation = ANGLE3D(0,0,0);
+      paAction.pa_vTranslation  = FLOAT3D(0.0f, 0.0f, 0.0f);
+      paAction.pa_aRotation     = ANGLE3D(0.0f, 0.0f, 0.0f);
+      paAction.pa_aViewRotation = ANGLE3D(0.0f, 0.0f, 0.0f);
+
       // if fire or use is pressed
-      if (ulNewButtons&(PLACT_FIRE|PLACT_USE)) {
+      if (ulNewButtons & (PLACT_FIRE|PLACT_USE)) {
         // stop camera
-        m_penCamera=NULL;
+        m_penCamera = NULL;
       }
+
     } else {
       ButtonsActions(paAction);
     }
@@ -4347,8 +4415,7 @@ functions:
     PlaySound(m_soPowerUpBeep, SOUND_POWERUP_BEEP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
   }
 
-  void ActiveActions(const CPlayerAction &paAction)
-  {
+  void ActiveActions(const CPlayerAction &paAction) {
     // translation
     FLOAT3D vTranslation = paAction.pa_vTranslation;
     // turbo speed cheat
@@ -4638,25 +4705,27 @@ functions:
       // set translation
       SetDesiredTranslation(vTranslation);
 
+      // [Cecil] Removed banking rotation
       // set pitch and banking from the normal rotation into the view rotation
       en_plViewpoint.Rotate_HPB(ANGLE3D(
         (ANGLE)((FLOAT)paAction.pa_aRotation(1)*_pTimer->TickQuantum),
-        (ANGLE)((FLOAT)paAction.pa_aRotation(2)*_pTimer->TickQuantum),
-        (ANGLE)((FLOAT)paAction.pa_aRotation(3)*_pTimer->TickQuantum)));
+        (ANGLE)((FLOAT)paAction.pa_aRotation(2)*_pTimer->TickQuantum), 0.0f));
+
       // pitch and banking boundaries
       RoundViewAngle(en_plViewpoint.pl_OrientationAngle(2), PITCH_MAX);
-      RoundViewAngle(en_plViewpoint.pl_OrientationAngle(3), BANKING_MAX);
 
       // translation rotate player for heading
       if (vTranslation.Length() > 0.1f) {
         SetDesiredRotation(ANGLE3D(en_plViewpoint.pl_OrientationAngle(1)/_pTimer->TickQuantum, 0.0f, 0.0f));
-        if (m_ulFlags&PLF_VIEWROTATIONCHANGED) {
-          m_ulFlags&=~PLF_VIEWROTATIONCHANGED;
+
+        if (m_ulFlags & PLF_VIEWROTATIONCHANGED) {
+          m_ulFlags &= ~PLF_VIEWROTATIONCHANGED;
           FLOATmatrix3D mViewRot;
           MakeRotationMatrixFast(mViewRot, ANGLE3D(en_plViewpoint.pl_OrientationAngle(1),0,0));
           FLOAT3D vTransRel = vTranslation*mViewRot;
           SetDesiredTranslation(vTransRel);
         }
+
         en_plViewpoint.pl_OrientationAngle(1) = 0.0f;
 
       // rotate head, body and legs
@@ -4788,11 +4857,12 @@ functions:
     // set heading, pitch and banking from the normal rotation into the camera view rotation
     if (m_penView!=NULL) {
       ASSERT(IsPredicted()&&m_penView->IsPredicted()||IsPredictor()&&m_penView->IsPredictor()||!IsPredicted()&&!m_penView->IsPredicted()&&!IsPredictor()&&!m_penView->IsPredictor());
-      en_plViewpoint.pl_PositionVector = FLOAT3D(0, 1, 0);
+      en_plViewpoint.pl_PositionVector = FLOAT3D(0.0f, 1.0f, 0.0f);
+
+      // [Cecil] Removed banking rotation
       en_plViewpoint.pl_OrientationAngle += (ANGLE3D(
-        (ANGLE)((FLOAT)paAction.pa_aRotation(1)*_pTimer->TickQuantum),
-        (ANGLE)((FLOAT)paAction.pa_aRotation(2)*_pTimer->TickQuantum),
-        (ANGLE)((FLOAT)paAction.pa_aRotation(3)*_pTimer->TickQuantum)));
+        (ANGLE)((FLOAT)paAction.pa_aRotation(1) * _pTimer->TickQuantum),
+        (ANGLE)((FLOAT)paAction.pa_aRotation(2) * _pTimer->TickQuantum), 0.0f));
     }
 
     // if death is finished and fire just released again and this is not a predictor
@@ -4849,8 +4919,7 @@ functions:
 
 
   // Buttons actions
-  void ButtonsActions( CPlayerAction &paAction)
-  {
+  void ButtonsActions(CPlayerAction &paAction) {
     // if selecting a new weapon select it
     if ((ulNewButtons & PLACT_SELECT_WEAPON_MASK) != 0) {
       ESelectWeapon eSelect;
@@ -4949,9 +5018,11 @@ functions:
       } else {
         UsePressed(ulNewButtons & PLACT_COMPUTER);
       }
+
     // if USE is not detected due to doubleclick and player is holding sniper
     } else if (ulNewButtons & PLACT_SNIPER_USE && ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon==WEAPON_SNIPER) {
       UsePressed(FALSE);
+
     // if computer is pressed
     } else if (ulNewButtons & PLACT_COMPUTER) {
       ComputerPressed();
@@ -4987,39 +5058,45 @@ functions:
       // center view with speed of 45 degrees per 1/20 seconds
       paAction.pa_aRotation(2) += Clamp( -en_plViewpoint.pl_OrientationAngle(2)/_pTimer->TickQuantum, -900.0f, +900.0f);
     }
+
+    // [Cecil] Voice commands
+    if (m_ulButtons1 > 0) {
+      CTString strVoice(0, "Sounds\\Player\\Commands\\Domination0%d.wav", m_ulButtons1);
+
+      SetSpeakMouthPitch();
+      PlaySound(m_soSpeech, CTFileName(strVoice), SOF_3D|SOF_VOLUMETRIC);
+    }
   };
 
-  void ApplySniperZoom( BOOL bZoomIn )
-  {
+  void ApplySniperZoom(BOOL bZoomIn) {
     // do nothing if not holding sniper and if not in sniping mode
-    if (((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon!=WEAPON_SNIPER ||
-      ((CPlayerWeapons&)*m_penWeapons).m_bSniping==FALSE) {
+    if (((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon != WEAPON_SNIPER ||
+      ((CPlayerWeapons&)*m_penWeapons).m_bSniping == FALSE) {
       return;
     }
+
     BOOL bZoomChanged;
+
     if (((CPlayerWeapons&)*m_penWeapons).SniperZoomDiscrete(bZoomIn, bZoomChanged)) {
       if (bZoomChanged) { 
         PlaySound(m_soSniperZoom, SOUND_SNIPER_QZOOM, SOF_3D); 
       }
-      m_ulFlags|=PLF_ISZOOMING;
-    }
-    else
-    {
-      m_ulFlags&=~PLF_ISZOOMING;
+      m_ulFlags |= PLF_ISZOOMING;
+
+    } else {
+      m_ulFlags &= ~PLF_ISZOOMING;
       PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
       if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
     }
-  }
+  };
 
   // check if cheats can be active
-  BOOL CheatsEnabled(void)
-  {
-    return (GetSP()->sp_ctMaxPlayers==1||GetSP()->sp_bQuickTest) && m_penActionMarker==NULL && !_SE_DEMO;
-  }
+  BOOL CheatsEnabled(void) {
+    return (GetSP()->sp_ctMaxPlayers == 1 || GetSP()->sp_bQuickTest) && m_penActionMarker == NULL && !_SE_DEMO;
+  };
 
   // Cheats
-  void Cheats(void)
-  {
+  void Cheats(void) {
     BOOL bFlyOn = cht_bFly || cht_bGhost;
     // fly mode
     BOOL bIsFlying = !(GetPhysicsFlags() & EPF_TRANSLATEDBYGRAVITY);
@@ -5114,9 +5191,10 @@ functions:
         } else {
           plView.pl_OrientationAngle = pen->en_plViewpoint.pl_OrientationAngle + (pen->m_aLocalRotation-pen->m_aLastRotation);
         }
+        
+        // [Cecil] Removed banking rotation
         // make sure it doesn't go out of limits
         RoundViewAngle(plView.pl_OrientationAngle(2), PITCH_MAX);
-        RoundViewAngle(plView.pl_OrientationAngle(3), BANKING_MAX);
 
         // compensate for rotations that happen to the player without his/hers will
         // (rotating brushes, weird gravities...)
@@ -5309,7 +5387,7 @@ functions:
     pdp->BlendScreen();
 
     // render status info line (if needed)
-    if( hud_bShowInfo) { 
+    if (hud_bShowInfo) { 
       // get player or its predictor
       BOOL bSnooping = FALSE;
       CPlayer *penHUDPlayer = this;
@@ -5327,7 +5405,7 @@ functions:
         penHUDPlayer = (CPlayer*)&*pen->m_penTargeting;
         bSnooping = TRUE;
       }
-      DrawHUD( penHUDPlayer, pdp, bSnooping, penHUDOwner);
+      DrawHUD(penHUDPlayer, pdp, bSnooping, penHUDOwner);
     }
   }
 

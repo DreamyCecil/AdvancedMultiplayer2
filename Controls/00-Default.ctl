@@ -156,8 +156,15 @@ Button
  Name: TTRS Talk
  Key1: T
  Key2: None
- Pressed:  con_bTalk=1;
+ Pressed:  con_bTalk = 1;
  Released: 
+ 
+Button
+ Name: TTRS Voice Commands Menu ^cff0000NEW!
+ Key1: Z
+ Key2: None
+ Pressed:  ctl_bVoiceCommands = 1;
+ Released: ctl_bVoiceCommands = 0;
  
 Button
  Name: TTRS Previous Weapon

@@ -2673,29 +2673,13 @@ functions:
   };
 
   // [Cecil] Rocket position
-  void FireRocket(INDEX iRocket, BOOL bSpread) {
-    // [Cecil] Shift rocket position
-    FLOAT3D vShift = FLOAT3D(0.0f, 0.0f, 0.0f);
-    ANGLE3D aSpread = ANGLE3D(0.0f, 0.0f, 0.0f);
-
-    // [Cecil] Spread rockets
-    if (bSpread) {
-      aSpread(1) = 5.0f - (5.0f * iRocket);
-    }
-
-    /*if (iRocket == 1) {
-      vShift = FLOAT3D(0.1f, -0.175f, 0.0f);
-    } else if (iRocket == 2) {
-      vShift = FLOAT3D(0.2f, 0.0f, 0.0f);
-    }*/
-
-    // [Cecil] Apply the spread angle
+  void FireRocket(void) {
     // rocket start position
     CPlacement3D plRocket;
-    CalcWeaponPositionAngle(FirePos(WEAPON_ROCKETLAUNCHER) + vShift, aSpread, plRocket, TRUE);
+    CalcWeaponPosition(FirePos(WEAPON_ROCKETLAUNCHER), plRocket, TRUE);
 
     // create rocket
-    CEntityPointer penRocket= CreateEntity(plRocket, CLASS_PROJECTILE);
+    CEntityPointer penRocket = CreateEntity(plRocket, CLASS_PROJECTILE);
     // init and launch rocket
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = m_penPlayer;
@@ -2705,13 +2689,17 @@ functions:
 
   // flamer source
   void GetFlamerSourcePlacement(CPlacement3D &plSource, CPlacement3D &plInFrontOfPipe) {
-    CalcLerpedWeaponPosition(FirePos(WEAPON_FLAMER) + FLOAT3D(0.0f, 0.0f, -0.15f), plSource, FALSE);
+    // [Cecil] Flamer position
+    FLOAT3D vPos = FirePos(WEAPON_FLAMER) + FLOAT3D(0.0f, 0.0f, -0.15f);
+    MirrorEffect(vPos, FLOAT3D(0.0f, 0.0f, 0.0f), amp_bWeaponMirrored);
+
+    CalcLerpedWeaponPosition(vPos, plSource, FALSE);
 
     plInFrontOfPipe = plSource;
 
     FLOAT3D vFront;
-    AnglesToDirectionVector( plSource.pl_OrientationAngle, vFront);
-    plInFrontOfPipe.pl_PositionVector=plSource.pl_PositionVector+vFront*1.0f;
+    AnglesToDirectionVector(plSource.pl_OrientationAngle, vFront);
+    plInFrontOfPipe.pl_PositionVector = plSource.pl_PositionVector+vFront*1.0f;
   };
 
   // fire flame
@@ -2757,7 +2745,7 @@ functions:
   void FireLaserRay(void) {
     // laser start position
     CPlacement3D plLaserRay;
-    FLOAT fFX = FirePos(WEAPON_LASER)(1);  // get laser center position
+    FLOAT fFX = FirePos(WEAPON_LASER)(1); // get laser center position
     FLOAT fFY = FirePos(WEAPON_LASER)(2);
     FLOAT fLUX = 0.0f;
     FLOAT fRUX = 0.8f;
@@ -5216,11 +5204,10 @@ procedures:
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
       m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_FIRE, 0);
 
-      // [Cecil] Fire first rocket
-      FireRocket(0, FALSE);
-
+      FireRocket();
       DoRecoil();
       SpawnRangeSound(20.0f);
+
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Rocketlauncher_fire");}
 
       DecAmmo(m_iCurrentWeapon, 1, FALSE);
