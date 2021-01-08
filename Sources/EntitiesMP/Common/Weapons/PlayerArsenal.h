@@ -108,6 +108,9 @@ struct SPlayerWeapon {
   // Can reload magazine
   inline BOOL CanReload(void) { return (!FullMag() && CurrentAmmo() > iMag); };
 
+  // Empty magazine
+  inline BOOL EmptyMag(void) { return (pWeaponStruct->iMaxMag > 0 && iMag <= 0); };
+
   // Get weapon position
   inline SWeaponPos GetPosition(void) { return pWeaponStruct->wpsPos; };
 };

@@ -2971,6 +2971,11 @@ functions:
 
   // add default ammount of ammunition when receiving a weapon
   void AddDefaultAmmoForWeapon(INDEX iWeapon, FLOAT fMaxAmmoRatio) {
+    // [Cecil] Add all ammo if infinite
+    if (GetSP()->sp_bInfiniteAmmo) {
+      fMaxAmmoRatio = 1.0f;
+    }
+    
     // [Cecil] Get weapon
     SPlayerWeapon &pw = m_aWeapons[iWeapon];
     SWeaponStruct &ws = *pw.pWeaponStruct;
@@ -2997,7 +3002,7 @@ functions:
 
     // make sure we don't have more ammo than maximum
     ClampAllAmmo();
-  }
+  };
 
   // drop current weapon (in deathmatch)
   void DropWeapon(void) {
@@ -4029,15 +4034,6 @@ procedures:
       return EEnd();
     }
 
-    // reload colts automagicaly when puting them away
-    BOOL bNowColt = m_iCurrentWeapon == WEAPON_COLT || m_iCurrentWeapon == WEAPON_DOUBLECOLT;
-    BOOL bWantedColt = m_iWantedWeapon == WEAPON_COLT || m_iWantedWeapon == WEAPON_DOUBLECOLT;
-
-    if (bNowColt && !bWantedColt) {
-      // [Cecil] Reload mag
-      CUR_WEAPON.Reload(TRUE);
-    }
-
     // [Cecil] Dual minigun
     if (AltFireExists(WEAPON_MINIGUN)) {
       m_moWeaponSecond.PlayAnim(m_iAnim, 0);
@@ -4129,6 +4125,16 @@ procedures:
     CPlayerAnimator &plan = (CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator;
     plan.BodyPullAnimation();
 
+    // [Cecil] Reload colts automagically when taking them out
+    BOOL bNowColt = (m_iCurrentWeapon == WEAPON_COLT || m_iCurrentWeapon == WEAPON_DOUBLECOLT);
+    BOOL bPrevColt = (m_iPreviousWeapon == WEAPON_COLT || m_iPreviousWeapon == WEAPON_DOUBLECOLT);
+    
+    // [Cecil] Reload mags
+    if (bNowColt && !bPrevColt) {
+      m_aWeapons[WEAPON_COLT].Reload(TRUE);
+      m_aWeapons[WEAPON_DOUBLECOLT].Reload(TRUE);
+    }
+
     // --->>>  DOUBLE COLT -> COLT SPECIFIC  <<<---
     if (m_iPreviousWeapon == WEAPON_DOUBLECOLT && m_iCurrentWeapon == WEAPON_COLT) {
       // mark that weapon change has ended
@@ -4169,8 +4175,14 @@ procedures:
   Fire() {
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
+
     // force ending of weapon change
     m_tmWeaponChangeRequired = 0;
+
+    // [Cecil] Reload mag if needed
+    if (CUR_WEAPON.EmptyMag()) {
+      jump Reload();
+    }
 
     m_bFireWeapon = TRUE;
     m_bHasAmmo = HasAmmo(m_iCurrentWeapon);
@@ -4257,6 +4269,11 @@ procedures:
 
     // force ending of weapon change
     m_tmWeaponChangeRequired = 0;
+
+    // [Cecil] Reload mag if needed
+    if (CUR_WEAPON.EmptyMag()) {
+      jump Reload();
+    }
 
     m_bAltFire = TRUE;
     m_bHasAmmo = HasAmmo(m_iCurrentWeapon);
@@ -4395,11 +4412,12 @@ procedures:
 
     // random colt fire
     INDEX iAnim;
-    switch (IRnd()%3) {
+    switch (IRnd() % 3) {
       case 0: iAnim = COLT_ANIM_FIRE1; break;
       case 1: iAnim = COLT_ANIM_FIRE2; break;
       case 2: iAnim = COLT_ANIM_FIRE3; break;
     }
+
     m_moWeapon.PlayAnim(iAnim, 0);
     // [Cecil] Multiply speed
     autowait((m_moWeapon.GetAnimLength(iAnim) - 0.05f) * FireSpeedMul());
@@ -4454,11 +4472,12 @@ procedures:
     PlaySound(plSnd.m_soWeapon0, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
     // random colt fire
-    switch (IRnd()%3) {
+    switch (IRnd() % 3) {
       case 0: m_iAnim = COLT_ANIM_FIRE1; break;
       case 1: m_iAnim = COLT_ANIM_FIRE2; break;
       case 2: m_iAnim = COLT_ANIM_FIRE3; break;
     }
+
     m_moWeapon.PlayAnim(m_iAnim, 0); // play first colt anim
     // [Cecil] Multiply speed
     autowait(m_moWeapon.GetAnimLength(m_iAnim)/2 * FireSpeedMul()); // wait half of the anim
