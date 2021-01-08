@@ -70,7 +70,8 @@ static const CPlayer *_penPlayer;
 static CPlayerWeapons *_penWeapons;
 static CDrawPort *_pDP;
 static PIX   _pixDPWidth, _pixDPHeight;
-static FLOAT _fResolutionScaling;
+static FLOAT _fScalingX; // [Cecil] Renamed from _fResolutionScaling
+static FLOAT _fScalingY; // [Cecil] Vertical scaling
 static FLOAT _fCustomScaling;
 static ULONG _ulAlphaHUD;
 static COLOR _colHUD;
@@ -231,7 +232,7 @@ static COLOR AddShaker( PIX const pixAmmount, INDEX const iCurrentValue, INDEX &
   if( tmDelta > SHAKE_TIME) return NONE;
   ASSERT( tmDelta>=0);
   // shake, baby shake!
-  const FLOAT fAmmount    = _fResolutionScaling * _fCustomScaling * pixAmmount;
+  const FLOAT fAmmount    = _fScalingX * _fCustomScaling * pixAmmount;
   const FLOAT fMultiplier = (SHAKE_TIME-tmDelta)/SHAKE_TIME *fAmmount;
   const INDEX iRandomizer = (INDEX)(tmNow*511.0f)*fAmmount*iCurrentValue;
   const FLOAT fNormRnd1   = (FLOAT)((iRandomizer ^ (iRandomizer>>9)) & 1023) * 0.0009775f;  // 1/1023 - normalized
@@ -338,9 +339,9 @@ static void HUD_DrawBorder( FLOAT fCenterX, FLOAT fCenterY, FLOAT fSizeX, FLOAT 
   // determine location
   const FLOAT fCenterI  = fCenterX*_pixDPWidth  / 640.0f;
   const FLOAT fCenterJ  = fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment);
-  const FLOAT fSizeI    = _fResolutionScaling*fSizeX;
-  const FLOAT fSizeJ    = _fResolutionScaling*fSizeY;
-  const FLOAT fTileSize = 8*_fResolutionScaling*_fCustomScaling;
+  const FLOAT fSizeI    = _fScalingX*fSizeX;
+  const FLOAT fSizeJ    = _fScalingX*fSizeY;
+  const FLOAT fTileSize = 8*_fScalingX*_fCustomScaling;
   // determine exact positions
   const FLOAT fLeft  = fCenterI  - fSizeI/2 -1; 
   const FLOAT fRight = fCenterI  + fSizeI/2 +1; 
@@ -390,8 +391,8 @@ static void HUD_DrawIcon( FLOAT fCenterX, FLOAT fCenterY, CTextureObject &toIcon
   CTextureData *ptd = (CTextureData*)toIcon.GetData();
 
   // [Cecil] Replaced texture size with constant size (16), added extra scaling
-  const FLOAT fHalfSizeI = _fResolutionScaling*_fCustomScaling * 16 * fScale;
-  const FLOAT fHalfSizeJ = _fResolutionScaling*_fCustomScaling * 16 * fScale;
+  const FLOAT fHalfSizeI = _fScalingX*_fCustomScaling * 16 * fScale;
+  const FLOAT fHalfSizeJ = _fScalingX*_fCustomScaling * 16 * fScale;
 
   // done
   _pDP->InitTexture( &toIcon);
@@ -402,20 +403,22 @@ static void HUD_DrawIcon( FLOAT fCenterX, FLOAT fCenterY, CTextureObject &toIcon
 
 
 // draw text (or numbers, whatever)
-static void HUD_DrawText( FLOAT fCenterX, FLOAT fCenterY, const CTString &strText,
-                          COLOR colDefault, FLOAT fNormValue)
-{
+static void HUD_DrawText(FLOAT fCenterX, FLOAT fCenterY, const CTString &strText,
+                         COLOR colDefault, FLOAT fNormValue) {
   // determine color
   COLOR col = colDefault;
-  if( col==NONE) col = GetCurrentColor( fNormValue);
+  if (col == NONE) {
+    col = GetCurrentColor(fNormValue);
+  }
+
   // determine location
   PIX pixCenterI = (PIX)(fCenterX*_pixDPWidth  / 640.0f);
   PIX pixCenterJ = (PIX)(fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment));
-  // done
-  _pDP->SetTextScaling( _fResolutionScaling*_fCustomScaling);
-  _pDP->PutTextCXY( strText, pixCenterI, pixCenterJ, col|_ulAlphaHUD);
-}
 
+  // done
+  _pDP->SetTextScaling(_fScalingX*_fCustomScaling);
+  _pDP->PutTextCXY(strText, pixCenterI, pixCenterJ, col|_ulAlphaHUD);
+};
 
 // draw bar
 static void HUD_DrawBar( FLOAT fCenterX, FLOAT fCenterY, PIX pixSizeX, PIX pixSizeY,
@@ -427,8 +430,8 @@ static void HUD_DrawBar( FLOAT fCenterX, FLOAT fCenterY, PIX pixSizeX, PIX pixSi
   // determine location and size
   PIX pixCenterI = (PIX)(fCenterX*_pixDPWidth  / 640.0f);
   PIX pixCenterJ = (PIX)(fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment));
-  PIX pixSizeI   = (PIX)(_fResolutionScaling*pixSizeX);
-  PIX pixSizeJ   = (PIX)(_fResolutionScaling*pixSizeY);
+  PIX pixSizeI   = (PIX)(_fScalingX*pixSizeX);
+  PIX pixSizeJ   = (PIX)(_fScalingX*pixSizeY);
   // fill bar background area
   PIX pixLeft  = pixCenterI-pixSizeI/2;
   PIX pixUpper = pixCenterJ-pixSizeJ/2;
@@ -513,8 +516,6 @@ static void HUD_DrawSniperMask( void )
 
   colMask = LerpColor(SE_COL_BLUE_LIGHT, C_WHITE, 0.25f);
 
-  FLOAT _fYResolutionScaling = (FLOAT)_pixDPHeight/480.0f;
-
   FLOAT fDistance = _penWeapons->m_fRayHitDistance;
   FLOAT aFOV = Lerp(_penWeapons->m_fSniperFOVlast, _penWeapons->m_fSniperFOV,
                     _pTimer->GetLerpFactor());
@@ -526,7 +527,7 @@ static void HUD_DrawSniperMask( void )
   FLOAT fAFact = (Clamp(aFOV, 14.2f, 53.1f)-14.2f)/(53.1f-14.2f); // only for zooms 2x-4x !!!!!!
   ANGLE aAngle = 314.0f+fAFact*292.0f;
 
-  DrawRotatedQuad(&_toSniperWheel, fCenterI, fCenterJ, 40.0f*_fYResolutionScaling,
+  DrawRotatedQuad(&_toSniperWheel, fCenterI, fCenterJ, 40.0f*_fScalingY,
                   aAngle, colMask|0x44);
   
   FLOAT fTM = _pTimer->GetLerpedCurrentTick();
@@ -539,17 +540,16 @@ static void HUD_DrawSniperMask( void )
   }
 
   // reload indicator
-  DrawAspectCorrectTextureCentered(&_toSniperLed, fCenterI-37.0f*_fYResolutionScaling,
-    fCenterJ+36.0f*_fYResolutionScaling, 15.0f*_fYResolutionScaling, colLED);
+  DrawAspectCorrectTextureCentered(&_toSniperLed, fCenterI-37.0f*_fScalingY,
+    fCenterJ+36.0f*_fScalingY, 15.0f*_fScalingY, colLED);
     
-  if (_fResolutionScaling>=1.0f)
-  {
+  if (_fScalingX >= 1.0f) {
     FLOAT _fIconSize;
     FLOAT _fLeftX,  _fLeftYU,  _fLeftYD;
     FLOAT _fRightX, _fRightYU, _fRightYD;
 
-    if (_fResolutionScaling<=1.3f) {
-      _pDP->SetFont( _pfdConsoleFont);
+    if (_fScalingX <= 1.3f) {
+      _pDP->SetFont(_pfdConsoleFont);
       _pDP->SetTextAspect( 1.0f);
       _pDP->SetTextScaling(1.0f);
       _fIconSize = 22.8f;
@@ -559,10 +559,11 @@ static void HUD_DrawSniperMask( void )
       _fRightX = 159.0f;
       _fRightYU = 11.0f;
       _fRightYD = 6.0f;
+
     } else {
-      _pDP->SetFont( _pfdDisplayFont);
+      _pDP->SetFont(_pfdDisplayFont);
       _pDP->SetTextAspect( 1.0f);
-      _pDP->SetTextScaling(0.7f*_fYResolutionScaling);
+      _pDP->SetTextScaling(0.7f*_fScalingY);
       _fIconSize = 19.0f;
       _fLeftX = 162.0f;
       _fLeftYU = 8.0f;
@@ -573,19 +574,19 @@ static void HUD_DrawSniperMask( void )
     }
      
     // arrow + distance
-    DrawAspectCorrectTextureCentered(&_toSniperArrow, fCenterI-_fLeftX*_fYResolutionScaling,
-      fCenterJ-_fLeftYU*_fYResolutionScaling, _fIconSize*_fYResolutionScaling, 0xFFCC3399 );
+    DrawAspectCorrectTextureCentered(&_toSniperArrow, fCenterI-_fLeftX*_fScalingY,
+      fCenterJ-_fLeftYU*_fScalingY, _fIconSize*_fScalingY, 0xFFCC3399 );
     if (fDistance>9999.9f) { strTmp.PrintF("---.-");           }
     else if (TRUE)         { strTmp.PrintF("%.1f", fDistance); }
-    _pDP->PutTextC( strTmp, fCenterI-_fLeftX*_fYResolutionScaling,
-      fCenterJ+_fLeftYD*_fYResolutionScaling, colMask|0xaa);
+    _pDP->PutTextC( strTmp, fCenterI-_fLeftX*_fScalingY,
+      fCenterJ+_fLeftYD*_fScalingY, colMask|0xaa);
     
     // eye + zoom level
-    DrawAspectCorrectTextureCentered(&_toSniperEye,   fCenterI+_fRightX*_fYResolutionScaling,
-      fCenterJ-_fRightYU*_fYResolutionScaling, _fIconSize*_fYResolutionScaling, 0xFFCC3399 ); //SE_COL_ORANGE_L
+    DrawAspectCorrectTextureCentered(&_toSniperEye,   fCenterI+_fRightX*_fScalingY,
+      fCenterJ-_fRightYU*_fScalingY, _fIconSize*_fScalingY, 0xFFCC3399 ); //SE_COL_ORANGE_L
     strTmp.PrintF("%.1fx", fZoom);
-    _pDP->PutTextC( strTmp, fCenterI+_fRightX*_fYResolutionScaling,
-      fCenterJ+_fRightYD*_fYResolutionScaling, colMask|0xaa);
+    _pDP->PutTextC( strTmp, fCenterI+_fRightX*_fScalingY,
+      fCenterJ+_fRightYD*_fScalingY, colMask|0xaa);
   }
 }
 
@@ -663,7 +664,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   _pixDPWidth   = _pDP->GetWidth();
   _pixDPHeight  = _pDP->GetHeight();
   _fCustomScaling     = hud_fScaling;
-  _fResolutionScaling = (FLOAT)_pixDPWidth /640.0f;
+  _fScalingX = (FLOAT)_pixDPWidth / 640.0f;
+  _fScalingY = (FLOAT)_pixDPHeight / 480.0f;
   _colHUD     = 0x4C80BB00;
   _colHUDText = SE_COL_ORANGE_LIGHT;
   _ulAlphaHUD = NormFloatToByte(hud_fOpacity);
@@ -1137,7 +1139,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // determine scaling of normal text and play mode
-  const FLOAT fTextScale  = (_fResolutionScaling+1) *0.5f;
+  const FLOAT fTextScale  = (_fScalingX+1.0f) * 0.5f;
   const BOOL bSinglePlay  =  GetSP()->sp_bSinglePlayer;
   const BOOL bCooperative =  GetSP()->sp_bCooperative && !bSinglePlay;
   const BOOL bScoreMatch  = !GetSP()->sp_bCooperative && !GetSP()->sp_bUseFrags;
@@ -1277,31 +1279,33 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // [Cecil] Voice commands menu
   if (ctl_bVoiceCommands) {
+    FLOAT fCommandsScale = _fScalingY*0.85f;
+
     _pfdDisplayFont->SetVariableWidth();
     _pDP->SetFont(_pfdDisplayFont);
     _pDP->SetTextScaling(fTextScale);
     _pDP->SetTextCharSpacing(fTextScale);
 
-    for (INDEX iVC = 0; iVC < 8; iVC++) {
-      if (_iVoiceCommand == iVC) {
-        _pDP->Fill(2 * _fResolutionScaling, (144 + 24*iVC) * _fResolutionScaling, 96 * _fResolutionScaling, 20 * _fResolutionScaling, 0xFFCC007F);
-      } else {
-        _pDP->Fill(2 * _fResolutionScaling, (144 + 24*iVC) * _fResolutionScaling, 96 * _fResolutionScaling, 20 * _fResolutionScaling, 0x0000007F);
-      }
+    const INDEX ctCommands = 5;
+    const CTString astrCommands[ctCommands] = {
+      "None", "Cheers", "Dare", "Domination", "Help",
+    };
 
-      CTString strCommand = "None";
+    const FLOAT fHeight = 24.0f;
+    const FLOAT fCenter = 240.0f - (fHeight*ctCommands) / 2.0f;
 
-      if (iVC > 0) {
-        strCommand.PrintF("Domination %d", iVC);
-      }
-
-      _pDP->PutTextCXY(strCommand, 50 * _fResolutionScaling, (156 + 24*iVC) * _fResolutionScaling, 0xFFFFFFFF);
+    for (INDEX iVC = 0; iVC < ctCommands; iVC++) {
+      _pDP->Fill(8 * _fScalingY, (fCenter + fHeight*iVC) * _fScalingY, 96 * _fScalingY, (fHeight-4.0f) * _fScalingY, (_iVoiceCommand == iVC ? 0xFFCC007F : 0x0000007F));
+      _pDP->PutTextCXY(Translate(astrCommands[iVC].str_String), 56 * _fScalingY, (fCenter + fHeight/2.0f + fHeight*iVC) * _fScalingY, 0xFFFFFFFF);
     }
+
+    _pDP->PutText(TRANS("Press Weapon Prev/Next\nto change the command"), 4 * _fScalingY, (fCenter - fHeight) * _fScalingY, 0xFFFFFFFF);
   }
 
   // restore font defaults
   _pfdDisplayFont->SetVariableWidth();
-  _pDP->SetFont( &_fdNumbersFont);
+  _pDP->SetFont(&_fdNumbersFont);
+  _pDP->SetTextScaling(fTextScale);
   _pDP->SetTextCharSpacing(1);
 
   // prepare output strings and formats depending on game type

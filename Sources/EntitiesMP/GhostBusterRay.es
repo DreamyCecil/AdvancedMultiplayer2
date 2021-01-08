@@ -114,20 +114,24 @@ functions:
   };
 
   void PostMoving(void) {
-    if (!IsOfClass(m_penOwner, "Player Weapons")) { return; }
+    if (!IsOfClass(m_penOwner, "Player Weapons")) {
+      return;
+    }
+
+    // [Cecil] For convenience
+    CPlayerWeapons &penWeapons = (CPlayerWeapons&)*m_penOwner;
 
     // from current owner position move away
     CPlacement3D plSource;
-    ((CPlayerWeapons&)*m_penOwner).GetGhostBusterSourcePlacement(plSource);
+    penWeapons.GetGhostBusterSourcePlacement(plSource);
+
     FLOAT3D vDirection, vDesired;
     AnglesToDirectionVector(plSource.pl_OrientationAngle, vDirection);
     vDesired = vDirection*HIT_DISTANCE;
     vDesired = plSource.pl_PositionVector + vDesired;
 
     // cast a ray to find if any brush is hit
-    CCastRay crRay( ((CPlayerWeapons&)*m_penOwner).m_penPlayer, plSource.pl_PositionVector, vDesired);
-    m_vSrcOld = m_vSrc;
-    m_vSrc = plSource.pl_PositionVector;
+    CCastRay crRay(penWeapons.m_penPlayer, plSource.pl_PositionVector, vDesired);
     crRay.cr_bHitTranslucentPortals = FALSE;
     crRay.cr_ttHitModels = CCastRay::TT_COLLISIONBOX;
     GetWorld()->CastRay(crRay);
@@ -138,6 +142,19 @@ functions:
     }
     vDesired -= vDirection/10.0f;
 
+    // [Cecil] Get last position offset
+    FLOAT3D vLastPos = penWeapons.RenderPos(WEAPON_LASER).Pos1();
+    vLastPos(3) = 0.1f;
+
+    // [Cecil] Shift the position
+    CPlacement3D plShift = CPlacement3D(vLastPos, ANGLE3D(0.0f, 0.0f, 0.0f));
+    plShift.RelativeToAbsolute(plSource);
+
+    // source position
+    m_vSrcOld = m_vSrc;
+    m_vSrc = plShift.pl_PositionVector;
+
+    // destination position
     m_vDstOld = m_vDst;
     m_vDst = vDesired;
 

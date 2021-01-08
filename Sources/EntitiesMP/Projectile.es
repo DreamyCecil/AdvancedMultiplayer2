@@ -25,6 +25,9 @@
 
 #define DEVIL_LASER_SPEED 100.0f
 #define DEVIL_ROCKET_SPEED 60.0f
+
+// [Cecil] Mirrored weapon
+extern INDEX amp_bWeaponMirrored;
 %}
 
 uses "EntitiesMP/BasicEffects";
@@ -437,8 +440,12 @@ properties:
 
  50 BOOL bLockedOn = TRUE,
  51 BOOL m_bLeftFlame = FALSE,
+
 {
   CLightSource m_lsLightSource;
+
+  // [Cecil] Last particles position
+  FLOAT3D m_vLastPos;
 }
 
 components:
@@ -604,6 +611,11 @@ components:
 260 class CLASS_HELLFIRECLOUD "Classes\\HellfireCloud.ecl",
 
 functions:
+  // [Cecil] Constructor
+  void CProjectile(void) {
+    m_vLastPos = FLOAT3D(0.0f, 0.0f, 0.0f);
+  };
+
   // premoving
   void PreMoving(void) {
     if (m_tmExpandBox>0) {
@@ -861,8 +873,9 @@ functions:
         fInFrontLiving = 0.05f;
         fLeaderLiving = _pTimer->GetLerpedCurrentTick() - m_fStartTime;
 
+        // [Cecil] Assert particles existence
         // not NULL or deleted
-        if (m_penParticles != NULL && !(m_penParticles->GetFlags() & ENF_DELETED)) {
+        if (ASSERT_ENTITY(m_penParticles)) {
           FLOAT3D vDirLeader = en_vCurrentTranslationAbsolute;
           vDirLeader.Normalize();
 
@@ -880,6 +893,7 @@ functions:
 
               CPlacement3D plPipe, plInFrontOfPipe;
               ((CPlayerWeapons&)*prLast.m_penParticles).GetFlamerSourcePlacement(plPipe, plInFrontOfPipe);
+
               fFollowerLiving = _pTimer->GetLerpedCurrentTick() - ((CProjectile&)*m_penParticles).m_fStartTime;
               FLOAT3D vDirPipeFront;
               AnglesToDirectionVector( plInFrontOfPipe.pl_OrientationAngle, vDirPipeFront);
@@ -892,8 +906,12 @@ functions:
               fFollowerLiving = _pTimer->GetLerpedCurrentTick() - ((CProjectile&)*m_penParticles).m_fStartTime;
               FLOAT3D vDirFollower = ((CMovableModelEntity*)(CEntity*)m_penParticles)->en_vCurrentTranslationAbsolute;
               vDirFollower.Normalize();
-              Particles_FlameThrower(GetLerpedPlacement(), m_penParticles->GetLerpedPlacement(),
-                                     vDirLeader, vDirFollower, fLeaderLiving, fFollowerLiving, en_ulID, FALSE);
+
+              // [Cecil] Shift the position
+              CPlacement3D plParticles = CPlacement3D(m_vLastPos, ANGLE3D(0.0f, 0.0f, 0.0f));
+              plParticles.RelativeToAbsolute(m_penParticles->GetLerpedPlacement());
+
+              Particles_FlameThrower(GetLerpedPlacement(), plParticles, vDirLeader, vDirFollower, fLeaderLiving, fFollowerLiving, en_ulID, FALSE);
             }
 
           // draw particles with player weapons
@@ -904,8 +922,12 @@ functions:
               return;
             }
 
+            // [Cecil] Get last position offset
+            m_vLastPos = FLOAT3D(plw.RenderPos(WEAPON_FLAMER).Pos1(1), -plw.RenderPos(WEAPON_FLAMER).vFire(2), -0.15f);
+
             CPlacement3D plPipe, plInFrontOfPipe;
             plw.GetFlamerSourcePlacement(plPipe, plInFrontOfPipe);
+
             FLOAT3D vDirPipeFront;
             AnglesToDirectionVector(plInFrontOfPipe.pl_OrientationAngle, vDirPipeFront);
             FLOAT3D vViewDir;

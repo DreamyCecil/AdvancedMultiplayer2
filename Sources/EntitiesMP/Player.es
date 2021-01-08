@@ -588,14 +588,13 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   // [Cecil] Change voice command if opened the menu
   if (_vcMenu.bHolding) {
     if (pctlCurrent.bWeaponNext) {
-      _iVoiceCommand = (_iVoiceCommand+1) % 8;
+      _iVoiceCommand = (_iVoiceCommand+1) % 5;
     }
 
     if (pctlCurrent.bWeaponPrev) {
-      if (_iVoiceCommand <= 0) {
-        _iVoiceCommand = 7;
-      } else {
-        _iVoiceCommand--;
+      _iVoiceCommand--;
+      if (_iVoiceCommand < 0) {
+        _iVoiceCommand = 4;
       }
     }
 
@@ -768,10 +767,14 @@ void CPlayer_Precache(void)
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODSTAIN);
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODSTAINGROW);
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODEXPLODE);
-}
 
-void CPlayer_OnInitClass(void)
-{
+  // [Cecil] Voice commands
+  for (INDEX iVC = SOUND_CHEERS1; iVC <= SOUND_HELP7; iVC++) {
+    pdec->PrecacheSound(iVC);
+  }
+};
+
+void CPlayer_OnInitClass(void) {
   // clear current player controls
   memset(&pctlCurrent, 0, sizeof(pctlCurrent));
   // declare player control variables
@@ -1253,6 +1256,8 @@ properties:
  211 BOOL m_bActionLoopBreak = FALSE,
  212 FLOAT3D m_vSpawnPoint = FLOAT3D(0.0f, 0.0f, 0.0f),
 
+ 220 FLOAT m_fVoiceCommands = -100.0f,
+
 {
   ShellLaunchData ShellLaunchData_array;  // array of data describing flying empty shells
   INDEX m_iFirstEmptySLD;                         // index of last added empty shell
@@ -1406,6 +1411,39 @@ components:
 260 sound SOUND_TOKEN "Sounds\\Player\\Token.wav",
 // [Cecil] Powerup sound
 261 sound SOUND_POWERUP "SoundsMP\\Items\\PowerUp.wav",
+
+// [Cecil] Voice commands
+300 sound SOUND_CHEERS1     "Sounds\\Player\\Commands\\Cheers1.wav",
+301 sound SOUND_CHEERS2     "Sounds\\Player\\Commands\\Cheers2.wav",
+302 sound SOUND_CHEERS3     "Sounds\\Player\\Commands\\Cheers3.wav",
+303 sound SOUND_CHEERS4     "Sounds\\Player\\Commands\\Cheers4.wav",
+304 sound SOUND_CHEERS5     "Sounds\\Player\\Commands\\Cheers5.wav",
+305 sound SOUND_CHEERS6     "Sounds\\Player\\Commands\\Cheers6.wav",
+306 sound SOUND_CHEERS7     "Sounds\\Player\\Commands\\Cheers7.wav",
+307 sound SOUND_CHEERS8     "Sounds\\Player\\Commands\\Cheers8.wav",
+308 sound SOUND_DARE1       "Sounds\\Player\\Commands\\Dare1.wav",
+309 sound SOUND_DARE2       "Sounds\\Player\\Commands\\Dare2.wav",
+310 sound SOUND_DARE3       "Sounds\\Player\\Commands\\Dare3.wav",
+311 sound SOUND_DARE4       "Sounds\\Player\\Commands\\Dare4.wav",
+312 sound SOUND_DARE5       "Sounds\\Player\\Commands\\Dare5.wav",
+313 sound SOUND_DARE6       "Sounds\\Player\\Commands\\Dare6.wav",
+314 sound SOUND_DARE7       "Sounds\\Player\\Commands\\Dare7.wav",
+315 sound SOUND_DARE8       "Sounds\\Player\\Commands\\Dare8.wav",
+316 sound SOUND_DARE9       "Sounds\\Player\\Commands\\Dare9.wav",
+317 sound SOUND_DOMINATION1 "Sounds\\Player\\Commands\\Domination1.wav",
+318 sound SOUND_DOMINATION2 "Sounds\\Player\\Commands\\Domination2.wav",
+319 sound SOUND_DOMINATION3 "Sounds\\Player\\Commands\\Domination3.wav",
+320 sound SOUND_DOMINATION4 "Sounds\\Player\\Commands\\Domination4.wav",
+321 sound SOUND_DOMINATION5 "Sounds\\Player\\Commands\\Domination5.wav",
+322 sound SOUND_DOMINATION6 "Sounds\\Player\\Commands\\Domination6.wav",
+323 sound SOUND_DOMINATION7 "Sounds\\Player\\Commands\\Domination7.wav",
+324 sound SOUND_HELP1       "Sounds\\Player\\Commands\\Help1.wav",
+325 sound SOUND_HELP2       "Sounds\\Player\\Commands\\Help2.wav",
+326 sound SOUND_HELP3       "Sounds\\Player\\Commands\\Help3.wav",
+327 sound SOUND_HELP4       "Sounds\\Player\\Commands\\Help4.wav",
+328 sound SOUND_HELP5       "Sounds\\Player\\Commands\\Help5.wav",
+329 sound SOUND_HELP6       "Sounds\\Player\\Commands\\Help6.wav",
+330 sound SOUND_HELP7       "Sounds\\Player\\Commands\\Help7.wav",
 
 functions:
   // [Cecil] Combo payout
@@ -4381,34 +4419,31 @@ functions:
     }
 
     // do the actions
-    if (!(m_ulFlags&PLF_AUTOMOVEMENTS)) {
+    if (!(m_ulFlags & PLF_AUTOMOVEMENTS)) {
       ActiveActions(paAction);
     }
-  }
+  };
 
-  void GetLerpedWeaponPosition( FLOAT3D vRel, CPlacement3D &pl)
-  {
-    pl = CPlacement3D( vRel, ANGLE3D(0,0,0));
+  void GetLerpedWeaponPosition(FLOAT3D vRel, CPlacement3D &pl) {
+    pl = CPlacement3D(vRel, ANGLE3D(0.0f, 0.0f, 0.0f));
     CPlacement3D plView;
-    _bDiscard3rdView=GetViewEntity()!=this;
+    _bDiscard3rdView = GetViewEntity() != this;
     GetLerpedAbsoluteViewPlacement(plView);
-    pl.RelativeToAbsolute( plView);
-  }
+    pl.RelativeToAbsolute(plView);
+  };
 
-  void SpawnBubbles( INDEX ctBubbles)
-  {
-    for( INDEX iBouble=0; iBouble<ctBubbles; iBouble++)
-    {
-      FLOAT3D vRndRel = FLOAT3D( (FRnd()-0.5f)*0.25f, -0.25f, -0.5f+FRnd()/10.0f);
+  void SpawnBubbles(INDEX ctBubbles) {
+    for (INDEX iBouble = 0; iBouble < ctBubbles; iBouble++) {
+      FLOAT3D vRndRel = FLOAT3D((FRnd()-0.5f)*0.25f, -0.25f, -0.5f+FRnd()/10.0f);
       ANGLE3D aDummy = ANGLE3D(0,0,0);
-      CPlacement3D plMouth = CPlacement3D( vRndRel, aDummy);
+      CPlacement3D plMouth = CPlacement3D(vRndRel, aDummy);
 
-      plMouth.RelativeToAbsolute( en_plViewpoint);
-      plMouth.RelativeToAbsolute( GetPlacement());
-      FLOAT3D vRndSpd = FLOAT3D( (FRnd()-0.5f)*0.25f, (FRnd()-0.5f)*0.25f, (FRnd()-0.5f)*0.25f);
-      AddBouble( plMouth.pl_PositionVector, vRndSpd);
+      plMouth.RelativeToAbsolute(en_plViewpoint);
+      plMouth.RelativeToAbsolute(GetPlacement());
+      FLOAT3D vRndSpd = FLOAT3D((FRnd()-0.5f)*0.25f, (FRnd()-0.5f)*0.25f, (FRnd()-0.5f)*0.25f);
+      AddBouble(plMouth.pl_PositionVector, vRndSpd);
     }
-  }
+  };
 
   void PlayPowerUpSound(void) {
     m_soPowerUpBeep.Set3DParameters(50.0f, 10.0f, 4.0f, 1.0f);
@@ -5060,11 +5095,41 @@ functions:
     }
 
     // [Cecil] Voice commands
-    if (m_ulButtons1 > 0) {
-      CTString strVoice(0, "Sounds\\Player\\Commands\\Domination0%d.wav", m_ulButtons1);
+    if (m_ulButtons1 > 0 && m_fVoiceCommands < _pTimer->CurrentTick()) {
+      INDEX iSound = SOUND_SILENCE;
+      CTString strCommand = "";
+      
+      switch (m_ulButtons1) {
+        case 1:
+          iSound = SOUND_CHEERS1 + (IRnd() % 8);
+          strCommand = "Cheers!";
+          break;
+
+        case 2:
+          iSound = SOUND_DARE1 + (IRnd() % 9);
+          strCommand = "Come here!";
+          break;
+
+        case 3:
+          iSound = SOUND_DOMINATION1 + (IRnd() % 7);
+          strCommand = "Take that!";
+          break;
+
+        case 4:
+          iSound = SOUND_HELP1 + (IRnd() % 7);
+          strCommand = "Help!";
+          break;
+      }
 
       SetSpeakMouthPitch();
-      PlaySound(m_soSpeech, CTFileName(strVoice), SOF_3D|SOF_VOLUMETRIC);
+      PlaySound(m_soSpeech, iSound, SOF_3D|SOF_VOLUMETRIC);
+
+      if (strCommand != "") {
+        CPrintF("%s^r: %s\n", en_pcCharacter.GetNameForPrinting(), strCommand);
+      }
+
+      // set cooldown
+      m_fVoiceCommands = _pTimer->CurrentTick() + 2.0f;
     }
   };
 
