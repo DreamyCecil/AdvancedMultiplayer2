@@ -1,6 +1,6 @@
 {
   "Name" : "XL2 Lasergun",
-  "Icon" : "TexturesMP\\Interface\\WLaser.tex",
+  "Icon" : "TexturesMP\Interface\WLaser.tex",
   
   "Ammo" : 7,
   "AltAmmo": -1,

@@ -1,6 +1,6 @@
 {
   "Name" : "RAPTOR 16mm Sniper",
-  "Icon" : "TexturesMP\\Interface\\WSniper.tex",
+  "Icon" : "TexturesMP\Interface\WSniper.tex",
   
   "Damage" : 300.0,
   "DamageDM" : 90.0,

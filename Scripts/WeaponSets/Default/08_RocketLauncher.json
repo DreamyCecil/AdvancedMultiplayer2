@@ -1,6 +1,6 @@
 {
   "Name" : "XPML21 Rocket Launcher",
-  "Icon" : "TexturesMP\\Interface\\WRocketLauncher.tex",
+  "Icon" : "TexturesMP\Interface\WRocketLauncher.tex",
   
   "Ammo" : 3,
   "AltAmmo": -1,

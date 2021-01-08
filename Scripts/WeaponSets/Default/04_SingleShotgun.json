@@ -1,6 +1,6 @@
 {
   "Name" : "12 Gauge Pump Action Shotgun",
-  "Icon" : "TexturesMP\\Interface\\WSingleShotgun.tex",
+  "Icon" : "TexturesMP\Interface\WSingleShotgun.tex",
   
   "Damage" : 10.0,
   

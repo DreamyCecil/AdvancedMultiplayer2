@@ -1,6 +1,6 @@
 {
   "Name" : "Military Knife",
-  "Icon" : "TexturesMP\\Interface\\WKnife.tex",
+  "Icon" : "TexturesMP\Interface\WKnife.tex",
   
   "Damage" : 100.0,
   "DamageDM" : 50.0,

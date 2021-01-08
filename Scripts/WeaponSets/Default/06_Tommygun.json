@@ -1,6 +1,6 @@
 {
   "Name" : "M1-A2 Tommygun",
-  "Icon" : "TexturesMP\\Interface\\WTommygun.tex",
+  "Icon" : "TexturesMP\Interface\WTommygun.tex",
   
   "Damage" : 10.0,
   "DamageAlt" : 10.0,

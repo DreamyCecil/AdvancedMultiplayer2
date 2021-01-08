@@ -1,6 +1,6 @@
 {
   "Name" : "XOP Flamethrower",
-  "Icon" : "TexturesMP\\Interface\\WFlamer.tex",
+  "Icon" : "TexturesMP\Interface\WFlamer.tex",
   
   "Ammo" : 5,
   "AltAmmo": -1,

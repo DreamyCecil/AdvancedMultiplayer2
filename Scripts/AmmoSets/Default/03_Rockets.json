@@ -1,6 +1,6 @@
 {
   "Name" : "Rockets",
-  "Icon" : "TexturesMP\\Interface\\AmRockets.tex",
+  "Icon" : "TexturesMP\Interface\AmRockets.tex",
   
   "Ammo" : 50,
   "Mana" : 150.0,
