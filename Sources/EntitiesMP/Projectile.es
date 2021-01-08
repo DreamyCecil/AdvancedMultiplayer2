@@ -109,15 +109,15 @@ enum ProjectileMovingType {
   5 PMT_GUIDED_SLIDING "",     // sliding on floor and guided at the same time
 };
 
-
 // input parameter for launching the projectile
 event ELaunchProjectile {
-  CEntityPointer penLauncher,     // who launched it
-  enum ProjectileType prtType,    // type of projectile
-  FLOAT fSpeed,                   // optional - projectile speed (only for some projectiles)
-  FLOAT fStretch,                 // optional - projectile stretch (only for some projectiles)
+  CEntityPointer penLauncher,  // who launched it
+  enum ProjectileType prtType, // type of projectile
+  FLOAT fSpeed,                // optional - projectile speed (only for some projectiles)
+  FLOAT fStretch,              // optional - projectile stretch (only for some projectiles)
+  FLOAT fDamage,      // [Cecil] Custom damage
+  FLOAT fRangeDamage, // [Cecil] Custom range damage
 };
-
 
 %{
 #define DRAGONMAN_NORMAL 0
@@ -431,7 +431,7 @@ properties:
  25 FLOAT m_tmExpandBox = 0.0f,              // expand collision after a few seconds
  26 FLOAT m_tmInvisibility = 0.0f,           // don't render before given time
  27 INDEX m_iRebounds = 0,                   // how many times to rebound
- 28 FLOAT m_fStretch=1.0f,                   // stretch
+ 28 FLOAT m_fStretch = 1.0f,                 // stretch
 
  30 CSoundObject m_soEffect,          // sound channel
  31 CSoundObject m_soExplosion,       // sound channel
@@ -3841,8 +3841,9 @@ procedures:
     m_penLauncher = eLaunch.penLauncher;
     m_prtType = eLaunch.prtType;
     m_fSpeed = eLaunch.fSpeed;
-    m_fStretch=eLaunch.fStretch;
+    m_fStretch = eLaunch.fStretch;
     SetPredictable(TRUE);
+
     // remember lauching time
     m_fIgnoreTime = _pTimer->CurrentTick() + 1.0f;
     m_penLastDamaged = NULL;
@@ -3857,7 +3858,7 @@ procedures:
         Particles_RocketTrail_Prepare(this);
         break;
 
-      case PRT_GUFFY_PROJECTILE: break; //Particles_RocketTrail_Prepare(this); break;
+      case PRT_GUFFY_PROJECTILE: break;
 
       case PRT_GRENADE:
         Particles_GrenadeTrail_Prepare(this);
@@ -3888,9 +3889,9 @@ procedures:
          break;
       case PRT_SHOOTER_FIREBALL: Particles_Fireball01Trail_Prepare(this); break;
     }
+
     // projectile initialization
-    switch (m_prtType)
-    {
+    switch (m_prtType) {
       case PRT_WALKER_ROCKET: WalkerRocket(); break;
       case PRT_ROCKET: PlayerRocket(); break;
 
@@ -3949,23 +3950,39 @@ procedures:
       default: ASSERTALWAYS("Unknown projectile type");
     }
 
+    // [Cecil] Set custom damage
+    if (eLaunch.fDamage > 0.0f) {
+      m_fDamageAmount = eLaunch.fDamage;
+    }
+    if (eLaunch.fRangeDamage > 0.0f) {
+      m_fRangeDamageAmount = eLaunch.fRangeDamage;
+    }
+
     // setup light source
-    if (m_bLightSource) { SetupLightSource(TRUE); }
+    if (m_bLightSource) {
+      SetupLightSource(TRUE);
+    }
 
     // fly
     m_fStartTime = _pTimer->CurrentTick();
+
     // if guided projectile
-    if( m_pmtMove == PMT_GUIDED) {
+    if (m_pmtMove == PMT_GUIDED) {
       autocall ProjectileGuidedFly() EEnd;
-    } else if (m_pmtMove==PMT_GUIDED_FAST) {
+
+    } else if (m_pmtMove == PMT_GUIDED_FAST) {
       autocall ProjectileGuidedFastFly() EEnd;
-    } else if (m_pmtMove==PMT_FLYING) {
+
+    } else if (m_pmtMove == PMT_FLYING) {
       autocall ProjectileFly() EEnd;
-    } else if (m_pmtMove==PMT_SLIDING) {
+
+    } else if (m_pmtMove == PMT_SLIDING) {
       autocall ProjectileSlide() EEnd;
-    } else if (m_pmtMove==PMT_FLYING_REBOUNDING) {
+
+    } else if (m_pmtMove == PMT_FLYING_REBOUNDING) {
       autocall ProjectileFlyRebounding() EEnd;
-    } else if (m_pmtMove==PMT_GUIDED_SLIDING) {
+
+    } else if (m_pmtMove == PMT_GUIDED_SLIDING) {
       autocall ProjectileGuidedSlide() EEnd;
     }
 

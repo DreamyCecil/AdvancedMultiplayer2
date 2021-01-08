@@ -80,18 +80,15 @@ functions:
   };
 
   /* Get static light source information. */
-  CLightSource *GetLightSource(void)
-  {
+  CLightSource *GetLightSource(void) {
     if (!IsPredictor()) {
       return &m_lsLightSource;
-    } else {
-      return NULL;
     }
+    return NULL;
   };
 
   // Setup light source
-  void SetupLightSource(void)
-  {
+  void SetupLightSource(void) {
     // setup light source
     CLightSource lsNew;
     lsNew.ls_ulFlags = LSF_NONPERSISTENT|LSF_DYNAMIC;
@@ -173,27 +170,32 @@ functions:
 /************************************************************
  *                      FIRE FUNCTIONS                      *
  ************************************************************/
-  // [Cecil] Ray power
-  void PrepareBullet(const CPlacement3D &plBullet, FLOAT fPower) {
+  // [Cecil] Added ray power and custom damage
+  void PrepareBullet(const CPlacement3D &plBullet, FLOAT fPower, FLOAT fDamage) {
     // create bullet
     penBullet = CreateEntity(plBullet, CLASS_BULLET);
     // init bullet
     EBulletInit eInit;
     eInit.penOwner = ((CPlayerWeapons&)*m_penOwner).m_penPlayer;
 
+    // [Cecil] Custom damage
+    FLOAT fSetDamage = (fDamage > 0.0f ? fDamage : 100.0f);
+
     // [Cecil] Multiply damage
-    eInit.fDamage = 100.0f*fPower * FireSpeed();
+    eInit.fDamage = fSetDamage*fPower * FireSpeed();
 
     penBullet->Initialize(eInit);
     ((CBullet&)*penBullet).m_EdtDamage = DMT_BULLET;
   };
 
-  // [Cecil] Ray power
-  void Fire(const CPlacement3D &plSource, FLOAT fPower) {
-    if (!IsOfClass(m_penOwner, "Player Weapons")) { return; }
+  // [Cecil] Added ray power and custom damage
+  void Fire(const CPlacement3D &plSource, FLOAT fPower, FLOAT fDamage) {
+    if (!IsOfClass(m_penOwner, "Player Weapons")) {
+      return;
+    }
 
     // fire lerped bullets
-    PrepareBullet(plSource, fPower);
+    PrepareBullet(plSource, fPower, fDamage);
 
     ((CBullet&)*penBullet).CalcTarget(HIT_DISTANCE);
     ((CBullet&)*penBullet).m_fBulletSize = 0.5f;

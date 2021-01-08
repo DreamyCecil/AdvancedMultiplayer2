@@ -60,6 +60,15 @@ static FLOAT amp_fWeaponFOV = 1.0f;
 extern INDEX amp_bWeaponMirrored = FALSE;
 static INDEX _bLastWeaponMirrored = FALSE;
 
+// [Cecil] Reset weapon position
+void ResetWeaponPosition(void) {
+  for (INDEX i = 0; i < 3; i++) {
+    amp_afWeaponPos[i] = 1.0f;
+    amp_afWeaponRot[i] = 1.0f;
+  }
+  amp_fWeaponFOV = 1.0f;
+};
+
 // [Cecil] Tesla lightning
 #include "EntitiesMP/TeslaLightning.h"
 // [Cecil] Extra functions
@@ -413,6 +422,7 @@ void CPlayerWeapons_Init(void) {
   _pShell->DeclareSymbol("persistent user FLOAT amp_afWeaponPos[3];", &amp_afWeaponPos);
   _pShell->DeclareSymbol("persistent user FLOAT amp_afWeaponRot[3];", &amp_afWeaponRot);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fWeaponFOV;", &amp_fWeaponFOV);
+  _pShell->DeclareSymbol("user void ResetWeaponPosition(void);", &ResetWeaponPosition);
 
   _pShell->DeclareSymbol("persistent user INDEX amp_bWeaponMirrored;", &amp_bWeaponMirrored);
 
@@ -754,7 +764,7 @@ functions:
   };
 
   // [Cecil] Tesla gun burst
-  void TeslaBurst(CEntity *penHit, FLOAT3D vTarget) {
+  void TeslaBurst(CEntity *penHit, FLOAT3D vTarget, FLOAT fDamage) {
     // counter
     INDEX iEnemy = 0;
 
@@ -796,7 +806,7 @@ functions:
         SpawnFlame(GetPlayer(), pen, vPos);
       }
 
-      InflictDirectDamage(pen, GetPlayer(), DMT_BURNING, 10.0f, vPos, FLOAT3D(0.0f, 1.0f, 0.0f));
+      InflictDirectDamage(pen, GetPlayer(), DMT_BURNING, (fDamage > 0.0f ? fDamage : 10.0f), vPos, FLOAT3D(0.0f, 1.0f, 0.0f));
 
       iEnemy++;
 
@@ -963,6 +973,21 @@ functions:
     SPlayerAmmo *pAlt = CUR_WEAPON.pAlt;
 
     return (bAlt ? pAlt : pAmmo);
+  };
+
+  // [Cecil] Get weapon damage
+  FLOAT GetDamage(INDEX iWeapon) {
+    SWeaponStruct &ws = *m_aWeapons[iWeapon].pWeaponStruct;
+    BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageDM <= 0.0f);
+    
+    return (bCoop ? ws.fDamage : ws.fDamageDM);
+  };
+
+  FLOAT GetDamageAlt(INDEX iWeapon) {
+    SWeaponStruct &ws = *m_aWeapons[iWeapon].pWeaponStruct;
+    BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageAltDM <= 0.0f);
+    
+    return (bCoop ? ws.fDamageAlt : ws.fDamageAltDM);
   };
 
   // [Cecil] Moved from the C++ block, added alt flag
@@ -2629,9 +2654,9 @@ functions:
     ((CBullet&)*penBullet).DestroyBullet();
   }
 
-  // [Cecil] Poison grenades
+  // [Cecil] Added poison grenades and custom damage
   // fire grenade
-  void FireGrenade(INDEX iPower, BOOL bPoison) {
+  void FireGrenade(INDEX iPower, BOOL bPoison, FLOAT fDamage) {
     // [Cecil] Grenade position
     FLOAT3D vGrenade = FLOAT3D(-CUR_WEAPON.GetPosition().Pos1(1), FirePos(WEAPON_GRENADELAUNCHER)(2), -0.15f);
 
@@ -2645,11 +2670,14 @@ functions:
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = m_penPlayer;
     eLaunch.prtType = (bPoison ? PRT_FIRE_GRENADE : PRT_GRENADE);
-    eLaunch.fSpeed = 20.0f+iPower*5.0f;
+    eLaunch.fSpeed = 20.0f + iPower*5.0f;
+    eLaunch.fDamage = fDamage * 0.75f;
+    eLaunch.fRangeDamage = fDamage;
     penGrenade->Initialize(eLaunch);
   };
-
-  void FireRocket(void) {
+  
+  // [Cecil] Added custom damage
+  void FireRocket(FLOAT fDamage) {
     // [Cecil] Rocket position
     FLOAT3D vRocket = FLOAT3D(-CUR_WEAPON.GetPosition().Pos1(1), FirePos(WEAPON_ROCKETLAUNCHER)(2), -0.15f);
 
@@ -2663,6 +2691,13 @@ functions:
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = m_penPlayer;
     eLaunch.prtType = (m_bChainLauncher ? PRT_CHAINSAW_ROCKET : PRT_ROCKET);
+    eLaunch.fDamage = fDamage;
+    
+    // [Cecil] Range damage only for normal rockets
+    if (!m_bChainLauncher) {
+      eLaunch.fRangeDamage = fDamage * (GetSP()->sp_bCooperative ? 0.5f : 1.0f);
+    }
+
     penRocket->Initialize(eLaunch);
   };
 
@@ -2678,9 +2713,10 @@ functions:
     AnglesToDirectionVector(plSource.pl_OrientationAngle, vFront);
     plInFrontOfPipe.pl_PositionVector = plSource.pl_PositionVector+vFront*1.0f;
   };
-
+  
+  // [Cecil] Added custom damage
   // fire flame
-  void FireFlame(void) {
+  void FireFlame(FLOAT fDamage) {
     // [Cecil] Fire position
     FLOAT3D vFire = FLOAT3D(-CUR_WEAPON.GetPosition().Pos1(1), FirePos(WEAPON_FLAMER)(2), -0.15f);
 
@@ -2694,6 +2730,7 @@ functions:
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = m_penPlayer;
     eLaunch.prtType = PRT_FLAME;
+    eLaunch.fDamage = fDamage;
     penFlame->Initialize(eLaunch);
 
     // [Cecil] Assert flame existence
@@ -2708,16 +2745,10 @@ functions:
     // store last flame
     m_penFlame = penFlame;
   };
-
-  // [Cecil] Ghost Buster hit
-  void GhostBusterHit(FLOAT fPower) {
-    if (m_fRayHitDistance <= 100.0f) {
-      FireGhostBusterRay(fPower);
-    }
-  };
   
+  // [Cecil] Added custom damage
   // fire laser ray
-  void FireLaserRay(void) {
+  void FireLaserRay(FLOAT fDamage) {
     // [Cecil] Laser position
     FLOAT3D vLaser = FLOAT3D(-CUR_WEAPON.GetPosition().Pos1(1), FirePos(WEAPON_LASER)(2), 0.0f);
 
@@ -2764,6 +2795,7 @@ functions:
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = m_penPlayer;
     eLaunch.prtType = PRT_LASER_RAY;
+    eLaunch.fDamage = fDamage;
     penLaser->Initialize(eLaunch);
   };
 
@@ -2781,18 +2813,19 @@ functions:
     CalcWeaponPosition(vTesla, plSource, FALSE);
   };
 
-  // [Cecil] Ray power
-  void FireGhostBusterRay(FLOAT fPower) {
+  // [Cecil] Added ray power and custom damage
+  void FireGhostBusterRay(FLOAT fPower, FLOAT fDamage) {
     // ray start position
     CPlacement3D plRay;
     GetGhostBusterSourcePlacement(plRay);
 
     // fire ray
-    ((CGhostBusterRay&)*m_penGhostBusterRay).Fire(plRay, fPower);
+    ((CGhostBusterRay&)*m_penGhostBusterRay).Fire(plRay, fPower, fDamage);
   };
-
+  
+  // [Cecil] Added custom damage
   // fire cannon ball
-  void FireCannonBall(INDEX iPower, BOOL bNuke) {
+  void FireCannonBall(INDEX iPower, BOOL bNuke, FLOAT fDamage) {
     // [Cecil] Ball position
     FLOAT3D vBall = FLOAT3D(-CUR_WEAPON.GetPosition().Pos1(1), FirePos(WEAPON_IRONCANNON)(2), 0.0f);
 
@@ -2802,12 +2835,14 @@ functions:
 
     // create cannon ball
     CEntityPointer penBall = CreateEntity(plBall, CLASS_CANNONBALL);
+
     // init and launch cannon ball
     ELaunchCannonBall eLaunch;
     eLaunch.penLauncher = m_penPlayer;
     eLaunch.fLaunchPower = (bNuke ? 30.0f : 60.0f) + iPower * (bNuke ? 2.0f : 4.0f); // ranges from 60-140 (since iPower can be max 20)
     eLaunch.fSize = 3.0f;
     eLaunch.cbtType = (bNuke ? CBT_NUKE : CBT_IRON);
+    eLaunch.fDamage = fDamage;
     penBall->Initialize(eLaunch);
   };
 
@@ -3785,21 +3820,21 @@ functions:
     }
 
     // if restoring best weapon
-    if (iSelect==-4) {
+    if (iSelect == -4) {
       SelectNewWeapon() ;
       return;
     }
 
     // if flipping weapon
-    if (iSelect==-3) {
+    if (iSelect == -3) {
       EwtTemp = GetAltWeapon(m_iWantedWeapon);
 
     // if selecting previous weapon
-    } else if (iSelect==-2) {
+    } else if (iSelect == -2) {
       EwtTemp = FindWeaponInDirection(-1);
 
     // if selecting next weapon
-    } else if (iSelect==-1) {
+    } else if (iSelect == -1) {
       EwtTemp = FindWeaponInDirection(+1);
 
     // if selecting directly
@@ -3811,16 +3846,19 @@ functions:
       // change to wanted weapon
       } else {
         EwtTemp = GetStrongerWeapon(iSelect);
-
+        
+        // [Cecil] Check if doesn't exist
         // if weapon don't exist or don't have ammo flip it
-        if ( !((1<<(EwtTemp-1))&m_iAvailableWeapons) || !HasAmmo(EwtTemp)) {
+        if (!WeaponExists(m_iAvailableWeapons, EwtTemp) || !HasAmmo(EwtTemp)) {
           EwtTemp = GetAltWeapon(EwtTemp);
         }
       }
     }
 
+    // [Cecil] Check if weapon exists
     // wanted weapon exist and has ammo
-    BOOL bChange = ( ((1<<(EwtTemp-1))&m_iAvailableWeapons) && HasAmmo(EwtTemp));
+    BOOL bChange = (WeaponExists(m_iAvailableWeapons, EwtTemp) && HasAmmo(EwtTemp));
+
     if (bChange) {
       m_iWantedWeapon = EwtTemp;
       m_bChangeWeapon = TRUE;
@@ -4119,6 +4157,7 @@ procedures:
       case WEAPON_IRONCANNON:
         m_iAnim = CANNON_ANIM_ACTIVATE;
         break;
+
       default: ASSERTALWAYS("Unknown weapon.");
     }
     // start animator
@@ -4197,17 +4236,22 @@ procedures:
     Setup3DSoundParameters();
 
     // start weapon firing animation for continuous firing
-    if (m_iCurrentWeapon==WEAPON_MINIGUN) {
+    if (m_iCurrentWeapon == WEAPON_MINIGUN) {
       jump MiniGunSpinUp();
-    } else if (m_iCurrentWeapon==WEAPON_FLAMER) {
+
+    } else if (m_iCurrentWeapon == WEAPON_FLAMER) {
       jump FlamerStart();
-    } else if (m_iCurrentWeapon==WEAPON_CHAINSAW) {
+
+    } else if (m_iCurrentWeapon == WEAPON_CHAINSAW) {
       jump ChainsawFire();
-    } else if (m_iCurrentWeapon==WEAPON_LASER) {
+
+    } else if (m_iCurrentWeapon == WEAPON_LASER) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING);
-    } else if (m_iCurrentWeapon==WEAPON_TOMMYGUN) {
+
+    } else if (m_iCurrentWeapon == WEAPON_TOMMYGUN) {
       autocall TommyGunStart() EEnd;
-    } else if ((m_iCurrentWeapon==WEAPON_IRONCANNON)) {
+
+    } else if ((m_iCurrentWeapon == WEAPON_IRONCANNON)) {
       jump CannonFireStart();
     }
 
@@ -4251,14 +4295,17 @@ procedures:
 
     // stop weapon firing animation for continuous firing
     switch (m_iCurrentWeapon) {
-      case WEAPON_TOMMYGUN: { jump TommyGunStop(); break; }
-      case WEAPON_MINIGUN: { jump MiniGunSpinDown(); break; }
-      case WEAPON_FLAMER: { jump FlamerStop(); break; }
-      case WEAPON_LASER: { 
+      case WEAPON_TOMMYGUN: jump TommyGunStop(); break;
+      case WEAPON_MINIGUN:  jump MiniGunSpinDown(); break;
+      case WEAPON_FLAMER:   jump FlamerStop(); break;
+
+      case WEAPON_LASER:
         GetAnimator()->FireAnimationOff();
         jump Idle();
-                         }
-      default: { jump Idle(); }
+
+      default: {
+        jump Idle();
+      }
     }
   };
 
@@ -4290,7 +4337,8 @@ procedures:
     // start weapon firing animation for continuous firing
     if (m_iCurrentWeapon == WEAPON_LASER) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING);
-    } else if ((m_iCurrentWeapon == WEAPON_IRONCANNON)) {
+
+    } else if (m_iCurrentWeapon == WEAPON_IRONCANNON) {
       jump NukeCannonFire();
     }
 
@@ -4372,14 +4420,14 @@ procedures:
     PlaySound(pl.m_soWeapon0, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
 
-    if (CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, ((GetSP()->sp_bCooperative) ? 100.0f : 50.0f))) {
+    if (CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetDamage(WEAPON_KNIFE))) {
       // [Cecil] Multiply speed
       autowait(m_fAnimWaitTime * FireSpeedMul());
 
     } else if (TRUE) {
       // [Cecil] Multiply speed
       autowait(m_fAnimWaitTime/2 * FireSpeedMul());
-      CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, ((GetSP()->sp_bCooperative) ? 100.0f : 50.0f));
+      CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetDamage(WEAPON_KNIFE));
       autowait(m_fAnimWaitTime/2 * FireSpeedMul());
     }
 
@@ -4395,7 +4443,7 @@ procedures:
     GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0);
 
     // fire bullet
-    FireOneBullet(FirePos(WEAPON_COLT), 500.0f, (GetSP()->sp_bCooperative ? 10.0f : 20.0f));
+    FireOneBullet(FirePos(WEAPON_COLT), 500.0f, GetDamage(WEAPON_COLT));
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
     DoRecoil();
@@ -4456,7 +4504,7 @@ procedures:
   FireDoubleColt() {
     // fire first colt - one bullet less in colt
     GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0);
-    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, 10.0f);
+    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, GetDamage(WEAPON_DOUBLECOLT));
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
 
@@ -4485,7 +4533,7 @@ procedures:
     // fire second colt
     GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRELEFT, 0);
     m_bMirrorFire = TRUE;
-    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, 10.0f);
+    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, GetDamage(WEAPON_DOUBLECOLT));
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
     
@@ -4547,7 +4595,7 @@ procedures:
     // fire one shell
     if (CurrentAmmo() > 0) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
-      FireBullets(FirePos(WEAPON_SINGLESHOTGUN), 500.0f, 10.0f, 7, afSingleShotgunPellets, 0.2f, 0.03f, 0.0f);
+      FireBullets(FirePos(WEAPON_SINGLESHOTGUN), 500.0f, GetDamage(WEAPON_SINGLESHOTGUN), 7, afSingleShotgunPellets, 0.2f, 0.03f, 0.0f);
 
       DoRecoil();
       SpawnRangeSound(60.0f);
@@ -4600,7 +4648,7 @@ procedures:
       m_moWeapon.PlayAnim(SINGLESHOTGUN_ANIM_WAIT1, AOF_LOOPING);
 
       // fire grenade
-      FireGrenade(5.0f, FALSE);
+      FireGrenade(5.0f, FALSE, GetDamageAlt(WEAPON_SINGLESHOTGUN));
       SpawnRangeSound(10.0f);
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Gnadelauncher");}
@@ -4644,7 +4692,7 @@ procedures:
     // fire two shell
     if (CurrentAmmo() > 1) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
-      FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, 10.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 0.0f);
+      FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, GetDamage(WEAPON_DOUBLESHOTGUN), 14, afDoubleShotgunPellets, 0.3f, 0.03f, 0.0f);
 
       DoRecoil();
       SpawnRangeSound(70.0f);
@@ -4698,7 +4746,7 @@ procedures:
     // fire two shell
     if (CurrentAmmo() > 1) {
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
-      FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, 3.0f, 14, afDoubleShotgunPellets, 0.3f, 0.03f, 70.0f);
+      FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, GetDamageAlt(WEAPON_DOUBLESHOTGUN), 14, afDoubleShotgunPellets, 0.3f, 0.03f, 70.0f);
 
       DoRecoil();
       SpawnRangeSound(70.0f);
@@ -4750,12 +4798,16 @@ procedures:
   // ***************** FIRE TOMMYGUN *****************
   TommyGunStart() {
     m_iBulletsOnFireStart = CurrentAmmo();
+
     CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC);      // stop possible sounds
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);      // fire
+    PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
+
+    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f); // fire
     PlaySound(pl.m_soWeapon0, SOUND_TOMMYGUN_FIRE, SOF_LOOP|SOF_3D|SOF_VOLUMETRIC);
+
     PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
     GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING);
+
     return EEnd();
   };
 
@@ -4804,7 +4856,8 @@ procedures:
     // fire one bullet
     if (CurrentAmmo() > 0) {
       // [Cecil] Multiply damage
-      FireMachineBullet(FirePos(WEAPON_TOMMYGUN), 500.0f, 10.0f * FireSpeed(), (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
+      FireMachineBullet(FirePos(WEAPON_TOMMYGUN), 500.0f, GetDamage(WEAPON_TOMMYGUN) * FireSpeed(),
+                        (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
 
       SpawnRangeSound(50.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
@@ -4847,7 +4900,7 @@ procedures:
       DecAmmo(m_iCurrentWeapon, m_iAmmoLeft, FALSE);
 
       while (--m_iAmmoLeft >= 0) {
-        FireMachineBullet(FirePos(WEAPON_TOMMYGUN), 500.0f, 10.0f, 0.15f, 0.1f);
+        FireMachineBullet(FirePos(WEAPON_TOMMYGUN), 500.0f, GetDamageAlt(WEAPON_TOMMYGUN), 0.15f, 0.1f);
 
         // [Cecil] Drop bullet
         DropBulletShell(_vTommygunShellPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET, amp_bWeaponMirrored);
@@ -4898,9 +4951,9 @@ procedures:
     if (CurrentAmmo() > 0) {
       // fire one bullet
       if (m_bSniping) {
-        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f), 0.0f);
+        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, GetDamage(WEAPON_SNIPER), 0.0f);
       } else {
-        FireSniperBullet(FirePos(WEAPON_SNIPER), 1000.0f, (GetSP()->sp_bCooperative ? 75.0f : 30.0f), 5.0f);
+        FireSniperBullet(FirePos(WEAPON_SNIPER), 1000.0f, GetDamage(WEAPON_SNIPER) / 4.0f, 5.0f);
       }
       m_tmLastSniperFire = _pTimer->CurrentTick();
 
@@ -4951,9 +5004,9 @@ procedures:
     if (CurrentAmmo() > 0) {
       // fire one bullet
       if (m_bSniping) {
-        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, (GetSP()->sp_bCooperative ? 300.0f : 90.0f) * 1.5f, 0.0f);
+        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, GetDamageAlt(WEAPON_SNIPER), 0.0f);
       } else {
-        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1000.0f, (GetSP()->sp_bCooperative ? 150.0f : 60.0f) * 1.5f, 0.0f);
+        FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1000.0f, GetDamageAlt(WEAPON_SNIPER) / 3.0f, 0.0f);
       }
       m_tmLastSniperFire = _pTimer->CurrentTick();
 
@@ -5012,6 +5065,7 @@ procedures:
 
     // no boring animation
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).m_fLastActionTime = _pTimer->CurrentTick();
+
     // clear last lerped bullet position
     m_iLastBulletPosition = FLOAT3D(32000.0f, 32000.0f, 32000.0f);
     CPlayer &pl = (CPlayer&)*m_penPlayer;
@@ -5025,16 +5079,17 @@ procedures:
     // spin start sounds
     PlaySound(pl.m_soWeapon2, SOUND_MINIGUN_CLICK, SOF_3D|SOF_VOLUMETRIC);
     PlaySound(pl.m_soWeapon1, SOUND_MINIGUN_SPINUP, SOF_3D|SOF_VOLUMETRIC);
-    //pl.m_soWeapon1.SetOffset((m_aMiniGunSpeed/MINIGUN_FULLSPEED)*MINIGUN_SPINUPSOUND);
+
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotateup");}
+
     // while not at full speed and fire is held
     while (m_aMiniGunSpeed < MINIGUN_FULLSPEED && HoldingFire()) {
       // every tick
       autowait(MINIGUN_TICKTIME);
       // increase speed
       m_aMiniGunLast = m_aMiniGun;
-      m_aMiniGun+=m_aMiniGunSpeed*MINIGUN_TICKTIME;
-      m_aMiniGunSpeed+=MINIGUN_SPINUPACC*MINIGUN_TICKTIME;
+      m_aMiniGun += m_aMiniGunSpeed*MINIGUN_TICKTIME;
+      m_aMiniGunSpeed += MINIGUN_SPINUPACC*MINIGUN_TICKTIME;
     }
     // do not go over full speed
     m_aMiniGunSpeed = ClampUp( m_aMiniGunSpeed, MINIGUN_FULLSPEED);
@@ -5044,9 +5099,10 @@ procedures:
       // start spindown
       jump MiniGunSpinDown();
     }
+
     // start firing
     jump MiniGunFire();
-  }
+  };
 
   MiniGunFire() {
     // spinning sound
@@ -5080,7 +5136,7 @@ procedures:
       if (CurrentAmmo() > 0) {
         // [Cecil] Multiply damage
         // fire a bullet
-        FireMachineBullet(FirePos(WEAPON_MINIGUN), 750.0f, (AltFireExists(WEAPON_MINIGUN) ? 20.0f : 10.0f) * FireSpeed(),
+        FireMachineBullet(FirePos(WEAPON_MINIGUN), 750.0f, (AltFireExists(WEAPON_MINIGUN) ? GetDamageAlt(WEAPON_MINIGUN) : GetDamage(WEAPON_MINIGUN)) * FireSpeed(),
                           (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
         DoRecoil();
         SpawnRangeSound(60.0f);
@@ -5139,19 +5195,22 @@ procedures:
     PlayLightAnim(LIGHT_ANIM_NONE, AOF_LOOPING);
     // start spin down
     jump MiniGunSpinDown();
-  }
+  };
 
   MiniGunSpinDown() {
     CPlayer &pl = (CPlayer&)*m_penPlayer;
+
     // spin down sounds
     PlaySound(pl.m_soWeapon3, SOUND_MINIGUN_CLICK, SOF_3D|SOF_VOLUMETRIC);
     PlaySound(pl.m_soWeapon1, SOUND_MINIGUN_SPINDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("Minigun_rotate");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotatedown");}
 
     // while still spinning and should not fire
     while (m_aMiniGunSpeed > 0 && (!HoldingFire() || CurrentAmmo() <= 0)) {
       autowait(MINIGUN_TICKTIME);
+
       // spin
       m_aMiniGunLast = m_aMiniGun;
       m_aMiniGun += m_aMiniGunSpeed*MINIGUN_TICKTIME;
@@ -5170,8 +5229,9 @@ procedures:
         jump Idle();
       }
     }
+
     // clamp some
-    m_aMiniGunSpeed = ClampDn( m_aMiniGunSpeed, 0.0f);
+    m_aMiniGunSpeed = ClampDn(m_aMiniGunSpeed, 0.0f);
     m_aMiniGunLast = m_aMiniGun;
 
     // if should fire
@@ -5197,6 +5257,7 @@ procedures:
         SelectNewWeapon(); 
       }
     }
+
     jump Idle();
   };
 
@@ -5207,7 +5268,9 @@ procedures:
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
       m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_FIRE, 0);
 
-      FireRocket();
+      // [Cecil] Custom damage
+      FLOAT fDamage = (m_bChainLauncher ? GetDamageAlt(WEAPON_ROCKETLAUNCHER) : GetDamage(WEAPON_ROCKETLAUNCHER));
+      FireRocket(fDamage);
       DoRecoil();
       SpawnRangeSound(20.0f);
 
@@ -5293,7 +5356,7 @@ procedures:
       INDEX iPower = INDEX((_pTimer->CurrentTick() - F_TEMP) / _pTimer->TickQuantum * FireSpeed());
 
       // fire grenade
-      FireGrenade(iPower, FALSE);
+      FireGrenade(iPower, FALSE, GetDamage(WEAPON_GRENADELAUNCHER));
       SpawnRangeSound(10.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Gnadelauncher");}
 
@@ -5364,7 +5427,7 @@ procedures:
       INDEX iPower = INDEX((_pTimer->CurrentTick() - F_TEMP) / _pTimer->TickQuantum * FireSpeed());
 
       // fire grenade
-      FireGrenade(iPower, TRUE);
+      FireGrenade(iPower, TRUE, GetDamageAlt(WEAPON_GRENADELAUNCHER));
       SpawnRangeSound(10.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Gnadelauncher");}
 
@@ -5426,7 +5489,7 @@ procedures:
     PlaySound(pl.m_soWeapon2, SOUND_FL_START, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerStart");}
 
-    FireFlame();
+    FireFlame(GetDamage(WEAPON_FLAMER));
     DecAmmo(m_iCurrentWeapon, 1, FALSE);
 
     autowait(0.05f);
@@ -5436,7 +5499,7 @@ procedures:
   FlamerFire() {
     // while holding fire
     while (HoldingFire() && CurrentAmmo() > 0) {
-      FireFlame();
+      FireFlame(GetDamage(WEAPON_FLAMER));
 
       DecAmmo(m_iCurrentWeapon, 1, FALSE);
       SpawnRangeSound(30.0f);
@@ -5462,7 +5525,7 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("FlamethrowerFire");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerStop");}
     
-    FireFlame();
+    FireFlame(GetDamage(WEAPON_FLAMER));
 
     // [Cecil] Assert flame existence
     // link last flame with nothing (if not NULL or deleted)
@@ -5505,7 +5568,7 @@ procedures:
       if (m_penRayHit != NULL && m_fRayHitDistance <= 50.0f) {
         // hit enemies in range
         if (IsDerivedFromClass(m_penRayHit, "Enemy Base")) {
-          TeslaBurst(m_penRayHit, vTarget);
+          TeslaBurst(m_penRayHit, vTarget, GetDamageAlt(WEAPON_FLAMER));
 
         // hit players
         } else if (IsOfClass(m_penRayHit, "Player")) {
@@ -5549,18 +5612,16 @@ procedures:
     pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
     PlaySound(pl.m_soWeapon0, SOUND_CS_BEGINFIRE, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawBeginFire");}
-
   
     // bring the chainsaw down to cutting height (fire position)
     m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT2FIRE, 0);
     autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_WAIT2FIRE)-0.05f);
 
-    CPlayerAnimator &pa=*GetAnimator();
+    CPlayerAnimator &pa = *GetAnimator();
     pa.FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
     
-    CModelObject *pmoTeeth=GetChainSawTeeth();
-    if( pmoTeeth!=NULL)
-    {
+    CModelObject *pmoTeeth = GetChainSawTeeth();
+    if (pmoTeeth != NULL) {
       pmoTeeth->PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING|AOF_NORESTART);
     }
 
@@ -5580,21 +5641,20 @@ procedures:
     CModelObject *pmo2 = &(pmo1->GetAttachmentModel(BLADE_ATTACHMENT_TEETH)->amo_moModelObject);
     pmo2->PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING);
 
-    while (HoldingFire())// && m_iNapalm>0)
-    {
+    while (HoldingFire()) {
       autowait(CHAINSAW_UPDATETIME);
       // 200 damage per second
-      CutWithChainsaw(0, 0, 3.0f, 2.0f, 1.0f, (GetSP()->sp_bCooperative ? 200.0f : 250.0f)*CHAINSAW_UPDATETIME);
+      CutWithChainsaw(0, 0, 3.0f, 2.0f, 1.0f, GetDamage(WEAPON_CHAINSAW) * CHAINSAW_UPDATETIME);
     }
     
     // bring it back to idle position
-
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     PlaySound(pl.m_soWeapon0, SOUND_CS_ENDFIRE, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("ChainsawFire");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawEnd");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawIdle");}
-//    PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC/*|SOF_SMOOTHCHANGE*/);
+
     // restore volume to engine sound
     pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
     
@@ -5606,22 +5666,21 @@ procedures:
     CModelObject *pmo2 = &(pmo1->GetAttachmentModel(BLADE_ATTACHMENT_TEETH)->amo_moModelObject);
     pmo2->PlayAnim(TEETH_ANIM_DEFAULT, 0);
 
-    CModelObject *pmoTeeth=GetChainSawTeeth();
-    if( pmoTeeth!=NULL)
-    {
+    CModelObject *pmoTeeth = GetChainSawTeeth();
+    if (pmoTeeth != NULL) {
       pmoTeeth->PlayAnim(TEETH_ANIM_DEFAULT, 0);
     }
 
     jump Idle();
   };
 
-  ChainsawBringUp()
-  {
+  ChainsawBringUp() {
     // bring it back to idle position
     m_moWeapon.PlayAnim(CHAINSAW_ANIM_FIRE2WAIT, 0);
     autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_FIRE2WAIT));
+
     jump Idle();
-  }
+  };
 
   // ***************** FIRE LASER *****************
   FireLaser() {
@@ -5632,31 +5691,35 @@ procedures:
       autowait(0.05f);
 
       m_moWeapon.PlayAnim(LASER_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
-      FireLaserRay();
+      FireLaserRay(GetDamage(WEAPON_LASER));
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Laser_fire");}
       DecAmmo(m_iCurrentWeapon, 1, FALSE);
 
       // sound
       SpawnRangeSound(20.0f);
       CPlayer &pl = (CPlayer&)*m_penPlayer;
+
       // activate barrel anim
-      switch(m_iLaserBarrel) {
-        case 0: {   // barrel lu
+      switch (m_iLaserBarrel) {
+        case 0: { // barrel lu
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_LEFTUP)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
           PlaySound(pl.m_soWeapon0, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
           break; }
-        case 3: {   // barrel rd
+
+        case 3: { // barrel rd
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_RIGHTDOWN)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
           PlaySound(pl.m_soWeapon1, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
           break; }
-        case 1: {   // barrel ld
+
+        case 1: { // barrel ld
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_LEFTDOWN)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
           PlaySound(pl.m_soWeapon2, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
           break; }
-        case 2: {   // barrel ru
+
+        case 2: { // barrel ru
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_RIGHTUP)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
           PlaySound(pl.m_soWeapon3, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
@@ -5670,10 +5733,11 @@ procedures:
       if (CurrentAmmo() <= 0) {
         SelectNewWeapon();
       }
+
     } else {
-      ASSERTALWAYS("Laser - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
     }
+
     return EEnd();
   };
 
@@ -5694,7 +5758,10 @@ procedures:
       // while holding fire
       while (HoldingAlt() && CurrentAmmo() > 0) {
         INDEX iAmmo = Clamp(CurrentAmmo(), (INDEX)1, (INDEX)2);
-        GhostBusterHit(FLOAT(iAmmo) / 2.0f);
+
+        if (m_fRayHitDistance <= 100.0f) {
+          FireGhostBusterRay(FLOAT(iAmmo) / 2.0f, GetDamageAlt(WEAPON_LASER));
+        }
 
         DecAmmo(m_iCurrentWeapon, iAmmo, FALSE);
 
@@ -5781,7 +5848,7 @@ procedures:
       }
 
       m_moWeapon.PlayAnim(CANNON_ANIM_FIRE, 0);
-      FireCannonBall(iPower, FALSE);
+      FireCannonBall(iPower, FALSE, GetDamage(WEAPON_IRONCANNON));
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon");}
 
@@ -5880,7 +5947,7 @@ procedures:
       }
 
       m_moWeapon.PlayAnim(CANNON_ANIM_FIRE, 0);
-      FireCannonBall(iPower, TRUE);
+      FireCannonBall(iPower, TRUE, GetDamageAlt(WEAPON_IRONCANNON));
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon");}
 

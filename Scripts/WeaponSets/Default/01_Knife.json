@@ -2,6 +2,9 @@
   "Name" : "Military Knife",
   "Icon" : "TexturesMP\\Interface\\WKnife.tex",
   
+  "Damage" : 100.0,
+  "DamageDM" : 50.0,
+  
   "Ammo" : -1,
   "AltAmmo": -1,
   

@@ -2,6 +2,9 @@
   "Name" : "Shofield .45 w/ TMAR",
   "Icon" : "TexturesMP\\Interface\\WColt.tex",
   
+  "Damage" : 10.0,
+  "DamageDM" : 15.0,
+  
   "Ammo" : 0,
   "AltAmmo": -1,
   "Mag" : 6,

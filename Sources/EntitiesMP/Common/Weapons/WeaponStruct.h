@@ -88,13 +88,20 @@ struct SWeaponStruct : public SWeaponBase {
   INDEX iPickup; // ammo in a weapon pickup
   INDEX iPickupAlt; // alt ammo in a weapon pickup
 
+  FLOAT fDamage;   // weapon damage
+  FLOAT fDamageDM; // weapon damage in deathmatch
+  FLOAT fDamageAlt;   // weapon alt damage
+  FLOAT fDamageAltDM; // weapon alt damage in deathmatch
+
   // Constructors
   SWeaponStruct(void) : SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-                        pAmmo(NULL), pAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0) {};
+                        pAmmo(NULL), pAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0),
+                        fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f) {};
 
   SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
     SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-    pAmmo(NULL), pAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0) {};
+    pAmmo(NULL), pAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0),
+    fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f) {};
 
   // Write and read
   void Write(CTStream *strm);

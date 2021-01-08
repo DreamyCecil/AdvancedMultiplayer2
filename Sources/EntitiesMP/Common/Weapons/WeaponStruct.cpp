@@ -215,6 +215,23 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
     ws.iPickupAlt = ceil(iPickupAlt * AmmoMul());
   }
 
+  // damage
+  if (cb.GetValue("Damage", val)) {
+    ws.fDamage = val.GetNumber();
+  }
+
+  if (cb.GetValue("DamageDM", val)) {
+    ws.fDamageDM = val.GetNumber();
+  }
+
+  if (cb.GetValue("DamageAlt", val)) {
+    ws.fDamageAlt = val.GetNumber();
+  }
+
+  if (cb.GetValue("DamageAltDM", val)) {
+    ws.fDamageAltDM = val.GetNumber();
+  }
+
   // other
   GetConfigString(cb, "Name", ws.strPickup);
   GetConfigString(cb, "Icon", ws.strIcon);

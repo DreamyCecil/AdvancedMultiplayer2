@@ -2,6 +2,8 @@
   "Name" : "'Bonecracker' P-LAH Chainsaw",
   "Icon" : "TexturesMP\\Interface\\WChainsaw.tex",
   
+  "Damage" : 250.0,
+  
   "Ammo" : -1,
   "AltAmmo": -1,
   
