@@ -595,6 +595,9 @@
     <ClCompile Include="Common\Weapons\WeaponStruct.cpp">
       <Filter>Source Files\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="GlobalController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Common.h">
@@ -1608,6 +1611,12 @@
     <ClInclude Include="Common\Weapons\WeaponStruct.h">
       <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
+    <ClInclude Include="GlobalController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalController_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">
@@ -2483,11 +2492,14 @@
     <CustomBuild Include="TeslaLightning.es">
       <Filter>Class Files\Effects</Filter>
     </CustomBuild>
-    <CustomBuild Include="PoisonCloud.es">
-      <Filter>Class Files\Effects</Filter>
-    </CustomBuild>
     <CustomBuild Include="DummyEnemy.es">
       <Filter>Class Files\Enemies</Filter>
+    </CustomBuild>
+    <CustomBuild Include="GlobalController.es">
+      <Filter>Class Files\AI</Filter>
+    </CustomBuild>
+    <CustomBuild Include="PoisonCloud.es">
+      <Filter>Class Files\Weapons</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

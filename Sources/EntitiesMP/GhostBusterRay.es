@@ -9,7 +9,7 @@ uses "EntitiesMP/PlayerWeapons";
 
 // input parameter for ghost buster ray
 event EGhostBusterRay {
-  CEntityPointer penOwner,        // entity which owns it
+  CEntityPointer penOwner, // entity which owns it
 };
 
 %{
@@ -54,12 +54,12 @@ components:
  11 texture TEXTURE_RAY "Models\\Editor\\Vector.tex",
 
 functions:
-  // add to prediction any entities that this entity depends on
+  // Add to prediction any entities that this entity depends on
   void AddDependentsToPrediction(void) {
     m_penOwner->AddToPrediction();
   }
 
-  // render particles
+  // Render particles
   void RenderParticles(void) {
     if (m_ctPasses < 2) {
       return;
@@ -72,14 +72,13 @@ functions:
     Particles_Ghostbuster2(vLerpedSrc, vLerpedDst, 32, 0.25f, 1.0f);
   };
 
-  /* Read from stream. */
-  void Read_t(CTStream *istr) // throw char *
-  {
+  // Read from stream
+  void Read_t(CTStream *istr) {
     CMovableModelEntity::Read_t(istr);
     SetupLightSource();
   };
 
-  /* Get static light source information. */
+  // Get static light source information
   CLightSource *GetLightSource(void) {
     if (!IsPredictor()) {
       return &m_lsLightSource;
@@ -89,7 +88,6 @@ functions:
 
   // Setup light source
   void SetupLightSource(void) {
-    // setup light source
     CLightSource lsNew;
     lsNew.ls_ulFlags = LSF_NONPERSISTENT|LSF_DYNAMIC;
     lsNew.ls_colColor = RGBToColor(134,238,255);
@@ -103,11 +101,9 @@ functions:
     m_lsLightSource.SetLightSource(lsNew);
   };
 
-/************************************************************
- *                        DO MOVING                         *
- ************************************************************/
+  // Move around
   void DoMoving(void) {
-    en_plLastPlacement = GetPlacement();  // remember old placement for lerping
+    en_plLastPlacement = GetPlacement(); // remember old placement for lerping
   };
 
   void PostMoving(void) {

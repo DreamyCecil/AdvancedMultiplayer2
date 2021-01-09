@@ -1341,22 +1341,7 @@ void CGame::EndInternal(void)
   }
 }
 
-BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld,
-   CSessionProperties &sp)
-{
-#if _SE_DEMO
-  try {
-    ULONG ulCRC = GetFileCRC32_t(fnWorld);
-    if (ulCRC!=0x5cf3f219/*intro*/ && ulCRC!=0x9f2ae3f6/*splevel*/ && ulCRC!=0x61586e9d/*techtest*/ && ulCRC!=0x4060d0dd/*dmlevel*/) {
-      ThrowF_t(TRANS("Wrong CRC check."));
-      //ThrowF_t("Wrong CRC check (%x).", ulCRC); 
-    }
-  } catch (char *strError) {
-    CPrintF("%s\n", strError);
-    return FALSE;              
-  }
-#endif
-
+BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, CSessionProperties &sp) {
   gam_iObserverConfig = 0;
   gam_iObserverOffset = 0;
   // stop eventually running game
@@ -1380,20 +1365,29 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld,
 
   // start the new session
   try {
-    if( dem_bPlay) {
+    if (dem_bPlay) {
       gm_aiStartLocalPlayers[0] = -2;
 
       CTFileName fnmDemo = CTString("Temp\\Play.dem");
-      if( dem_bPlayByName) {
+      if (dem_bPlayByName) {
         fnmDemo = fnWorld;
       }
       CAM_Start(fnmDemo);
       _pNetwork->StartDemoPlay_t(fnmDemo);
+
     } else {
       BOOL bWaitAllPlayers = sp.sp_bWaitAllPlayers && _pNetwork->IsNetworkEnabled();
       _pNetwork->StartPeerToPeer_t( strSessionName, fnWorld, 
         sp.sp_ulSpawnFlags, sp.sp_ctMaxPlayers, bWaitAllPlayers, &sp);
+
+      // [Cecil] Create global controller entity
+      CWorld *pwo = &_pNetwork->ga_World;
+      CPlacement3D plGlobal = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
+
+      CEntity *pen = pwo->CreateEntity_t(plGlobal, CTFILENAME("Classes\\GlobalController.ecl"));
+      pen->Initialize();
     }
+
   } catch (char *strError) {
     gm_bFirstLoading = FALSE;
     // stop network provider

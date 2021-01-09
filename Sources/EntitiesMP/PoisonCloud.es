@@ -18,10 +18,10 @@ components:
   2 texture TEXTURE_MARKER "Models\\Editor\\Vector.tex",
 
 functions:
-  // returns bytes of memory used by this object
+  // Returns bytes of memory used by this object
   SLONG GetUsedMemory(void) {
-    // initial
     SLONG slUsedMemory = sizeof(CHellfireCloud) - sizeof(CRationalEntity) + CRationalEntity::GetUsedMemory();
+
     return slUsedMemory;
   };
 

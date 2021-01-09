@@ -31,7 +31,7 @@ components:
   2 texture TEXTURE_MARKER "Models\\Editor\\Vector.tex",
 
 functions:
-  // add to prediction any entities that this entity depends on
+  // Add to prediction any entities that this entity depends on
   void AddDependentsToPrediction(void) {
     m_penOwner->AddToPrediction();
   };
@@ -46,7 +46,7 @@ functions:
     }
   };
 
-  // set source position
+  // Set source position
   void SetSource(const CPlacement3D &plTesla) {
     CPlayerWeapons &penWeapons = (CPlayerWeapons&)*m_penOwner;
 
