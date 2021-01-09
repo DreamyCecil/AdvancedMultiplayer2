@@ -76,6 +76,7 @@ Sources/EntitiesMP/*.cpp
 # AMP2 files
 *.rpt
 *.lnk
+Controls/01-*
 Demos/*
 !Demos/empty
 Models/*
@@ -83,3 +84,4 @@ Players/*
 !Players/empty
 Sounds/*
 Textures/*
+Temp/*
