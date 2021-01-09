@@ -77,17 +77,17 @@ void ResetWeaponPosition(void) {
 // [Cecil] Ammo types to default ammo set
 static const _aiAmmoSetTypes[] = {
   -1, // invalid
-   0, // AIT_SHELLS
-   1, // AIT_BULLETS
-   2, // AIT_ROCKETS
-   3, // AIT_GRENADES
-   6, // AIT_ELECTRICITY
+   1, // AIT_SHELLS
+   2, // AIT_BULLETS
+   3, // AIT_ROCKETS
+   4, // AIT_GRENADES
+   7, // AIT_ELECTRICITY
   -1, // AIT_NUKEBALL (invalid)
-   7, // AIT_IRONBALLS
+   8, // AIT_IRONBALLS
   -1, // AIT_SERIOUSPACK (invalid)
   -1, // AIT_BACKPACK (invalid)
-   4, // AIT_NAPALM
-   5, // AIT_SNIPERBULLETS
+   5, // AIT_NAPALM
+   6, // AIT_SNIPERBULLETS
 };
 
 // Current player weapon
