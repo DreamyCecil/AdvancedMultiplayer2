@@ -2129,6 +2129,9 @@ functions:
 
     // [Cecil] Mirror the weapon
     ApplyMirroring(amp_bWeaponMirrored);
+
+    // [Cecil] Play default animation
+    PlayDefaultAnim(TRUE);
   };
 
   /*
@@ -2955,9 +2958,10 @@ functions:
     m_iCurrentWeapon=m_iWantedWeapon;
     wpn_iCurrent = m_iCurrentWeapon;
     m_bChangeWeapon = FALSE;
+
     // set weapon model for current weapon
     SetCurrentWeaponModel();
-    PlayDefaultAnim();
+
     // remove weapon attachment
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).RemoveWeapon();
     // add weapon attachment
@@ -3380,6 +3384,11 @@ functions:
       // [Cecil] Print each type
       } else {
         for (INDEX i = 1; i <= 8; i++) {
+          // [Cecil] No ammo
+          if (aiSet[i-1] <= 0) {
+            continue;
+          }
+
           // [Cecil] Next type
           if (strMessage != "") {
             strMessage += ", ";
@@ -3539,72 +3548,77 @@ functions:
     return PredTail()->m_aWeapons[EwtWeapon].HasAmmo(AltFireExists(EwtWeapon));
   };
 
-  /*
-   *  >>>---   DEFAULT ANIM   ---<<<
-   */
-  void PlayDefaultAnim(void) {
+  // [Cecil] Forced animation flag
+  void PlayDefaultAnim(BOOL bForced) {
+    ULONG ulFlags = AOF_LOOPING|AOF_NORESTART;
+
+    // [Cecil] Smooth animation if not forcing
+    if (!bForced) {
+      ulFlags |= AOF_SMOOTHCHANGE;
+    }
+
     switch(m_iCurrentWeapon) {
       case WEAPON_NONE: break;
 
       case WEAPON_KNIFE:
-        m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, ulFlags);
         break;
 
       case WEAPON_DOUBLECOLT:
-        m_moWeaponSecond.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeaponSecond.PlayAnim(COLT_ANIM_WAIT1, ulFlags);
       case WEAPON_COLT:
-        m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, ulFlags);
         break;
 
       case WEAPON_SINGLESHOTGUN:
-        m_moWeapon.PlayAnim(SINGLESHOTGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(SINGLESHOTGUN_ANIM_WAIT1, ulFlags);
         break;
 
       case WEAPON_DOUBLESHOTGUN:
-        m_moWeapon.PlayAnim(DOUBLESHOTGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(DOUBLESHOTGUN_ANIM_WAIT1, ulFlags);
         // [Cecil] Hide the hand
         m_moWeaponSecond.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
         break;
 
       case WEAPON_TOMMYGUN:
-        m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, ulFlags);
         break;
 
       case WEAPON_SNIPER:
-        m_moWeapon.PlayAnim(SNIPER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(SNIPER_ANIM_WAIT01, ulFlags);
         break;
 
       case WEAPON_MINIGUN:
-        m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, ulFlags);
 
         // [Cecil] Dual minigun
         if (AltFireExists(WEAPON_MINIGUN)) {
-          m_moWeaponSecond.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+          m_moWeaponSecond.PlayAnim(MINIGUN_ANIM_WAIT1, ulFlags);
         }
         break;
 
       case WEAPON_ROCKETLAUNCHER:
-        m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_WAIT1, ulFlags);
         break;
 
       case WEAPON_GRENADELAUNCHER:
-        m_moWeapon.PlayAnim(GRENADELAUNCHER_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(GRENADELAUNCHER_ANIM_WAIT1, ulFlags);
         break;
 
       case WEAPON_FLAMER:
-        m_moWeapon.PlayAnim(FLAMER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(FLAMER_ANIM_WAIT01, ulFlags);
         break;
 
       case WEAPON_CHAINSAW:
-        m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT1, ulFlags);
         break;
 
       case WEAPON_LASER:
-        m_moWeapon.PlayAnim(LASER_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(LASER_ANIM_WAIT01, ulFlags);
         break;
 
       case WEAPON_IRONCANNON:
-        m_moWeapon.PlayAnim(CANNON_ANIM_WAIT01, AOF_LOOPING|AOF_NORESTART|AOF_SMOOTHCHANGE);
+        m_moWeapon.PlayAnim(CANNON_ANIM_WAIT01, ulFlags);
         break;
 
       default: ASSERTALWAYS("Unknown weapon.");
@@ -6036,7 +6050,7 @@ procedures:
     wait() {
       on (EBegin) : {
         // play default anim
-        PlayDefaultAnim();
+        PlayDefaultAnim(FALSE);
 
         // weapon changed
         if (m_bChangeWeapon) {
@@ -6148,9 +6162,6 @@ procedures:
 
     // set weapon model for current weapon
     SetCurrentWeaponModel();
-
-    // play default anim
-    PlayDefaultAnim();    
 
     wait() {
       on (EBegin) : { call Idle(); }
