@@ -360,7 +360,7 @@ procedures:
     // set model stretch -- MUST BE DONE BEFORE SETTING MODEL!
     if( m_bRenderAsSmallLight)
     {
-      GetModelObject()->mo_Stretch = FLOAT3D( 0.25f, 0.25f, 0.25f);
+      GetModelObject()->mo_Stretch = FLOAT3D(0.25f, 0.25f, 0.25f);
     }
     else
     {
@@ -371,7 +371,7 @@ procedures:
         if (fFactor<LIGHT_MINSIZE) {
           fFactor=LIGHT_MINSIZE;
         }
-        GetModelObject()->mo_Stretch = FLOAT3D( fFactor, fFactor, fFactor);
+        GetModelObject()->mo_Stretch = FLOAT3D(fFactor, fFactor, fFactor);
       }
     }
 

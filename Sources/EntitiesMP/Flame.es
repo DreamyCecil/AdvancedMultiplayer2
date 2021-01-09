@@ -50,21 +50,21 @@ properties:
  20 FLOAT m_tmStart = 0.0f,
  21 FLOAT m_fDamageToApply = 0.0f,
  22 FLOAT m_fDamageStep = 0.0f,
- 23 FLOAT m_fAppliedDamage=0.0f,
+ 23 FLOAT m_fAppliedDamage = 0.0f,
  24 FLOAT m_tmFirstStart = 0.0f,   // when the burning started
 
- 29 INDEX m_ctFlames=0,
- 30 FLOAT3D m_vPos01=FLOAT3D(0,0,0),
- 31 FLOAT3D m_vPos02=FLOAT3D(0,0,0),
- 32 FLOAT3D m_vPos03=FLOAT3D(0,0,0),
- 33 FLOAT3D m_vPos04=FLOAT3D(0,0,0),
- 34 FLOAT3D m_vPos05=FLOAT3D(0,0,0),
- 35 FLOAT3D m_vPos06=FLOAT3D(0,0,0),
- 36 FLOAT3D m_vPos07=FLOAT3D(0,0,0),
- 37 FLOAT3D m_vPos08=FLOAT3D(0,0,0),
- 38 FLOAT3D m_vPos09=FLOAT3D(0,0,0),
- 39 FLOAT3D m_vPos10=FLOAT3D(0,0,0),
- 40 FLOAT3D m_vPlaneNormal=FLOAT3D(0,0,0),
+ 29 INDEX m_ctFlames = 0,
+ 30 FLOAT3D m_vPos01 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 31 FLOAT3D m_vPos02 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 32 FLOAT3D m_vPos03 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 33 FLOAT3D m_vPos04 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 34 FLOAT3D m_vPos05 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 35 FLOAT3D m_vPos06 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 36 FLOAT3D m_vPos07 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 37 FLOAT3D m_vPos08 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 38 FLOAT3D m_vPos09 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 39 FLOAT3D m_vPos10 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 40 FLOAT3D m_vPlaneNormal = FLOAT3D(0.0f, 0.0f, 0.0f),
  51 BOOL m_bBurningBrush=FALSE,
  52 FLOAT m_tmDeathParticlesStart=1e6,
 
@@ -202,9 +202,6 @@ functions:
     m_lsLightSource.SetLightSource(lsNew);
   }
 
-/************************************************************
- *                   P R O C E D U R E S                    *
- ************************************************************/
 procedures:
   // --->>> MAIN
   Main(EFlame ef) {

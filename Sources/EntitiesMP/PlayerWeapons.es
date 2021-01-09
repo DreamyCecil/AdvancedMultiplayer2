@@ -489,10 +489,10 @@ properties:
  30 CEntityPointer m_penRayHit,         // entity hit by ray
  31 FLOAT m_fRayHitDistance = 100.0f,   // distance from hit point
  32 FLOAT m_fEnemyHealth    = 0.0f,     // normalized health of enemy in target (for coloring of crosshair)
- 33 FLOAT3D m_vRayHit     = FLOAT3D(0,0,0), // coordinates where ray hit
- 34 FLOAT3D m_vRayHitLast = FLOAT3D(0,0,0), // for lerping
- 35 FLOAT3D m_vBulletSource = FLOAT3D(0,0,0), // bullet launch position remembered here
- 36 FLOAT3D m_vBulletTarget = FLOAT3D(0,0,0), // bullet hit (if hit) position remembered here
+ 33 FLOAT3D m_vRayHit     = FLOAT3D(0.0f, 0.0f, 0.0f), // coordinates where ray hit
+ 34 FLOAT3D m_vRayHitLast = FLOAT3D(0.0f, 0.0f, 0.0f), // for lerping
+ 35 FLOAT3D m_vBulletSource = FLOAT3D(0.0f, 0.0f, 0.0f), // bullet launch position remembered here
+ 36 FLOAT3D m_vBulletTarget = FLOAT3D(0.0f, 0.0f, 0.0f), // bullet hit (if hit) position remembered here
 
 // weapons specific
 // minigun
@@ -1840,11 +1840,6 @@ functions:
     }
   };
 
-
-
-/************************************************************
- *                      FIRE FLARE                          *
- ************************************************************/
   // show flare
   void ShowFlare(CModelObject &moWeapon, INDEX iAttachObject, INDEX iAttachFlare, FLOAT fSize) {
     CModelObject *pmo = &(moWeapon.GetAttachmentModel(iAttachObject)->amo_moModelObject);
@@ -1854,12 +1849,11 @@ functions:
     pmo->StretchModel(FLOAT3D(fSize, fSize, fSize));
   };
 
-
   // hide flare
   void HideFlare(CModelObject &moWeapon, INDEX iAttachObject, INDEX iAttachFlare) {
     CModelObject *pmo = &(moWeapon.GetAttachmentModel(iAttachObject)->amo_moModelObject);
     pmo = &(pmo->GetAttachmentModel(iAttachFlare)->amo_moModelObject);
-    pmo->StretchModel(FLOAT3D(0, 0, 0));
+    pmo->StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
   };
 
   void SetFlare(INDEX iFlare, INDEX iAction)
@@ -2134,9 +2128,6 @@ functions:
     PlayDefaultAnim(TRUE);
   };
 
-  /*
-   *  >>>---  ROTATE MINIGUN  ---<<<
-   */
   void RotateMinigun(void) {
     // [Cecil] Mirroring
     FLOAT fMirror = (amp_bWeaponMirrored ? -1.0f : 1.0f);
@@ -2154,16 +2145,12 @@ functions:
     }
   };
 
-  /*
-   *  >>>---  SUPPORT (COMMON) FUNCTIONS  ---<<<
-   */
-
   // calc weapon position for 3rd person view
   void CalcWeaponPosition3rdPersonView(FLOAT3D vPos, CPlacement3D &plPos, BOOL bResetZ) {
     // [Cecil] Weapon position
     SWeaponPos wps = CUR_WEAPON.GetPosition();
 
-    plPos.pl_OrientationAngle = ANGLE3D(0, 0, 0);
+    plPos.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     // weapon handle
     if (!m_bMirrorFire) {
       plPos.pl_PositionVector = wps.Pos1();
@@ -2173,7 +2160,7 @@ functions:
     }
 
     // weapon offset
-    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)));
 
     plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
     plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
@@ -2195,7 +2182,7 @@ functions:
     // [Cecil] Weapon position
     SWeaponPos wps = CUR_WEAPON.GetPosition();
 
-    plPos.pl_OrientationAngle = ANGLE3D(0, 0, 0);
+    plPos.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     // weapon handle
     if (!m_bMirrorFire) {
       plPos.pl_PositionVector = wps.Pos1();
@@ -2210,7 +2197,7 @@ functions:
     }
 
     // weapon offset
-    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)));
 
     plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
     plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
@@ -2233,7 +2220,7 @@ functions:
     // [Cecil] Weapon position
     SWeaponPos wps = RenderPos(m_iCurrentWeapon); //CUR_WEAPON.GetPosition();
 
-    plPos.pl_OrientationAngle = ANGLE3D(0, 0, 0);
+    plPos.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     // weapon handle
     if (!m_bMirrorFire) {
       plPos.pl_PositionVector = wps.Pos1();
@@ -2248,7 +2235,7 @@ functions:
     }
 
     // weapon offset
-    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)));
 
     plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
     plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
@@ -2285,7 +2272,7 @@ functions:
     }
 
     // weapon offset
-    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0, 0, 0)));
+    plPos.RelativeToAbsoluteSmooth(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)));
 
     plPos.pl_PositionVector(1) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
     plPos.pl_PositionVector(2) *= SinFast(wps.fFOV / 2.0f) / SinFast(90.0f / 2.0f);
@@ -2315,13 +2302,8 @@ functions:
     pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 0.0f, 1.0f);
   };
 
-  /*
-   *  >>>---  FIRE FUNCTIONS  ---<<<
-   */
-
   // cut in front of you with knife
-  BOOL CutWithKnife(FLOAT fX, FLOAT fY, FLOAT fRange, FLOAT fWide, FLOAT fThickness, FLOAT fDamage) 
-  {
+  BOOL CutWithKnife(FLOAT fX, FLOAT fY, FLOAT fRange, FLOAT fWide, FLOAT fThickness, FLOAT fDamage) {
     // knife start position
     CPlacement3D plKnife;
     CalcWeaponPosition(FLOAT3D(fX, fY, 0), plKnife, TRUE);
@@ -2390,7 +2372,7 @@ functions:
               CModelHolder2 *pmh2=(CModelHolder2*)crRay.cr_penHit;
               colParticles=pmh2->m_colBurning;
             }
-            FLOATaabbox3D boxCutted=FLOATaabbox3D(FLOAT3D(0,0,0),FLOAT3D(1,1,1));
+            FLOATaabbox3D boxCutted=FLOATaabbox3D(FLOAT3D(0.0f, 0.0f, 0.0f),FLOAT3D(1.0f, 1.0f, 1.0f));
             if(bRender)
             {
               crRay.cr_penHit->en_pmoModelObject->GetCurrentFrameBBox( boxCutted);
@@ -2518,7 +2500,7 @@ functions:
                 }
               }
             }
-            FLOATaabbox3D boxCutted=FLOATaabbox3D(FLOAT3D(0,0,0),FLOAT3D(1,1,1));
+            FLOATaabbox3D boxCutted=FLOATaabbox3D(FLOAT3D(0.0f, 0.0f, 0.0f),FLOAT3D(1.0f, 1.0f, 1.0f));
             if(bRender && m_tmLastChainsawSpray+0.2f<_pTimer->CurrentTick())
             {
               crRay.cr_penHit->en_pmoModelObject->GetCurrentFrameBBox( boxCutted);
@@ -2775,19 +2757,19 @@ functions:
 
     switch (m_iLaserBarrel) {
       case 0: // barrel lu (*o-oo)
-        CalcWeaponPosition(FLOAT3D(fFX+fLUX, fFY+fLUY, 0), plLaserRay, TRUE);
+        CalcWeaponPosition(FLOAT3D(fFX+fLUX, fFY+fLUY, 0.0f), plLaserRay, TRUE);
         break;
 
       case 1: // barrel ld (oo-*o)
-        CalcWeaponPosition(FLOAT3D(fFX+fLDX, fFY+fLDY, 0), plLaserRay, TRUE);
+        CalcWeaponPosition(FLOAT3D(fFX+fLDX, fFY+fLDY, 0.0f), plLaserRay, TRUE);
         break;
 
       case 2: // barrel ru (o*-oo)
-        CalcWeaponPosition(FLOAT3D(fFX+fRUX, fFY+fRUY, 0), plLaserRay, TRUE);
+        CalcWeaponPosition(FLOAT3D(fFX+fRUX, fFY+fRUY, 0.0f), plLaserRay, TRUE);
         break;
 
       case 3: // barrel rd (oo-o*)
-        CalcWeaponPosition(FLOAT3D(fFX+fRDX, fFY+fRDY, 0), plLaserRay, TRUE);
+        CalcWeaponPosition(FLOAT3D(fFX+fRDX, fFY+fRDY, 0.0f), plLaserRay, TRUE);
         break;
     }
 
@@ -2857,9 +2839,6 @@ functions:
     }
   };
 
-  /*
-   *  >>>---  WEAPON INTERFACE FUNCTIONS  ---<<<
-   */
   // clear weapons
   void ClearWeapons(void) {
     // [Cecil] Don't clear secret weapons in coop
@@ -2994,10 +2973,6 @@ functions:
     ((CPlayer&)*m_penPlayer).m_fPickedMana += iMana;
   };
 
-  /*
-   *  >>>---  RECEIVE FUNCTIONS  ---<<<
-   */
-
   // clamp ammounts of all ammunition to maximum values
   void ClampAllAmmo(void) {
     // [Cecil] Limit all ammo
@@ -3081,7 +3056,7 @@ functions:
     pwi->CEntity::Initialize();
     
     const FLOATmatrix3D &m = GetPlayer()->GetRotationMatrix();
-    FLOAT3D vSpeed = FLOAT3D( 5.0f, 10.0f, -7.5f);
+    FLOAT3D vSpeed = FLOAT3D(5.0f, 10.0f, -7.5f);
     pwi->GiveImpulseTranslationAbsolute(vSpeed*m);
   };
 
@@ -3406,9 +3381,6 @@ functions:
     return FALSE;
   }
 
-  /*
-   *  >>>---  WEAPON CHANGE FUNCTIONS  ---<<<
-   */
   // get weapon from selected number
   WeaponType GetStrongerWeapon(INDEX iWeapon) {
     switch(iWeapon) {
@@ -3625,9 +3597,7 @@ functions:
     }
   };
 
-  /*
-   *  >>>---   WEAPON BORING   ---<<<
-   */
+  // Boring animations
   FLOAT KnifeBoring(void) {
     // play boring anim
     INDEX iAnim = KNIFE_ANIM_WAIT1;
@@ -3778,10 +3748,6 @@ functions:
     m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
     return m_moWeapon.GetAnimLength(iAnim);
   };
-  
-  /*
-   *  >>>---   WEAPON CHANGE FUNCTIONS   ---<<<
-   */
 
   // find first possible weapon in given direction
   WeaponType FindWeaponInDirection(INDEX iDir) {
@@ -3963,9 +3929,6 @@ functions:
   };
 
 procedures:
-  /*
-   *  >>>---   WEAPON CHANGE PROCEDURE  ---<<<
-   */
   ChangeWeapon() {
     // if really changing weapon, make sure sniping is off and notify owner of the change
     if (m_iCurrentWeapon!=m_iWantedWeapon) {
@@ -4222,9 +4185,7 @@ procedures:
     return EEnd();
   };
 
-  /*
-   *  >>>---   FIRE WEAPON   ---<<<
-   */
+  // Fire weapon
   Fire() {
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
@@ -5995,9 +5956,7 @@ procedures:
     jump Idle();
   };
 
-  /*
-   *  >>>---   RELOAD WEAPON   ---<<<
-   */
+  // Reload weapon
   Reload() {
     m_bReloadWeapon = FALSE;
 
@@ -6011,9 +5970,7 @@ procedures:
     jump Idle();
   };
 
-  /*
-   *  >>>---   BORING WEAPON ANIMATION   ---<<<
-   */
+  // Play boring animation
   BoringWeaponAnimation() {
     // select new mode change animation
     FLOAT fWait = 0.0f;
@@ -6043,9 +6000,7 @@ procedures:
     return EBegin();
   };
 
-  /*
-   *  >>>---   NO WEAPON ACTION   ---<<<
-   */
+  // No weapon actions
   Idle() {
     wait() {
       on (EBegin) : {
@@ -6143,9 +6098,6 @@ procedures:
     }
   };
 
-  /*
-   *  >>>---   M  A  I  N   ---<<<
-   */
   Main(EWeaponsInit eInit) {
     // remember the initial parameters
     ASSERT(eInit.penOwner!=NULL);

@@ -7,7 +7,6 @@
 uses "EntitiesMP/EnemyBase";
 uses "EntitiesMP/Projectile";
 
-
 %{
 // info structure
 static EntityInfo eiGuffy = {
@@ -18,12 +17,7 @@ static EntityInfo eiGuffy = {
 
 #define FIRE_LEFT_ARM   FLOAT3D(-0.56f, +1.125f, -1.32f)
 #define FIRE_RIGHT_ARM  FLOAT3D(+0.50f, +1.060f, -0.82f)
-
-//#define FIRE_DEATH_LEFT   FLOAT3D( 0.0f, 7.0f, -2.0f)
-//#define FIRE_DEATH_RIGHT  FLOAT3D(3.75f, 4.2f, -2.5f)
-
 %}
-
 
 class CGuffy : CEnemyBase {
 name      "Guffy";
@@ -228,11 +222,7 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   Fire(EVoid) : CEnemyBase::Fire {
-    
     StartModelAnim(GUFFY_ANIM_FIRE, AOF_LOOPING);
     
     // wait for animation to bring the left hand into firing position
@@ -245,7 +235,7 @@ procedures:
     BOOL bEnemyRight = fLookRight % (m_penEnemy->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector);
 
     if (bEnemyRight>=0) {  // enemy is to the right of guffy
-      ShootProjectile(PRT_GUFFY_PROJECTILE, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+      ShootProjectile(PRT_GUFFY_PROJECTILE, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0.0f, 0.0f, 0.0f));
       PlaySound(m_soFire1, SOUND_FIRE, SOF_3D);
       
       ShootProjectile(PRT_GUFFY_PROJECTILE, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(-9, 0, 0));
@@ -254,7 +244,7 @@ procedures:
       ShootProjectile(PRT_GUFFY_PROJECTILE, FIRE_LEFT_ARM*m_fSize, ANGLE3D(9, 0, 0));
       PlaySound(m_soFire1, SOUND_FIRE, SOF_3D);
       
-      ShootProjectile(PRT_GUFFY_PROJECTILE, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+      ShootProjectile(PRT_GUFFY_PROJECTILE, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0.0f, 0.0f, 0.0f));
       PlaySound(m_soFire2, SOUND_FIRE, SOF_3D);
     }
     
@@ -271,32 +261,6 @@ procedures:
     return EReturn();
   };
 
-
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
-  /*Death(EVoid) : CEnemyBase::Death {
-    // stop moving
-    StopMoving();
-    DeathSound();     // death sound
-    
-    // set physic flags
-    SetCollisionFlags(ECF_MODEL);
-    SetFlags(GetFlags() | ENF_SEETHROUGH);
-
-    // death notify (change collision box)
-    ChangeCollisionBoxIndexWhenPossible(GUFFY_COLLISION_BOX_DEATH);
-
-    // start death anim
-    StartModelAnim(GUFFY_ANIM_DEATHFORWARD, 0);
-    autowait(GetModelObject()->GetAnimLength(GUFFY_ANIM_TOFIRE));
-    
-    return EEnd();
-  };*/
-
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

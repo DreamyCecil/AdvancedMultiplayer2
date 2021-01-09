@@ -7,8 +7,8 @@ CEmittedParticle::CEmittedParticle(void)
   ep_tmEmitted=-1;
   ep_tmLife=1.0f;
   ep_colColor=C_WHITE|CT_OPAQUE;
-  ep_vSpeed=FLOAT3D(0,0,0);
-  ep_vPos=FLOAT3D(0,0,0);
+  ep_vSpeed=FLOAT3D(0.0f, 0.0f, 0.0f);
+  ep_vPos=FLOAT3D(0.0f, 0.0f, 0.0f);
   ep_fStretch=1;
   ep_fRot=0;
   ep_fRotSpeed=0;

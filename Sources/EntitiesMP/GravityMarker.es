@@ -29,10 +29,10 @@ properties:
   11 FLOAT m_fSign = 1,
   12 FLOAT m_fStep = 0,
 
-  20 ANGLE3D m_aForceDir    "Forcefield Direction"  'F' = ANGLE3D(0,0,0),
+  20 ANGLE3D m_aForceDir    "Forcefield Direction"  'F' = ANGLE3D(0.0f, 0.0f, 0.0f),
   21 FLOAT m_fForceA        "Forcefield Acceleration" = 0.0f,
   22 FLOAT m_fForceV        "Forcefield Velocity" = 0.0f,
-  23 FLOAT3D m_vForceDir = FLOAT3D(1,0,0),
+  23 FLOAT3D m_vForceDir = FLOAT3D(1.0f, 0.0f, 0.0f),
 
 components:
   1 model   MODEL_MARKER     "Models\\Editor\\GravityMarker.mdl",
@@ -105,13 +105,13 @@ functions:
         fsGravity.fs_vDirection/=fDistance;
       }
       fsGravity.fs_fAcceleration = StrengthAtDistance(fDistance);
-      fsGravity.fs_fVelocity = 70;
+      fsGravity.fs_fVelocity = 70.0f;
       
                    } break;
     default:
       fsGravity.fs_fAcceleration = m_fAcc;
-      fsGravity.fs_fVelocity = 70;
-      fsGravity.fs_vDirection = FLOAT3D(0,-1,0);
+      fsGravity.fs_fVelocity = 70.0f;
+      fsGravity.fs_vDirection = FLOAT3D(0.0f, -1.0f, 0.0f);
     }
 
     // calculate forcefield influence

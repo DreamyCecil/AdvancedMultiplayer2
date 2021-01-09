@@ -386,9 +386,6 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   Fire(EVoid) : CEnemyBase::Fire {
     // soldier
     if (m_gtType == GT_SOLDIER) {
@@ -411,12 +408,12 @@ procedures:
 
     GetModelInstance()->AddAnimation(idGrunt_Fire,AN_CLEAR,1.0f,0);
 
-    ShootProjectile(PRT_GRUNT_PROJECTILE_SOL, FIREPOS_SOLDIER, ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_GRUNT_PROJECTILE_SOL, FIREPOS_SOLDIER, ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soFire1, SOUND_FIRE, SOF_3D);
 
     autowait(0.15f + FRnd()*0.1f);
     GetModelInstance()->AddAnimation(idGrunt_Fire,AN_CLEAR,1.0f,0);
-    ShootProjectile(PRT_GRUNT_PROJECTILE_SOL, FIREPOS_SOLDIER, ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_GRUNT_PROJECTILE_SOL, FIREPOS_SOLDIER, ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soFire2, SOUND_FIRE, SOF_3D);
     
 
@@ -435,7 +432,7 @@ procedures:
     FLOAT   fLaserSpeed  = 45.0f; // m/s
     FLOAT3D vPredictedEnemyPosition = CalculatePredictedPosition(vGunPosAbs,
       vEnemyPos, fLaserSpeed, vEnemySpeed, GetPlacement().pl_PositionVector(2) );
-    ShootPredictedProjectile(PRT_GRUNT_LASER, vPredictedEnemyPosition, FLOAT3D(0.0f, 1.0f, 0.0f), ANGLE3D(0, 0, 0));*/
+    ShootPredictedProjectile(PRT_GRUNT_LASER, vPredictedEnemyPosition, FLOAT3D(0.0f, 1.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));*/
 
     GetModelInstance()->AddAnimation(idGrunt_Fire,AN_CLEAR,1,0);
     ShootProjectile(PRT_GRUNT_PROJECTILE_COM, FIREPOS_COMMANDER_DN, ANGLE3D(-20, 0, 0));
@@ -448,7 +445,7 @@ procedures:
 
     autowait(0.035f);
     GetModelInstance()->AddAnimation(idGrunt_Fire,AN_CLEAR,1,0);
-    ShootProjectile(PRT_GRUNT_PROJECTILE_COM, FIREPOS_COMMANDER_DN, ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_GRUNT_PROJECTILE_COM, FIREPOS_COMMANDER_DN, ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soFire1, SOUND_FIRE, SOF_3D);
 
     autowait(0.035f);
@@ -465,9 +462,6 @@ procedures:
     return EEnd();
   };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsSkaModel();
@@ -476,10 +470,6 @@ procedures:
     SetFlags(GetFlags()|ENF_ALIVE);
     en_tmMaxHoldBreath = 5.0f;
     en_fDensity = 2000.0f;
-    //m_fBlowUpSize = 2.0f;
-
-    //_toStar01.SetData_t(CTFILENAME("Models\\Items\\Particles\\Star01.tex"));
-
 
     // set your appearance
     switch (m_gtType) {

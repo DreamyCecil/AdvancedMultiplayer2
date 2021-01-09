@@ -156,7 +156,7 @@ functions:
 
   FLOAT WaitForDust(FLOAT3D &vStretch)
   {
-    vStretch=FLOAT3D(1,1,2)*3.0f;
+    vStretch = FLOAT3D(1.0f, 1.0f, 2.0f)*3.0f;
     return 1.1f;
   };
 
@@ -209,18 +209,11 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
-  Fire(EVoid) : CEnemyBase::Fire
-  {
-    
-    // SetDesiredTranslation???
-    if (m_fMoveSpeed>0.0f) {
+  Fire(EVoid) : CEnemyBase::Fire {
+    if (m_fMoveSpeed > 0.0f) {
       SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, -m_fMoveSpeed));
     }
     
-    //StartModelAnim(DEMON_ANIM_ATTACK, AOF_SMOOTHCHANGE);
     StartModelAnim(DEMON_ANIM_ATTACK, 0);
     autocall CMovableModelEntity::WaitUntilScheduledAnimStarts() EReturn;    
     
@@ -275,7 +268,7 @@ procedures:
       {
         FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
         vDirection.Normalize();
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 50.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 50.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       }
       autowait(1.5f);
       MaybeSwitchToAnotherPlayer();
@@ -286,10 +279,6 @@ procedures:
     return EReturn();
   }
 
-
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

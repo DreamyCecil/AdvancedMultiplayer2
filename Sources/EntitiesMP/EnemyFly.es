@@ -135,9 +135,6 @@ functions:
     }
     return FALSE;
   };
-/************************************************************
- *                     MOVING FUNCTIONS                     *
- ************************************************************/
 
   // set desired rotation and translation to go/orient towards desired position
   // and get the resulting movement type
@@ -168,9 +165,6 @@ functions:
     return ulFlags;
   }
 
-/************************************************************
- *                CLASS SUPPORT FUNCTIONS                   *
- ************************************************************/
   // set entity position
   void SetEntityPosition() {
     switch (m_EeftType) {
@@ -211,96 +205,18 @@ functions:
     StandingAnim();
   };
 
-
-/************************************************************
- *          VIRTUAL FUNCTIONS THAT NEED OVERRIDE            *
- ************************************************************/
+  // Functions for overriding
   virtual FLOAT AirToGroundAnim(void) { return _pTimer->TickQuantum; }
   virtual FLOAT GroundToAirAnim(void) { return _pTimer->TickQuantum; }
   virtual void ChangeCollisionToAir(void) {}
   virtual void ChangeCollisionToGround(void) {}
 
-
-
 procedures:
-/************************************************************
- *      PROCEDURES WHEN NO ANY SPECIAL ACTION               *
- ************************************************************/
-/*
-#### !!!!
-  MoveToDestinationFlying(EVoid) {
-    m_fMoveFrequency = 0.25f;
-    m_fMoveTime = _pTimer->CurrentTick() + 45.0f;
-    while ((m_vDesiredPosition-GetPlacement().pl_PositionVector).Length()>m_fMoveSpeed*m_fMoveFrequency*2.0f &&
-            m_fMoveTime>_pTimer->CurrentTick()) {
-      wait (m_fMoveFrequency) {
-        on (EBegin) : { FlyToPosition(); }
-        on (ETimer) : { stop; }
-      }
-    }
-    return EReturn();
-  }
-  // Move to destination
-  MoveToDestination(EVoid) : CEnemyBase::MoveToDestination {
-    if (m_bFlyToMarker && !m_bInAir) {
-      autocall GroundToAir() EReturn;
-    } else if (!m_bFlyToMarker && m_bInAir) {
-      autocall AirToGround() EReturn;
-    }
-
-    // animation
-    if (m_bRunToMarker) {
-      RunningAnim();
-    } else {
-      WalkingAnim();
-    }
-    // fly to position
-    if (m_bInAir) {
-      jump MoveToDestinationFlying();
-    // move to position
-    } else {
-      jump CEnemyBase::MoveToDestination();
-    }
-  };*/
-
   // return to start position
-  ReturnToStartPosition(EVoid) : CEnemyBase::ReturnToStartPosition
-  {
+  ReturnToStartPosition(EVoid) : CEnemyBase::ReturnToStartPosition {
     jump CEnemyBase::BeIdle();
-/*    // if on ground, but can fly
-    if (!m_bInAir && m_EeftType!=EFT_GROUND_ONLY) {
-      // fly up
-      autocall GroundToAir() EReturn;
-    }
-
-    GetWatcher()->StartPlayers();     // start watching
-    m_vDesiredPosition = m_vStartPosition-en_vGravityDir*2.0f;
-    m_vStartDirection = (GetPlacement().pl_PositionVector-m_vStartPosition).Normalize();
-    m_fMoveSpeed = m_fAttackRunSpeed;
-    m_aRotateSpeed = m_aAttackRotateSpeed;
-    RunningAnim();
-    autocall MoveToDestinationFlying() EReturn;
-
-    WalkingAnim();
-    m_vDesiredAngle = m_vStartDirection;
-    StopTranslating();
-
-    autocall CEnemyBase::RotateToStartDirection() EReturn;
-
-    // if should be on ground
-    if (m_bInAir && !m_bStartInAir) {
-      // fly down
-      autocall AirToGround() EReturn;
-    }
-    StopMoving();
-    StandingAnim();
-
-    jump CEnemyBase::BeIdle();*/
   };
 
-/************************************************************
- *                PROCEDURES WHEN HARMED                    *
- ************************************************************/
   // Play wound animation and falling body part
   BeWounded(EDamage eDamage) : CEnemyBase::BeWounded {
     // land on ground
@@ -313,24 +229,19 @@ procedures:
     return EReturn();
   };
 
-
-
-/************************************************************
- *                 AIR - GROUND PROCEDURES                  *
- ************************************************************/
   // air to ground
   AirToGround(EVoid) 
   {
     // land on brush
     SetDesiredTranslation(FLOAT3D(0, -m_fAirToGroundSpeed, 0));
-    SetDesiredRotation(ANGLE3D(0, 0, 0));
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
     WalkingAnim();
     wait() {
       on (EBegin) : { resume; }
       // on brush stop
       on (ETouch etouch) : {
         if (etouch.penOther->GetRenderType() & RT_BRUSH) {
-          SetDesiredTranslation(FLOAT3D(0, 0, 0));
+          SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
           stop;
         }
         resume;
@@ -359,7 +270,7 @@ procedures:
     SetPhysicsFlags((GetPhysicsFlags() & ~EPF_MODEL_WALKING) | EPF_MODEL_FLYING);
     m_bInAir = TRUE;
     SetDesiredTranslation(FLOAT3D(0, m_fGroundToAirSpeed, 0));
-    SetDesiredRotation(ANGLE3D(0, 0, 0));
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
     ChangeCollisionToAir();
     // animation
     wait(GroundToAirAnim()) {
@@ -376,15 +287,10 @@ procedures:
       on (ETimer) : { stop; }
       otherwise() : { resume; }
     }
-    SetDesiredTranslation(FLOAT3D(0, 0, 0));
+    SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
     return EReturn();
   };
 
-
-
-/************************************************************
- *                 ATTACK ENEMY PROCEDURES                  *
- ************************************************************/
   // initialize attack is overridden to switch fly/walk modes if needed
   AttackEnemy() : CEnemyBase::AttackEnemy
   {
@@ -425,9 +331,6 @@ procedures:
     }
   }
 
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
   Death(EVoid) : CEnemyBase::Death {
     // clear fly flag
     SetPhysicsFlags((GetPhysicsFlags() & ~EPF_MODEL_FLYING) | EPF_MODEL_WALKING);
@@ -435,11 +338,6 @@ procedures:
     jump CEnemyBase::Death();
   };
 
-
-
-/************************************************************
- *                M  A  I  N    L  O  O  P                  *
- ************************************************************/
   // main loop
   MainLoop(EVoid) : CEnemyBase::MainLoop {
     SetEntityPosition();
@@ -451,9 +349,6 @@ procedures:
     return;
   };
 
-/************************************************************
- *          VIRTUAL PROCEDURES THAT NEED OVERRIDE           *
- ************************************************************/
   // this is called to hit the player when near and you are on ground
   GroundHit(EVoid) 
   { 

@@ -217,7 +217,7 @@ functions:
   FLOAT WaitForDust(FLOAT3D &vStretch) {
     if(GetModelObject()->GetAnim()==BEAST_ANIM_DEATH)
     {
-      vStretch=FLOAT3D(1,1,2)*2.0f;
+      vStretch = FLOAT3D(1.0f, 1.0f, 2.0f)*2.0f;
       return 0.3f;
     }
     return -1.0f;
@@ -285,9 +285,6 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
   Death(EVoid) : CEnemyBase::Death {
     if (m_bcType == BT_NORMAL) {
       jump CEnemyBase::Death();
@@ -324,11 +321,11 @@ procedures:
     CPlacement3D plFX=GetPlacement();
     ESpawnEffect ese;
     ese.colMuliplier = C_WHITE|CT_OPAQUE;
-    ese.vStretch = FLOAT3D(1,1,2)*15.0f;
-    ese.vNormal = FLOAT3D(0,1,0);
+    ese.vStretch = FLOAT3D(1.0f, 1.0f, 2.0f)*15.0f;
+    ese.vNormal = FLOAT3D(0.0f, 1.0f, 0.0f);
     ese.betType = BET_DUST_FALL;
     CPlacement3D plSmoke=plFX;
-    plSmoke.pl_PositionVector+=FLOAT3D(0,0.35f*ese.vStretch(2),0);
+    plSmoke.pl_PositionVector+=FLOAT3D(0.0f, 0.35f*ese.vStretch(2), 0.0f);
     CEntityPointer penFX = CreateEntity(plSmoke, CLASS_BASIC_EFFECT);
     penFX->Initialize(ese);
 
@@ -336,11 +333,8 @@ procedures:
     return EEnd();
   };
 
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
-  Fire(EVoid) : CEnemyBase::Fire
-  {
+  // Fire attack
+  Fire(EVoid) : CEnemyBase::Fire {
     // wait to finish walk and smooth change to idle
     StartModelAnim(BEAST_ANIM_WALKTOIDLE, AOF_SMOOTHCHANGE);
     autocall CMovableModelEntity::WaitUntilScheduledAnimStarts() EReturn;    
@@ -352,7 +346,7 @@ procedures:
       PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
       autowait(0.51f);
 
-      ShootProjectile(PRT_BEAST_PROJECTILE, FLOAT3D( 0.0f, 1.5f*BEAST_STRETCH, 0.0f),
+      ShootProjectile(PRT_BEAST_PROJECTILE, FLOAT3D(0.0f, 1.5f*BEAST_STRETCH, 0.0f),
         ANGLE3D(AngleDeg((FRnd()-0.5)*30.0f), AngleDeg(FRnd()*10.0f), 0));
       autowait(0.3f);
     }
@@ -369,10 +363,8 @@ procedures:
 
           PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
           autowait(0.34f);
-          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D( 0.0f, 1.5f*BIG_BEAST_STRETCH, 0.0f),
+          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D(0.0f, 1.5f*BIG_BEAST_STRETCH, 0.0f),
             ANGLE3D(0.0f, 0.0f, 0.0f));
-            //ANGLE3D( AngleDeg(40.0f*Cos(m_iCounter*360.0/6.0f)), AngleDeg(20.0f*Sin(m_iCounter*180.0/6.0f)), 0));
-          //autowait(0.15f);
           m_iCounter++;
         }
         m_fAttackFireTime = 7.0f;
@@ -388,11 +380,8 @@ procedures:
 
           PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
           autowait(0.5f);
-          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D( 0.0f, 1.5f*BIG_BEAST_STRETCH, 0.0f),
+          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D(0.0f, 1.5f*BIG_BEAST_STRETCH, 0.0f),
             ANGLE3D(0.0f, 0.0f, 0.0f));
-            //ANGLE3D( AngleDeg(20.0f*Cos(m_iCounter*360.0/3.0f)), AngleDeg(10.0f*Sin(m_iCounter*180.0/3.0f)), 0));
-            //ANGLE3D( FRnd()*20.0f-10.0f, FRnd()*10.0f-5.0f, 0));
-          //autowait(0.25f);
           m_iCounter++;
         }
       }
@@ -410,10 +399,8 @@ procedures:
 
           PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
           autowait(0.34f);
-          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D( 0.0f, 1.5f*HUGE_BEAST_STRETCH, 0.0f),
+          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D(0.0f, 1.5f*HUGE_BEAST_STRETCH, 0.0f),
             ANGLE3D(0.0f, 0.0f, 0.0f));
-            //ANGLE3D( AngleDeg(40.0f*Cos(m_iCounter*360.0/6.0f)), AngleDeg(20.0f*Sin(m_iCounter*180.0/6.0f)), 0));
-          //autowait(0.15f);
           m_iCounter++;
         }
         m_fAttackFireTime = 7.0f;
@@ -429,11 +416,8 @@ procedures:
 
           PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
           autowait(0.5f);
-          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D( 0.0f, 1.5f*HUGE_BEAST_STRETCH, 0.0f),
+          ShootProjectile(PRT_BEAST_BIG_PROJECTILE, FLOAT3D(0.0f, 1.5f*HUGE_BEAST_STRETCH, 0.0f),
             ANGLE3D(0.0f, 0.0f, 0.0f));
-            //ANGLE3D( AngleDeg(20.0f*Cos(m_iCounter*360.0/3.0f)), AngleDeg(10.0f*Sin(m_iCounter*180.0/3.0f)), 0));
-            //ANGLE3D( FRnd()*20.0f-10.0f, FRnd()*10.0f-5.0f, 0));
-          //autowait(0.25f);
           m_iCounter++;
         }
       }
@@ -458,40 +442,30 @@ procedures:
     return EReturn();
   };
 
-  // hit enemy
+  // Hit attack
   Hit(EVoid) : CEnemyBase::Hit {
     // close attack
     StartModelAnim(BEAST_ANIM_KICK, 0);
     autowait(0.45f);
-    /*
-    StartModelAnim(BEAST_ANIM_KICK, AOF_SMOOTHCHANGE);
-    autocall CMovableModelEntity::WaitUntilScheduledAnimStarts() EReturn;    
-    */
+
     PlaySound(m_soSound, SOUND_KICK, SOF_3D);
     if (CalcDist(m_penEnemy) < m_fCloseDistance) {
       FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
       vDirection.Normalize();
       if (m_bcType == BT_BIG) {
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 80.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 80.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       } else if (m_bcType == BT_HUGE) {
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 120.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 120.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       } else  {
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 40.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 40.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       }
     }
 
-    /*
-    StartModelAnim(BEAST_ANIM_IDLE, AOF_SMOOTHCHANGE);
-    autocall CMovableModelEntity::WaitUntilScheduledAnimStarts() EReturn;    
-    */
     autowait(0.45f);
     MaybeSwitchToAnotherPlayer();
     return EReturn();
   };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

@@ -26,9 +26,6 @@ properties:
   13 FLOAT  m_fParam3  "Parameter 3" 'G' = 0.0f,   // parameter 3
   14 FLOAT  m_fParam4  "Parameter 4" 'H' = 0.0f,   // parameter 4
   15 FLOAT  m_fParam5  "Parameter 5" 'J' = 0.0f,   // parameter 5
-  /*16 BOOL   m_bRetryOnBlock "Retry tactic when blocked" = FALSE,
-  17 INDEX  m_bRetryCount "Number of retries" = 1,*/
-
   20 FLOAT  m_tmLastActivation = 0.0f, // internal - the last time when manager was triggered
 
 components:

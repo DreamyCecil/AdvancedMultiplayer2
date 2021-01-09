@@ -17,7 +17,7 @@ properties:
   5 FLOAT m_fStretch "Stretch" 'S' = 1.0f,
   6 FLOAT m_fDeceleration "Deceleration" = 0.9f,
   7 FLOAT m_fStartSpeed "Start Speed" 'Z' = 50.0f,
-  8 ANGLE3D m_vStartDir "Start Direction" 'A' = ANGLE3D(0,0,0),
+  8 ANGLE3D m_vStartDir "Start Direction" 'A' = ANGLE3D(0.0f, 0.0f, 0.0f),
   9 CEntityPointer m_penDeathTarget "Death target" 'T',
 
  // sound channels for bouncing sound
@@ -31,10 +31,10 @@ properties:
  32 BOOL m_bRollPlaying = FALSE,
 
  // internal vars
- 40 FLOATquat3D m_qA = FLOATquat3D(0, 1, 0, 0),
- 41 FLOATquat3D m_qALast = FLOATquat3D(0, 1, 0, 0),
+ 40 FLOATquat3D m_qA = FLOATquat3D(0.0f, 1.0f, 0.0f, 0.0f),
+ 41 FLOATquat3D m_qALast = FLOATquat3D(0.0f, 1.0f, 0.0f, 0.0f),
  42 FLOAT m_fASpeed = 0.0f,
- 43 FLOAT3D m_vR = FLOAT3D(0,0,1),
+ 43 FLOAT3D m_vR = FLOAT3D(0.0f, 0.0f, 1.0f),
 
 components:
  1 model   MODEL_ROLLINGSTONE      "Models\\Ages\\Egypt\\Traps\\RollingStone\\RollingStone.mdl",
@@ -123,7 +123,7 @@ functions:
     // if going too slow in translation and rotation
     if (en_vCurrentTranslationAbsolute.Length()<1.0f && m_fASpeed<1.0f) {
       // just stop
-      en_vCurrentTranslationAbsolute = FLOAT3D(0,0,0);
+      en_vCurrentTranslationAbsolute = FLOAT3D(0.0f, 0.0f, 0.0f);
       m_fASpeed = 0.0f;
       RollSound(0.0f);
       return;
@@ -162,7 +162,7 @@ functions:
     // what is caused by translation
     FLOAT3D vTraFromTra = vTranslationParallel;
     FLOAT fTraFromTra = vTraFromTra.Length();
-    FLOAT3D vRotFromTra = FLOAT3D(1,0,0);
+    FLOAT3D vRotFromTra = FLOAT3D(1.0f, 0.0f, 0.0f);
     FLOAT fRotFromTra = 0;
     if (fTraFromTra>0.001f) {
       vTraFromTra/=fTraFromTra;
@@ -195,47 +195,44 @@ functions:
     m_fASpeed *= 180/PI;
   }
 
-/************************************************************
- *                      S O U N D S                         *
- ************************************************************/
-void BounceSound(FLOAT fSpeed) {
-  FLOAT fHitStrength = fSpeed*fSpeed;
+  // Sounds
+  void BounceSound(FLOAT fSpeed) {
+    FLOAT fHitStrength = fSpeed*fSpeed;
 
-  FLOAT fVolume = fHitStrength/20.0f; 
-  //CPrintF("bounce %g->%g\n", fHitStrength, fVolume);
-  fVolume = Clamp( fVolume, 0.0f, 2.0f);
-  //FLOAT fVolume = Clamp(fHitStrength*5E-3f, 0.0f, 2.0f);
-  FLOAT fPitch = Lerp(0.2f, 1.0f, Clamp(fHitStrength/100, 0.0f, 1.0f));
-  if (fVolume<0.1f) {
-    return;
-  }
-  CSoundObject &so = (&m_soBounce0)[m_iNextChannel];
-  m_iNextChannel = (m_iNextChannel+1)%5;
-  so.Set3DParameters(200.0f*m_fStretch, 100.0f*m_fStretch, fVolume, fPitch);
-  PlaySound(so, SOUND_BOUNCE, SOF_3D);
-};
-
-void RollSound(FLOAT fSpeed) 
-{
-  FLOAT fHitStrength = fSpeed*fSpeed*m_fStretch*m_fStretch*m_fStretch;
-
-  FLOAT fVolume = fHitStrength/20.0f; 
-  fVolume = Clamp( fVolume, 0.0f, 1.0f);
-  FLOAT fPitch = Lerp(0.2f, 1.0f, Clamp(fHitStrength/100, 0.0f, 1.0f));
-  if (fVolume<0.1f) {
-    if (m_bRollPlaying) {
-      m_soRoll.Stop();
-      m_bRollPlaying = FALSE;
+    FLOAT fVolume = fHitStrength/20.0f; 
+    //CPrintF("bounce %g->%g\n", fHitStrength, fVolume);
+    fVolume = Clamp( fVolume, 0.0f, 2.0f);
+    //FLOAT fVolume = Clamp(fHitStrength*5E-3f, 0.0f, 2.0f);
+    FLOAT fPitch = Lerp(0.2f, 1.0f, Clamp(fHitStrength/100, 0.0f, 1.0f));
+    if (fVolume<0.1f) {
+      return;
     }
-    return;
-  }
-  m_soRoll.Set3DParameters(200.0f*m_fStretch, 100.0f*m_fStretch, fVolume, fPitch);
+    CSoundObject &so = (&m_soBounce0)[m_iNextChannel];
+    m_iNextChannel = (m_iNextChannel+1)%5;
+    so.Set3DParameters(200.0f*m_fStretch, 100.0f*m_fStretch, fVolume, fPitch);
+    PlaySound(so, SOUND_BOUNCE, SOF_3D);
+  };
 
-  if (!m_bRollPlaying) {
-    PlaySound(m_soRoll, SOUND_ROLL, SOF_3D|SOF_LOOP);
-    m_bRollPlaying = TRUE;
-  }
-}
+  void RollSound(FLOAT fSpeed) {
+    FLOAT fHitStrength = fSpeed*fSpeed*m_fStretch*m_fStretch*m_fStretch;
+
+    FLOAT fVolume = fHitStrength/20.0f; 
+    fVolume = Clamp( fVolume, 0.0f, 1.0f);
+    FLOAT fPitch = Lerp(0.2f, 1.0f, Clamp(fHitStrength/100, 0.0f, 1.0f));
+    if (fVolume<0.1f) {
+      if (m_bRollPlaying) {
+        m_soRoll.Stop();
+        m_bRollPlaying = FALSE;
+      }
+      return;
+    }
+    m_soRoll.Set3DParameters(200.0f*m_fStretch, 100.0f*m_fStretch, fVolume, fPitch);
+
+    if (!m_bRollPlaying) {
+      PlaySound(m_soRoll, SOUND_ROLL, SOF_3D|SOF_LOOP);
+      m_bRollPlaying = TRUE;
+    }
+  };
 
 procedures:
 
@@ -249,7 +246,7 @@ procedures:
     SetModelMainTexture(TEXTURE_ROLLINGSTONE);
     AddAttachmentToModel(this, *GetModelObject(), 0, MODEL_STONESPHERE, TEXTURE_ROLLINGSTONE, 0, 0, TEXTURE_DETAIL);
 
-    GetModelObject()->StretchModel( FLOAT3D(m_fStretch, m_fStretch, m_fStretch));
+    GetModelObject()->StretchModel(FLOAT3D(m_fStretch, m_fStretch, m_fStretch));
     ModelChangeNotify();
 
     en_fBounceDampNormal = m_fBounce;
@@ -258,7 +255,7 @@ procedures:
     en_fCollisionSpeedLimit = 45.0f;
     en_fCollisionDamageFactor = 10.0f;
 
-    SetPlacement(CPlacement3D(GetPlacement().pl_PositionVector, ANGLE3D(0,0,0)));
+    SetPlacement(CPlacement3D(GetPlacement().pl_PositionVector, ANGLE3D(0.0f, 0.0f, 0.0f)));
     m_qA = FLOATquat3D(0, 1, 0, 0);
     m_qALast= FLOATquat3D(0, 1, 0, 0);
 
@@ -313,7 +310,7 @@ procedures:
           {
             // receive artificial impact damage
             ReceiveDamage(eTouch.penOther, DMT_IMPACT, m_fHealth*2.0f,
-              FLOAT3D(0,0,0), FLOAT3D(0,0,0));
+              FLOAT3D(0.0f, 0.0f, 0.0f), FLOAT3D(0.0f, 0.0f, 0.0f));
           }
         }
         resume;
@@ -325,7 +322,7 @@ procedures:
         GetBoundingBox(box);
         FLOAT fEntitySize = box.Size().MaxNorm();
         
-        Debris_Begin(EIBT_ROCK, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(1.0f,2.0f,3.0f), FLOAT3D(0,0,0), 1.0f, 0.0f);
+        Debris_Begin(EIBT_ROCK, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(1.0f, 2.0f, 3.0f), FLOAT3D(0.0f, 0.0f, 0.0f), 1.0f, 0.0f);
         for(INDEX iDebris = 0; iDebris<12; iDebris++) {
           Debris_Spawn(this, this, MODEL_STONE, TEXTURE_STONE, 0, 0, 0, IRnd()%4, 0.15f,
             FLOAT3D(FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f));

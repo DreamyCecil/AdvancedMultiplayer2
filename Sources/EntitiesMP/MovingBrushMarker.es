@@ -34,33 +34,24 @@ properties:
  21 CEntityPointer m_penSoundStop     "Sound stop entity" 'Z',    // sound stop entity
  22 CEntityPointer m_penSoundFollow   "Sound follow entity" 'F',  // sound follow entity
 
-
 components:
-
   1 model   MODEL_MARKER     "Models\\Editor\\MovingBrushMarker.mdl",
   2 texture TEXTURE_MARKER   "Models\\Editor\\GravityMarker.tex"
 
-
 functions:
-
-  /* Check if entity can drop marker for making linked route. */
+  // Check if entity can drop marker for making linked route
   BOOL DropsMarker(CTFileName &fnmMarkerClass, CTString &strTargetProperty) const {
     fnmMarkerClass = CTFILENAME("Classes\\MovingBrushMarker.ecl");
     strTargetProperty = "Target";
     return TRUE;
-  }
-
+  };
 
   // returns bytes of memory used by this object
-  SLONG GetUsedMemory(void)
-  {
+  SLONG GetUsedMemory(void) {
     return( sizeof(CMovingBrushMarker) - sizeof(CMarker) + CMarker::GetUsedMemory());
-  }
-
+  };
 
 procedures:
-
-
   Main()
   {
     InitAsEditorModel();

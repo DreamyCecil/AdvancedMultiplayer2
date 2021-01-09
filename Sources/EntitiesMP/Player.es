@@ -45,12 +45,14 @@
 #include "EntitiesMP/Common/ExtraFunc.h"
 
 extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
-// from game
-#define GRV_SHOWEXTRAS  (1L<<0)   // add extra stuff like console, weapon, pause
 
-#define GENDER_MALE     0
-#define GENDER_FEMALE   1
-#define GENDEROFFSET    100   // sound components for genders are offset by this value
+// From GameMP
+#define GRV_SHOWEXTRAS (1L<<0) // add extra stuff like console, weapon, pause
+
+// Gender types
+#define GENDER_MALE   0
+#define GENDER_FEMALE 1
+#define GENDEROFFSET  100 // offset for gender-specific sound components
 
 // [Cecil] Combo font
 static CFontData _fdComboFont;
@@ -79,41 +81,40 @@ extern INDEX ctl_bVoiceCommands = FALSE; // show voice commands menu
 extern INDEX _iVoiceCommand = 0; // current voice command
 %}
 
+// Player view type
 enum PlayerViewType {
-  0 PVT_PLAYEREYES      "",
-  1 PVT_PLAYERAUTOVIEW  "",
-  2 PVT_SCENECAMERA     "",
-  3 PVT_3RDPERSONVIEW   "",
+  0 PVT_PLAYEREYES     "",
+  1 PVT_PLAYERAUTOVIEW "",
+  2 PVT_SCENECAMERA    "",
+  3 PVT_3RDPERSONVIEW  "",
 };
 
+// Player model state
 enum PlayerState {
-  0 PST_STAND     "",
-  1 PST_CROUCH    "",
-  2 PST_SWIM      "",
-  3 PST_DIVE      "",
-  4 PST_FALL      "",
+  0 PST_STAND  "",
+  1 PST_CROUCH "",
+  2 PST_SWIM   "",
+  3 PST_DIVE   "",
+  4 PST_FALL   "",
 };
 
-// event for starting cinematic camera sequence
+// Event for starting cinematic camera sequence
 event ECameraStart {
-  CEntityPointer penCamera,   // the camera
+  CEntityPointer penCamera,
 };
 
-// event for ending cinematic camera sequence
+// Event for ending cinematic camera sequence
 event ECameraStop {
-  CEntityPointer penCamera,   // the camera
+  CEntityPointer penCamera,
 };
 
+// Sent when needs to rebirth
+event ERebirth {};
 
-// sent when needs to rebirth
-event ERebirth {
-};
+// Sent when player was disconnected from game
+event EDisconnected {};
 
-// sent when player was disconnected from game
-event EDisconnected {
-};
-
-// starts automatic player actions
+// Start auto actions
 event EAutoAction {
   CEntityPointer penFirstMarker,
 };
@@ -124,75 +125,86 @@ event EStopActions {
 };
 
 %{
-extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOOL bSnooping, const CPlayer *penPlayerOwner);
+// HUD render
+extern void DrawHUD(const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOOL bSnooping, const CPlayer *penPlayerOwner);
 extern void InitHUD(void);
 extern void EndHUD(void);
 
 static CTimerValue _tvProbingLast;
 
-// used to render certain entities only for certain players (like picked items, etc.)
+// Used to render certain entities only for certain players (like picked items, etc.)
 extern ULONG _ulPlayerRenderingMask = 0;
 
-// temporary BOOL used to discard calculating of 3rd view when calculating absolute view placement
-BOOL _bDiscard3rdView=FALSE;
+// Temporary BOOL used to discard calculating of 3rd view when calculating absolute view placement
+BOOL _bDiscard3rdView = FALSE;
 
-#define NAME name
+// Damage for the player to blow up
+const FLOAT _fBlowUpAmount = 70.0f;
 
-const FLOAT _fBlowUpAmmount = 70.0f;
+// Computer message adding flags
+#define CMF_READ    (1L<<0)
+#define CMF_ANALYZE (1L<<1)
 
-// computer message adding flags
-#define CMF_READ       (1L<<0)
-#define CMF_ANALYZE    (1L<<1)
+// Export current player projection
+CAnyProjection3D prPlayerProjection;
 
+// Marker distance
 struct MarkerDistance {
-public:
   FLOAT md_fMinD;
   CPlayerMarker *md_ppm;
   void Clear(void);
 };
 
-// export current player projection
-CAnyProjection3D prPlayerProjection;
-
-
-int qsort_CompareMarkerDistance(const void *pv0, const void *pv1)
-{
+int qsort_CompareMarkerDistance(const void *pv0, const void *pv1) {
   MarkerDistance &md0 = *(MarkerDistance*)pv0;
   MarkerDistance &md1 = *(MarkerDistance*)pv1;
-  if(      md0.md_fMinD<md1.md_fMinD) return +1;
-  else if( md0.md_fMinD>md1.md_fMinD) return -1;
-  else                                return  0;
-}
 
-static inline FLOAT IntensityAtDistance( FLOAT fFallOff, FLOAT fHotSpot, FLOAT fDistance)
-{
+  if (md0.md_fMinD < md1.md_fMinD) {
+    return +1;
+  } else if (md0.md_fMinD > md1.md_fMinD) {
+    return -1;
+  }
+
+  return 0;
+};
+
+static inline FLOAT IntensityAtDistance( FLOAT fFallOff, FLOAT fHotSpot, FLOAT fDistance) {
   // intensity is zero if further than fall-off range
-  if( fDistance>fFallOff) return 0.0f;
-  // intensity is maximum if closer than hot-spot range
-  if( fDistance<fHotSpot) return 1.0f;
-  // interpolate if between fall-off and hot-spot range
-  return (fFallOff-fDistance)/(fFallOff-fHotSpot);
-}
+  if (fDistance>fFallOff) {
+    return 0.0f;
+  }
 
-static CTString MakeEmptyString(INDEX ctLen, char ch=' ')
-{
+  // intensity is maximum if closer than hot-spot range
+  if (fDistance<fHotSpot) {
+    return 1.0f;
+  }
+
+  // interpolate if between fall-off and hot-spot range
+  return (fFallOff-fDistance) / (fFallOff-fHotSpot);
+};
+
+static CTString MakeEmptyString(INDEX ctLen, char ch=' ') {
   char ach[2];
   ach[0] = ch;
   ach[1] = 0;
-  CTString strSpaces;
-  for (INDEX i=0; i<ctLen; i++) {
-    strSpaces+=ach;
-  }
-  return strSpaces;
-}
 
-// take a two line string and align into one line of minimum given length
-static _ctAlignWidth = 20;
-static CTString AlignString(const CTString &strOrg)
-{
+  CTString strSpaces;
+
+  for (INDEX i = 0; i < ctLen; i++) {
+    strSpaces += ach;
+  }
+
+  return strSpaces;
+};
+
+// Take a two line string and align into one line of minimum given length
+static INDEX _ctAlignWidth = 20;
+
+static CTString AlignString(const CTString &strOrg) {
   // split into two lines
   CTString strL = strOrg;
   strL.OnlyFirstLine();
+
   CTString strR = strOrg;
   strR.RemovePrefix(strL);
   strR.DeleteChar(0);
@@ -202,62 +214,53 @@ static CTString AlignString(const CTString &strOrg)
   INDEX iLenR = strR.LengthNaked();
 
   // find number of spaces to insert
-  INDEX ctSpaces = _ctAlignWidth-(iLenL+iLenR);
-  if (ctSpaces<1) {
-    ctSpaces=1;
-  }
+  INDEX ctSpaces = ClampDn(_ctAlignWidth - (iLenL + iLenR), (INDEX)1);
 
   // make aligned string
-  return strL+MakeEmptyString(ctSpaces)+strR;
-}
+  return strL + MakeEmptyString(ctSpaces)+strR;
+};
 
-static CTString CenterString(const CTString &str)
-{
-  INDEX ctSpaces = (_ctAlignWidth-str.LengthNaked())/2;
-  if (ctSpaces<0) {
-    ctSpaces=0;
-  }
-  return MakeEmptyString(ctSpaces)+str;
-}
+static CTString CenterString(const CTString &str) {
+  INDEX ctSpaces = ClampDn((_ctAlignWidth - str.LengthNaked()) / (INDEX)2, (INDEX)0);
 
-static CTString PadStringRight(const CTString &str, INDEX iLen)
-{
-  INDEX ctSpaces = iLen-str.LengthNaked();
-  if (ctSpaces<0) {
-    ctSpaces=0;
-  }
-  return str+MakeEmptyString(ctSpaces);
-}
+  return MakeEmptyString(ctSpaces) + str;
+};
 
-static CTString PadStringLeft(const CTString &str, INDEX iLen)
-{
-  INDEX ctSpaces = iLen-str.LengthNaked();
-  if (ctSpaces<0) {
-    ctSpaces=0;
-  }
-  return MakeEmptyString(ctSpaces)+str;
-}
+static CTString PadStringRight(const CTString &str, INDEX iLen) {
+  INDEX ctSpaces = ClampDn(iLen - str.LengthNaked(), (INDEX)0);
 
-static void KillAllEnemies(CEntity *penKiller)
-{
+  return str + MakeEmptyString(ctSpaces);
+};
+
+static CTString PadStringLeft(const CTString &str, INDEX iLen) {
+  INDEX ctSpaces = ClampDn(iLen - str.LengthNaked(), (INDEX)0);
+
+  return MakeEmptyString(ctSpaces) + str;
+};
+
+static void KillAllEnemies(CEntity *penKiller) {
   // for each entity in the world
   {FOREACHINDYNAMICCONTAINER(penKiller->GetWorld()->wo_cenEntities, CEntity, iten) {
     CEntity *pen = iten;
+
     if (IsDerivedFromClass(pen, "Enemy Base") && !IsOfClass(pen, "Devil")) {
-      CEnemyBase *penEnemy = (CEnemyBase *)pen;
-      if (penEnemy->m_penEnemy==NULL) {
+      CEnemyBase *penEnemy = (CEnemyBase*)pen;
+
+      if (penEnemy->m_penEnemy == NULL) {
         continue;
       }
-      penKiller->InflictDirectDamage(pen, penKiller, DMT_BULLET, 
-        penEnemy->GetHealth()+1, pen->GetPlacement().pl_PositionVector, FLOAT3D(0,1,0));
+
+      penKiller->InflictDirectDamage(pen, penKiller, DMT_BULLET,
+        penEnemy->GetHealth() + 1.0f, pen->GetPlacement().pl_PositionVector, FLOAT3D(0.0f, 1.0f, 0.0f));
     }
   }}
-}
+};
 
+// View angle limits
 #define HEADING_MAX 45.0f
 #define PITCH_MAX   90.0f
 
-// player flags
+// Player flags
 #define PLF_INITIALIZED         (1UL<<0)  // set when player entity is ready to function
 #define PLF_VIEWROTATIONCHANGED (1UL<<1)  // for adjusting view rotation separately from legs
 #define PLF_JUMPALLOWED         (1UL<<2)  // if jumping is allowed
@@ -271,7 +274,7 @@ static void KillAllEnemies(CEntity *penKiller)
 #define PLF_ISZOOMING           (1UL<<10) // marks that player is zoomed in with the sniper
 #define PLF_RESPAWNINPLACE      (1UL<<11) // don't move to marker when respawning (for current death only)
 
-// defines representing flags used to fill player buttoned actions
+// Defines representing flags used to fill player buttoned actions
 #define PLACT_FIRE            (1L<<0)
 #define PLACT_RELOAD          (1L<<1)
 #define PLACT_WEAPON_NEXT     (1L<<2)
@@ -293,13 +296,10 @@ static void KillAllEnemies(CEntity *penKiller)
                                      
 #define MAX_WEAPONS 30
 
-#define PICKEDREPORT_TIME (2.0f) // how long (picked-up) message stays on screen
+// How long the pickup message stays on screen
+#define PICKEDREPORT_TIME 2.0f
 
-// is player spying another player
-//extern TIME _tmSnoopingStarted;
-//extern CEntity *_penTargeting;
-
-
+// Individual player controls
 struct PlayerControls {
   FLOAT3D aRotation;
   FLOAT3D aViewRotation;
@@ -339,7 +339,7 @@ struct PlayerControls {
   BOOL bUse;
   BOOL bComputer;
   BOOL bUseOrComputer;
-  BOOL bUseOrComputerLast;  // for internal use
+  BOOL bUseOrComputerLast; // for internal use
   BOOL b3rdPersonView;
 
   BOOL bSniperZoomIn;
@@ -353,77 +353,85 @@ struct PlayerControls {
 
 static struct PlayerControls pctlCurrent;
 
-// cheats
+// Cheats
 static INDEX cht_iGoToMarker = -1;
-static INDEX cht_bKillAll    = FALSE;
-static INDEX cht_bGiveAll    = FALSE;
-static INDEX cht_bOpen       = FALSE;
-static INDEX cht_bAllMessages= FALSE;
-static INDEX cht_bRefresh    = FALSE;
-extern INDEX cht_bGod        = FALSE;
-extern INDEX cht_bFly        = FALSE;
-extern INDEX cht_bGhost      = FALSE;
-extern INDEX cht_bInvisible  = FALSE;
+static INDEX cht_bKillAll = FALSE;
+static INDEX cht_bGiveAll = FALSE;
+static INDEX cht_bOpen = FALSE;
+static INDEX cht_bAllMessages = FALSE;
+static INDEX cht_bRefresh = FALSE;
+extern INDEX cht_bGod = FALSE;
+extern INDEX cht_bFly = FALSE;
+extern INDEX cht_bGhost = FALSE;
+extern INDEX cht_bInvisible = FALSE;
 extern FLOAT cht_fTranslationMultiplier = 1.0f;
-extern INDEX cht_bEnable     = 0;   
+extern INDEX cht_bEnable = FALSE;   
 
-// interface control
-static INDEX hud_bShowAll     = TRUE; // used internaly in menu/console
-extern INDEX hud_bShowWeapon  = TRUE;
+// Interface control
+static INDEX hud_bShowAll = TRUE; // used internaly in menu/console
+extern INDEX hud_bShowWeapon = TRUE;
 extern INDEX hud_bShowMessages = TRUE;
-extern INDEX hud_bShowInfo    = TRUE;
+extern INDEX hud_bShowInfo = TRUE;
 extern INDEX hud_bShowLatency = FALSE;
-extern INDEX hud_iShowPlayers = -1;   // auto
-extern INDEX hud_iSortPlayers = -1;   // auto
-extern FLOAT hud_fOpacity     = 0.9f;
-extern FLOAT hud_fScaling     = 1.0f;
+extern INDEX hud_iShowPlayers = -1; // auto
+extern INDEX hud_iSortPlayers = -1; // auto
+extern FLOAT hud_fOpacity = 0.9f;
+extern FLOAT hud_fScaling = 1.0f;
 extern FLOAT hud_tmWeaponsOnScreen = 3.0f;
 extern FLOAT hud_tmLatencySnapshot = 1.0f;
 extern INDEX hud_bShowMatchInfo = TRUE;
+
+extern FLOAT plr_fBreathingStrength = 0.0f;
+extern FLOAT plr_tmSnoopingTime;
 
 // [Cecil] AMP 2 customization
 static INDEX amp_bBloodScreen = TRUE;
 extern INDEX amp_bEnemyCounter = TRUE;
 static INDEX amp_iComboText = 2;
 
-extern FLOAT plr_fBreathingStrength = 0.0f;
-extern FLOAT plr_tmSnoopingTime;
+// Debug commands
 extern INDEX cht_bKillFinalBoss = FALSE;
 INDEX cht_bDebugFinalBoss = FALSE;
 INDEX cht_bDumpFinalBossData = FALSE;
 INDEX cht_bDebugFinalBossAnimations = FALSE;
 INDEX cht_bDumpPlayerShading = FALSE;
 
-// misc
+// Misc
 static FLOAT plr_fAcceleration  = 100.0f;
 static FLOAT plr_fDeceleration  = 60.0f;
+
 static FLOAT plr_fSpeedForward  = 10.0f;
 static FLOAT plr_fSpeedBackward = 10.0f;
 static FLOAT plr_fSpeedSide     = 10.0f;
 static FLOAT plr_fSpeedUp       = 11.0f;
+
 static FLOAT plr_fViewHeightStand  = 1.9f;
 static FLOAT plr_fViewHeightCrouch = 0.7f;
 static FLOAT plr_fViewHeightSwim   = 0.4f;
 static FLOAT plr_fViewHeightDive   = 0.0f;
+
 extern FLOAT plr_fViewDampFactor        = 0.4f;
 extern FLOAT plr_fViewDampLimitGroundUp = 0.1f;
 extern FLOAT plr_fViewDampLimitGroundDn = 0.4f;
 extern FLOAT plr_fViewDampLimitWater    = 0.1f;
+
 static FLOAT plr_fFrontClipDistance = 0.25f;
 static FLOAT plr_fFOV = 90.0f;
+
 static FLOAT net_tmLatencyAvg;
 extern INDEX plr_bRenderPicked = FALSE;
 extern INDEX plr_bRenderPickedParticles = FALSE;
 extern INDEX plr_bOnlySam = FALSE;
+
 extern INDEX ent_bReportBrokenChains = FALSE;
-extern FLOAT ent_tmMentalIn   = 0.5f;
-extern FLOAT ent_tmMentalOut  = 0.75f;
+extern FLOAT ent_tmMentalIn = 0.5f;
+extern FLOAT ent_tmMentalOut = 0.75f;
 extern FLOAT ent_tmMentalFade = 0.5f;
 
 extern FLOAT gfx_fEnvParticlesDensity = 1.0f;
 extern FLOAT gfx_fEnvParticlesRange = 1.0f;
 
-// prediction control vars
+// Prediction control vars
 extern FLOAT cli_fPredictPlayersRange = 0.0f;
 extern FLOAT cli_fPredictItemsRange = 3.0f;
 extern FLOAT cli_tmPredictFoe = 10.0f;
@@ -436,32 +444,33 @@ static FLOAT plr_fWalkSoundDelay = 0.5f;
 static FLOAT plr_fRunSoundDelay  = 0.3f;
 
 static FLOAT ctl_tmComputerDoubleClick = 0.5f; // double click delay for calling computer
-static FLOAT _tmLastUseOrCompPressed = -10.0f;  // for computer doubleclick
+static FLOAT _tmLastUseOrCompPressed = -10.0f; // for computer double click
 
-// speeds for button rotation
+// Speeds for button rotation
 static FLOAT ctl_fButtonRotationSpeedH = 300.0f;
 static FLOAT ctl_fButtonRotationSpeedP = 150.0f;
 static FLOAT ctl_fButtonRotationSpeedB = 150.0f;
-// modifier for axis strafing
+
+// Modifier for axis strafing
 static FLOAT ctl_fAxisStrafingModifier = 1.0f;
 
-// !=NULL if some player wants to call computer
+// Player that wants to call the computer
 DECL_DLL extern class CPlayer *cmp_ppenPlayer = NULL;
-// !=NULL for rendering computer on secondary display in dualhead
+// For rendering computer on secondary display in dualhead
 DECL_DLL extern class CPlayer *cmp_ppenDHPlayer = NULL;
-// set to update current message in background mode (for dualhead)
+// Set to update current message in background mode (for dualhead)
 DECL_DLL extern BOOL cmp_bUpdateInBackground = FALSE;
-// set for initial calling computer without rendering game
+// Set for the initial calling computer without rendering the game
 DECL_DLL extern BOOL cmp_bInitialStart = FALSE;
 
-// game sets this for player hud and statistics and hiscore sound playing
-DECL_DLL extern INDEX plr_iHiScore = 0.0f;
+// For player HUD and statistics
+DECL_DLL extern INDEX plr_iHiScore = 0;
 
-// these define address and size of player controls structure
+// Define address and size of player controls structure
 DECL_DLL extern void *ctl_pvPlayerControls = &pctlCurrent;
 DECL_DLL extern const SLONG ctl_slPlayerControlsSize = sizeof(pctlCurrent);
 
-// called to compose action packet from current controls
+// Compose action packet from current controls
 DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction &paAction, BOOL bPreScan) {
   // allow double axis controls
   paAction.pa_aRotation += paAction.pa_aViewRotation;
@@ -478,7 +487,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   // if centering view
   if (pctlCurrent.bCenterView) {
     // don't allow moving view up/down
-    paAction.pa_aRotation(2) = 0;
+    paAction.pa_aRotation(2) = 0.0f;
   }
 
   // multiply axis actions with speed
@@ -491,7 +500,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
     paAction.pa_vTranslation(3) *= plr_fSpeedBackward;
   }
 
-  // find local player, if any
+  // find local player
   CPlayer *penThis = NULL;
   INDEX ctPlayers = CEntity::GetMaxPlayers();
 
@@ -504,51 +513,89 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
     }
   }
 
-  // if not found
+  // not found
   if (penThis == NULL) {
-    // do nothing
     return;
   }
 
   // accumulate local rotation
-  penThis->m_aLocalRotation     += paAction.pa_aRotation;
+  penThis->m_aLocalRotation += paAction.pa_aRotation;
   penThis->m_aLocalViewRotation += paAction.pa_aViewRotation;
-  penThis->m_vLocalTranslation  += paAction.pa_vTranslation;
+  penThis->m_vLocalTranslation += paAction.pa_vTranslation;
 
-  // if prescanning
+  // no button checking if prescanning
   if (bPreScan) {
-    // no button checking
     return;
   }
 
-  // add button movement/rotation/look actions to the axis actions
-  if(pctlCurrent.bMoveForward  ) paAction.pa_vTranslation(3) -= plr_fSpeedForward;
-  if(pctlCurrent.bMoveBackward ) paAction.pa_vTranslation(3) += plr_fSpeedBackward;
-  if(pctlCurrent.bMoveLeft  || pctlCurrent.bStrafe&&pctlCurrent.bTurnLeft) paAction.pa_vTranslation(1) -= plr_fSpeedSide;
-  if(pctlCurrent.bMoveRight || pctlCurrent.bStrafe&&pctlCurrent.bTurnRight) paAction.pa_vTranslation(1) += plr_fSpeedSide;
-  if(pctlCurrent.bMoveUp       ) paAction.pa_vTranslation(2) += plr_fSpeedUp;
-  if(pctlCurrent.bMoveDown     ) paAction.pa_vTranslation(2) -= plr_fSpeedUp;
+  // add movement actions
+  if (pctlCurrent.bMoveForward) {
+    paAction.pa_vTranslation(3) -= plr_fSpeedForward;
+  }
 
+  if (pctlCurrent.bMoveBackward) {
+    paAction.pa_vTranslation(3) += plr_fSpeedBackward;
+  }
+
+  if (pctlCurrent.bMoveLeft || (pctlCurrent.bStrafe && pctlCurrent.bTurnLeft)) {
+    paAction.pa_vTranslation(1) -= plr_fSpeedSide;
+  }
+
+  if (pctlCurrent.bMoveRight || (pctlCurrent.bStrafe && pctlCurrent.bTurnRight)) {
+    paAction.pa_vTranslation(1) += plr_fSpeedSide;
+  }
+
+  if (pctlCurrent.bMoveUp) {
+    paAction.pa_vTranslation(2) += plr_fSpeedUp;
+  }
+
+  if (pctlCurrent.bMoveDown) {
+    paAction.pa_vTranslation(2) -= plr_fSpeedUp;
+  }
+
+  // add rotation actions
   const FLOAT fQuantum = _pTimer->TickQuantum;
-  if(pctlCurrent.bTurnLeft  && !pctlCurrent.bStrafe) penThis->m_aLocalRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
-  if(pctlCurrent.bTurnRight && !pctlCurrent.bStrafe) penThis->m_aLocalRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
-  if(pctlCurrent.bTurnUp  ) penThis->m_aLocalRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
-  if(pctlCurrent.bTurnDown) penThis->m_aLocalRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
+  if (pctlCurrent.bTurnLeft  && !pctlCurrent.bStrafe)  {
+    penThis->m_aLocalRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
+  }
 
-  if(pctlCurrent.bLookLeft ) penThis->m_aLocalViewRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
-  if(pctlCurrent.bLookRight) penThis->m_aLocalViewRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
-  if(pctlCurrent.bLookUp   ) penThis->m_aLocalViewRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
-  if(pctlCurrent.bLookDown ) penThis->m_aLocalViewRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
+  if (pctlCurrent.bTurnRight && !pctlCurrent.bStrafe)  {
+    penThis->m_aLocalRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
+  }
+
+  if (pctlCurrent.bTurnUp)  {
+    penThis->m_aLocalRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
+  }
+
+  if (pctlCurrent.bTurnDown)  {
+    penThis->m_aLocalRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
+  }
+
+  // add look actions
+  if (pctlCurrent.bLookLeft)  {
+    penThis->m_aLocalViewRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
+  }
+
+  if (pctlCurrent.bLookRight)  {
+    penThis->m_aLocalViewRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
+  }
+
+  if (pctlCurrent.bLookUp)  {
+    penThis->m_aLocalViewRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
+  }
+
+  if (pctlCurrent.bLookDown)  {
+    penThis->m_aLocalViewRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
+  }
 
   // use current accumulated rotation
-  paAction.pa_aRotation     = penThis->m_aLocalRotation;
+  paAction.pa_aRotation = penThis->m_aLocalRotation;
   paAction.pa_aViewRotation = penThis->m_aLocalViewRotation;
 
-  // if walking
+  // slower speed while walking
   if (pctlCurrent.bWalk) {
-    // make forward/backward and sidestep speeds slower
-    paAction.pa_vTranslation(3) /= 2.0f;
     paAction.pa_vTranslation(1) /= 2.0f;
+    paAction.pa_vTranslation(3) /= 2.0f;
   }
 
   // [Cecil] Reserve banking rotation for more buttons
@@ -580,7 +627,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   // set weapon selection bits
   for (INDEX i = 1; i < MAX_WEAPONS; i++) {
     if (pctlCurrent.bSelectWeapon[i]) {
-      paAction.pa_ulButtons = i<<PLACT_SELECT_WEAPON_SHIFT;
+      paAction.pa_ulButtons = (i << PLACT_SELECT_WEAPON_SHIFT);
       break;
     }
   }
@@ -608,54 +655,50 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   }
   
   // set button pressed flags
-  if(pctlCurrent.bWeaponFlip) paAction.pa_ulButtons |= PLACT_WEAPON_FLIP;
-  if(pctlCurrent.bFire)       paAction.pa_ulButtons |= PLACT_FIRE;
-  if(pctlCurrent.bReload)     paAction.pa_ulButtons |= PLACT_RELOAD;
-  if(pctlCurrent.bUse)        paAction.pa_ulButtons |= PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE;
-  if(pctlCurrent.bComputer)      paAction.pa_ulButtons |= PLACT_COMPUTER;
-  if(pctlCurrent.b3rdPersonView) paAction.pa_ulButtons |= PLACT_3RD_PERSON_VIEW;
-  if(pctlCurrent.bCenterView)    paAction.pa_ulButtons |= PLACT_CENTER_VIEW;
+  paAction.pa_ulButtons = (pctlCurrent.bWeaponFlip    ? PLACT_WEAPON_FLIP : 0)
+                        | (pctlCurrent.bFire          ? PLACT_FIRE : 0)
+                        | (pctlCurrent.bReload        ? PLACT_RELOAD : 0)
+                        | (pctlCurrent.bUse           ? PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE : 0)
+                        | (pctlCurrent.bComputer      ? PLACT_COMPUTER : 0)
+                        | (pctlCurrent.b3rdPersonView ? PLACT_3RD_PERSON_VIEW : 0)
+                        | (pctlCurrent.bCenterView    ? PLACT_CENTER_VIEW : 0)
+                        | (pctlCurrent.bFireBomb      ? PLACT_FIREBOMB : 0)
+                        // use button
+                        | (pctlCurrent.bUseOrComputer ? PLACT_USE_HELD|PLACT_SNIPER_USE : 0)
+                        | (pctlCurrent.bSniperZoomIn  ? PLACT_SNIPER_ZOOMIN : 0)
+                        | (pctlCurrent.bSniperZoomOut ? PLACT_SNIPER_ZOOMOUT : 0)
+                        // [Cecil] New buttons
+                        | (pctlCurrent.bAltFire ? PLACT_ALTFIRE : 0)
+                        | (pctlCurrent.bTokens  ? PLACT_TOKENS : 0);
 
-  // is 'use' being held?
-  if(pctlCurrent.bUseOrComputer) paAction.pa_ulButtons |= PLACT_USE_HELD|PLACT_SNIPER_USE;
-  if(pctlCurrent.bSniperZoomIn)  paAction.pa_ulButtons |= PLACT_SNIPER_ZOOMIN;
-  if(pctlCurrent.bSniperZoomOut) paAction.pa_ulButtons |= PLACT_SNIPER_ZOOMOUT;
-  if(pctlCurrent.bFireBomb)      paAction.pa_ulButtons |= PLACT_FIREBOMB;
-
-  // [Cecil] New buttons
-  if (pctlCurrent.bAltFire) {
-    paAction.pa_ulButtons |= PLACT_ALTFIRE;
-  }
-  if (pctlCurrent.bTokens) {
-    paAction.pa_ulButtons |= PLACT_TOKENS;
-  }
-
-  // if userorcomp just pressed
-  if(pctlCurrent.bUseOrComputer && !pctlCurrent.bUseOrComputerLast) {
-    // if double-click is off
-    if (ctl_tmComputerDoubleClick==0 || (pps->ps_ulFlags&PSF_COMPSINGLECLICK)) {
+  // if 'use or comp' has been pressed
+  if (pctlCurrent.bUseOrComputer && !pctlCurrent.bUseOrComputerLast) {
+    // no double-click
+    if (ctl_tmComputerDoubleClick == 0 || (pps->ps_ulFlags & PSF_COMPSINGLECLICK)) {
       // press both
       paAction.pa_ulButtons |= PLACT_USE|PLACT_COMPUTER;
-    // if double-click is on
+
+    // double-click
     } else {
-      // if double click
-      if (_pTimer->GetRealTimeTick()<=_tmLastUseOrCompPressed+ctl_tmComputerDoubleClick) {
-        // computer pressed
+      // computer if double click
+      if (_pTimer->GetRealTimeTick() <= _tmLastUseOrCompPressed + ctl_tmComputerDoubleClick) {
         paAction.pa_ulButtons |= PLACT_COMPUTER;
-      // if single click
+
+      // use if single click
       } else {
-        // use pressed
         paAction.pa_ulButtons |= PLACT_USE;
       }
     }
+
     _tmLastUseOrCompPressed = _pTimer->GetRealTimeTick();
   }
+
   // remember old userorcomp pressed state
   pctlCurrent.bUseOrComputerLast = pctlCurrent.bUseOrComputer;
 };
 
-void CPlayer_Precache(void)
-{
+// Precache player components
+void CPlayer_Precache(void) {
   CDLLEntityClass *pdec = &CPlayer_DLLClass;
 
   // precache view
@@ -663,81 +706,80 @@ void CPlayer_Precache(void)
   CPlayerView_Precache();
 
   // precache all player sounds
-  pdec->PrecacheSound(SOUND_WATER_ENTER        );
-  pdec->PrecacheSound(SOUND_WATER_LEAVE        );
-  pdec->PrecacheSound(SOUND_WALK_L             );
-  pdec->PrecacheSound(SOUND_WALK_R             );
-  pdec->PrecacheSound(SOUND_WALK_SAND_L        );
-  pdec->PrecacheSound(SOUND_WALK_SAND_R        );
-  pdec->PrecacheSound(SOUND_SWIM_L             );
-  pdec->PrecacheSound(SOUND_SWIM_R             );
-  pdec->PrecacheSound(SOUND_DIVE_L             );
-  pdec->PrecacheSound(SOUND_DIVE_R             );
-  pdec->PrecacheSound(SOUND_DIVEIN             );
-  pdec->PrecacheSound(SOUND_DIVEOUT            );
-  pdec->PrecacheSound(SOUND_DROWN              );
-  pdec->PrecacheSound(SOUND_INHALE0            );
-  pdec->PrecacheSound(SOUND_JUMP               );
-  pdec->PrecacheSound(SOUND_LAND               );
-  pdec->PrecacheSound(SOUND_WOUNDWEAK          );
-  pdec->PrecacheSound(SOUND_WOUNDMEDIUM        );
-  pdec->PrecacheSound(SOUND_WOUNDSTRONG        );
-  pdec->PrecacheSound(SOUND_WOUNDWATER         );
-  pdec->PrecacheSound(SOUND_DEATH              );
-  pdec->PrecacheSound(SOUND_DEATHWATER         );
-  pdec->PrecacheSound(SOUND_WATERAMBIENT       );
-  pdec->PrecacheSound(SOUND_WATERBUBBLES       );
-  pdec->PrecacheSound(SOUND_WATERWALK_L        );
-  pdec->PrecacheSound(SOUND_WATERWALK_R        );
-  pdec->PrecacheSound(SOUND_INHALE1            );
-  pdec->PrecacheSound(SOUND_INHALE2            );
-  pdec->PrecacheSound(SOUND_INFO               );
-  pdec->PrecacheSound(SOUND_WALK_GRASS_L       );
-  pdec->PrecacheSound(SOUND_WALK_GRASS_R       );
-  pdec->PrecacheSound(SOUND_WALK_WOOD_L        );
-  pdec->PrecacheSound(SOUND_WALK_WOOD_R        );
-  pdec->PrecacheSound(SOUND_WALK_SNOW_L        );
-  pdec->PrecacheSound(SOUND_WALK_SNOW_R        );
-//pdec->PrecacheSound(SOUND_HIGHSCORE          );
-  pdec->PrecacheSound(SOUND_SNIPER_ZOOM        );
-  pdec->PrecacheSound(SOUND_SNIPER_QZOOM       );
-  pdec->PrecacheSound(SOUND_SILENCE            );
-  pdec->PrecacheSound(SOUND_POWERUP_BEEP       );
+  pdec->PrecacheSound(SOUND_WATER_ENTER);
+  pdec->PrecacheSound(SOUND_WATER_LEAVE);
+  pdec->PrecacheSound(SOUND_WALK_L);
+  pdec->PrecacheSound(SOUND_WALK_R);
+  pdec->PrecacheSound(SOUND_WALK_SAND_L);
+  pdec->PrecacheSound(SOUND_WALK_SAND_R);
+  pdec->PrecacheSound(SOUND_SWIM_L);
+  pdec->PrecacheSound(SOUND_SWIM_R);
+  pdec->PrecacheSound(SOUND_DIVE_L);
+  pdec->PrecacheSound(SOUND_DIVE_R);
+  pdec->PrecacheSound(SOUND_DIVEIN);
+  pdec->PrecacheSound(SOUND_DIVEOUT);
+  pdec->PrecacheSound(SOUND_DROWN);
+  pdec->PrecacheSound(SOUND_INHALE0);
+  pdec->PrecacheSound(SOUND_INHALE1);
+  pdec->PrecacheSound(SOUND_INHALE2);
+  pdec->PrecacheSound(SOUND_JUMP);
+  pdec->PrecacheSound(SOUND_LAND);
+  pdec->PrecacheSound(SOUND_WOUNDWEAK);
+  pdec->PrecacheSound(SOUND_WOUNDMEDIUM);
+  pdec->PrecacheSound(SOUND_WOUNDSTRONG);
+  pdec->PrecacheSound(SOUND_WOUNDWATER);
+  pdec->PrecacheSound(SOUND_DEATH);
+  pdec->PrecacheSound(SOUND_DEATHWATER);
+  pdec->PrecacheSound(SOUND_WATERAMBIENT);
+  pdec->PrecacheSound(SOUND_WATERBUBBLES);
+  pdec->PrecacheSound(SOUND_WATERWALK_L);
+  pdec->PrecacheSound(SOUND_WATERWALK_R);
+  pdec->PrecacheSound(SOUND_INFO);
+  pdec->PrecacheSound(SOUND_WALK_GRASS_L);
+  pdec->PrecacheSound(SOUND_WALK_GRASS_R);
+  pdec->PrecacheSound(SOUND_WALK_WOOD_L);
+  pdec->PrecacheSound(SOUND_WALK_WOOD_R);
+  pdec->PrecacheSound(SOUND_WALK_SNOW_L);
+  pdec->PrecacheSound(SOUND_WALK_SNOW_R);
 
-  pdec->PrecacheSound(SOUND_F_WATER_ENTER        );
-  pdec->PrecacheSound(SOUND_F_WATER_LEAVE        );
-  pdec->PrecacheSound(SOUND_F_WALK_L             );
-  pdec->PrecacheSound(SOUND_F_WALK_R             );
-  pdec->PrecacheSound(SOUND_F_WALK_SAND_L        );
-  pdec->PrecacheSound(SOUND_F_WALK_SAND_R        );
-  pdec->PrecacheSound(SOUND_F_SWIM_L             );
-  pdec->PrecacheSound(SOUND_F_SWIM_R             );
-  pdec->PrecacheSound(SOUND_F_DIVE_L             );
-  pdec->PrecacheSound(SOUND_F_DIVE_R             );
-  pdec->PrecacheSound(SOUND_F_DIVEIN             );
-  pdec->PrecacheSound(SOUND_F_DIVEOUT            );
-  pdec->PrecacheSound(SOUND_F_DROWN              );
-  pdec->PrecacheSound(SOUND_F_INHALE0            );
-  pdec->PrecacheSound(SOUND_F_JUMP               );
-  pdec->PrecacheSound(SOUND_F_LAND               );
-  pdec->PrecacheSound(SOUND_F_WOUNDWEAK          );
-  pdec->PrecacheSound(SOUND_F_WOUNDMEDIUM        );
-  pdec->PrecacheSound(SOUND_F_WOUNDSTRONG        );
-  pdec->PrecacheSound(SOUND_F_WOUNDWATER         );
-  pdec->PrecacheSound(SOUND_F_DEATH              );
-  pdec->PrecacheSound(SOUND_F_DEATHWATER         );
-  pdec->PrecacheSound(SOUND_F_WATERWALK_L        );
-  pdec->PrecacheSound(SOUND_F_WATERWALK_R        );
-  pdec->PrecacheSound(SOUND_F_INHALE1            );
-  pdec->PrecacheSound(SOUND_F_INHALE2            );
-  pdec->PrecacheSound(SOUND_F_WALK_GRASS_L       );
-  pdec->PrecacheSound(SOUND_F_WALK_GRASS_R       );
-  pdec->PrecacheSound(SOUND_F_WALK_WOOD_L        );
-  pdec->PrecacheSound(SOUND_F_WALK_WOOD_R        );
-  pdec->PrecacheSound(SOUND_F_WALK_SNOW_L        );
-  pdec->PrecacheSound(SOUND_F_WALK_SNOW_R        );
-//pdec->PrecacheSound(SOUND_F_HIGHSCORE          );
-  pdec->PrecacheSound(SOUND_BLOWUP               );
+  pdec->PrecacheSound(SOUND_F_WATER_ENTER);
+  pdec->PrecacheSound(SOUND_F_WATER_LEAVE);
+  pdec->PrecacheSound(SOUND_F_WALK_L);
+  pdec->PrecacheSound(SOUND_F_WALK_R);
+  pdec->PrecacheSound(SOUND_F_WALK_SAND_L);
+  pdec->PrecacheSound(SOUND_F_WALK_SAND_R);
+  pdec->PrecacheSound(SOUND_F_SWIM_L);
+  pdec->PrecacheSound(SOUND_F_SWIM_R);
+  pdec->PrecacheSound(SOUND_F_DIVE_L);
+  pdec->PrecacheSound(SOUND_F_DIVE_R);
+  pdec->PrecacheSound(SOUND_F_DIVEIN);
+  pdec->PrecacheSound(SOUND_F_DIVEOUT);
+  pdec->PrecacheSound(SOUND_F_DROWN);
+  pdec->PrecacheSound(SOUND_F_INHALE0);
+  pdec->PrecacheSound(SOUND_F_INHALE1);
+  pdec->PrecacheSound(SOUND_F_INHALE2);
+  pdec->PrecacheSound(SOUND_F_JUMP);
+  pdec->PrecacheSound(SOUND_F_LAND);
+  pdec->PrecacheSound(SOUND_F_WOUNDWEAK);
+  pdec->PrecacheSound(SOUND_F_WOUNDMEDIUM);
+  pdec->PrecacheSound(SOUND_F_WOUNDSTRONG);
+  pdec->PrecacheSound(SOUND_F_WOUNDWATER);
+  pdec->PrecacheSound(SOUND_F_DEATH);
+  pdec->PrecacheSound(SOUND_F_DEATHWATER);
+  pdec->PrecacheSound(SOUND_F_WATERWALK_L);
+  pdec->PrecacheSound(SOUND_F_WATERWALK_R);
+  pdec->PrecacheSound(SOUND_F_WALK_GRASS_L);
+  pdec->PrecacheSound(SOUND_F_WALK_GRASS_R);
+  pdec->PrecacheSound(SOUND_F_WALK_WOOD_L);
+  pdec->PrecacheSound(SOUND_F_WALK_WOOD_R);
+  pdec->PrecacheSound(SOUND_F_WALK_SNOW_L);
+  pdec->PrecacheSound(SOUND_F_WALK_SNOW_R);
+  pdec->PrecacheSound(SOUND_BLOWUP);
+
+  pdec->PrecacheSound(SOUND_SNIPER_ZOOM);
+  pdec->PrecacheSound(SOUND_SNIPER_QZOOM);
+  pdec->PrecacheSound(SOUND_SILENCE);
+  pdec->PrecacheSound(SOUND_POWERUP_BEEP);
 
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_TELEPORT);
   pdec->PrecacheClass(CLASS_SERIOUSBOMB);
@@ -777,6 +819,7 @@ void CPlayer_Precache(void)
 void CPlayer_OnInitClass(void) {
   // clear current player controls
   memset(&pctlCurrent, 0, sizeof(pctlCurrent));
+
   // declare player control variables
   _pShell->DeclareSymbol("user INDEX ctl_bMoveForward;",  &pctlCurrent.bMoveForward);
   _pShell->DeclareSymbol("user INDEX ctl_bMoveBackward;", &pctlCurrent.bMoveBackward);
@@ -814,10 +857,11 @@ void CPlayer_OnInitClass(void) {
   _pShell->DeclareSymbol("persistent user FLOAT ctl_fButtonRotationSpeedP;", &ctl_fButtonRotationSpeedP);
   _pShell->DeclareSymbol("persistent user FLOAT ctl_fButtonRotationSpeedB;", &ctl_fButtonRotationSpeedB);
   _pShell->DeclareSymbol("persistent user FLOAT ctl_fAxisStrafingModifier;", &ctl_fAxisStrafingModifier);
-  //new
-  _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomIn;",         &pctlCurrent.bSniperZoomIn);
-  _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomOut;",        &pctlCurrent.bSniperZoomOut);
-  _pShell->DeclareSymbol("user INDEX ctl_bFireBomb;",             &pctlCurrent.bFireBomb);
+
+  // mission pack controls
+  _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomIn;",  &pctlCurrent.bSniperZoomIn);
+  _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomOut;", &pctlCurrent.bSniperZoomOut);
+  _pShell->DeclareSymbol("user INDEX ctl_bFireBomb;",      &pctlCurrent.bFireBomb);
 
   // [Cecil] New buttons
   _pShell->DeclareSymbol("user INDEX ctl_bAltFire;", &pctlCurrent.bAltFire);
@@ -835,16 +879,16 @@ void CPlayer_OnInitClass(void) {
   _pShell->DeclareSymbol("persistent user FLOAT cli_tmPredictAlly;",       &cli_tmPredictAlly       );
   _pShell->DeclareSymbol("persistent user FLOAT cli_tmPredictEnemy;",      &cli_tmPredictEnemy      );
 
-  _pShell->DeclareSymbol("     INDEX hud_bShowAll;",     &hud_bShowAll);
-  _pShell->DeclareSymbol("user INDEX hud_bShowInfo;",    &hud_bShowInfo);
+  _pShell->DeclareSymbol("     INDEX hud_bShowAll;",  &hud_bShowAll);
+  _pShell->DeclareSymbol("user INDEX hud_bShowInfo;", &hud_bShowInfo);
   _pShell->DeclareSymbol("user const FLOAT net_tmLatencyAvg;", &net_tmLatencyAvg);
-  _pShell->DeclareSymbol("persistent user INDEX hud_bShowLatency;", &hud_bShowLatency);
-  _pShell->DeclareSymbol("persistent user INDEX hud_iShowPlayers;", &hud_iShowPlayers);
-  _pShell->DeclareSymbol("persistent user INDEX hud_iSortPlayers;", &hud_iSortPlayers);
-  _pShell->DeclareSymbol("persistent user INDEX hud_bShowWeapon;",  &hud_bShowWeapon);
-  _pShell->DeclareSymbol("persistent user INDEX hud_bShowMessages;",&hud_bShowMessages);
-  _pShell->DeclareSymbol("persistent user FLOAT hud_fScaling;",     &hud_fScaling);
-  _pShell->DeclareSymbol("persistent user FLOAT hud_fOpacity;",     &hud_fOpacity);
+  _pShell->DeclareSymbol("persistent user INDEX hud_bShowLatency;",  &hud_bShowLatency);
+  _pShell->DeclareSymbol("persistent user INDEX hud_iShowPlayers;",  &hud_iShowPlayers);
+  _pShell->DeclareSymbol("persistent user INDEX hud_iSortPlayers;",  &hud_iSortPlayers);
+  _pShell->DeclareSymbol("persistent user INDEX hud_bShowWeapon;",   &hud_bShowWeapon);
+  _pShell->DeclareSymbol("persistent user INDEX hud_bShowMessages;", &hud_bShowMessages);
+  _pShell->DeclareSymbol("persistent user FLOAT hud_fScaling;", &hud_fScaling);
+  _pShell->DeclareSymbol("persistent user FLOAT hud_fOpacity;", &hud_fOpacity);
   _pShell->DeclareSymbol("persistent user FLOAT hud_tmWeaponsOnScreen;",  &hud_tmWeaponsOnScreen);
   _pShell->DeclareSymbol("persistent user FLOAT hud_tmLatencySnapshot;",  &hud_tmLatencySnapshot);
   _pShell->DeclareSymbol("persistent user FLOAT plr_fBreathingStrength;", &plr_fBreathingStrength);
@@ -873,29 +917,12 @@ void CPlayer_OnInitClass(void) {
   _pShell->DeclareSymbol("user INDEX cht_bAllMessages;", &cht_bAllMessages);
   _pShell->DeclareSymbol("user FLOAT cht_fTranslationMultiplier ;", &cht_fTranslationMultiplier);
   _pShell->DeclareSymbol("user INDEX cht_bRefresh;", &cht_bRefresh);
-  // this one is masqueraded cheat enable variable
-  _pShell->DeclareSymbol("INDEX cht_bEnable;", &cht_bEnable);
+  _pShell->DeclareSymbol("user INDEX cht_bEnableCheats;", &cht_bEnable);
 
   // this cheat is always enabled
   _pShell->DeclareSymbol("user INDEX cht_iGoToMarker;", &cht_iGoToMarker);
 
-  // player speed and view parameters, not declared except in internal build
-  #if 0
-    _pShell->DeclareSymbol("user FLOAT plr_fViewHeightStand;", &plr_fViewHeightStand);
-    _pShell->DeclareSymbol("user FLOAT plr_fViewHeightCrouch;",&plr_fViewHeightCrouch);
-    _pShell->DeclareSymbol("user FLOAT plr_fViewHeightSwim;",  &plr_fViewHeightSwim);
-    _pShell->DeclareSymbol("user FLOAT plr_fViewHeightDive;",  &plr_fViewHeightDive);
-    _pShell->DeclareSymbol("user FLOAT plr_fViewDampFactor;",         &plr_fViewDampFactor);
-    _pShell->DeclareSymbol("user FLOAT plr_fViewDampLimitGroundUp;",  &plr_fViewDampLimitGroundUp);
-    _pShell->DeclareSymbol("user FLOAT plr_fViewDampLimitGroundDn;",  &plr_fViewDampLimitGroundDn);
-    _pShell->DeclareSymbol("user FLOAT plr_fViewDampLimitWater;",     &plr_fViewDampLimitWater);
-    _pShell->DeclareSymbol("user FLOAT plr_fAcceleration;",  &plr_fAcceleration);
-    _pShell->DeclareSymbol("user FLOAT plr_fDeceleration;",  &plr_fDeceleration);
-    _pShell->DeclareSymbol("user FLOAT plr_fSpeedForward;",  &plr_fSpeedForward);
-    _pShell->DeclareSymbol("user FLOAT plr_fSpeedBackward;", &plr_fSpeedBackward);
-    _pShell->DeclareSymbol("user FLOAT plr_fSpeedSide;",     &plr_fSpeedSide);
-    _pShell->DeclareSymbol("user FLOAT plr_fSpeedUp;",       &plr_fSpeedUp);
-  #endif
+  // player parameters
   _pShell->DeclareSymbol("persistent user FLOAT plr_fFOV;", &plr_fFOV);
   _pShell->DeclareSymbol("persistent user FLOAT plr_fFrontClipDistance;", &plr_fFrontClipDistance);
   _pShell->DeclareSymbol("persistent user INDEX plr_bRenderPicked;", &plr_bRenderPicked);
@@ -924,29 +951,29 @@ void CPlayer_OnInitClass(void) {
 
   // precache
   CPlayer_Precache();
-}
+};
 
-// clean up
-void CPlayer_OnEndClass(void)
-{
+// Player cleanup
+void CPlayer_OnEndClass(void) {
   EndHUD();
-}
+};
 
-CTString GetDifficultyString(void)
-{
-  if (GetSP()->sp_bMental) { return TRANS("Mental"); }
+CTString GetDifficultyString(void) {
+  if (GetSP()->sp_bMental) {
+    return TRANS("Mental");
+  }
 
   switch (GetSP()->sp_gdGameDifficulty) {
-  case CSessionProperties::GD_TOURIST:  return TRANS("Tourist");
-  case CSessionProperties::GD_EASY:     return TRANS("Easy");
-  default:
-  case CSessionProperties::GD_NORMAL:   return TRANS("Normal");
-  case CSessionProperties::GD_HARD:     return TRANS("Hard");
-  case CSessionProperties::GD_EXTREME:  return TRANS("Serious");
+    case CSessionProperties::GD_TOURIST: return TRANS("Tourist");
+    case CSessionProperties::GD_EASY:    return TRANS("Easy");
+    default:
+    case CSessionProperties::GD_NORMAL:  return TRANS("Normal");
+    case CSessionProperties::GD_HARD:    return TRANS("Hard");
+    case CSessionProperties::GD_EXTREME: return TRANS("Serious");
   }
-}
-// armor & health constants getters
+};
 
+// Armor & health constants getters
 FLOAT MaxArmor(void) {
   BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
 
@@ -983,94 +1010,91 @@ FLOAT TopHealth(void) {
   return (bEasy ? 200.0f : 100.0f);
 };
 
-// info structure
+// Info structures
 static EntityInfo eiPlayerGround = {
   EIBT_FLESH, 80.0f,
-  0.0f, 1.7f, 0.0f,     // source (eyes)
-  0.0f, 1.0f, 0.0f,     // target (body)
+  0.0f, 1.7f, 0.0f, // source (eyes)
+  0.0f, 1.0f, 0.0f, // target (body)
 };
+
 static EntityInfo eiPlayerCrouch = {
   EIBT_FLESH, 80.0f,
-  0.0f, 1.2f, 0.0f,     // source (eyes)
-  0.0f, 0.7f, 0.0f,     // target (body)
+  0.0f, 1.2f, 0.0f, // source (eyes)
+  0.0f, 0.7f, 0.0f, // target (body)
 };
+
 static EntityInfo eiPlayerSwim = {
   EIBT_FLESH, 40.0f,
-  0.0f, 0.0f, 0.0f,     // source (eyes)
-  0.0f, 0.0f, 0.0f,     // target (body)
+  0.0f, 0.0f, 0.0f, // source (eyes)
+  0.0f, 0.0f, 0.0f, // target (body)
 };
 
-
-// animation light specific
+// Light animations
 #define LIGHT_ANIM_MINIGUN 2
 #define LIGHT_ANIM_TOMMYGUN 3
 #define LIGHT_ANIM_COLT_SHOTGUN 4
 #define LIGHT_ANIM_NONE 5
 
-const char *NameForState(PlayerState pst)
-{
-  switch(pst) {
-  case PST_STAND: return "stand";
-  case PST_CROUCH: return "crouch";
-  case PST_FALL: return "fall";
-  case PST_SWIM: return "swim";
-  case PST_DIVE: return "dive";
-  default: return "???";
-  };
-}
+const char *NameForState(PlayerState pst) {
+  switch (pst) {
+    case PST_STAND: return "stand";
+    case PST_CROUCH: return "crouch";
+    case PST_FALL: return "fall";
+    case PST_SWIM: return "swim";
+    case PST_DIVE: return "dive";
+  }
+  return "???";
+};
 
-
-// print explanation on how a player died
-void PrintPlayerDeathMessage(CPlayer *ppl, const EDeath &eDeath)
-{
+// Print explanation on how the player died
+void PrintPlayerDeathMessage(CPlayer *ppl, const EDeath &eDeath) {
   CTString strMyName = ppl->GetPlayerName();
   CEntity *penKiller = eDeath.eLastDamage.penInflictor;
+
   // if killed by a valid entity
-  if (penKiller!=NULL) {
+  if (penKiller != NULL) {
     // if killed by a player
     if (IsOfClass(penKiller, "Player")) {
       // if not self
-      if (penKiller!=ppl) {
+      if (penKiller != ppl) {
         CTString strKillerName = ((CPlayer*)penKiller)->GetPlayerName();
 
-        if(eDeath.eLastDamage.dmtType==DMT_TELEPORT) {
-          CPrintF(TRANS("%s telefragged %s\n"), strKillerName, strMyName);
-        } else if(eDeath.eLastDamage.dmtType==DMT_CLOSERANGE) {
-          CPrintF(TRANS("%s cut %s into pieces\n"), strKillerName, strMyName);
-        } else if(eDeath.eLastDamage.dmtType==DMT_CHAINSAW) {
-          CPrintF(TRANS("%s cut %s into pieces\n"), strKillerName, strMyName);
-        } else if(eDeath.eLastDamage.dmtType==DMT_BULLET) {
-          CPrintF(TRANS("%s poured lead into %s\n"), strKillerName, strMyName);
-        } else if(eDeath.eLastDamage.dmtType==DMT_PROJECTILE || eDeath.eLastDamage.dmtType==DMT_EXPLOSION) {
-          CPrintF(TRANS("%s blew %s away\n"), strKillerName, strMyName);
-        } else if(eDeath.eLastDamage.dmtType==DMT_CANNONBALL) {
-          CPrintF(TRANS("%s smashed %s with a cannon\n"), strKillerName, strMyName);
-        } else if(eDeath.eLastDamage.dmtType==DMT_CANNONBALL_EXPLOSION) {
-          CPrintF(TRANS("%s nuked %s\n"), strKillerName, strMyName);
-        } else {
-          CPrintF(TRANS("%s killed %s\n"), strKillerName, strMyName);
+        switch (eDeath.eLastDamage.dmtType) {
+          case DMT_TELEPORT:   CPrintF(TRANS("%s telefragged %s\n"), strKillerName, strMyName); break;
+          case DMT_CLOSERANGE: CPrintF(TRANS("%s cut %s into pieces\n"), strKillerName, strMyName); break;
+          case DMT_CHAINSAW:   CPrintF(TRANS("%s cut %s into pieces\n"), strKillerName, strMyName); break;
+          case DMT_BULLET:     CPrintF(TRANS("%s poured lead into %s\n"), strKillerName, strMyName); break;
+          case DMT_PROJECTILE:
+          case DMT_EXPLOSION:  CPrintF(TRANS("%s blew %s away\n"), strKillerName, strMyName); break;
+          case DMT_CANNONBALL: CPrintF(TRANS("%s smashed %s with a cannon\n"), strKillerName, strMyName); break;
+          case DMT_CANNONBALL_EXPLOSION: CPrintF(TRANS("%s nuked %s\n"), strKillerName, strMyName); break;
+
+          default: CPrintF(TRANS("%s killed %s\n"), strKillerName, strMyName);
         }
+
       } else {
         // make message from damage type
-        switch(eDeath.eLastDamage.dmtType) {
-        case DMT_DROWNING:  CPrintF(TRANS("%s drowned\n"), strMyName); break;
-        case DMT_BURNING:   CPrintF(TRANS("%s burst into flames\n"), strMyName); break;
-        case DMT_SPIKESTAB: CPrintF(TRANS("%s fell into a spike-hole\n"), strMyName); break;
-        case DMT_FREEZING:  CPrintF(TRANS("%s has frozen\n"), strMyName); break;
-        case DMT_ACID:      CPrintF(TRANS("%s dissolved\n"), strMyName); break;
-        case DMT_PROJECTILE:
-        case DMT_EXPLOSION:
-          CPrintF(TRANS("%s blew himself away\n"), strMyName); break;
-        default:            CPrintF(TRANS("%s has committed suicide\n"), strMyName);
+        switch (eDeath.eLastDamage.dmtType) {
+          case DMT_DROWNING:  CPrintF(TRANS("%s drowned\n"), strMyName); break;
+          case DMT_BURNING:   CPrintF(TRANS("%s burst into flames\n"), strMyName); break;
+          case DMT_SPIKESTAB: CPrintF(TRANS("%s fell into a spike-hole\n"), strMyName); break;
+          case DMT_FREEZING:  CPrintF(TRANS("%s has frozen\n"), strMyName); break;
+          case DMT_ACID:      CPrintF(TRANS("%s dissolved\n"), strMyName); break;
+          case DMT_PROJECTILE:
+          case DMT_EXPLOSION: CPrintF(TRANS("%s blew themselves away\n"), strMyName); break;
+
+          default: CPrintF(TRANS("%s has committed suicide\n"), strMyName);
         }
       }
+
     // if killed by an enemy
     } else if (IsDerivedFromClass(penKiller, "Enemy Base")) {
       // check for telefrag first
-      if(eDeath.eLastDamage.dmtType==DMT_TELEPORT) {
+      if (eDeath.eLastDamage.dmtType == DMT_TELEPORT) {
         CPrintF(TRANS("%s was telefragged\n"), strMyName);
         return;
       }
+
       // describe how this enemy killed player
       CPrintF("%s\n", (const char*)((CEnemyBase*)penKiller)->GetPlayerKillDescription(strMyName, eDeath));
 
@@ -1078,20 +1102,21 @@ void PrintPlayerDeathMessage(CPlayer *ppl, const EDeath &eDeath)
     } else {
       // make message from damage type
       switch(eDeath.eLastDamage.dmtType) {
-      case DMT_SPIKESTAB: CPrintF(TRANS("%s was pierced\n"), strMyName); break;
-      case DMT_BRUSH:     CPrintF(TRANS("%s was squashed\n"), strMyName); break;
-      case DMT_ABYSS:     CPrintF(TRANS("%s went over the edge\n"), strMyName); break;
-      case DMT_IMPACT:    CPrintF(TRANS("%s swashed\n"), strMyName); break;
-      case DMT_HEAT:      CPrintF(TRANS("%s stood in the sun for too long\n"), strMyName); break;
-      default:            CPrintF(TRANS("%s passed away\n"), strMyName);
+        case DMT_SPIKESTAB: CPrintF(TRANS("%s was pierced\n"), strMyName); break;
+        case DMT_BRUSH:     CPrintF(TRANS("%s was squashed\n"), strMyName); break;
+        case DMT_ABYSS:     CPrintF(TRANS("%s went over the edge\n"), strMyName); break;
+        case DMT_IMPACT:    CPrintF(TRANS("%s swashed\n"), strMyName); break;
+        case DMT_HEAT:      CPrintF(TRANS("%s stood in the sun for too long\n"), strMyName); break;
+
+        default: CPrintF(TRANS("%s passed away\n"), strMyName);
       }
     }
+
   // if no entity pointer (shouldn't happen)
   } else {
     CPrintF(TRANS("%s is missing in action\n"), strMyName);
   }
-}
-
+};
 %}
 
 class export CPlayer : CPlayerEntity {
@@ -1101,49 +1126,49 @@ features  "ImplementsOnInitClass", "ImplementsOnEndClass", "CanBePredictable";
 
 properties:
   1 CTString m_strName "Name" = "<unnamed player>",
-  2 COLOR m_ulLastButtons = 0x0,              // buttons last pressed
-  3 FLOAT m_fArmor = 0.0f,                    // armor
-  4 CTString m_strGroup = "",                 // group name for world change
-  5 INDEX m_ulKeys = 0,                       // mask for all picked-up keys
-  6 FLOAT m_fMaxHealth = 1,                 // default health supply player can have
-  7 INDEX m_ulFlags = 0,                      // various flags
+  2 COLOR m_ulLastButtons = 0, // buttons last pressed
+  3 FLOAT m_fArmor = 0.0f,     // armor
+  4 CTString m_strGroup = "",  // group name for world change
+  5 INDEX m_ulKeys = 0,        // mask for all picked-up keys
+  6 FLOAT m_fMaxHealth = 1.0f, // default health supply player can have
+  7 INDEX m_ulFlags = 0,       // various flags
   
- 16 CEntityPointer m_penWeapons,              // player weapons
- 17 CEntityPointer m_penAnimator,             // player animator
- 18 CEntityPointer m_penView,                 // player view
- 19 CEntityPointer m_pen3rdPersonView,        // player 3rd person view
- 20 INDEX m_iViewState=PVT_PLAYEREYES,        // view state
- 21 INDEX m_iLastViewState=PVT_PLAYEREYES,    // last view state
+ 16 CEntityPointer m_penWeapons,       // player weapons
+ 17 CEntityPointer m_penAnimator,      // player animator
+ 18 CEntityPointer m_penView,          // player view
+ 19 CEntityPointer m_pen3rdPersonView, // player 3rd person view
+ 20 INDEX m_iViewState = PVT_PLAYEREYES,     // view state
+ 21 INDEX m_iLastViewState = PVT_PLAYEREYES, // last view state
 
- 26 CAnimObject m_aoLightAnimation,           // light animation object
- 27 FLOAT m_fDamageAmmount = 0.0f,            // how much was last wound
- 28 FLOAT m_tmWoundedTime  = 0.0f,            // when was last wound
- 29 FLOAT m_tmScreamTime   = 0.0f,            // when was last wound sound played
+ 26 CAnimObject m_aoLightAnimation, // light animation object
+ 27 FLOAT m_fDamageAmmount = 0.0f,  // how much was last wound
+ 28 FLOAT m_tmWoundedTime  = 0.0f,  // when was last wound
+ 29 FLOAT m_tmScreamTime   = 0.0f,  // when was last wound sound played
 
- 33 INDEX m_iGender = GENDER_MALE,            // male/female offset in various tables
- 34 enum PlayerState m_pstState = PST_STAND,  // current player state
- 35 FLOAT m_fFallTime = 0.0f,                 // time passed when falling
- 36 FLOAT m_fSwimTime = 0.0f,                 // time when started swimming
- 45 FLOAT m_tmOutOfWater = 0.0f,              // time when got out of water last time
- 37 FLOAT m_tmMoveSound = 0.0f,           // last time move sound was played
- 38 BOOL  m_bMoveSoundLeft = TRUE,        // left or right walk channel is current
- 39 FLOAT m_tmNextAmbientOnce = 0.0f,     // next time to play local ambient sound
- 43 FLOAT m_tmMouthSoundLast = 0.0f,      // time last played some repeating mouth sound
+ 33 INDEX m_iGender = GENDER_MALE, // male/female offset in various tables
+ 34 enum PlayerState m_pstState = PST_STAND, // current player state
+ 35 FLOAT m_fFallTime = 0.0f,    // time passed when falling
+ 36 FLOAT m_fSwimTime = 0.0f,    // time when started swimming
+ 45 FLOAT m_tmOutOfWater = 0.0f, // time when got out of water last time
+ 37 FLOAT m_tmMoveSound = 0.0f,       // last time move sound was played
+ 38 BOOL  m_bMoveSoundLeft = TRUE,    // left or right walk channel is current
+ 39 FLOAT m_tmNextAmbientOnce = 0.0f, // next time to play local ambient sound
+ 43 FLOAT m_tmMouthSoundLast = 0.0f,  // time last played some repeating mouth sound
 
- 40 CEntityPointer m_penCamera,           // camera for current cinematic sequence, or null
- 41 CTString m_strCenterMessage="",       // center message
- 42 FLOAT m_tmCenterMessageEnd = 0.0f,    // last time to show centered message
- 48 BOOL m_bPendingMessage = FALSE,   // message sound pending to be played
- 47 FLOAT m_tmMessagePlay = 0.0f,     // when to play the message sound
- 49 FLOAT m_tmAnalyseEnd = 0.0f,      // last time to show analysation
- 50 BOOL m_bComputerInvoked = FALSE,  // set if computer was invoked at least once
- 57 FLOAT m_tmAnimateInbox = -100.0f,      // show animation of inbox icon animation
+ 40 CEntityPointer m_penCamera,        // camera for current cinematic sequence, or null
+ 41 CTString m_strCenterMessage = "",  // center message
+ 42 FLOAT m_tmCenterMessageEnd = 0.0f, // last time to show centered message
+ 48 BOOL m_bPendingMessage = FALSE,    // message sound pending to be played
+ 47 FLOAT m_tmMessagePlay = 0.0f,      // when to play the message sound
+ 49 FLOAT m_tmAnalyseEnd = 0.0f,       // last time to show analysation
+ 50 BOOL m_bComputerInvoked = FALSE,   // set if computer was invoked at least once
+ 57 FLOAT m_tmAnimateInbox = -100.0f,  // show animation of inbox icon animation
  
  44 CEntityPointer m_penMainMusicHolder,
 
  51 FLOAT m_tmLastDamage = -1.0f,
  52 FLOAT m_fMaxDamageAmmount = 0.0f,
- 53 FLOAT3D m_vDamage = FLOAT3D(0,0,0),
+ 53 FLOAT3D m_vDamage = FLOAT3D(0.0f, 0.0f, 0.0f),
  54 FLOAT m_tmSpraySpawned = -1.0f,
  55 FLOAT m_fSprayDamage = 0.0f,
  56 CEntityPointer m_penSpray,
@@ -1163,7 +1188,7 @@ properties:
  74 CSoundObject m_soLocalAmbientLoop,  // local ambient that only this player hears
  75 CSoundObject m_soLocalAmbientOnce,  // local ambient that only this player hears
  76 CSoundObject m_soMessage,  // message sounds
- 77 CSoundObject m_soHighScore, // high score sound
+ 77 CSoundObject m_soHighScore, // [Cecil] NOTE: Free sound object, can be repurposed
  78 CSoundObject m_soSpeech,    // for quotes
  79 CSoundObject m_soSniperZoom, // for sniper zoom sound
 
@@ -1181,8 +1206,8 @@ properties:
  97 BOOL  m_bEndOfGame  = FALSE,
  98 INDEX m_iMayRespawn = 0,     // must get to 2 to be able to respawn
  99 FLOAT m_tmSpawned = 0.0f,   // when player was spawned
- 100 FLOAT3D m_vDied = FLOAT3D(0,0,0),  // where player died (for respawn in-place)
- 101 FLOAT3D m_aDied = FLOAT3D(0,0,0),
+ 100 FLOAT3D m_vDied = FLOAT3D(0.0f, 0.0f, 0.0f),  // where player died (for respawn in-place)
+ 101 FLOAT3D m_aDied = FLOAT3D(0.0f, 0.0f, 0.0f),
 
  // statistics
  103 FLOAT m_tmEstTime  = 0.0f,   // time estimated for this level
@@ -1196,7 +1221,7 @@ properties:
  110 CEntityPointer m_penActionMarker,  // current marker for auto actions
  111 FLOAT m_fAutoSpeed = 0.0f, // speed to go towards the marker
  112 INDEX m_iAutoOrgWeapon = 0, // original weapon for autoactions
- 113 FLOAT3D m_vAutoSpeed = FLOAT3D(0,0,0),
+ 113 FLOAT3D m_vAutoSpeed = FLOAT3D(0.0f, 0.0f, 0.0f),
  114 FLOAT m_tmSpiritStart = 0.0f,
  115 FLOAT m_tmFadeStart = 0.0f,
 
@@ -1208,29 +1233,27 @@ properties:
 
  // shaker values
  130 INDEX m_iLastHealth = 0,
- 131 INDEX m_iLastArmor  = 0,
- 132 INDEX m_iLastAmmo   = 0,
+ 131 INDEX m_iLastArmor = 0,
  135 FLOAT m_tmHealthChanged = -9,
- 136 FLOAT m_tmArmorChanged  = -9,
- 137 FLOAT m_tmAmmoChanged   = -9,
+ 136 FLOAT m_tmArmorChanged = -9,
  
  138 FLOAT m_tmMinigunAutoFireStart = -1.0f,
 
- 150 FLOAT3D m_vLastStain  = FLOAT3D(0,0,0), // where last stain was left
+ 150 FLOAT3D m_vLastStain  = FLOAT3D(0.0f, 0.0f, 0.0f), // where last stain was left
    
  // for mouse lag elimination via prescanning
- 151 ANGLE3D m_aLastRotation = FLOAT3D(0,0,0),
- 152 ANGLE3D m_aLastViewRotation = FLOAT3D(0,0,0),
- 153 FLOAT3D m_vLastTranslation = FLOAT3D(0,0,0),
- 154 ANGLE3D m_aLocalRotation = FLOAT3D(0,0,0),
- 155 ANGLE3D m_aLocalViewRotation = FLOAT3D(0,0,0),
- 156 FLOAT3D m_vLocalTranslation = FLOAT3D(0,0,0),
+ 151 ANGLE3D m_aLastRotation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 152 ANGLE3D m_aLastViewRotation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 153 FLOAT3D m_vLastTranslation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 154 ANGLE3D m_aLocalRotation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 155 ANGLE3D m_aLocalViewRotation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 156 FLOAT3D m_vLocalTranslation = FLOAT3D(0.0f, 0.0f, 0.0f),
 
  // powerups (DO NOT CHANGE ORDER!) - needed by HUD.cpp
- 160 FLOAT m_tmInvisibility    = 0.0f, 
- 161 FLOAT m_tmInvulnerability = 0.0f, 
- 162 FLOAT m_tmSeriousDamage   = 0.0f, 
- 163 FLOAT m_tmSeriousSpeed    = 0.0f, 
+ 160 FLOAT m_tmInvisibility    = 0.0f,
+ 161 FLOAT m_tmInvulnerability = 0.0f,
+ 162 FLOAT m_tmSeriousDamage   = 0.0f,
+ 163 FLOAT m_tmSeriousSpeed    = 0.0f,
  166 FLOAT m_tmInvisibilityMax    = 30.0f,
  167 FLOAT m_tmInvulnerabilityMax = 30.0f,
  168 FLOAT m_tmSeriousDamageMax   = 40.0f,
@@ -1259,27 +1282,28 @@ properties:
  220 FLOAT m_fVoiceCommands = -100.0f,
 
 {
-  ShellLaunchData ShellLaunchData_array;  // array of data describing flying empty shells
-  INDEX m_iFirstEmptySLD;                         // index of last added empty shell
+  ShellLaunchData ShellLaunchData_array; // array of data describing flying empty shells
+  INDEX m_iFirstEmptySLD; // index of last added empty shell
 
-  BulletSprayLaunchData BulletSprayLaunchData_array;  // array of data describing flying bullet sprays
-  INDEX m_iFirstEmptyBSLD;                            // index of last added bullet spray
+  BulletSprayLaunchData BulletSprayLaunchData_array; // array of data describing flying bullet sprays
+  INDEX m_iFirstEmptyBSLD; // index of last added bullet spray
 
-  GoreSprayLaunchData GoreSprayLaunchData_array;   // array of data describing gore sprays
-  INDEX m_iFirstEmptyGSLD;                         // index of last added gore spray
+  GoreSprayLaunchData GoreSprayLaunchData_array; // array of data describing gore sprays
+  INDEX m_iFirstEmptyGSLD; // index of last added gore spray
 
-  ULONG ulButtonsNow;  ULONG ulButtonsBefore;
+  ULONG ulButtonsNow;
+  ULONG ulButtonsBefore;
   ULONG ulNewButtons;
   ULONG ulReleasedButtons;
 
-  BOOL  bUseButtonHeld;
+  BOOL bUseButtonHeld;
 
   // listener
   CSoundListener sliSound;
   // light
   CLightSource m_lsLightSource;
 
-  TIME m_tmPredict;  // time to predict the entity to
+  TIME m_tmPredict; // time to predict the entity to
 
   // all messages in the inbox
   CDynamicStackArray<CCompMessageID> m_acmiMessages;
@@ -1306,95 +1330,93 @@ components:
   5 class   CLASS_BLOOD_SPRAY     "Classes\\BloodSpray.ecl", 
   6 class   CLASS_SERIOUSBOMB     "Classes\\SeriousBomb.ecl",
 
-// [Cecil] Extra classes
+ // [Cecil] Extra classes
   7 class CLASS_START "Classes\\PlayerMarker.ecl",
 
-// gender specific sounds - make sure that offset is exactly 100 
- 50 sound SOUND_WATER_ENTER     "Sounds\\Player\\WaterEnter.wav",
- 51 sound SOUND_WATER_LEAVE     "Sounds\\Player\\WaterLeave.wav",
- 52 sound SOUND_WALK_L          "Sounds\\Player\\WalkL.wav",
- 53 sound SOUND_WALK_R          "Sounds\\Player\\WalkR.wav",
- 54 sound SOUND_SWIM_L          "Sounds\\Player\\SwimL.wav",
- 55 sound SOUND_SWIM_R          "Sounds\\Player\\SwimR.wav",
- 56 sound SOUND_DIVE_L          "Sounds\\Player\\Dive.wav",
- 57 sound SOUND_DIVE_R          "Sounds\\Player\\Dive.wav",
- 58 sound SOUND_DIVEIN          "Sounds\\Player\\DiveIn.wav",
- 59 sound SOUND_DIVEOUT         "Sounds\\Player\\DiveOut.wav",
- 60 sound SOUND_DROWN           "Sounds\\Player\\Drown.wav",
- 61 sound SOUND_INHALE0         "Sounds\\Player\\Inhale00.wav",
- 62 sound SOUND_JUMP            "Sounds\\Player\\Jump.wav",
- 63 sound SOUND_LAND            "Sounds\\Player\\Land.wav",
- 66 sound SOUND_DEATH           "Sounds\\Player\\Death.wav",
- 67 sound SOUND_DEATHWATER      "Sounds\\Player\\DeathWater.wav",
- 70 sound SOUND_WATERWALK_L     "Sounds\\Player\\WalkWaterL.wav",
- 71 sound SOUND_WATERWALK_R     "Sounds\\Player\\WalkWaterR.wav",
- 72 sound SOUND_INHALE1         "Sounds\\Player\\Inhale01.wav",
- 73 sound SOUND_INHALE2         "Sounds\\Player\\Inhale02.wav",
- 75 sound SOUND_WALK_SAND_L     "Sounds\\Player\\WalkSandL.wav",
- 76 sound SOUND_WALK_SAND_R     "Sounds\\Player\\WalkSandR.wav",
-//178 sound SOUND_HIGHSCORE       "Sounds\\Player\\HighScore.wav",
- 80 sound SOUND_WOUNDWEAK       "Sounds\\Player\\WoundWeak.wav",
- 81 sound SOUND_WOUNDMEDIUM     "Sounds\\Player\\WoundMedium.wav",
- 82 sound SOUND_WOUNDSTRONG     "Sounds\\Player\\WoundStrong.wav",
- 85 sound SOUND_WOUNDWATER      "Sounds\\Player\\WoundWater.wav",
- 86 sound SOUND_WALK_GRASS_L    "SoundsMP\\Player\\WalkGrassL.wav",
- 87 sound SOUND_WALK_GRASS_R    "SoundsMP\\Player\\WalkGrassR.wav",
- 88 sound SOUND_WALK_WOOD_L     "SoundsMP\\Player\\WalkWoodL.wav",
- 89 sound SOUND_WALK_WOOD_R     "SoundsMP\\Player\\WalkWoodR.wav",
- 90 sound SOUND_WALK_SNOW_L     "SoundsMP\\Player\\WalkSnowL.wav",
- 91 sound SOUND_WALK_SNOW_R     "SoundsMP\\Player\\WalkSnowR.wav",
- 92 sound SOUND_BLOWUP          "SoundsMP\\Player\\BlowUp.wav",
+ // gender specific sounds - make sure that offset is exactly 100 
+ 50 sound SOUND_WATER_ENTER  "Sounds\\Player\\WaterEnter.wav",
+ 51 sound SOUND_WATER_LEAVE  "Sounds\\Player\\WaterLeave.wav",
+ 52 sound SOUND_WALK_L       "Sounds\\Player\\WalkL.wav",
+ 53 sound SOUND_WALK_R       "Sounds\\Player\\WalkR.wav",
+ 54 sound SOUND_SWIM_L       "Sounds\\Player\\SwimL.wav",
+ 55 sound SOUND_SWIM_R       "Sounds\\Player\\SwimR.wav",
+ 56 sound SOUND_DIVE_L       "Sounds\\Player\\Dive.wav",
+ 57 sound SOUND_DIVE_R       "Sounds\\Player\\Dive.wav",
+ 58 sound SOUND_DIVEIN       "Sounds\\Player\\DiveIn.wav",
+ 59 sound SOUND_DIVEOUT      "Sounds\\Player\\DiveOut.wav",
+ 60 sound SOUND_DROWN        "Sounds\\Player\\Drown.wav",
+ 61 sound SOUND_INHALE0      "Sounds\\Player\\Inhale00.wav",
+ 62 sound SOUND_JUMP         "Sounds\\Player\\Jump.wav",
+ 63 sound SOUND_LAND         "Sounds\\Player\\Land.wav",
+ 66 sound SOUND_DEATH        "Sounds\\Player\\Death.wav",
+ 67 sound SOUND_DEATHWATER   "Sounds\\Player\\DeathWater.wav",
+ 70 sound SOUND_WATERWALK_L  "Sounds\\Player\\WalkWaterL.wav",
+ 71 sound SOUND_WATERWALK_R  "Sounds\\Player\\WalkWaterR.wav",
+ 72 sound SOUND_INHALE1      "Sounds\\Player\\Inhale01.wav",
+ 73 sound SOUND_INHALE2      "Sounds\\Player\\Inhale02.wav",
+ 75 sound SOUND_WALK_SAND_L  "Sounds\\Player\\WalkSandL.wav",
+ 76 sound SOUND_WALK_SAND_R  "Sounds\\Player\\WalkSandR.wav",
+ 80 sound SOUND_WOUNDWEAK    "Sounds\\Player\\WoundWeak.wav",
+ 81 sound SOUND_WOUNDMEDIUM  "Sounds\\Player\\WoundMedium.wav",
+ 82 sound SOUND_WOUNDSTRONG  "Sounds\\Player\\WoundStrong.wav",
+ 85 sound SOUND_WOUNDWATER   "Sounds\\Player\\WoundWater.wav",
+ 86 sound SOUND_WALK_GRASS_L "SoundsMP\\Player\\WalkGrassL.wav",
+ 87 sound SOUND_WALK_GRASS_R "SoundsMP\\Player\\WalkGrassR.wav",
+ 88 sound SOUND_WALK_WOOD_L  "SoundsMP\\Player\\WalkWoodL.wav",
+ 89 sound SOUND_WALK_WOOD_R  "SoundsMP\\Player\\WalkWoodR.wav",
+ 90 sound SOUND_WALK_SNOW_L  "SoundsMP\\Player\\WalkSnowL.wav",
+ 91 sound SOUND_WALK_SNOW_R  "SoundsMP\\Player\\WalkSnowR.wav",
+ 92 sound SOUND_BLOWUP       "SoundsMP\\Player\\BlowUp.wav",
 
-150 sound SOUND_F_WATER_ENTER   "SoundsMP\\Player\\Female\\WaterEnter.wav",
-151 sound SOUND_F_WATER_LEAVE   "SoundsMP\\Player\\Female\\WaterLeave.wav",
-152 sound SOUND_F_WALK_L        "SoundsMP\\Player\\Female\\WalkL.wav",
-153 sound SOUND_F_WALK_R        "SoundsMP\\Player\\Female\\WalkR.wav",
-154 sound SOUND_F_SWIM_L        "SoundsMP\\Player\\Female\\SwimL.wav",
-155 sound SOUND_F_SWIM_R        "SoundsMP\\Player\\Female\\SwimR.wav",
-156 sound SOUND_F_DIVE_L        "SoundsMP\\Player\\Female\\Dive.wav",
-157 sound SOUND_F_DIVE_R        "SoundsMP\\Player\\Female\\Dive.wav",
-158 sound SOUND_F_DIVEIN        "SoundsMP\\Player\\Female\\DiveIn.wav",
-159 sound SOUND_F_DIVEOUT       "SoundsMP\\Player\\Female\\DiveOut.wav",
-160 sound SOUND_F_DROWN         "SoundsMP\\Player\\Female\\Drown.wav",
-161 sound SOUND_F_INHALE0       "SoundsMP\\Player\\Female\\Inhale00.wav",
-162 sound SOUND_F_JUMP          "SoundsMP\\Player\\Female\\Jump.wav",
-163 sound SOUND_F_LAND          "SoundsMP\\Player\\Female\\Land.wav",
-166 sound SOUND_F_DEATH         "SoundsMP\\Player\\Female\\Death.wav",
-167 sound SOUND_F_DEATHWATER    "SoundsMP\\Player\\Female\\DeathWater.wav",
-170 sound SOUND_F_WATERWALK_L   "SoundsMP\\Player\\Female\\WalkWaterL.wav",
-171 sound SOUND_F_WATERWALK_R   "SoundsMP\\Player\\Female\\WalkWaterR.wav",
-172 sound SOUND_F_INHALE1       "SoundsMP\\Player\\Female\\Inhale01.wav",
-173 sound SOUND_F_INHALE2       "SoundsMP\\Player\\Female\\Inhale02.wav",
-175 sound SOUND_F_WALK_SAND_L   "SoundsMP\\Player\\Female\\WalkSandL.wav",
-176 sound SOUND_F_WALK_SAND_R   "SoundsMP\\Player\\Female\\WalkSandR.wav",
-// 78 sound SOUND_F_HIGHSCORE     "SoundsMP\\Player\\Female\\HighScore.wav",
-180 sound SOUND_F_WOUNDWEAK     "SoundsMP\\Player\\Female\\WoundWeak.wav",
-181 sound SOUND_F_WOUNDMEDIUM   "SoundsMP\\Player\\Female\\WoundMedium.wav",
-182 sound SOUND_F_WOUNDSTRONG   "SoundsMP\\Player\\Female\\WoundStrong.wav",
-185 sound SOUND_F_WOUNDWATER    "SoundsMP\\Player\\Female\\WoundWater.wav",
-186 sound SOUND_F_WALK_GRASS_L  "SoundsMP\\Player\\Female\\WalkGrassL.wav",
-187 sound SOUND_F_WALK_GRASS_R  "SoundsMP\\Player\\Female\\WalkGrassR.wav",
-188 sound SOUND_F_WALK_WOOD_L   "SoundsMP\\Player\\Female\\WalkWoodL.wav",
-189 sound SOUND_F_WALK_WOOD_R   "SoundsMP\\Player\\Female\\WalkWoodR.wav",
-190 sound SOUND_F_WALK_SNOW_L   "SoundsMP\\Player\\Female\\WalkSnowL.wav",
-191 sound SOUND_F_WALK_SNOW_R   "SoundsMP\\Player\\Female\\WalkSnowR.wav",
+150 sound SOUND_F_WATER_ENTER  "SoundsMP\\Player\\Female\\WaterEnter.wav",
+151 sound SOUND_F_WATER_LEAVE  "SoundsMP\\Player\\Female\\WaterLeave.wav",
+152 sound SOUND_F_WALK_L       "SoundsMP\\Player\\Female\\WalkL.wav",
+153 sound SOUND_F_WALK_R       "SoundsMP\\Player\\Female\\WalkR.wav",
+154 sound SOUND_F_SWIM_L       "SoundsMP\\Player\\Female\\SwimL.wav",
+155 sound SOUND_F_SWIM_R       "SoundsMP\\Player\\Female\\SwimR.wav",
+156 sound SOUND_F_DIVE_L       "SoundsMP\\Player\\Female\\Dive.wav",
+157 sound SOUND_F_DIVE_R       "SoundsMP\\Player\\Female\\Dive.wav",
+158 sound SOUND_F_DIVEIN       "SoundsMP\\Player\\Female\\DiveIn.wav",
+159 sound SOUND_F_DIVEOUT      "SoundsMP\\Player\\Female\\DiveOut.wav",
+160 sound SOUND_F_DROWN        "SoundsMP\\Player\\Female\\Drown.wav",
+161 sound SOUND_F_INHALE0      "SoundsMP\\Player\\Female\\Inhale00.wav",
+162 sound SOUND_F_JUMP         "SoundsMP\\Player\\Female\\Jump.wav",
+163 sound SOUND_F_LAND         "SoundsMP\\Player\\Female\\Land.wav",
+166 sound SOUND_F_DEATH        "SoundsMP\\Player\\Female\\Death.wav",
+167 sound SOUND_F_DEATHWATER   "SoundsMP\\Player\\Female\\DeathWater.wav",
+170 sound SOUND_F_WATERWALK_L  "SoundsMP\\Player\\Female\\WalkWaterL.wav",
+171 sound SOUND_F_WATERWALK_R  "SoundsMP\\Player\\Female\\WalkWaterR.wav",
+172 sound SOUND_F_INHALE1      "SoundsMP\\Player\\Female\\Inhale01.wav",
+173 sound SOUND_F_INHALE2      "SoundsMP\\Player\\Female\\Inhale02.wav",
+175 sound SOUND_F_WALK_SAND_L  "SoundsMP\\Player\\Female\\WalkSandL.wav",
+176 sound SOUND_F_WALK_SAND_R  "SoundsMP\\Player\\Female\\WalkSandR.wav",
+180 sound SOUND_F_WOUNDWEAK    "SoundsMP\\Player\\Female\\WoundWeak.wav",
+181 sound SOUND_F_WOUNDMEDIUM  "SoundsMP\\Player\\Female\\WoundMedium.wav",
+182 sound SOUND_F_WOUNDSTRONG  "SoundsMP\\Player\\Female\\WoundStrong.wav",
+185 sound SOUND_F_WOUNDWATER   "SoundsMP\\Player\\Female\\WoundWater.wav",
+186 sound SOUND_F_WALK_GRASS_L "SoundsMP\\Player\\Female\\WalkGrassL.wav",
+187 sound SOUND_F_WALK_GRASS_R "SoundsMP\\Player\\Female\\WalkGrassR.wav",
+188 sound SOUND_F_WALK_WOOD_L  "SoundsMP\\Player\\Female\\WalkWoodL.wav",
+189 sound SOUND_F_WALK_WOOD_R  "SoundsMP\\Player\\Female\\WalkWoodR.wav",
+190 sound SOUND_F_WALK_SNOW_L  "SoundsMP\\Player\\Female\\WalkSnowL.wav",
+191 sound SOUND_F_WALK_SNOW_R  "SoundsMP\\Player\\Female\\WalkSnowR.wav",
 
 // gender-independent sounds
-200 sound SOUND_SILENCE         "Sounds\\Misc\\Silence.wav",
-201 sound SOUND_SNIPER_ZOOM     "ModelsMP\\Weapons\\Sniper\\Sounds\\Zoom.wav",
-206 sound SOUND_SNIPER_QZOOM    "ModelsMP\\Weapons\\Sniper\\Sounds\\QuickZoom.wav",
-202 sound SOUND_INFO            "Sounds\\Player\\Info.wav",
-203 sound SOUND_WATERAMBIENT    "Sounds\\Player\\Underwater.wav",
-204 sound SOUND_WATERBUBBLES    "Sounds\\Player\\Bubbles.wav",
-205 sound SOUND_POWERUP_BEEP    "SoundsMP\\Player\\PowerUpBeep.wav",
+200 sound SOUND_SILENCE      "Sounds\\Misc\\Silence.wav",
+201 sound SOUND_SNIPER_ZOOM  "ModelsMP\\Weapons\\Sniper\\Sounds\\Zoom.wav",
+206 sound SOUND_SNIPER_QZOOM "ModelsMP\\Weapons\\Sniper\\Sounds\\QuickZoom.wav",
+202 sound SOUND_INFO         "Sounds\\Player\\Info.wav",
+203 sound SOUND_WATERAMBIENT "Sounds\\Player\\Underwater.wav",
+204 sound SOUND_WATERBUBBLES "Sounds\\Player\\Bubbles.wav",
+205 sound SOUND_POWERUP_BEEP "SoundsMP\\Player\\PowerUpBeep.wav",
 
-// ************** FLESH PARTS **************
-210 model   MODEL_FLESH          "Models\\Effects\\Debris\\Flesh\\Flesh.mdl",
-211 model   MODEL_FLESH_APPLE    "Models\\Effects\\Debris\\Fruits\\Apple.mdl",
-212 model   MODEL_FLESH_BANANA   "Models\\Effects\\Debris\\Fruits\\Banana.mdl",
-213 model   MODEL_FLESH_BURGER   "Models\\Effects\\Debris\\Fruits\\CheeseBurger.mdl",
-214 model   MODEL_FLESH_LOLLY    "Models\\Effects\\Debris\\Fruits\\LollyPop.mdl",
-215 model   MODEL_FLESH_ORANGE   "Models\\Effects\\Debris\\Fruits\\Orange.mdl",
+// flesh parts
+210 model MODEL_FLESH        "Models\\Effects\\Debris\\Flesh\\Flesh.mdl",
+211 model MODEL_FLESH_APPLE  "Models\\Effects\\Debris\\Fruits\\Apple.mdl",
+212 model MODEL_FLESH_BANANA "Models\\Effects\\Debris\\Fruits\\Banana.mdl",
+213 model MODEL_FLESH_BURGER "Models\\Effects\\Debris\\Fruits\\CheeseBurger.mdl",
+214 model MODEL_FLESH_LOLLY  "Models\\Effects\\Debris\\Fruits\\LollyPop.mdl",
+215 model MODEL_FLESH_ORANGE "Models\\Effects\\Debris\\Fruits\\Orange.mdl",
 
 220 texture TEXTURE_FLESH_RED    "Models\\Effects\\Debris\\Flesh\\FleshRed.tex",
 221 texture TEXTURE_FLESH_GREEN  "Models\\Effects\\Debris\\Flesh\\FleshGreen.tex",
@@ -1590,13 +1612,11 @@ functions:
     }
   };
 
-  INDEX GenderSound(INDEX iSound)
-  {
-    return iSound+m_iGender*GENDEROFFSET;
-  }
+  INDEX GenderSound(INDEX iSound) {
+    return iSound + m_iGender*GENDEROFFSET;
+  };
 
-  void AddBouble( FLOAT3D vPos, FLOAT3D vSpeedRelative)
-  {
+  void AddBouble(FLOAT3D vPos, FLOAT3D vSpeedRelative) {
     ShellLaunchData &sld = m_asldData[m_iFirstEmptySLD];
     sld.sld_vPos = vPos;
     const FLOATmatrix3D &m = GetRotationMatrix();
@@ -1607,20 +1627,18 @@ functions:
     sld.sld_estType = ESL_BUBBLE;
     // move to next shell position
     m_iFirstEmptySLD = (m_iFirstEmptySLD+1) % MAX_FLYING_SHELLS;
-  }
-
-  void ClearShellLaunchData( void)
-  {
-    // clear flying shells data array
+  };
+  
+  // Clear flying shells data array
+  void ClearShellLaunchData(void) {
     m_iFirstEmptySLD = 0;
-    for( INDEX iShell=0; iShell<MAX_FLYING_SHELLS; iShell++)
-    {
+
+    for (INDEX iShell = 0; iShell < MAX_FLYING_SHELLS; iShell++) {
       m_asldData[iShell].sld_tmLaunch = -100.0f;
     }
-  }
+  };
 
-  void AddBulletSpray( FLOAT3D vPos, EffectParticlesType eptType, FLOAT3D vStretch)
-  {
+  void AddBulletSpray(FLOAT3D vPos, EffectParticlesType eptType, FLOAT3D vStretch) {
     BulletSprayLaunchData &bsld = m_absldData[m_iFirstEmptyBSLD];
     bsld.bsld_vPos = vPos;
     bsld.bsld_vG = en_vGravityDir;
@@ -1630,16 +1648,15 @@ functions:
     bsld.bsld_vStretch=vStretch;
     // move to bullet spray position
     m_iFirstEmptyBSLD = (m_iFirstEmptyBSLD+1) % MAX_BULLET_SPRAYS;
-  }
+  };
 
-  void ClearBulletSprayLaunchData( void)
-  {
+  void ClearBulletSprayLaunchData(void) {
     m_iFirstEmptyBSLD = 0;
-    for( INDEX iBulletSpray=0; iBulletSpray<MAX_BULLET_SPRAYS; iBulletSpray++)
-    {
+
+    for (INDEX iBulletSpray = 0; iBulletSpray < MAX_BULLET_SPRAYS; iBulletSpray++) {
       m_absldData[iBulletSpray].bsld_tmLaunch = -100.0f;
     }
-  }
+  };
 
   void AddGoreSpray( FLOAT3D vPos, FLOAT3D v3rdPos, SprayParticlesType sptType, FLOAT3D vSpilDirection,
     FLOATaabbox3D boxHitted, FLOAT fDamagePower, COLOR colParticles)
@@ -1657,16 +1674,15 @@ functions:
     gsld.gsld_colParticles = colParticles;
     // move to bullet spray position
     m_iFirstEmptyGSLD = (m_iFirstEmptyGSLD+1) % MAX_GORE_SPRAYS;
-  }
+  };
 
-  void ClearGoreSprayLaunchData( void)
-  {
+  void ClearGoreSprayLaunchData(void) {
     m_iFirstEmptyGSLD = 0;
-    for( INDEX iGoreSpray=0; iGoreSpray<MAX_GORE_SPRAYS; iGoreSpray++)
-    {
+
+    for (INDEX iGoreSpray = 0; iGoreSpray < MAX_GORE_SPRAYS; iGoreSpray++) {
       m_agsldData[iGoreSpray].gsld_tmLaunch = -100.0f;
     }
-  }
+  };
 
   void CPlayer(void) {
     // clear flying shells data array
@@ -1686,21 +1702,18 @@ functions:
   };
 
   class CPlayerWeapons *GetPlayerWeapons(void) {
-    ASSERT(m_penWeapons!=NULL);
-    return (CPlayerWeapons *)&*m_penWeapons;
+    return (CPlayerWeapons*)&*m_penWeapons;
   };
 
   class CPlayerAnimator *GetPlayerAnimator(void) {
-    ASSERT(m_penAnimator!=NULL);
-    return (CPlayerAnimator *)&*m_penAnimator;
+    return (CPlayerAnimator*)&*m_penAnimator;
   };
 
   CPlayerSettings *GetSettings(void) {
-    return (CPlayerSettings *)en_pcCharacter.pc_aubAppearance;
+    return (CPlayerSettings*)en_pcCharacter.pc_aubAppearance;
   };
 
-  export void Copy(CEntity &enOther, ULONG ulFlags)
-  {
+  export void Copy(CEntity &enOther, ULONG ulFlags) {
     CPlayerEntity::Copy(enOther, ulFlags);
     CPlayer *penOther = (CPlayer *)(&enOther);
     m_moRender.Copy(penOther->m_moRender);
@@ -1710,16 +1723,15 @@ functions:
     m_psGameTotal  = penOther->m_psGameTotal ;
 
     // if creating predictor
-    if (ulFlags&COPY_PREDICTOR)
-    {
+    if (ulFlags & COPY_PREDICTOR) {
       // copy positions of launched empty shells
-      memcpy( m_asldData, penOther->m_asldData, sizeof( m_asldData));
+      memcpy(m_asldData, penOther->m_asldData, sizeof(m_asldData));
       m_iFirstEmptySLD = penOther->m_iFirstEmptySLD;
+
       // all messages in the inbox
       m_acmiMessages.Clear();
       m_ctUnreadMessages = 0;
-      //m_lsLightSource;
-      SetupLightSource(); //? is this ok !!!!
+      SetupLightSource();
 
     // if normal copying
     } else {
@@ -1727,15 +1739,14 @@ functions:
       m_acmiMessages = penOther->m_acmiMessages;
       m_ctUnreadMessages = penOther->m_ctUnreadMessages;
     }
-  }
+  };
 
-  // update smoothed (average latency)
-  void UpdateLatency(FLOAT tmLatencyNow)
-  {
+  // Update smoothed (average latency)
+  void UpdateLatency(FLOAT tmLatencyNow) {
     TIME tmNow = _pTimer->GetHighPrecisionTimer().GetSeconds();
 
     // if not enough time passed
-    if (tmNow<m_tmLatencyLastAvg+hud_tmLatencySnapshot) {
+    if (tmNow < m_tmLatencyLastAvg+hud_tmLatencySnapshot) {
       // just sum
       m_tmLatencyAvgSum += tmLatencyNow;
       m_ctLatencyAvg++;
@@ -1743,7 +1754,8 @@ functions:
     // if enough time passed
     } else {
       // calculate average
-      m_tmLatency = m_tmLatencyAvgSum/m_ctLatencyAvg;
+      m_tmLatency = m_tmLatencyAvgSum / m_ctLatencyAvg;
+
       // reset counters
       m_tmLatencyAvgSum = 0.0f;
       m_ctLatencyAvg = 0;
@@ -1756,96 +1768,104 @@ functions:
     }
   }
 
-  // check character data for invalid values
+  // Check character data for invalid values
   void ValidateCharacter(void) {
-    // if in single player or flyover
+    // use default model in single player or flyover
     if (GetSP()->sp_bSinglePlayer) {
-      // always use default model
-      CPlayerSettings *pps = (CPlayerSettings *)en_pcCharacter.pc_aubAppearance;
-      memset(pps->ps_achModelFile, 0, sizeof(pps->ps_achModelFile));
+      return;
     }
+
+    CPlayerSettings *pps = (CPlayerSettings*)en_pcCharacter.pc_aubAppearance;
+    memset(pps->ps_achModelFile, 0, sizeof(pps->ps_achModelFile));
   };
 
-  // parse gender from your name
+  // Parse gender from your name
   void ParseGender(CTString &strName) {
     if (strName.RemovePrefix("#male#")) {
       m_iGender = GENDER_MALE;
     } else if (strName.RemovePrefix("#female#")) {
       m_iGender = GENDER_FEMALE;
-    } else {
-      m_iGender = GENDER_MALE;
     }
+
+    m_iGender = GENDER_MALE;
   };
 
-  void CheckHighScore(void)
-  {
+  void CheckHighScore(void) {
     // if not playing a demo
     if (!_pNetwork->IsPlayingDemo()) {
-      // update our local high score with the external
-      if (plr_iHiScore>m_iHighScore) {
+      // update local high score with the external one
+      if (plr_iHiScore > m_iHighScore) {
         m_iHighScore = plr_iHiScore;
       }
     }
 
-    // if current score is better than highscore
-    if (m_psGameStats.ps_iScore>m_iHighScore) {
-      // if it is a highscore greater than the last one beaten
-      if (m_iHighScore>m_iBeatenHighScore) {
-        // remember that it was beaten
+    // if current score is higher than the high score
+    if (m_psGameStats.ps_iScore > m_iHighScore) {
+      // remember that it was beaten
+      if (m_iHighScore > m_iBeatenHighScore) {
         m_iBeatenHighScore = m_iHighScore;
-        // tell that to player
-        m_soHighScore.Set3DParameters(25.0f, 5.0f, 1.0f, 1.0f);
-        //PlaySound(m_soHighScore, SOUND_HIGHSCORE, 0); !!!!####!!!!
       }
     }
-  }
+  };
 
-  CTString GetPredictName(void) const
-  {
+  CTString GetPredictName(void) const {
     if (IsPredicted()) {
       return "PREDICTED";
+
     } else if (IsPredictor()) {
       return "predictor";
-    } else if (GetFlags()&ENF_WILLBEPREDICTED){
+
+    } else if (GetFlags() & ENF_WILLBEPREDICTED) {
       return "WILLBEPREDICTED";
-    } else {
-      return "no prediction";
     }
+
+    return "no prediction";
   };
 
   // Write to stream
   void Write_t(CTStream *ostr) {
     CPlayerEntity::Write_t(ostr);
+
     // save array of messages
     ostr->WriteID_t("MSGS");
+
     INDEX ctMsg = m_acmiMessages.Count();
-    (*ostr)<<ctMsg;
-    for(INDEX iMsg=0; iMsg<ctMsg; iMsg++) {
+    *ostr << ctMsg;
+
+    for (INDEX iMsg = 0; iMsg < ctMsg; iMsg++) {
       m_acmiMessages[iMsg].Write_t(*ostr);
     }
+
     ostr->Write_t(&m_psLevelStats, sizeof(m_psLevelStats));
     ostr->Write_t(&m_psLevelTotal, sizeof(m_psLevelTotal));
-    ostr->Write_t(&m_psGameStats , sizeof(m_psGameStats));
-    ostr->Write_t(&m_psGameTotal , sizeof(m_psGameTotal));
+    ostr->Write_t(&m_psGameStats, sizeof(m_psGameStats));
+    ostr->Write_t(&m_psGameTotal, sizeof(m_psGameTotal));
   };
 
   // Read from stream
   void Read_t(CTStream *istr) { 
     CPlayerEntity::Read_t(istr);
+
     // clear flying shells data array
     ClearShellLaunchData();
     ClearBulletSprayLaunchData();
     ClearGoreSprayLaunchData();
+
     // load array of messages
     istr->ExpectID_t("MSGS");
+
     INDEX ctMsg;
-    (*istr)>>ctMsg;
+    *istr >> ctMsg;
+
     m_acmiMessages.Clear();
     m_ctUnreadMessages = 0;
-    if( ctMsg>0) {
+
+    if (ctMsg > 0) {
       m_acmiMessages.Push(ctMsg);
-      for(INDEX iMsg=0; iMsg<ctMsg; iMsg++) {
+
+      for (INDEX iMsg = 0; iMsg < ctMsg; iMsg++) {
         m_acmiMessages[iMsg].Read_t(*istr);
+
         if (!m_acmiMessages[iMsg].cmi_bRead) {
           m_ctUnreadMessages++;
         }
@@ -1859,99 +1879,98 @@ functions:
 
     // set your real appearance if possible
     ValidateCharacter();
+
     CTString strDummy;
-    SetPlayerAppearance(&m_moRender, &en_pcCharacter, strDummy, /*bPreview=*/FALSE);
+    SetPlayerAppearance(&m_moRender, &en_pcCharacter, strDummy, FALSE);
     ParseGender(strDummy);
+
     m_ulFlags |= PLF_SYNCWEAPON;
+
     // setup light source
     SetupLightSource();
   };
 
-  /* Get static light source information. */
-  CLightSource *GetLightSource(void)
-  {
+  // Get static light source information
+  CLightSource *GetLightSource(void) {
     if (!IsPredictor()) {
       return &m_lsLightSource;
-    } else {
-      return NULL;
     }
+    return NULL;
   };
 
-  // called by other entities to set time prediction parameter
-  void SetPredictionTime(TIME tmAdvance)   // give time interval in advance to set
-  {
-    m_tmPredict = _pTimer->CurrentTick()+tmAdvance;
-  }
+  // Called by other entities to set time prediction parameter
+  void SetPredictionTime(TIME tmAdvance) {
+    // give time interval in advance to set
+    m_tmPredict = _pTimer->CurrentTick() + tmAdvance;
+  };
 
-  // called by engine to get the upper time limit 
-  TIME GetPredictionTime(void)   // return moment in time up to which to predict this entity
-  {
+  // Called by engine to get the upper time limit
+  TIME GetPredictionTime(void) {
+    // return moment in time up to which to predict this entity
     return m_tmPredict;
-  }
+  };
 
-  // get maximum allowed range for predicting this entity
-  FLOAT GetPredictionRange(void)
-  {
+  // Get maximum allowed range for predicting this entity
+  FLOAT GetPredictionRange(void) {
     return cli_fPredictPlayersRange;
-  }
+  };
 
-  // add to prediction any entities that this entity depends on
-  void AddDependentsToPrediction(void)
-  {
+  // Add to prediction any entities that this entity depends on
+  void AddDependentsToPrediction(void) {
     m_penWeapons->AddToPrediction();
     m_penAnimator->AddToPrediction();
     m_penView->AddToPrediction();
     m_pen3rdPersonView->AddToPrediction();
-  }
+  };
 
-  // get in-game time for statistics
-  TIME GetStatsInGameTimeLevel(void)
-  {
+  // Get in-game time for statistics
+  TIME GetStatsInGameTimeLevel(void) {
     if(m_bEndOfLevel) {
       return m_psLevelStats.ps_tmTime;
-    } else {
-      return _pNetwork->GetGameTime()-m_tmLevelStarted;
     }
-  }
-  TIME GetStatsInGameTimeGame(void)
-  {
-    if(m_bEndOfLevel) {
-      return m_psGameStats.ps_tmTime;
-    } else {
-      return m_psGameStats.ps_tmTime + (_pNetwork->GetGameTime()-m_tmLevelStarted);
-    }
-  }
+    return _pNetwork->GetGameTime() - m_tmLevelStarted;
+  };
 
-  FLOAT GetStatsRealWorldTime(void)
-  {
+  TIME GetStatsInGameTimeGame(void) {
+    if (m_bEndOfLevel) {
+      return m_psGameStats.ps_tmTime;
+    }
+    return m_psGameStats.ps_tmTime + (_pNetwork->GetGameTime() - m_tmLevelStarted);
+  };
+
+  FLOAT GetStatsRealWorldTime(void) {
     time_t timeNow;
-    if(m_bEndOfLevel) { 
+
+    if (m_bEndOfLevel) { 
       timeNow = m_iEndTime; 
     } else {
       time(&timeNow);
     }
-    return (FLOAT)difftime( timeNow, m_iStartTime);
-  }
 
-  CTString GetStatsRealWorldStarted(void)
-  {
+    return (FLOAT)difftime(timeNow, m_iStartTime);
+  };
+
+  CTString GetStatsRealWorldStarted(void) {
     struct tm *newtime;
     newtime = localtime(&m_iStartTime);
-
     setlocale(LC_ALL, "");
+
     CTString strTimeline;
     char achTimeLine[256]; 
-    strftime( achTimeLine, sizeof(achTimeLine)-1, "%a %x %H:%M", newtime);
+
+    strftime(achTimeLine, sizeof(achTimeLine)-1, "%a %x %H:%M", newtime);
     strTimeline = achTimeLine;
     setlocale(LC_ALL, "C");
-    return strTimeline;
-  }
 
-  // fill in player statistics
-  export void GetStats( CTString &strStats, const CompStatType csType, INDEX ctCharsPerRow) {
+    return strTimeline;
+  };
+
+  // Fill in player statistics
+  export void GetStats(CTString &strStats, const CompStatType csType, INDEX ctCharsPerRow) {
     // get proper type of stats
-    if( csType==CST_SHORT) {
+    if (csType == CST_SHORT) {
       GetShortStats(strStats);
+
     } else {
       ASSERT(csType==CST_DETAIL);
 
@@ -1970,19 +1989,18 @@ functions:
     }
   };
 
-  // get short one-line statistics - used for savegame descriptions and similar
-  void GetShortStats(CTString &strStats)
-  {
-    strStats.PrintF( TRANS("%s %s Score: %d Kills: %d/%d"), 
-                     GetDifficultyString(), TimeToString(GetStatsInGameTimeLevel()), 
-                     m_psLevelStats.ps_iScore, m_psLevelStats.ps_iKills, m_psLevelTotal.ps_iKills);
-  }
+  // Get short one-line statistics - used for savegame descriptions and similar
+  void GetShortStats(CTString &strStats) {
+    strStats.PrintF(TRANS("%s %s Score: %d Kills: %d/%d"), 
+                    GetDifficultyString(), TimeToString(GetStatsInGameTimeLevel()), 
+                    m_psLevelStats.ps_iScore, m_psLevelStats.ps_iKills, m_psLevelTotal.ps_iKills);
+  };
 
-  // get detailed statistics for deathmatch game
-  void GetDetailStatsDM(CTString &strStats)
-  {
-    extern INDEX SetAllPlayersStats( INDEX iSortKey);
+  // Get detailed statistics for deathmatch game
+  void GetDetailStatsDM(CTString &strStats) {
+    extern INDEX SetAllPlayersStats(INDEX iSortKey);
     extern CPlayer *_apenPlayers[NET_MAXGAMEPLAYERS];
+
     // determine type of game
     const BOOL bFragMatch = GetSP()->sp_bUseFrags;
 
@@ -1990,13 +2008,14 @@ functions:
     const INDEX ctPlayers = SetAllPlayersStats(bFragMatch?5:3); // sort by frags or by score
 
     // get time elapsed since the game start
-    strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("TIME"), TimeToString(_pNetwork->GetGameTime())));
-    strStats+="\n";
+    strStats += AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("TIME"), TimeToString(_pNetwork->GetGameTime())));
+    strStats += "\n";
 
     // find maximum frags/score that one player has
     INDEX iMaxFrags = LowerLimit(INDEX(0));
     INDEX iMaxScore = LowerLimit(INDEX(0));
-    {for(INDEX iPlayer=0; iPlayer<ctPlayers; iPlayer++) {
+
+    {for(INDEX iPlayer = 0; iPlayer < ctPlayers; iPlayer++) {
       CPlayer *penPlayer = _apenPlayers[iPlayer];
       iMaxFrags = Max(iMaxFrags, penPlayer->m_psLevelStats.ps_iKills);
       iMaxScore = Max(iMaxScore, penPlayer->m_psLevelStats.ps_iScore);
@@ -2004,21 +2023,25 @@ functions:
 
     // print game limits
     const CSessionProperties &sp = *GetSP();
-    if (sp.sp_iTimeLimit>0) {
+
+    if (sp.sp_iTimeLimit > 0) {
       FLOAT fTimeLeft = ClampDn(sp.sp_iTimeLimit*60.0f - _pNetwork->GetGameTime(), 0.0f);
       strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("TIME LEFT"), TimeToString(fTimeLeft)));
       strStats+="\n";
     }
-    if (bFragMatch && sp.sp_iFragLimit>0) {
+
+    if (bFragMatch && sp.sp_iFragLimit > 0) {
       INDEX iFragsLeft = ClampDn(sp.sp_iFragLimit-iMaxFrags, INDEX(0));
       strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%d", TRANS("FRAGS LEFT"), iFragsLeft));
       strStats+="\n";
     }
-    if (!bFragMatch && sp.sp_iScoreLimit>0) {
+
+    if (!bFragMatch && sp.sp_iScoreLimit > 0) {
       INDEX iScoreLeft = ClampDn(sp.sp_iScoreLimit-iMaxScore, INDEX(0));
       strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%d", TRANS("SCORE LEFT"), iScoreLeft));
       strStats+="\n";
     }
+
     strStats += "\n";
 
     CTString strRank = TRANS("NO.");
@@ -2038,7 +2061,8 @@ functions:
     strStats += PadStringRight(strName, ctNameChars)+" ";
     strStats += "^r";
     strStats += "\n\n";
-    {for(INDEX iPlayer=0; iPlayer<ctPlayers; iPlayer++) {
+
+    {for(INDEX iPlayer = 0; iPlayer < ctPlayers; iPlayer++) {
       CTString strLine;
       CPlayer *penPlayer = _apenPlayers[iPlayer];
       INDEX iPing = ceil(penPlayer->en_tmPing*1000.0f);
@@ -2051,14 +2075,13 @@ functions:
       strStats += PadStringRight(strName,                      ctNameChars)+" ";
       strStats += "\n";
     }}
-  }
+  };
 
-  // get singleplayer statistics
-  void GetDetailStatsCoop(CTString &strStats)
-  {
+  // Get singleplayer statistics
+  void GetDetailStatsCoop(CTString &strStats) {
     // first put in your full stats
     strStats += "^b"+CenterString(TRANS("YOUR STATS"))+"^r\n";
-    strStats+="\n";
+    strStats += "\n";
     GetDetailStatsSP(strStats, 1);
 
     // get stats from all players
@@ -2068,8 +2091,9 @@ functions:
 
     // for each player
     PlayerStats psSquadLevel = PlayerStats();
-    PlayerStats psSquadGame  = PlayerStats();
-    {for( INDEX iPlayer=0; iPlayer<ctPlayers; iPlayer++) {
+    PlayerStats psSquadGame = PlayerStats();
+
+    {for (INDEX iPlayer = 0; iPlayer < ctPlayers; iPlayer++) {
       CPlayer *penPlayer = _apenPlayers[iPlayer];
       // add values to squad stats
       ASSERT( penPlayer!=NULL);
@@ -2111,179 +2135,187 @@ functions:
     strStats+="\n";
     strStats+="\n";
 
-
     strStats+="\n";
     strStats += "^b"+CenterString(TRANS("OTHER PLAYERS"))+"^r\n";
     strStats+="\n";
 
     // for each player
-    {for(INDEX iPlayer=0; iPlayer<ctPlayers; iPlayer++) {
+    {for (INDEX iPlayer = 0; iPlayer < ctPlayers; iPlayer++) {
       CPlayer *penPlayer = _apenPlayers[iPlayer];
+
       // if this one
-      if (penPlayer==this) {
+      if (penPlayer == this) {
         // skip it
         continue;
       }
+
       // add his stats short
       strStats+="^cFFFFFF"+CenterString(penPlayer->GetPlayerName())+"^r\n\n";
       penPlayer->GetDetailStatsSP(strStats, 2);
       strStats+="\n";
     }}
-  }
+  };
 
-  // get singleplayer statistics
-  void GetDetailStatsSP(CTString &strStats, INDEX iCoopType)
-  {
-    if (iCoopType<=1) {
+  // Get singleplayer statistics
+  void GetDetailStatsSP(CTString &strStats, INDEX iCoopType) {
+    if (iCoopType <= 1) {
       if (m_bEndOfGame) {
-        if (GetSP()->sp_gdGameDifficulty==CSessionProperties::GD_EXTREME) {
-          strStats+=TRANS("^f4SERIOUS GAME FINISHED,\nMENTAL MODE IS NOW ENABLED!^F\n\n");
+        if (GetSP()->sp_gdGameDifficulty == CSessionProperties::GD_EXTREME) {
+          strStats += TRANS("^f4SERIOUS GAME FINISHED,\nMENTAL MODE IS NOW ENABLED!^F\n\n");
         } else if (GetSP()->sp_bMental) {
-          strStats+=TRANS("^f4YOU HAVE MASTERED THE GAME!^F\n\n");
+          strStats += TRANS("^f4YOU HAVE MASTERED THE GAME!^F\n\n");
         }
       }
     }
 
-    if (iCoopType<=1) {
+    if (iCoopType <= 1) {
       // report total score info
-      strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%d", TRANS("TOTAL SCORE"), m_psGameStats.ps_iScore));
-      strStats+="\n";
-      strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("DIFFICULTY"), GetDifficultyString()));
-      strStats+="\n";
-      strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("STARTED"), GetStatsRealWorldStarted()));
-      strStats+="\n";
-      strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("PLAYING TIME"), TimeToString(GetStatsRealWorldTime())));
-      strStats+="\n";
-      if( m_psGameStats.ps_iScore<=plr_iHiScore) {
-        strStats+=AlignString(CTString(0, "^cFFFFFF%s:^r\n%d", TRANS("HI-SCORE"), plr_iHiScore));
+      strStats += AlignString(CTString(0, "^cFFFFFF%s:^r\n%d", TRANS("TOTAL SCORE"), m_psGameStats.ps_iScore));
+      strStats += "\n";
+      strStats += AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("DIFFICULTY"), GetDifficultyString()));
+      strStats += "\n";
+      strStats += AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("STARTED"), GetStatsRealWorldStarted()));
+      strStats += "\n";
+      strStats += AlignString(CTString(0, "^cFFFFFF%s:^r\n%s", TRANS("PLAYING TIME"), TimeToString(GetStatsRealWorldTime())));
+      strStats += "\n";
+
+      if (m_psGameStats.ps_iScore <= plr_iHiScore) {
+        strStats += AlignString(CTString(0, "^cFFFFFF%s:^r\n%d", TRANS("HI-SCORE"), plr_iHiScore));
       } else {
-        strStats+=TRANS("YOU BEAT THE HI-SCORE!");
+        strStats += TRANS("YOU BEAT THE HI-SCORE!");
       }
-      strStats+="\n\n";
+      strStats += "\n\n";
     }
 
     // report this level statistics
     strStats+=CTString(0, "^cFFFFFF%s^r", TranslateConst(en_pwoWorld->GetName(), 0));
     strStats+="\n";
-    if (iCoopType<=1) {
-      if( m_bEndOfLevel) {
-        strStats+=AlignString(CTString(0, "  %s:\n%s", TRANS("ESTIMATED TIME"), TimeToString(m_tmEstTime)));
-        strStats+="\n";
-        strStats+=AlignString(CTString(0, "  %s:\n%d", TRANS("TIME BONUS"), m_iTimeScore));
-        strStats+="\n";
-        strStats+="\n";
+
+    if (iCoopType <= 1) {
+      if (m_bEndOfLevel) {
+        strStats += AlignString(CTString(0, "  %s:\n%s", TRANS("ESTIMATED TIME"), TimeToString(m_tmEstTime)));
+        strStats += "\n";
+        strStats += AlignString(CTString(0, "  %s:\n%d", TRANS("TIME BONUS"), m_iTimeScore));
+        strStats += "\n";
+        strStats += "\n";
       }
-//    } else {
-//      strStats+=CTString("^cFFFFFF")+TRANS("THIS LEVEL")+"^r\n";
     }
-    strStats+=AlignString(CTString(0, "  %s:\n%d", TRANS("SCORE"), m_psLevelStats.ps_iScore));
-    strStats+="\n";
-    strStats+=AlignString(CTString(0, "  %s:\n%d/%d", TRANS("KILLS"), m_psLevelStats.ps_iKills, m_psLevelTotal.ps_iKills));
-    strStats+="\n";
-    if (iCoopType>=1) {
-      strStats+=AlignString(CTString(0, "  %s:\n%d", TRANS("DEATHS"), m_psLevelStats.ps_iDeaths, m_psLevelTotal.ps_iDeaths));
-      strStats+="\n";
+
+    strStats += AlignString(CTString(0, "  %s:\n%d", TRANS("SCORE"), m_psLevelStats.ps_iScore));
+    strStats += "\n";
+    strStats += AlignString(CTString(0, "  %s:\n%d/%d", TRANS("KILLS"), m_psLevelStats.ps_iKills, m_psLevelTotal.ps_iKills));
+    strStats += "\n";
+
+    if (iCoopType >= 1) {
+      strStats += AlignString(CTString(0, "  %s:\n%d", TRANS("DEATHS"), m_psLevelStats.ps_iDeaths, m_psLevelTotal.ps_iDeaths));
+      strStats += "\n";
     }
-    strStats+=AlignString(CTString(0, "  %s:\n%d/%d", TRANS("SECRETS"), m_psLevelStats.ps_iSecrets, m_psLevelTotal.ps_iSecrets));
-    strStats+="\n";
-    if (iCoopType<=1) {
-      strStats+=AlignString(CTString(0, "  %s:\n%s", TRANS("TIME"), TimeToString(GetStatsInGameTimeLevel())));
-      strStats+="\n";
+    strStats += AlignString(CTString(0, "  %s:\n%d/%d", TRANS("SECRETS"), m_psLevelStats.ps_iSecrets, m_psLevelTotal.ps_iSecrets));
+    strStats += "\n";
+
+    if (iCoopType <= 1) {
+      strStats += AlignString(CTString(0, "  %s:\n%s", TRANS("TIME"), TimeToString(GetStatsInGameTimeLevel())));
+      strStats += "\n";
     }
-    strStats+="\n";
+    strStats += "\n";
 
     // report total game statistics
-    strStats+=CTString("^cFFFFFF")+TRANS("TOTAL")+"^r";
-    strStats+="\n";
-    strStats+=AlignString(CTString(0, "  %s:\n%d", TRANS("SCORE"), m_psGameStats.ps_iScore));
-    strStats+="\n";
-    strStats+=AlignString(CTString(0, "  %s:\n%d/%d", TRANS("KILLS"), m_psGameStats.ps_iKills, m_psGameTotal.ps_iKills));
-    strStats+="\n";
-    if (iCoopType>=1) {
-      strStats+=AlignString(CTString(0, "  %s:\n%d", TRANS("DEATHS"), m_psGameStats.ps_iDeaths, m_psGameTotal.ps_iDeaths));
-      strStats+="\n";
+    strStats += CTString("^cFFFFFF")+TRANS("TOTAL")+"^r";
+    strStats += "\n";
+    strStats += AlignString(CTString(0, "  %s:\n%d", TRANS("SCORE"), m_psGameStats.ps_iScore));
+    strStats += "\n";
+    strStats += AlignString(CTString(0, "  %s:\n%d/%d", TRANS("KILLS"), m_psGameStats.ps_iKills, m_psGameTotal.ps_iKills));
+    strStats += "\n";
+
+    if (iCoopType >= 1) {
+      strStats += AlignString(CTString(0, "  %s:\n%d", TRANS("DEATHS"), m_psGameStats.ps_iDeaths, m_psGameTotal.ps_iDeaths));
+      strStats += "\n";
     }
-    strStats+=AlignString(CTString(0, "  %s:\n%d/%d", TRANS("SECRETS"), m_psGameStats.ps_iSecrets, m_psGameTotal.ps_iSecrets));
-    strStats+="\n";
-    if (iCoopType<=1) {
-      strStats+=AlignString(CTString(0, "  %s:\n%s", TRANS("GAME TIME"), TimeToString(GetStatsInGameTimeGame())));
-      strStats+="\n";
+    strStats += AlignString(CTString(0, "  %s:\n%d/%d", TRANS("SECRETS"), m_psGameStats.ps_iSecrets, m_psGameTotal.ps_iSecrets));
+    strStats += "\n";
+
+    if (iCoopType <= 1) {
+      strStats += AlignString(CTString(0, "  %s:\n%s", TRANS("GAME TIME"), TimeToString(GetStatsInGameTimeGame())));
+      strStats += "\n";
     }
-    strStats+="\n";
+    strStats += "\n";
     
     // set per level outputs
-    if (iCoopType<1) {
-      if(m_strLevelStats!="") {
+    if (iCoopType < 1) {
+      if(m_strLevelStats != "") {
         strStats += CTString("^cFFFFFF")+TRANS("Per level statistics") +"^r\n\n" + m_strLevelStats;
       }
     }
   }
 
-  // provide info for GameSpy enumeration
-  void GetGameSpyPlayerInfo( INDEX iPlayer, CTString &strOut) 
-  {
+  // Provide info for GameSpy enumeration
+  void GetGameSpyPlayerInfo(INDEX iPlayer, CTString &strOut) {
     CTString strKey;
     strKey.PrintF("\\player_%d\\%s", iPlayer, (const char*)GetPlayerName());
-    strOut+=strKey;
+    strOut += strKey;
+
     if (GetSP()->sp_bUseFrags) {
       strKey.PrintF("\\frags_%d\\%d", iPlayer, m_psLevelStats.ps_iKills);
-      strOut+=strKey;
+      strOut += strKey;
+
     } else {
       strKey.PrintF("\\frags_%d\\%d", iPlayer, m_psLevelStats.ps_iScore);
-      strOut+=strKey;
+      strOut += strKey;
     }
-    strKey.PrintF("\\ping_%d\\%d", iPlayer, INDEX(ceil(en_tmPing*1000.0f)));
-    strOut+=strKey;
+
+    strKey.PrintF("\\ping_%d\\%d", iPlayer, INDEX(ceil(en_tmPing * 1000.0f)));
+    strOut += strKey;
   };
 
-  // check if message is in inbox
-  BOOL HasMessage( const CTFileName &fnmMessage)
-  {
+  // Check if message is in inbox
+  BOOL HasMessage(const CTFileName &fnmMessage) {
     ULONG ulHash = fnmMessage.GetHash();
     INDEX ctMsg = m_acmiMessages.Count();
-    for(INDEX iMsg=0; iMsg<ctMsg; iMsg++) {
-      if (m_acmiMessages[iMsg].cmi_ulHash      == ulHash &&
-          m_acmiMessages[iMsg].cmi_fnmFileName == fnmMessage) {
+
+    for (INDEX iMsg = 0; iMsg < ctMsg; iMsg++) {
+      if (m_acmiMessages[iMsg].cmi_ulHash == ulHash
+       && m_acmiMessages[iMsg].cmi_fnmFileName == fnmMessage) {
         return TRUE;
       }
     }
     return FALSE;
-  }
+  };
 
   // receive a computer message and put it in inbox if not already there
-  void ReceiveComputerMessage(const CTFileName &fnmMessage, ULONG ulFlags)
-  {
-    // if already received
+  void ReceiveComputerMessage(const CTFileName &fnmMessage, ULONG ulFlags) {
+    // already received
     if (HasMessage(fnmMessage)) {
-      // do nothing
       return;
     }
+
     // add it to array
     CCompMessageID &cmi = m_acmiMessages.Push();
     cmi.NewMessage(fnmMessage);
-    cmi.cmi_bRead = ulFlags&CMF_READ;
-    if (!(ulFlags&CMF_READ)) {
+    cmi.cmi_bRead = ulFlags & CMF_READ;
+
+    if (!(ulFlags & CMF_READ)) {
       m_ctUnreadMessages++;
       cmp_bUpdateInBackground = TRUE;
     }
-    if (!(ulFlags&CMF_READ) && (ulFlags&CMF_ANALYZE)) {
-      m_tmAnalyseEnd = _pTimer->CurrentTick()+2.0f;
+
+    if (!(ulFlags & CMF_READ) && ulFlags & CMF_ANALYZE) {
+      m_tmAnalyseEnd = _pTimer->CurrentTick() + 2.0f;
       m_soMessage.Set3DParameters(25.0f, 5.0f, 1.0f, 1.0f);
       PlaySound(m_soMessage, SOUND_INFO, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
     }
-  }
+  };
 
   void SayVoiceMessage(const CTFileName &fnmMessage) {
-    if (GetSettings()->ps_ulFlags&PSF_NOQUOTES) {
+    if (GetSettings()->ps_ulFlags & PSF_NOQUOTES) {
       return;
     }
+
     SetSpeakMouthPitch();
     PlaySound(m_soSpeech, fnmMessage, SOF_3D|SOF_VOLUMETRIC);
   };
 
   // receive all messages in one directory - cheat
-  void CheatAllMessagesDir(const CTString &strDir, ULONG ulFlags)
-  {
+  void CheatAllMessagesDir(const CTString &strDir, ULONG ulFlags) {
     // list the directory
     CDynamicStackArray<CTFileName> afnmDir;
     MakeDirList(afnmDir, strDir, "*.txt", DLI_RECURSIVE);
@@ -2294,14 +2326,10 @@ functions:
       // add the message
       ReceiveComputerMessage(fnm, ulFlags);
     }
-  }
+  };
 
   // receive all messages - cheat
-  void CheatAllMessages(void)
-  {
-    //CheatAllMessagesDir("Data\\Messages\\information\\");
-    //CheatAllMessagesDir("Data\\Messages\\background\\");
-    //CheatAllMessagesDir("Data\\Messages\\statistics\\");
+  void CheatAllMessages(void) {
     CheatAllMessagesDir("Data\\Messages\\weapons\\", 0);
     CheatAllMessagesDir("Data\\Messages\\enemies\\", 0);
     CheatAllMessagesDir("DataMP\\Messages\\enemies\\", 0);
@@ -2309,18 +2337,18 @@ functions:
     CheatAllMessagesDir("DataMP\\Messages\\statistics\\", 0);
     CheatAllMessagesDir("DataMP\\Messages\\weapons\\", 0);
     CheatAllMessagesDir("DataMP\\Messages\\background\\", 0);
-  }
+  };
 
   // mark that an item was picked
-  void ItemPicked(const CTString &strName, FLOAT fAmmount)
-  {
+  void ItemPicked(const CTString &strName, FLOAT fAmmount) {
     // if nothing picked too long
-    if (_pTimer->CurrentTick() > m_tmLastPicked+PICKEDREPORT_TIME) {
+    if (_pTimer->CurrentTick() > m_tmLastPicked + PICKEDREPORT_TIME) {
       // kill the name
       m_strPickedName = "";
       // reset picked mana
       m_fPickedMana = 0;
     }
+
     // if different than last picked
     if (m_strPickedName!=strName) {
       // remember name
@@ -2328,14 +2356,14 @@ functions:
       // reset picked ammount
       m_fPickedAmmount = 0;
     }
+
     // increase ammount
     m_fPickedAmmount+=fAmmount;
     m_tmLastPicked = _pTimer->CurrentTick();
-  }
+  };
 
   // Setup light source
-  void SetupLightSource(void)
-  {
+  void SetupLightSource(void) {
     // setup light source
     CLightSource lsNew;
     lsNew.ls_ulFlags = LSF_NONPERSISTENT|LSF_DYNAMIC;
@@ -2350,9 +2378,9 @@ functions:
     m_lsLightSource.SetLightSource(lsNew);
   };
 
-  // play light animation
+  // Play light animation
   void PlayLightAnim(INDEX iAnim, ULONG ulFlags) {
-    if (m_aoLightAnimation.GetData()!=NULL) {
+    if (m_aoLightAnimation.GetData() != NULL) {
       m_aoLightAnimation.PlayAnim(iAnim, ulFlags);
     }
   };
@@ -2392,11 +2420,10 @@ functions:
     return CPlayerEntity::AdjustShadingParameters(vLightDirection, colLight, colAmbient);
   };
 
-  // get a different model object for rendering
-  CModelObject *GetModelForRendering(void)
-  {
+  // Get a different model object for rendering
+  CModelObject *GetModelForRendering(void) {
     // if not yet initialized
-    if(!(m_ulFlags&PLF_INITIALIZED)) { 
+    if (!(m_ulFlags & PLF_INITIALIZED)) { 
       // return base model
       return GetModelObject();
     }
@@ -2404,12 +2431,15 @@ functions:
     // lerp player viewpoint
     CPlacement3D plView;
     plView.Lerp(en_plLastViewpoint, en_plViewpoint, _pTimer->GetLerpFactor());
+
     // body and head attachment animation
     ((CPlayerAnimator&)*m_penAnimator).BodyAndHeadOrientation(plView);
     ((CPlayerAnimator&)*m_penAnimator).OnPreRender();
+
     // synchronize your appearance with the default model
     m_moRender.Synchronize(*GetModelObject());
-    if (m_ulFlags&PLF_SYNCWEAPON) {
+
+    if (m_ulFlags & PLF_SYNCWEAPON) {
       m_ulFlags &= ~PLF_SYNCWEAPON;
       GetPlayerAnimator()->SyncWeapon();
     }
@@ -2418,9 +2448,9 @@ functions:
 
     FLOAT fFading = 1.0f;
     if (m_tmFadeStart!=0) {
-      FLOAT fFactor = (tmNow-m_tmFadeStart)/5.0f;
+      FLOAT fFactor = (tmNow - m_tmFadeStart) / 5.0f;
       fFactor = Clamp(fFactor, 0.0f, 1.0f);
-      fFading*=fFactor;
+      fFading *= fFactor;
     }
 
     // if invunerable after spawning
@@ -2428,87 +2458,92 @@ functions:
     if (tmSpawnInvulnerability > 0 && tmNow - m_tmSpawned < tmSpawnInvulnerability) {
       // blink fast
       FLOAT fDelta = tmNow-m_tmSpawned;
-      fFading *= 0.75f+0.25f*Sin(fDelta/0.5f*360);
+      fFading *= 0.75f + 0.25f*Sin(fDelta/0.5f * 360);
     }
 
     COLOR colAlpha = m_moRender.mo_colBlendColor;
-    colAlpha = (colAlpha&0xffffff00) + (COLOR(fFading*0xff)&0xff);
+    colAlpha = (colAlpha & 0xFFFFFF00) + (COLOR(fFading * 0xFF) & 0xFF);
     m_moRender.mo_colBlendColor = colAlpha;
 
     // if not connected
-    if (m_ulFlags&PLF_NOTCONNECTED) {
+    if (m_ulFlags & PLF_NOTCONNECTED) {
       // pulse slowly
-      fFading *= 0.25f+0.25f*Sin(tmNow/2.0f*360);
+      fFading *= 0.25f + 0.25f*Sin(tmNow/2.0f * 360);
+
     // if invisible
-    } else if (m_tmInvisibility>tmNow) {
-      FLOAT fIntensity=0.0f;
-      if((m_tmInvisibility-tmNow)<3.0f)
-      {
-        fIntensity = 0.5f-0.5f*cos((m_tmInvisibility-tmNow)*(6.0f*3.1415927f/3.0f));
+    } else if (m_tmInvisibility > tmNow) {
+      FLOAT fIntensity = 0.0f;
+
+      if (m_tmInvisibility-tmNow < 3.0f) {
+        fIntensity = 0.5f - 0.5f*cos((m_tmInvisibility-tmNow) * (6.0f * 3.1415927f / 3.0f));
       }
-      if (_ulPlayerRenderingMask == 1<<GetMyPlayerIndex()) {
-        colAlpha = (colAlpha&0xffffff00)|(INDEX)(INVISIBILITY_ALPHA_LOCAL+(FLOAT)(254-INVISIBILITY_ALPHA_LOCAL)*fIntensity);
+
+      if (_ulPlayerRenderingMask == (1 << GetMyPlayerIndex())) {
+        colAlpha = (colAlpha & 0xFFFFFF00) | (INDEX)(INVISIBILITY_ALPHA_LOCAL + (FLOAT)(254-INVISIBILITY_ALPHA_LOCAL)*fIntensity);
+
       } else if (TRUE) {
-        if ((m_tmInvisibility-tmNow)<1.28f) {
-          colAlpha = (colAlpha&0xffffff00)|(INDEX)(INVISIBILITY_ALPHA_REMOTE+(FLOAT)(254-INVISIBILITY_ALPHA_REMOTE)*fIntensity);
+        if (m_tmInvisibility-tmNow < 1.28f) {
+          colAlpha = (colAlpha & 0xFFFFFF00) | (INDEX)(INVISIBILITY_ALPHA_REMOTE + (FLOAT)(254-INVISIBILITY_ALPHA_REMOTE)*fIntensity);
+
         } else if (TRUE) {
-          colAlpha = (colAlpha&0xffffff00)|INVISIBILITY_ALPHA_REMOTE;
+          colAlpha = (colAlpha & 0xFFFFFF00) | INVISIBILITY_ALPHA_REMOTE;
         }
       }
+
       m_moRender.mo_colBlendColor = colAlpha;
     }
 
     // use the appearance for rendering
     return &m_moRender;
-  }
+  };
 
-  // wrapper for action marker getting
+  // Wrapper for action marker getting
   class CPlayerActionMarker *GetActionMarker(void) {
     return (CPlayerActionMarker *)&*m_penActionMarker;
-  }
+  };
 
-  // find main music holder if not remembered
-  void FindMusicHolder(void)
-  {
-    if (m_penMainMusicHolder==NULL) {
+  // Find main music holder if not remembered
+  void FindMusicHolder(void) {
+    if (m_penMainMusicHolder == NULL) {
       m_penMainMusicHolder = _pNetwork->GetEntityWithName("MusicHolder", 0);
     }
-  }
+  };
 
-  // update per-level stats
-  void UpdateLevelStats(void)
-  {
+  // Update per-level stats
+  void UpdateLevelStats(void) {
     // clear stats for this level
     m_psLevelStats = PlayerStats();
 
     // get music holder
-    if (m_penMainMusicHolder==NULL) {
+    if (m_penMainMusicHolder == NULL) {
       return;
     }
+
     CMusicHolder &mh = (CMusicHolder&)*m_penMainMusicHolder;
 
     // assure proper count enemies in current world
-    if (mh.m_ctEnemiesInWorld==0) {
+    if (mh.m_ctEnemiesInWorld == 0) {
       mh.CountEnemies();
     }
+
     // set totals for level and increment for game
     m_psLevelTotal.ps_iKills = mh.m_ctEnemiesInWorld;
     m_psGameTotal.ps_iKills += mh.m_ctEnemiesInWorld;
     m_psLevelTotal.ps_iSecrets = mh.m_ctSecretsInWorld;
     m_psGameTotal.ps_iSecrets += mh.m_ctSecretsInWorld;
-  }
+  };
 
-  // check if there is fuss
-  BOOL IsFuss(void)
-  {
+  // Check if there is fuss
+  BOOL IsFuss(void) {
     // if no music holder
-    if (m_penMainMusicHolder==NULL) {
+    if (m_penMainMusicHolder == NULL) {
       // no fuss
       return FALSE;
     }
+
     // if no enemies - no fuss
-    return ((CMusicHolder*)&*m_penMainMusicHolder)->m_cenFussMakers.Count()>0;
-  }
+    return ((CMusicHolder*)&*m_penMainMusicHolder)->m_cenFussMakers.Count() > 0;
+  };
 
   void SetDefaultMouthPitch(void) {
     m_soMouth.Set3DParameters(50.0f, 10.0f, 1.0f, 1.0f);
@@ -2523,12 +2558,10 @@ functions:
   };
 
   // added: also shake view because of chainsaw firing
-  void ApplyShaking(CPlacement3D &plViewer)
-  {
+  void ApplyShaking(CPlacement3D &plViewer) {
     // chainsaw shaking
     FLOAT fT = _pTimer->GetLerpedCurrentTick();
-    if (fT<m_tmChainShakeEnd)
-    {
+    if (fT < m_tmChainShakeEnd) {
       m_fChainsawShakeDX = 0.03f*m_fChainShakeStrength*SinFast(fT*m_fChainShakeFreqMod*3300.0f);
       m_fChainsawShakeDY = 0.03f*m_fChainShakeStrength*SinFast(fT*m_fChainShakeFreqMod*2900.0f);
       
@@ -2537,101 +2570,104 @@ functions:
     }
 
     CWorldSettingsController *pwsc = GetWSC(this);
-    if (pwsc==NULL || pwsc->m_tmShakeStarted<0) {
+
+    if (pwsc == NULL || pwsc->m_tmShakeStarted < 0.0f) {
       return;
     }
 
-    TIME tm = _pTimer->GetLerpedCurrentTick()-pwsc->m_tmShakeStarted;
-    if (tm<0) {
+    TIME tm = _pTimer->GetLerpedCurrentTick() - pwsc->m_tmShakeStarted;
+
+    if (tm < 0) {
       return;
     }
+
     FLOAT fDistance = (plViewer.pl_PositionVector-pwsc->m_vShakePos).Length();
     FLOAT fIntensity = IntensityAtDistance(pwsc->m_fShakeFalloff, 0, fDistance);
     FLOAT fShakeY, fShakeB, fShakeZ;
+
     if (!pwsc->m_bShakeFadeIn) {
       fShakeY = SinFast(tm*pwsc->m_tmShakeFrequencyY*360.0f)*
         exp(-tm*(pwsc->m_fShakeFade))*
         fIntensity*pwsc->m_fShakeIntensityY;
+
       fShakeB = SinFast(tm*pwsc->m_tmShakeFrequencyB*360.0f)*
         exp(-tm*(pwsc->m_fShakeFade))*
         fIntensity*pwsc->m_fShakeIntensityB;
+
       fShakeZ = SinFast(tm*pwsc->m_tmShakeFrequencyZ*360.0f)*
         exp(-tm*(pwsc->m_fShakeFade))*
         fIntensity*pwsc->m_fShakeIntensityZ;
+
     } else {
       FLOAT ootm = 1.0f/tm;
       fShakeY = SinFast(tm*pwsc->m_tmShakeFrequencyY*360.0f)*
         exp((tm-2)*ootm*(pwsc->m_fShakeFade))*
         fIntensity*pwsc->m_fShakeIntensityY;
+
       fShakeB = SinFast(tm*pwsc->m_tmShakeFrequencyB*360.0f)*
         exp((tm-2)*ootm*(pwsc->m_fShakeFade))*
         fIntensity*pwsc->m_fShakeIntensityB;
+
       fShakeZ = SinFast(tm*pwsc->m_tmShakeFrequencyZ*360.0f)*
         exp((tm-2)*ootm*(pwsc->m_fShakeFade))*
         fIntensity*pwsc->m_fShakeIntensityZ;
     }
+
     plViewer.pl_PositionVector(2) += fShakeY;
     plViewer.pl_PositionVector(3) += fShakeZ;
     plViewer.pl_OrientationAngle(3) += fShakeB;
-    
-  }
+  };
 
-  COLOR GetWorldGlaring(void)
-  {
+  COLOR GetWorldGlaring(void) {
     CWorldSettingsController *pwsc = GetWSC(this);
-    if (pwsc==NULL || pwsc->m_tmGlaringStarted<0) {
+
+    if (pwsc == NULL || pwsc->m_tmGlaringStarted < 0.0f) {
       return 0;
     }
+
     TIME tm = _pTimer->GetLerpedCurrentTick();
     FLOAT fRatio = CalculateRatio(tm, pwsc->m_tmGlaringStarted, pwsc->m_tmGlaringEnded,
-      pwsc->m_fGlaringFadeInRatio,  pwsc->m_fGlaringFadeOutRatio);
-    COLOR colResult = (pwsc->m_colGlade&0xFFFFFF00)|(UBYTE(fRatio*255.0f));
+      pwsc->m_fGlaringFadeInRatio, pwsc->m_fGlaringFadeOutRatio);
+
+    COLOR colResult = (pwsc->m_colGlade & 0xFFFFFF00) | (UBYTE(fRatio*255.0f));
     return colResult;
   }
 
-  void RenderScroll(CDrawPort *pdp)
-  {
+  void RenderScroll(CDrawPort *pdp) {
     CWorldSettingsController *pwsc = GetWSC(this);
-    if( pwsc!=NULL && pwsc->m_penScrollHolder!=NULL)
-    {
-      CScrollHolder &sch = (CScrollHolder &) *pwsc->m_penScrollHolder;
+
+    if (pwsc != NULL && pwsc->m_penScrollHolder != NULL) {
+      CScrollHolder &sch = (CScrollHolder&)*pwsc->m_penScrollHolder;
       sch.Credits_Render(&sch, pdp);
     }
   }
 
-  void RenderCredits(CDrawPort *pdp)
-  {
+  void RenderCredits(CDrawPort *pdp) {
     CWorldSettingsController *pwsc = GetWSC(this);
-    if( pwsc!=NULL && pwsc->m_penCreditsHolder!=NULL)
-    {
-      CCreditsHolder &cch = (CCreditsHolder &) *pwsc->m_penCreditsHolder;
+
+    if (pwsc != NULL && pwsc->m_penCreditsHolder != NULL) {
+      CCreditsHolder &cch = (CCreditsHolder&)*pwsc->m_penCreditsHolder;
       cch.Credits_Render(&cch, pdp);
     }
-  }
+  };
   
-  void RenderTextFX(CDrawPort *pdp)
-  {
+  void RenderTextFX(CDrawPort *pdp) {
     CWorldSettingsController *pwsc = GetWSC(this);
-    if( pwsc!=NULL && pwsc->m_penTextFXHolder!=NULL)
-    {
-      CTextFXHolder &tfx = (CTextFXHolder &) *pwsc->m_penTextFXHolder;
+
+    if (pwsc != NULL && pwsc->m_penTextFXHolder != NULL) {
+      CTextFXHolder &tfx = (CTextFXHolder&)*pwsc->m_penTextFXHolder;
       tfx.TextFX_Render(&tfx, pdp);
     }
-  }
+  };
 
-  void RenderHudPicFX(CDrawPort *pdp)
-  {
+  void RenderHudPicFX(CDrawPort *pdp) {
     CWorldSettingsController *pwsc = GetWSC(this);
-    if( pwsc!=NULL && pwsc->m_penHudPicFXHolder!=NULL)
-    {
+
+    if (pwsc != NULL && pwsc->m_penHudPicFXHolder != NULL) {
       CHudPicHolder &hpfx = (CHudPicHolder &) *pwsc->m_penHudPicFXHolder;
       hpfx.HudPic_Render(&hpfx, pdp);
     }
-  }
-
-/************************************************************
- *                    RENDER GAME VIEW                      *
- ************************************************************/
+  };
 
   // setup viewing parameters for viewing from player or camera
   void SetupView(CDrawPort *pdp, CAnyProjection3D &apr, CEntity *&penViewer, 
@@ -2706,7 +2742,7 @@ functions:
     // set up viewer position
     apr = prPerspectiveProjection;
     apr->ViewerPlacementL() = plViewer;
-    apr->ObjectPlacementL() = CPlacement3D(FLOAT3D(0,0,0), ANGLE3D(0,0,0));
+    apr->ObjectPlacementL() = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
     prPlayerProjection = apr;
     prPlayerProjection->Prepare();
   }
@@ -2797,7 +2833,7 @@ functions:
 
       if (hud_bShowAll && bShowExtras) {
         // let the player entity render its interface
-        CPlacement3D plLight(_vViewerLightDirection, ANGLE3D(0,0,0));
+        CPlacement3D plLight(_vViewerLightDirection, ANGLE3D(0.0f, 0.0f, 0.0f));
         plLight.AbsoluteToRelative(plViewer);
         RenderHUD(*(CPerspectiveProjection3D *)(CProjection3D *)apr, pdp, 
           plLight.pl_PositionVector, _colViewerLight, _colViewerAmbient, 
@@ -2823,7 +2859,7 @@ functions:
       pdp->PutTextCXY(m_strCenterMessage, pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
 
     // print picked item
-    } else if (_pTimer->CurrentTick()<m_tmLastPicked+PICKEDREPORT_TIME) {
+    } else if (_pTimer->CurrentTick() < m_tmLastPicked + PICKEDREPORT_TIME) {
       CTString strPicked;
       if (m_fPickedAmmount==0) {
         strPicked = m_strPickedName;
@@ -3034,21 +3070,8 @@ functions:
     pdp->Lock();
   };
 
-
-
-
-/************************************************************
- *                   PRE/DO/POST MOVING                     *
- ************************************************************/
-
   // premoving for soft player up-down movement
   void PreMoving(void) {
-    /*CPrintF("pos(%s): %g,%g,%g\n", GetPredictName(), 
-      GetPlacement().pl_PositionVector(1),
-      GetPlacement().pl_PositionVector(2),
-      GetPlacement().pl_PositionVector(3));
-      */
-
     ((CPlayerAnimator&)*m_penAnimator).StoreLast();
     CPlayerEntity::PreMoving();
   };
@@ -3066,10 +3089,8 @@ functions:
     }
   };
 
-
   // postmoving for soft player up-down movement
-  void PostMoving(void)
-  {
+  void PostMoving(void) {
     CPlayerEntity::PostMoving();
     // never allow a player to be removed from the list of movers
     en_ulFlags &= ~ENF_INRENDERING;
@@ -3130,7 +3151,7 @@ functions:
     ForceFullStop();
     SetPhysicsFlags(GetPhysicsFlags() & ~(EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY));
     SetCollisionFlags(GetCollisionFlags() & ~((ECBI_BRUSH|ECBI_MODEL)<<ECB_TEST));
-    en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle = ANGLE3D(0,0,0);
+    en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
 
     StartModelAnim(PLAYER_ANIM_STAND, 0);
     // [Cecil] Default animation instead of walking animation
@@ -3180,11 +3201,6 @@ functions:
     strm.FPrintF_t("m_fArmor: %g(%08x)\n", m_fArmor, (ULONG&)m_fArmor);
   }
 
-/************************************************************
- *         DAMAGE OVERRIDE (PLAYER HAS ARMOR)               *
- ************************************************************/
-
-
   // leave stain
   virtual void LeaveStain( BOOL bGrow)
   {
@@ -3207,15 +3223,15 @@ functions:
         // stain
         if (bGrow) {
           ese.betType    = BET_BLOODSTAINGROW;
-          ese.vStretch   = FLOAT3D( fStretch*1.5f, fStretch*1.5f, 1.0f);
+          ese.vStretch   = FLOAT3D(fStretch*1.5f, fStretch*1.5f, 1.0f);
         } else {
           ese.betType    = BET_BLOODSTAIN;
-          ese.vStretch   = FLOAT3D( fStretch*0.75f, fStretch*0.75f, 1.0f);
+          ese.vStretch   = FLOAT3D(fStretch*0.75f, fStretch*0.75f, 1.0f);
         }
-        ese.vNormal    = FLOAT3D( vPlaneNormal);
-        ese.vDirection = FLOAT3D( 0, 0, 0);
+        ese.vNormal    = FLOAT3D(vPlaneNormal);
+        ese.vDirection = FLOAT3D(0.0f, 0.0f, 0.0f);
         FLOAT3D vPos = vPoint+ese.vNormal/50.0f*(FRnd()+0.5f);
-        CEntityPointer penEffect = CreateEntity( CPlacement3D(vPos, ANGLE3D(0,0,0)), CLASS_BASIC_EFFECT);
+        CEntityPointer penEffect = CreateEntity(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)), CLASS_BASIC_EFFECT);
         penEffect->Initialize(ese);
       }
     }
@@ -3264,7 +3280,7 @@ functions:
 
     // fade damage out
     if (tmDelta>=_pTimer->TickQuantum*3) {
-      m_vDamage=FLOAT3D(0,0,0);
+      m_vDamage=FLOAT3D(0.0f, 0.0f, 0.0f);
     }
     // add new damage
     FLOAT3D vDirectionFixed;
@@ -3323,7 +3339,7 @@ functions:
       m_fSprayDamage+fDamageAmmount>50.0f)) {
 
       // spawn blood spray
-      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0, 0, 0));
+      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0.0f, 0.0f, 0.0f));
       m_penSpray = CreateEntity( plSpray, CLASS_BLOOD_SPRAY);
       m_penSpray->SetParent( this);
       ESpawnSpray eSpawnSpray;
@@ -3560,7 +3576,7 @@ functions:
       // dead and
       (GetHealth()<=0) && 
       // has received large enough damage lately and
-      (m_vDamage.Length() > _fBlowUpAmmount) &&
+      (m_vDamage.Length() > _fBlowUpAmount) &&
       // is not blown up already
       GetRenderType()==RT_MODEL;
   };
@@ -3568,7 +3584,7 @@ functions:
   // spawn body parts
   void BlowUp(void)
   {
-    FLOAT3D vNormalizedDamage = m_vDamage-m_vDamage*(_fBlowUpAmmount/m_vDamage.Length());
+    FLOAT3D vNormalizedDamage = m_vDamage-m_vDamage*(_fBlowUpAmount/m_vDamage.Length());
     vNormalizedDamage /= Sqrt(vNormalizedDamage.Length());
     vNormalizedDamage *= 0.75f;
 
@@ -3664,10 +3680,7 @@ functions:
     }
   };
 
-/************************************************************
- *                 OVERRIDEN FUNCTIONS                      *
- ************************************************************/
-  /* Entity info */
+  // Entity info
   void *GetEntityInfo(void)
   {
     switch (m_pstState) {
@@ -3684,8 +3697,7 @@ functions:
     return &eiPlayerGround;
   };
 
-
-  /* Receive item */
+  // Receive item
   BOOL ReceiveItem(const CEntityEvent &ee)
   {
     // *********** HEALTH ***********
@@ -3976,14 +3988,9 @@ functions:
         }
       }
     }
-  }
+  };
 
-  
-/************************************************************
- *                      PLAYER ACTIONS                      *
- ************************************************************/
-  void SetGameEnd(void)
-  {
+  void SetGameEnd(void) {
     _pNetwork->SetGameFinished();
     // start console for first player possible
     for(INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
@@ -3994,10 +4001,10 @@ functions:
         }
       }
     }
-  }
+  };
+
   // check if game should be finished
-  void CheckGameEnd(void)
-  {
+  void CheckGameEnd(void) {
     BOOL bFinished = FALSE;
     // if time limit is out
     INDEX iTimeLimit = GetSP()->sp_iTimeLimit;
@@ -4351,9 +4358,9 @@ functions:
 
     CPlayerAction paAction = pa;
     // ignore keyboard/mouse/joystick commands
-    paAction.pa_vTranslation  = FLOAT3D(0,0,0);
-    paAction.pa_aRotation     = ANGLE3D(0,0,0);
-    paAction.pa_aViewRotation = ANGLE3D(0,0,0);
+    paAction.pa_vTranslation  = FLOAT3D(0.0f, 0.0f, 0.0f);
+    paAction.pa_aRotation     = ANGLE3D(0.0f, 0.0f, 0.0f);
+    paAction.pa_aViewRotation = ANGLE3D(0.0f, 0.0f, 0.0f);
 
     // if moving towards the marker is enabled
     if (m_fAutoSpeed > 0) {
@@ -4435,7 +4442,7 @@ functions:
   void SpawnBubbles(INDEX ctBubbles) {
     for (INDEX iBouble = 0; iBouble < ctBubbles; iBouble++) {
       FLOAT3D vRndRel = FLOAT3D((FRnd()-0.5f)*0.25f, -0.25f, -0.5f+FRnd()/10.0f);
-      ANGLE3D aDummy = ANGLE3D(0,0,0);
+      ANGLE3D aDummy = ANGLE3D(0.0f, 0.0f, 0.0f);
       CPlacement3D plMouth = CPlacement3D(vRndRel, aDummy);
 
       plMouth.RelativeToAbsolute(en_plViewpoint);
@@ -5167,10 +5174,10 @@ functions:
     BOOL bIsFlying = !(GetPhysicsFlags() & EPF_TRANSLATEDBYGRAVITY);
     if (bFlyOn && !bIsFlying) {
       SetPhysicsFlags(GetPhysicsFlags() & ~(EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY));
-      en_plViewpoint.pl_OrientationAngle = ANGLE3D(0, 0, 0);
+      en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     } else if (!bFlyOn && bIsFlying) {
       SetPhysicsFlags(GetPhysicsFlags() | EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY);
-      en_plViewpoint.pl_OrientationAngle = ANGLE3D(0, 0, 0);
+      en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     }
 
     // ghost mode
@@ -5215,12 +5222,6 @@ functions:
       SetHealth(TopHealth());
     }
   };
-
-
-/************************************************************
- *                 END OF PLAYER ACTIONS                    *
- ************************************************************/
-
 
   // Get current placement that the player views from in absolute space.
   void GetLerpedAbsoluteViewPlacement(CPlacement3D &plView) {
@@ -5274,10 +5275,10 @@ functions:
         FLOATmatrix3D mForced = !mDesired*mCurr*!mLast; // = aCurr-aLast-aDesired;
         ANGLE3D aForced; DecomposeRotationMatrixNoSnap(aForced, mForced);
         if (aForced.MaxNorm()<1E-2) {
-          aForced = ANGLE3D(0,0,0);
+          aForced = ANGLE3D(0.0f, 0.0f, 0.0f);
         }
         FLOATquat3D qForced; qForced.FromEuler(aForced);
-        FLOATquat3D qZero;   qZero.FromEuler(ANGLE3D(0,0,0));
+        FLOATquat3D qZero;   qZero.FromEuler(ANGLE3D(0.0f, 0.0f, 0.0f));
         FLOATquat3D qLerped = Slerp(fLerpFactor, qZero, qForced);
         FLOATmatrix3D m;
         qLerped.ToMatrix(m);
@@ -5474,10 +5475,6 @@ functions:
     }
   }
 
-
-/************************************************************
- *                  SPECIAL FUNCTIONS                       *
- ************************************************************/
   // try to find start marker for deathmatch (re)spawning
   CEntity *GetDeathmatchStartMarker(void)
   {
@@ -5544,14 +5541,10 @@ functions:
     return amdMarkers[iMarker].md_ppm;
   }
 
-/************************************************************
- *                  INITIALIZE PLAYER                       *
- ************************************************************/
-
   void InitializePlayer()
   {
     // set viewpoint position inside the entity
-    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0,0,0);
+    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     en_plViewpoint.pl_PositionVector = FLOAT3D(0.0f, plr_fViewHeightStand, 0.0f);
     en_plLastViewpoint = en_plViewpoint;
 
@@ -5873,7 +5866,7 @@ functions:
         ASSERTALWAYS("Unknown world link type");
 
         // [Cecil] No telefrag
-        Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0, 0, 0)), FALSE);
+        Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0.0f, 0.0f, 0.0f)), FALSE);
       }
       // if there is a start trigger target
       if(CpmStart.m_penTarget!=NULL) {
@@ -5890,7 +5883,7 @@ functions:
       // set weapons
       ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(0, 0, 0, 0);
       // start position
-      Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0, 0, 0)));
+      Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0.0f, 0.0f, 0.0f)));
     }
     // send teleport event to all entities in range
     SendEventInRange(ETeleport(), FLOATaabbox3D(GetPlacement().pl_PositionVector, 200.0f));
@@ -6122,17 +6115,10 @@ functions:
   }
 
 procedures:
-/************************************************************
- *                       WOUNDED                            *
- ************************************************************/
   Wounded(EDamage eDamage) {
     return;
   };
 
-
-/************************************************************
- *                     WORLD CHANGE                         *
- ************************************************************/
   WorldChange() {
     // if in single player
     if (GetSP()->sp_bSinglePlayer) {
@@ -6191,10 +6177,6 @@ procedures:
     m_ulFlags &= ~PLF_CHANGINGLEVEL;
     return;
   }
-
-/************************************************************
- *                       D E A T H                          *
- ************************************************************/
 
   Death(EDeath eDeath) {
     // stop firing when dead
@@ -6361,7 +6343,7 @@ procedures:
         }
       }
     }
-    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0,0,0);
+    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     StartModelAnim(iAnim1, 0);
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
     moBody.PlayAnim(iAnim2, 0);
@@ -6507,7 +6489,7 @@ procedures:
       BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
 
-    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0,0,0);
+    en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
 
     // call computer
     m_bEndOfGame = TRUE;
@@ -6526,9 +6508,6 @@ procedures:
     }
   };
 
-/************************************************************
- *                      R E B I R T H                       *
- ************************************************************/
   FirstInit() {
     // clear use button and zoom flag
     bUseButtonHeld = FALSE;
@@ -6781,7 +6760,7 @@ procedures:
 
     autowait(GetModelObject()->GetCurrentAnimLength()/2);
 
-    m_vAutoSpeed = FLOAT3D(0,0,0);
+    m_vAutoSpeed = FLOAT3D(0.0f, 0.0f, 0.0f);
  
     // start looking around
     StartModelAnim(PLAYER_ANIM_STAND, 0);
@@ -6837,7 +6816,7 @@ procedures:
 
     // put it to normal state
     SetPhysicsFlags(GetPhysicsFlags() | EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY);
-    SetDesiredRotation(ANGLE3D(0,0,0));
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
     m_ulFlags&=~PLF_AUTOMOVEMENTS;
 
     // [Cecil] SPAWN_FALLDOWN -> DEATH_BACK
@@ -7274,9 +7253,6 @@ procedures:
     return EVoid();
   };
 
-/************************************************************
- *                        M  A  I  N                        *
- ************************************************************/
   Main() {
     // remember start time
     time(&m_iStartTime);

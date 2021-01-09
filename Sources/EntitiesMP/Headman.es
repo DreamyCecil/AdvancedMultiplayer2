@@ -350,9 +350,6 @@ functions:
     }
   }
 
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
   void BlowUpNotify(void) {
     // kamikaze and bomberman explode if is not already exploded
     if (m_hdtType==HDT_KAMIKAZE || m_hdtType==HDT_BOMBERMAN) {
@@ -477,9 +474,6 @@ functions:
   }
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   InitializeAttack(EVoid) : CEnemyBase::InitializeAttack {
     if (m_hdtType==HDT_KAMIKAZE) {
       KamikazeSoundOn();
@@ -532,7 +526,7 @@ procedures:
     FLOAT fRelativeHdg;
     CalculateAngularLaunchParams(
       GetPlacement().pl_PositionVector, BOMBERMAN_LAUNCH(2)-1.5f,
-      m_penEnemy->GetPlacement().pl_PositionVector, FLOAT3D(0,0,0),
+      m_penEnemy->GetPlacement().pl_PositionVector, FLOAT3D(0.0f, 0.0f, 0.0f),
       BOMBERMAN_ANGLE,
       fLaunchSpeed,
       fRelativeHdg);
@@ -595,22 +589,15 @@ procedures:
     autowait(0.2f + FRnd()/4);
 
     StartModelAnim(HEADMAN_ANIM_ROCKETMAN_ATTACK, 0);
-    ShootProjectile(PRT_HEADMAN_ROCKETMAN, FLOAT3D(0.0f, 1.0f, 0.0f), ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_HEADMAN_ROCKETMAN, FLOAT3D(0.0f, 1.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soSound, SOUND_FIREROCKETMAN, SOF_3D);
 
     autowait(1.0f + FRnd()/3);
     return EEnd();
   };
 
-
-
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
   Death(EVoid) : CEnemyBase::Death {
-    // don't check this because summoner can send death event even to kamikaze
-    // ASSERT(m_hdtType!=HDT_KAMIKAZE);
-    // instead, stop playing the yelling sound
+    // stop playing the yelling sound
     if (m_hdtType==HDT_KAMIKAZE) {
       KamikazeSoundOff();
     }
@@ -623,11 +610,6 @@ procedures:
     return EEnd();
   };
 
-
-
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

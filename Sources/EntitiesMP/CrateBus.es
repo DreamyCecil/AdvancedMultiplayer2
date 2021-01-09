@@ -150,7 +150,7 @@ functions:
 
   void SpawnExplosion(INDEX iCharacter, FLOAT fAddY, FLOAT fSize)
   {
-    FLOAT3D vOffset=FLOAT3D(0,0,0);
+    FLOAT3D vOffset=FLOAT3D(0.0f, 0.0f, 0.0f);
     // spawn explosion
     if(iCharacter>=0)
     {
@@ -166,7 +166,7 @@ functions:
     else
     {
       // rnd pos
-      vOffset=FLOAT3D( (FRnd()-0.5f)*4.0f, 3.0f+(FRnd())*1.0f+fAddY, (FRnd()-0.5f)*36.0f)*m_fStretch;
+      vOffset=FLOAT3D((FRnd()-0.5f)*4.0f, 3.0f+(FRnd())*1.0f+fAddY, (FRnd()-0.5f)*36.0f)*m_fStretch;
     }
 
     CPlacement3D plExplosion = GetPlacement();
@@ -224,7 +224,7 @@ procedures:
       FLOAT fAddY=1.0f*m_fStretch;
       FLOAT3D vOffset=FLOAT3D(-1.0f+iX*2.0f, 3.0f+(FRnd())*1.0f+fAddY, -14.5f+iZ*2.8f)*m_fStretch;
       FLOAT3D vPos = GetPlacement().pl_PositionVector+vOffset;
-      CEntityPointer penDebris = GetWorld()->CreateEntity_t( CPlacement3D(vPos, ANGLE3D(0,0,0)),
+      CEntityPointer penDebris = GetWorld()->CreateEntity_t(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)),
         CTFILENAME("Classes\\Debris.ecl"));
       // prepare parameters
       ESpawnDebris eSpawn;
@@ -242,14 +242,14 @@ procedures:
       eSpawn.ptdBump = NULL;
       eSpawn.iModelAnim = 0;
       eSpawn.fSize = m_fStretch;
-      eSpawn.vStretch = FLOAT3D(1,1,1);
+      eSpawn.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
       eSpawn.penFallFXPapa=NULL;
       // initialize it
       penDebris->Initialize(eSpawn);
 
       // speed it up
-      FLOAT3D vSpeed = FLOAT3D( FRnd()-0.5f, 0.25f+FRnd()*0.75f, FRnd()-0.5f)*60.0f;
-      FLOAT3D vRot   = FLOAT3D( FRnd()-0.5f, FRnd()-0.5f, FRnd()-0.5f)*200.0f;
+      FLOAT3D vSpeed = FLOAT3D(FRnd()-0.5f, 0.25f+FRnd()*0.75f, FRnd()-0.5f)*60.0f;
+      FLOAT3D vRot   = FLOAT3D(FRnd()-0.5f, FRnd()-0.5f, FRnd()-0.5f)*200.0f;
       ((CMovableEntity&)*penDebris).LaunchAsFreeProjectile( vSpeed, NULL);
       ((CMovableEntity&)*penDebris).SetDesiredRotation( vRot);
 
@@ -268,9 +268,6 @@ procedures:
     return;
   }
 
- /************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     if( m_bActive)
@@ -291,7 +288,7 @@ procedures:
 
     m_bShowTrail=FALSE;
     AddRiders();
-    GetModelObject()->StretchModel( FLOAT3D(m_fStretch,m_fStretch,m_fStretch));
+    GetModelObject()->StretchModel(FLOAT3D(m_fStretch,m_fStretch,m_fStretch));
     ModelChangeNotify();
 
     autowait(0.1f);

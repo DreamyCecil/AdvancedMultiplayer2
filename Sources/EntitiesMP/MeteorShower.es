@@ -77,14 +77,9 @@ functions:
   }
 
 procedures:
-/************************************************************
- *                    A C T I O N S                         *
- ************************************************************/
   // active state
-  Active(EVoid)
-  {
+  Active(EVoid) {
     while (TRUE) {
-      
       wait(_pTimer->TickQuantum) {
         on (EBegin) : { 
           resume;
@@ -96,25 +91,25 @@ procedures:
           MaybeShootMeteor();
           stop;
         }
-      } // wait
-
+      }
     }
   };
 
   // inactive state
-  Inactive(EVoid)
-  {
+  Inactive(EVoid) {
     wait() {
       on (EBegin) : { resume; }
       on (EEnvironmentStart) : { jump Active(); }
     }
   };
 
-
   Main(EVoid) {
-
-    if (m_fMinStretch>m_fMaxStretch) { m_fMinStretch = m_fMaxStretch; }
-    if (m_rSafeArea>m_rArea) { m_rSafeArea = m_rArea; }
+    if (m_fMinStretch > m_fMaxStretch) {
+      m_fMinStretch = m_fMaxStretch;
+    }
+    if (m_rSafeArea > m_rArea) {
+      m_rSafeArea = m_rArea;
+    }
 
     InitAsEditorModel();
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
@@ -127,6 +122,5 @@ procedures:
     autowait(0.05f);
 
     jump Inactive();
-  }
-
+  };
 };

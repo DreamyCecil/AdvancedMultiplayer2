@@ -57,17 +57,17 @@ features  "HasName", "IsTargetable", "CanBePredictable";
 
 properties:
   1 CEntityPointer m_penWatcher,      // watcher
-  2 FLOAT3D m_vStartPosition = FLOAT3D(0,0,0),         // start position
+  2 FLOAT3D m_vStartPosition = FLOAT3D(0.0f, 0.0f, 0.0f), // start position
   3 CEntityPointer m_penEnemy,        // current enemy
   4 enum TargetType m_ttTarget = TT_NONE, // type of target
   5 CTString m_strDescription = "Enemy base",
   6 CTString m_strName  "Name" 'N' = "Enemy base",
   7 CSoundObject m_soSound,
-  8 FLOAT3D m_vStartDirection = FLOAT3D(0,0,-1),         // for returning to start
+  8 FLOAT3D m_vStartDirection = FLOAT3D(0.0f, 0.0f, -1.0f), // for returning to start
   9 BOOL m_bOnStartPosition = TRUE,
  29 FLOAT m_fFallHeight "Fall height" = 8.0f,
  31 FLOAT m_fStepHeight "Step height" = -1.0f,
- 17 RANGE m_fSenseRange "Sense Range" = 0.0f,       // immediately spots any player that gets closer than this
+ 17 RANGE m_fSenseRange "Sense Range" = 0.0f, // immediately spots any player that gets closer than this
  28 FLOAT m_fViewAngle "View angle" 'V' = 360.0f, // view frustum angle for spotting players
 
  // moving/attack properties - CAN BE SET
@@ -90,17 +90,17 @@ properties:
  40 FLOAT m_fBlowUpAmount = 0.0f,             // damage in minus for blow up
  41 INDEX m_fBodyParts = 4,                   // number of spawned body parts
  42 FLOAT m_fDamageWounded = 0.0f,            // damage amount to be wounded
- 43 FLOAT3D m_vDamage = FLOAT3D(0,0,0),       // current damage impact
+ 43 FLOAT3D m_vDamage = FLOAT3D(0.0f, 0.0f, 0.0f),       // current damage impact
  44 FLOAT m_tmLastDamage = -1000.0f,
  46 BOOL m_bRobotBlowup = FALSE,    // set for robots parts blowup, otherwise blowup flesh
  47 FLOAT m_fBlowUpSize = 2.0f,
 
  // logic temporary variables -> DO NOT USE
 133 FLOAT m_fMoveTime = 0.0f,
- 52 FLOAT3D m_vDesiredPosition = FLOAT3D(0,0,0),
+ 52 FLOAT3D m_vDesiredPosition = FLOAT3D(0.0f, 0.0f, 0.0f),
  53 enum DestinationType m_dtDestination =  DT_PLAYERCURRENT, // type of current desired position
  59 CEntityPointer m_penPathMarker,   // current path finding marker
- 18 FLOAT3D m_vPlayerSpotted =  FLOAT3D(0,0,0), // where player was last spotted
+ 18 FLOAT3D m_vPlayerSpotted =  FLOAT3D(0.0f, 0.0f, 0.0f), // where player was last spotted
  54 FLOAT m_fMoveFrequency = 0.0f,
  55 FLOAT m_fMoveSpeed = 0.0f,
  56 ANGLE m_aRotateSpeed = 0,
@@ -155,14 +155,14 @@ properties:
 147 FLOAT m_fSprayDamage = 0.0f,     // total ammount of damage
 148 CEntityPointer m_penSpray,       // the blood spray
 149 FLOAT m_fMaxDamageAmmount  = 0.0f, // max ammount of damage received in in last few ticks
-150 FLOAT3D m_vLastStain  = FLOAT3D(0,0,0), // where last stain was left
+150 FLOAT3D m_vLastStain  = FLOAT3D(0.0f, 0.0f, 0.0f), // where last stain was left
 151 enum SprayParticlesType m_sptType = SPT_BLOOD, // type of particles
 
 160 CEntityPointer m_penTacticsHolder "Tactics Holder",
 161 BOOL  m_bTacticActive = FALSE,
 162 FLOAT m_tmTacticsActivation = 0.0f,
 // warning! tactic variables are also used for dust spawning
-163 FLOAT3D m_vTacticsStartPosition = FLOAT3D(0,0,0),
+163 FLOAT3D m_vTacticsStartPosition = FLOAT3D(0.0f, 0.0f, 0.0f),
 165 FLOAT m_fTacticVar1 = 0.0f,
 166 FLOAT m_fTacticVar2 = 0.0f,
 167 FLOAT m_fTacticVar3 = 0.0f,
@@ -683,7 +683,7 @@ functions:
 
     // fade damage out
     if (tmDelta>=_pTimer->TickQuantum*3) {
-      m_vDamage=FLOAT3D(0,0,0);
+      m_vDamage = FLOAT3D(0.0f, 0.0f, 0.0f);
     }
     // add new damage
     FLOAT3D vDirectionFixed;
@@ -693,14 +693,7 @@ functions:
       vDirectionFixed = -en_vGravityDir;
     }
     FLOAT3D vDamageOld = m_vDamage;
-/*    if( (dmtType == DMT_EXPLOSION) || (dmtType == DMT_CANNONBALL_EXPLOSION) )
-    {
-      m_vDamage+=(vDirectionFixed/2-en_vGravityDir/2)*fKickDamage;
-    }
-    else*/
-    {
-      m_vDamage+=(vDirectionFixed-en_vGravityDir/2)*fKickDamage;
-    }
+    m_vDamage+=(vDirectionFixed-en_vGravityDir/2)*fKickDamage;
     
     FLOAT fOldLen = vDamageOld.Length();
     FLOAT fNewLen = m_vDamage.Length();
@@ -741,7 +734,7 @@ functions:
       !(dmtType==DMT_BURNING && GetHealth()<0) ) {
 
       // spawn blood spray
-      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0, 0, 0));
+      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0.0f, 0.0f, 0.0f));
       m_penSpray = CreateEntity( plSpray, CLASS_BLOOD_SPRAY);
       if(m_sptType != SPT_ELECTRICITY_SPARKS)
       {
@@ -798,11 +791,7 @@ functions:
       dmtType, fNewDamage, vHitPoint, vDirection);
   };
 
-
-/************************************************************
- *                        FADE OUT                          *
- ************************************************************/
-
+  // Fade out
   BOOL AdjustShadingParameters(FLOAT3D &vLightDirection, COLOR &colLight, COLOR &colAmbient)
   {
     colAmbient = AddColors( colAmbient, m_colColor);
@@ -1049,10 +1038,6 @@ functions:
     return penOld!=penPlayer;
   }
 
-/************************************************************
- *                     MOVING FUNCTIONS                     *
- ************************************************************/
-
   // get movement frequency for attack
   virtual FLOAT GetAttackMoveFrequency(FLOAT fEnemyDistance) {
     if (fEnemyDistance > GetProp(m_fCloseDistance)) {
@@ -1188,7 +1173,7 @@ functions:
     // if we may not rotate
     } else {
       // stop rotating
-      SetDesiredRotation(ANGLE3D(0, 0, 0));
+      SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
     }
 
     // if we may move
@@ -1205,7 +1190,7 @@ functions:
     // if we may not move
     } else {
       // stop translating
-      SetDesiredTranslation(FLOAT3D(0, 0, 0));
+      SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
     }
 
     return ulFlags;
@@ -1221,7 +1206,7 @@ functions:
   // stop desired rotation
   void StopRotating() 
   {
-    SetDesiredRotation(ANGLE3D(0, 0, 0));
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
   };
 
   // stop desired translation
@@ -1352,10 +1337,6 @@ functions:
 
     return m_penPathMarker!=NULL;
   }
-
-  /************************************************************
- *                   TACTICS FUNCTIONS                      *
- ************************************************************/
 
   void InitializeTactics( void )   {
   
@@ -1556,9 +1537,6 @@ functions:
     m_tmTacticsActivation = -1.0f;    
   }
 
-/************************************************************
- *                   ATTACK SPECIFIC                        *
- ************************************************************/
   // can attack (shoot) at entity in plane - ground support
   BOOL CanAttackEnemy(CEntity *penTarget, FLOAT fCosAngle) {
     if (IsInPlaneFrustum(penTarget, fCosAngle)) {
@@ -1689,7 +1667,7 @@ functions:
     if (peiTarget != NULL)
     {
       // get body center vector
-      FLOAT3D vBody = FLOAT3D(peiTarget->vTargetCenter[0],peiTarget->vTargetCenter[1],peiTarget->vTargetCenter[2]);
+      FLOAT3D vBody = FLOAT3D(peiTarget->vTargetCenter[0], peiTarget->vTargetCenter[1], peiTarget->vTargetCenter[2]);
       FLOATmatrix3D mRotation;
       MakeRotationMatrixFast(mRotation, m_penEnemy->GetPlacement().pl_OrientationAngle);
       vShootTarget = vPredictedPos + vBody*mRotation;
@@ -1731,10 +1709,6 @@ functions:
     return  WouldNotLeaveAttackRadius() && !bEnemyDiving;
   };
 
-
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
   // should this enemy blow up (spawn debris)
   virtual BOOL ShouldBlowUp(void) 
   {
@@ -1867,7 +1841,7 @@ functions:
       eSpawnEffect.colMuliplier = C_WHITE|CT_OPAQUE;
       eSpawnEffect.betType = BET_BOMB;
       FLOAT fSize = m_fBlowUpSize*0.3f;
-      eSpawnEffect.vStretch = FLOAT3D(fSize,fSize,fSize);
+      eSpawnEffect.vStretch = FLOAT3D(fSize, fSize, fSize);
       penExplosion->Initialize(eSpawnEffect);
     }
 
@@ -1876,11 +1850,6 @@ functions:
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
   }
-
-
-/************************************************************
- *                CLASS SUPPORT FUNCTIONS                   *
- ************************************************************/
 
   // leave stain
   virtual void LeaveStain( BOOL bGrow)
@@ -1904,15 +1873,15 @@ functions:
         // stain
         if (bGrow) {
           ese.betType    = BET_BLOODSTAINGROW;
-          ese.vStretch   = FLOAT3D( fStretch*1.5f, fStretch*1.5f, 1.0f);
+          ese.vStretch   = FLOAT3D(fStretch*1.5f, fStretch*1.5f, 1.0f);
         } else {
           ese.betType    = BET_BLOODSTAIN;
-          ese.vStretch   = FLOAT3D( fStretch*0.75f, fStretch*0.75f, 1.0f);
+          ese.vStretch   = FLOAT3D(fStretch*0.75f, fStretch*0.75f, 1.0f);
         }
-        ese.vNormal    = FLOAT3D( vPlaneNormal);
-        ese.vDirection = FLOAT3D( 0, 0, 0);
+        ese.vNormal    = FLOAT3D(vPlaneNormal);
+        ese.vDirection = FLOAT3D(0.0f, 0.0f, 0.0f);
         FLOAT3D vPos = vPoint+ese.vNormal/50.0f*(FRnd()+0.5f);
-        CEntityPointer penEffect = CreateEntity( CPlacement3D(vPos, ANGLE3D(0,0,0)), CLASS_BASIC_EFFECT);
+        CEntityPointer penEffect = CreateEntity(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)), CLASS_BASIC_EFFECT);
         penEffect->Initialize(ese);
       }
     }
@@ -1928,10 +1897,6 @@ functions:
     m_fAttackFireTime *= 1/fAttackSpeed;
     m_fCloseFireTime *= 1/fAttackSpeed;
   };
-
-/************************************************************
- *                SOUND VIRTUAL FUNCTIONS                   *
- ************************************************************/
 
   // wounded -> yell
   void WoundedNotify(const EDamage &eDamage)
@@ -1967,11 +1932,7 @@ functions:
     SendEventInRange(eSound, FLOATaabbox3D(GetPlacement().pl_PositionVector, 50.0f));
   };
 
-
-
-/************************************************************
- *          VIRTUAL FUNCTIONS THAT NEED OVERRIDE            *
- ************************************************************/
+  // Functions for overriding
   virtual void StandingAnim(void) {};
   virtual void StandingAnimFight(void) { StandingAnim(); };
   virtual void WalkingAnim(void) {};
@@ -1989,8 +1950,7 @@ functions:
   virtual void DeathSound(void) {};
   virtual FLOAT GetLockRotationSpeed(void) { return 2000.0f;};
 
-
-  // render particles
+  // Render particles
   void RenderParticles(void) {
     // no particles when not existing
     if (GetRenderType()!=CEntity::RT_MODEL && GetRenderType()!=CEntity::RT_SKAMODEL) {
@@ -2113,11 +2073,6 @@ functions:
 
 
 procedures:
-
-//**********************************************************
-//                 MOVEMENT PROCEDURES
-//**********************************************************
-
   // move to given destination position
   MoveToDestination(EVoid) 
   {
@@ -2352,11 +2307,6 @@ procedures:
     // return to called
     return EReturn();
   };
-
-
-//**********************************************************
-//                 ATTACK PROCEDURES
-//**********************************************************
 
   // sequence that is activated when a new player is spotted visually or heard
   NewEnemySpotted()
@@ -2674,10 +2624,6 @@ procedures:
     return EReturn();
   };
 
-//**********************************************************
-//                 COMBAT IMPLEMENTATION
-//**********************************************************
-
   // this is called to hit the player when near
   Hit(EVoid) 
   { 
@@ -2689,10 +2635,6 @@ procedures:
   { 
     return EReturn(); 
   }
-
-//**********************************************************
-//                 COMBAT HELPERS
-//**********************************************************
 
   // call this to lock on player for some time - set m_fLockOnEnemyTime before calling
   LockOnEnemy(EVoid) 
@@ -2756,7 +2698,7 @@ procedures:
           FLOAT3D vSpeed;
           GetHeadingDirection(m_fChargeHitAngle, vSpeed);
           // damage entity in that direction
-          InflictDirectDamage(etouch.penOther, this, DMT_CLOSERANGE, m_fChargeHitDamage, FLOAT3D(0, 0, 0), vSpeed);
+          InflictDirectDamage(etouch.penOther, this, DMT_CLOSERANGE, m_fChargeHitDamage, FLOAT3D(0.0f, 0.0f, 0.0f), vSpeed);
           // push it away
           vSpeed = vSpeed * m_fChargeHitSpeed;
           KickEntity(etouch.penOther, vSpeed);
@@ -2784,10 +2726,6 @@ procedures:
     // return to caller
     return EReturn();
   };
-
-//**********************************************************
-//             WOUNDING AND DYING PROCEDURES
-//**********************************************************
 
   // play wounding animation
   BeWounded(EDamage eDamage)
@@ -2918,7 +2856,7 @@ procedures:
     // start death anim
     INDEX iAnim = AnimForDeath();
     // use tactic variables for temporary data
-    m_vTacticsStartPosition=FLOAT3D(1,1,1);
+    m_vTacticsStartPosition=FLOAT3D(1.0f, 1.0f, 1.0f);
     m_fTacticVar4=WaitForDust(m_vTacticsStartPosition);
     // remember start time
     m_fTacticVar5=_pTimer->CurrentTick();
@@ -2942,7 +2880,7 @@ procedures:
           ESpawnEffect ese;
           ese.colMuliplier = C_WHITE|CT_OPAQUE;
           ese.vStretch = m_vTacticsStartPosition;
-          ese.vNormal = FLOAT3D(0,1,0);
+          ese.vNormal = FLOAT3D(0.0f, 1.0f, 0.0f);
           ese.betType = BET_DUST_FALL;
           CPlacement3D plSmoke=plFX;
           plSmoke.pl_PositionVector+=FLOAT3D(0,0.35f*m_vTacticsStartPosition(2),0);
@@ -2992,9 +2930,6 @@ procedures:
 
     return EEnd();
   }
-//**********************************************************
-//                MAIN LOOP PROCEDURES
-//**********************************************************
 
   // move
   Active(EVoid) 

@@ -211,9 +211,6 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   DiveHit(EVoid) : CEnemyDive::DiveHit
   {
     if (CalcDist(m_penEnemy) > DISTANCE_ELECTRICITY)
@@ -261,9 +258,6 @@ procedures:
     jump DiveHit();
   }
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

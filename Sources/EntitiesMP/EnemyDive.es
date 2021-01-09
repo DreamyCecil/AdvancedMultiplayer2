@@ -83,9 +83,7 @@ functions:
     }
     return FALSE;
   };
-/************************************************************
- *                        POST MOVING                       *
- ************************************************************/
+
   void PostMoving(void) {
     CEnemyBase::PostMoving();
     // change to liquid
@@ -104,11 +102,6 @@ functions:
     }
   };
 
-
-
-/************************************************************
- *                     MOVING FUNCTIONS                     *
- ************************************************************/
   // set desired rotation and translation to go/orient towards desired position
   // and get the resulting movement type
   virtual ULONG SetDesiredMovement(void) 
@@ -144,9 +137,6 @@ functions:
     return WouldNotLeaveAttackRadius();
   }
 
-/************************************************************
- *                CLASS SUPPORT FUNCTIONS                   *
- ************************************************************/
   // set entity position
   void SetEntityPosition() {
     switch (m_EedtType) {
@@ -170,22 +160,11 @@ functions:
     StandingAnim();
   };
 
-
-/************************************************************
- *          VIRTUAL FUNCTIONS THAT NEED OVERRIDE            *
- ************************************************************/
+  // Functions for overriding
   virtual void ChangeCollisionToLiquid(void) {}
   virtual void ChangeCollisionToGround(void) {}
 
-
-
 procedures:
-/************************************************************
- *      PROCEDURES WHEN NO ANY SPECIAL ACTION               *
- ************************************************************/
-/************************************************************
- *                 ATTACK ENEMY PROCEDURES                  *
- ************************************************************/
   // this is called to hit the player when near
   Hit(EVoid) : CEnemyBase::Hit
   { 
@@ -206,9 +185,6 @@ procedures:
     }
   }
 
-/************************************************************
- *                M  A  I  N    L  O  O  P                  *
- ************************************************************/
   // main loop
   MainLoop(EVoid) : CEnemyBase::MainLoop {
     SetEntityPosition();
@@ -220,11 +196,6 @@ procedures:
     return;
   };
 
-
-
-/************************************************************
- *          VIRTUAL PROCEDURES THAT NEED OVERRIDE           *
- ************************************************************/
   // this is called to hit the player when near and you are on ground
   GroundHit(EVoid) 
   { 

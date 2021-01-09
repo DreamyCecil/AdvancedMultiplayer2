@@ -12,11 +12,9 @@
   EPF_TRANSLATEDBYGRAVITY|EPF_MOVABLE|EPF_ABSOLUTETRANSLATE)
 %}
 
-
 uses "EntitiesMP/AirElemental";
 uses "EntitiesMP/Elemental";
 uses "EntitiesMP/Spinner";
-
 
 // input parameter for twister
 event ETwister {
@@ -28,14 +26,12 @@ event ETwister {
   BOOL  bMovingAllowed,           // if moving is allowed
 };
 
-
 %{
 static EntityInfo eiTwister = {
   EIBT_AIR, 0.0f,
   0.0f, 1.0f, 0.0f,
   0.0f, 0.75f, 0.0f,
 };
-
 
 #define MOVE_FREQUENCY 0.1f
 #define ROTATE_SPEED 10000.0f
@@ -56,19 +52,19 @@ thumbnail "";
 features  "ImplementsOnPrecache";
 
 properties:
-  1 CEntityPointer m_penOwner,                  // entity which owns it
-  2 FLOAT   m_fSize = 1.0f,                     // size
-  3 FLOAT3D m_vSpeed = FLOAT3D(0,0,0),          // current speed
-  4 INDEX   m_sgnSpinDir = 1,                   // spin clockwise
-  5 BOOL    m_bGrow = TRUE,                     // grow to full size?
-  6 FLOAT   m_tmLastMove = 0.0f,                // when moving has started
-  7 FLOAT3D m_aSpeedRotation = FLOAT3D(0,0,0),
+  1 CEntityPointer m_penOwner, // entity which owns it
+  2 FLOAT   m_fSize = 1.0f,
+  3 FLOAT3D m_vSpeed = FLOAT3D(0.0f, 0.0f, 0.0f), // current speed
+  4 INDEX   m_sgnSpinDir = 1,    // spin clockwise
+  5 BOOL    m_bGrow = TRUE,      // grow to full size
+  6 FLOAT   m_tmLastMove = 0.0f, // when moving has started
+  7 FLOAT3D m_aSpeedRotation = FLOAT3D(0.0f, 0.0f, 0.0f),
   8 BOOL    m_bMoving = FALSE,
   9 BOOL    m_bMovingAllowed = TRUE,
   
  // internal -> do not use
- 10 FLOAT3D m_vDesiredPosition = FLOAT3D(0,0,0),
- 11 FLOAT3D m_vDesiredAngle = FLOAT3D(0,0,0),
+ 10 FLOAT3D m_vDesiredPosition = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 11 FLOAT3D m_vDesiredAngle = FLOAT3D(0.0f, 0.0f, 0.0f),
  12 FLOAT m_fStopTime = 0.0f,
  13 FLOAT m_fActionRadius = 0.0f,
  14 FLOAT m_fActionTime = 0.0f,
@@ -79,10 +75,9 @@ properties:
  22 FLOAT m_fFadeTime = 2.0f,
  23 FLOAT m_fStartTime = 0.0f,
 
- 50 CSoundObject m_soSpin,  // sound channel for spinning
+ 50 CSoundObject m_soSpin, // sound channel for spinning
 
 components:
-
   1 class   CLASS_SPINNER         "Classes\\Spinner.ecl",
  
  10 model   MODEL_TWISTER         "ModelsMP\\Enemies\\AirElemental\\Twister.mdl",
@@ -124,9 +119,7 @@ functions:
     }
   }
 
-/************************************************************
- *                   FADE OUT & MOVING                      *
- ************************************************************/
+  // Fade out
   BOOL AdjustShadingParameters(FLOAT3D &vLightDirection, COLOR &colLight, COLOR &colAmbient) {
     // fading out
     if (m_bFadeOut) {
@@ -138,19 +131,14 @@ functions:
     }
     return CMovableModelEntity::AdjustShadingParameters(vLightDirection, colLight, colAmbient);
   };
-
-
-/************************************************************
- *                   ATTACK SPECIFIC                        *
- ************************************************************/
   
   void SpinEntity(CEntity *pen) {
-    
     // don't spin air elemental and other twisters and any items
     if (IsOfClass(pen, "AirElemental") || IsOfClass(pen, "Twister")
         || IsDerivedFromClass(pen, "Item")) {
       return;
     }
+
     // don't spin air elementals wind blast
     if (IsOfClass(pen, "Projectile")) {
       if (((CProjectile *)&*pen)->m_prtType==PRT_AIRELEMENTAL_WIND)
@@ -158,8 +146,6 @@ functions:
         return; 
       }
     }
-    
-
 
     if (pen->GetPhysicsFlags()&EPF_MOVABLE) {
       // if any other spinner affects the target, skip this spinner
@@ -243,10 +229,6 @@ functions:
     CMovableModelEntity::PreMoving();
   };
  
-  
-/************************************************************
- *                   P R O C E D U R E S                    *
- ************************************************************/
 procedures:
   // --->>> MAIN
   Main(ETwister et) {
@@ -295,7 +277,7 @@ procedures:
     // beginning random speed
     FLOAT fR = FRndIn(5.0f, 10.0f);
     FLOAT fA = FRnd()*360.0f;
-    m_vSpeed = FLOAT3D(CosFast(fA)*fR, 0, SinFast(fA)*fR);
+    m_vSpeed = FLOAT3D(CosFast(fA)*fR, 0.0f, SinFast(fA)*fR);
     m_bMoving = m_bMovingAllowed;
 
     // move in range

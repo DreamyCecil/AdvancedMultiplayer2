@@ -52,11 +52,8 @@ functions:
     m_iCount = 0;
     pmh->m_penCounter = NULL;
   }
-procedures:
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
+procedures:
   Main(EVoid) {
     // declare yourself as a model
     InitAsEditorModel();

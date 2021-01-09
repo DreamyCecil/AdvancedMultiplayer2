@@ -340,9 +340,6 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   Fire(EVoid) : CEnemyBase::Fire {
     DeactivateWalkingSound();
     // to fire
@@ -360,7 +357,7 @@ procedures:
         PlaySound(m_soFire1, SOUND_CANNON, SOF_3D);
 
       } else {
-        ShootProjectile(PRT_WALKER_ROCKET, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+        ShootProjectile(PRT_WALKER_ROCKET, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0.0f, 0.0f, 0.0f));
         PlaySound(m_soFire1, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
       }
 
@@ -379,7 +376,7 @@ procedures:
         PlaySound(m_soFire2, SOUND_CANNON, SOF_3D);
 
       } else {
-        ShootProjectile(PRT_WALKER_ROCKET, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+        ShootProjectile(PRT_WALKER_ROCKET, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0.0f, 0.0f, 0.0f));
         PlaySound(m_soFire2, SOUND_SERGEANT_FIRE_ROCKET, SOF_3D);
       }
     }
@@ -393,10 +390,10 @@ procedures:
       while(m_iLoopCounter>0) {
         if (m_iLoopCounter%2) {
           StartModelAnim(WALKER_ANIM_FIRELEFT, AOF_LOOPING);
-          ShootProjectile(PRT_CYBORG_LASER, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+          ShootProjectile(PRT_CYBORG_LASER, FIRE_LEFT_ARM*m_fSize, ANGLE3D(0.0f, 0.0f, 0.0f));
         } else {
           StartModelAnim(WALKER_ANIM_FIRERIGHT, AOF_LOOPING);
-          ShootProjectile(PRT_CYBORG_LASER, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0, 0, 0));
+          ShootProjectile(PRT_CYBORG_LASER, FIRE_RIGHT_ARM*m_fSize, ANGLE3D(0.0f, 0.0f, 0.0f));
         }
         INDEX iChannel = m_iLoopCounter%4;
         if (iChannel==0) {
@@ -434,11 +431,6 @@ procedures:
     return EReturn();
   };
 
-
-
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
   Death(EVoid) : CEnemyBase::Death {
     // stop moving
     StopMoving();
@@ -503,9 +495,6 @@ procedures:
     return EEnd();
   };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();
@@ -530,7 +519,7 @@ procedures:
       SetModelMainTexture(TEXTURE_WALKER_SERGEANT);
       AddAttachment(WALKER_ATTACHMENT_ROCKETLAUNCHER_LT, MODEL_ROCKETLAUNCHER, TEXTURE_ROCKETLAUNCHER);
       AddAttachment(WALKER_ATTACHMENT_ROCKETLAUNCHER_RT, MODEL_ROCKETLAUNCHER, TEXTURE_ROCKETLAUNCHER);
-      GetModelObject()->StretchModel(FLOAT3D(1,1,1));
+      GetModelObject()->StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
       ModelChangeNotify();
       CModelObject *pmoRight = &GetModelObject()->GetAttachmentModel(WALKER_ATTACHMENT_ROCKETLAUNCHER_RT)->amo_moModelObject;
       pmoRight->StretchModel(FLOAT3D(-1,1,1));

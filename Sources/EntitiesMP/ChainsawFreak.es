@@ -132,12 +132,12 @@ functions:
   FLOAT WaitForDust(FLOAT3D &vStretch) {
     if(GetModelObject()->GetAnim()==FREAK_ANIM_DEATHRUN)
     {
-      vStretch=FLOAT3D(1,1,2)*1.0f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 2.0f)*1.0f;
       return 0.65f;
     }
     else if(GetModelObject()->GetAnim()==FREAK_ANIM_DEATHSTAND)
     {
-      vStretch=FLOAT3D(1,1,2)*1.5f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 2.0f)*1.5f;
       return 0.72f;
     }
     return -1.0f;
@@ -210,10 +210,6 @@ functions:
     m_bRunSoundPlaying = FALSE;
   }
 
-
-/************************************************************
- *                      ATTACK FUNCTIONS                    *
- ************************************************************/
   // touched another live entity
   void LiveEntityTouched(ETouch etouch) {
     if (m_penLastTouched!=etouch.penOther || _pTimer->CurrentTick()>=m_fLastTouchedTime+0.25f) {
@@ -235,7 +231,7 @@ functions:
         FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
         vDirection.Normalize();
         InflictDirectDamage(etouch.penOther, this, DMT_CHAINSAW, -aHitAngle*40.0f,
-          FLOAT3D(0, 0, 0), vDirection);
+          FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
         // kick touched entity
         FLOAT3D vSpeed = -FLOAT3D(etouch.plCollision);
         vSpeed = vSpeed*10.0f;
@@ -277,9 +273,6 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   // hit enemy
   Hit(EVoid) : CEnemyBase::Hit {
     if (CalcDist(m_penEnemy) < HIT_DISTANCE) {
@@ -306,7 +299,7 @@ procedures:
       if (m_bSawHit) {
         FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
         vDirection.Normalize();
-        InflictDirectDamage(m_penEnemy, this, DMT_CHAINSAW, 20.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CHAINSAW, 20.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
         
         vDirection = vDirection * 10.0f;
         //GetPitchDirection(AngleDeg(90.0f), vSpeed);
@@ -340,15 +333,12 @@ procedures:
   PostRunAwayFromEnemy(EVoid) : CEnemyRunInto::PostRunAwayFromEnemy {
     StartModelAnim(FREAK_ANIM_ATTACKRUNFAR, 0);
     autowait(0.25f);
-    SetDesiredTranslation(FLOAT3D(0,0,0));
+    SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
     StartModelAnim(FREAK_ANIM_IDLE, 0);
     autowait(0.25f);
     return EReturn();
   };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

@@ -143,7 +143,7 @@ functions:
     FLOAT fSpeed = (m_fMaxSpeed-m_fMinSpeed)*FRnd() + m_fMinSpeed;
     ANGLE3D aAngle((FRnd()*2-1)*m_fAngle, (FRnd()*2-1)*m_fAngle, 0);
     // create placement
-    CPlacement3D plLava(FLOAT3D(0, 0, 0), aAngle);
+    CPlacement3D plLava(FLOAT3D(0.0f, 0.0f, 0.0f), aAngle);
     plLava.RelativeToAbsolute(GetPlacement());
 
     SpawnProjectile(plLava, fSpeed);
@@ -179,9 +179,6 @@ functions:
     }
   }
 procedures:
-/************************************************************
- *                    A C T I O N S                         *
- ************************************************************/
   // active state
   Active(EVoid)
   {
@@ -215,11 +212,6 @@ procedures:
     }
   };
 
-
-
-/************************************************************
- *                M  A  I  N    L  O  O  P                  *
- ************************************************************/
   // main loop
   MainLoop(EVoid) {
     wait() {

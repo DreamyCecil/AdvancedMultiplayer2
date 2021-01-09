@@ -24,15 +24,15 @@ properties:
 
   1 enum SprayParticlesType m_sptType = SPT_NONE,                    // type of particles
   2 FLOAT m_tmStarted = 0.0f,                                        // time when spawned
-  3 FLOAT3D m_vDirection = FLOAT3D(0,0,0),                           // dammage direction
+  3 FLOAT3D m_vDirection = FLOAT3D(0.0f, 0.0f, 0.0f),                           // dammage direction
   5 CEntityPointer m_penOwner,                                       // who spawned the spray
   6 FLOAT m_fDamagePower = 1.0f,                                     // power of inflicted damage
-  8 FLOATaabbox3D m_boxSizedOwner = FLOATaabbox3D(FLOAT3D(0,0,0), 0.01f), // bounding box of blood spray's owner
-  9 FLOAT3D m_vGDir = FLOAT3D(0,0,0),                                // gravity direction
+  8 FLOATaabbox3D m_boxSizedOwner = FLOATaabbox3D(FLOAT3D(0.0f, 0.0f, 0.0f), 0.01f), // bounding box of blood spray's owner
+  9 FLOAT3D m_vGDir = FLOAT3D(0.0f, 0.0f, 0.0f),                                // gravity direction
   10 FLOAT m_fGA = 0.0f,                                             // gravity strength
   11 FLOAT m_fLaunchPower = 1.0f,
   12 COLOR m_colCentralColor = COLOR(C_WHITE|CT_OPAQUE),
-  13 FLOATaabbox3D m_boxOriginalOwner = FLOATaabbox3D(FLOAT3D(0,0,0), 0.01f),
+  13 FLOATaabbox3D m_boxOriginalOwner = FLOATaabbox3D(FLOAT3D(0.0f, 0.0f, 0.0f), 0.01f),
   14 COLOR m_colBurnColor = COLOR(C_WHITE|CT_OPAQUE),
 
 
@@ -100,14 +100,8 @@ functions:
     }
   };
 
-/************************************************************
- *                          MAIN                            *
- ************************************************************/
-
 procedures:
-
-  Main( ESpawnSpray eSpawn)
-  {
+  Main(ESpawnSpray eSpawn) {
     InitAsEditorModel();
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);

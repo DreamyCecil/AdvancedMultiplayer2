@@ -163,9 +163,6 @@ functions:
     m_ctPasses++;
   };
 
-/************************************************************
- *                      FIRE FUNCTIONS                      *
- ************************************************************/
   // [Cecil] Added ray power and custom damage
   void PrepareBullet(const CPlacement3D &plBullet, FLOAT fPower, FLOAT fDamage) {
     // create bullet
@@ -206,9 +203,6 @@ functions:
     Destroy();
   };
 
-/************************************************************
- *                   P R O C E D U R E S                    *
- ************************************************************/
 procedures:
   // --->>> MAIN
   Main(EGhostBusterRay egbr) {

@@ -52,7 +52,7 @@ properties:
  21 FLOAT m_fBeginStretchXZ = 0.0f,
  22 FLOAT m_fEndStretchXZ = 0.0f,
  
- 25 FLOATaabbox3D m_boxMaxSize = FLOATaabbox3D(FLOAT3D(0,0,0), FLOAT3D(1,1,1)),
+ 25 FLOATaabbox3D m_boxMaxSize = FLOATaabbox3D(FLOAT3D(0.0f, 0.0f, 0.0f), FLOAT3D(1.0f, 1.0f, 1.0f)),
 
  30 BOOL m_bFadeOut = FALSE,         // set this when fading out
 

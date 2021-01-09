@@ -140,10 +140,7 @@ functions:
     }
 
     // set model stretch -- MUST BE DONE BEFORE SETTING MODEL!
-    GetModelObject()->mo_Stretch = FLOAT3D(
-      m_fStretchAll*m_fStretchX,
-      m_fStretchAll*m_fStretchY,
-      m_fStretchAll*m_fStretchZ);
+    GetModelObject()->mo_Stretch = FLOAT3D(m_fStretchX, m_fStretchY, m_fStretchZ) * m_fStretchAll;
 
     // set appearance
     SetModel(m_fnModel);

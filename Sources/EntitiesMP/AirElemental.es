@@ -336,40 +336,17 @@ functions:
     return CMovableModelEntity::AdjustShadingParameters(vLightDirection, colLight, colAmbient);
   };
   
+  // No body parts
+  void BlowUp(void) {};
 
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
-  // spawn body parts
-  void BlowUp(void) {
-    // get your size
-    /*FLOATaabbox3D box;
-    GetBoundingBox(box);
-    FLOAT fEntitySize = box.Size().MaxNorm()/2;
-
-    INDEX iCount = 7;
-    FLOAT3D vNormalizedDamage = m_vDamage-m_vDamage*(m_fBlowUpAmount/m_vDamage.Length());
-    vNormalizedDamage /= Sqrt(vNormalizedDamage.Length());
-    vNormalizedDamage *= 1.75f;
-    FLOAT3D vBodySpeed = en_vCurrentTranslationAbsolute-en_vGravityDir*(en_vGravityDir%en_vCurrentTranslationAbsolute);
-
-    // hide yourself (must do this after spawning debris)
-    SwitchToEditorModel();
-    SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
-    SetCollisionFlags(ECF_IMMATERIAL);*/
-  };
-
-
-  // adjust sound and watcher parameters here if needed
-  void EnemyPostInit(void) 
-  {
+  // Adjust sound and watcher parameters here if needed
+  void EnemyPostInit(void) {
     m_soFire.Set3DParameters(600.0f, 150.0f, 2.0f, 1.0f);
     m_soVoice.Set3DParameters(600.0f, 150.0f, 2.0f, 1.0f);
     m_soSound.Set3DParameters(600.0f, 150.0f, 2.0f, 1.0f);
   };
 
-  void LaunchTwister(FLOAT3D vEnemyOffset)
-  {
+  void LaunchTwister(FLOAT3D vEnemyOffset) {
     // calculate parameters for predicted angular launch curve
     FLOAT3D vFirePos = FIREPOS_TWISTER*m_fAttSizeCurrent*GetRotationMatrix();
     FLOAT3D vShooting = GetPlacement().pl_PositionVector + vFirePos;
@@ -432,12 +409,12 @@ functions:
   void GetAirElementalAttachmentData(INDEX iAttachment, FLOATmatrix3D &mRot, FLOAT3D &vPos)
   {
     MakeRotationMatrixFast(mRot, ANGLE3D(0.0f, 0.0f, 0.0f));
-    vPos=FLOAT3D(0.0f, 0.0f, 0.0f);
+    vPos = FLOAT3D(0.0f, 0.0f, 0.0f);
     GetModelObject()->GetAttachmentTransformations(AIRELEMENTAL_ATTACHMENT_BODY, mRot, vPos, FALSE);
     // next in hierarchy
     CAttachmentModelObject *pamo = GetModelObject()->GetAttachmentModel(AIRELEMENTAL_ATTACHMENT_BODY);
     pamo->amo_moModelObject.GetAttachmentTransformations( iAttachment, mRot, vPos, TRUE);
-    vPos=GetPlacement().pl_PositionVector+vPos*GetRotationMatrix();
+    vPos = GetPlacement().pl_PositionVector+vPos*GetRotationMatrix();
   }
 
   FLOAT GetCurrentStretchRatio(void)
@@ -493,12 +470,8 @@ procedures:
     jump CEnemyBase::Die(eDeath);
   }
 
-/************************************************************
- *                      FIRE PROCEDURES                     *
- ************************************************************/
-
+  // Attacks
   Fire(EVoid) : CEnemyBase::Fire {
-    
     if (m_tmWindNextFire<_pTimer->CurrentTick()) {
       ElementalModel()->PlayAnim(ELEMENTAL_ANIM_FIREPROJECTILES, AOF_NORESTART);  
       m_iWind = 0;
@@ -559,7 +532,6 @@ procedures:
       vToPlayer*=15.0f + FRnd()*5.0f;
       vOffset -= vToPlayer;
       LaunchTwister(vOffset);
-      //LaunchTwister(vOffset+FLOAT3D(-5.0f-FRnd()*5.0f, 0.0f, -15.0f-FRnd()*5.0f));
       LaunchTwister(FLOAT3D(0.0f, 0.0f, 0.0f));
       LaunchTwister(vOffset+FLOAT3D(+5.0f+FRnd()*5.0f, 0.0f, -15.0f-FRnd()*5.0f));
     }
@@ -579,11 +551,8 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
-  Death(EVoid) : CEnemyBase::Death
-  {
+  // Death
+  Death(EVoid) : CEnemyBase::Death {
     m_fFadeStartTime = _pTimer->CurrentTick();
     m_bFadeOut = TRUE;
     m_fFadeTime = 2.0f;
@@ -592,10 +561,6 @@ procedures:
     //GetModelObject()->mo_toBump.SetData( NULL);
     return EEnd();
   };
-
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
 
   Grow() {
     // we can only grow, never shrink
@@ -651,7 +616,7 @@ procedures:
     }
 
     jump CEnemyBase::MainLoop();
-  }
+  };
 
   ElementalLoop() {
     wait () {
@@ -667,10 +632,9 @@ procedures:
         resume;
       }
     }
-  }
+  };
 
   Main(EVoid) {
-    
     // declare yourself as a model
     InitAsEditorModel();
     

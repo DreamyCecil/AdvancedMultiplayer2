@@ -248,9 +248,9 @@ properties:
   4 BOOL  m_bFade = FALSE,          // fade is enabled
   5 FLOAT m_fFadeStartTime  = 0.0f,        // fade away start time
   9 FLOAT m_fFadeStartAlpha = 1.0f,        // alpha value 
-  6 FLOAT3D m_vNormal    = FLOAT3D(0,0,0), // normal for orientative effects
-  7 FLOAT3D m_vStretch   = FLOAT3D(0,0,0), // stretch effect
-  8 FLOAT3D m_vDirection = FLOAT3D(0,0,0), // direction oriented effects
+  6 FLOAT3D m_vNormal    = FLOAT3D(0.0f, 0.0f, 0.0f), // normal for orientative effects
+  7 FLOAT3D m_vStretch   = FLOAT3D(0.0f, 0.0f, 0.0f), // stretch effect
+  8 FLOAT3D m_vDirection = FLOAT3D(0.0f, 0.0f, 0.0f), // direction oriented effects
   10 FLOAT m_fDepthSortOffset = 0.0f,
   11 FLOAT m_fFadeInSpeed = 0.0f,
   12 FLOAT m_tmSpawn = 0.0f,  // when it was spawned
@@ -266,7 +266,7 @@ properties:
 
  40 enum EffectParticlesType m_eptType = EPT_NONE, // type of particle effect
  41 FLOAT m_tmWhenShot = 0.0f, // when entity was shot
- 42 FLOAT3D m_vGravity = FLOAT3D(0,0,0), // simulated direction of gravity
+ 42 FLOAT3D m_vGravity = FLOAT3D(0.0f, 0.0f, 0.0f), // simulated direction of gravity
 
 {
   CLightSource m_lsLightSource;
@@ -516,10 +516,7 @@ functions:
     }
   };
 
-/************************************************************
- *                        FADE OUT                          *
- ************************************************************/
-
+  // Fade out
   BOOL AdjustShadingParameters(FLOAT3D &vLightDirection, COLOR &colLight, COLOR &colAmbient)
   {
     if( m_bFade) {
@@ -544,12 +541,6 @@ functions:
   {
     return m_fDepthSortOffset;
   }
-
-
-
-/************************************************************
- *                GLOBAL SUPPORT FUNCTIONS                  *
- ************************************************************/
 
   void SetNonLoopingTexAnims(void)
   {
@@ -700,11 +691,7 @@ functions:
     }
   }
 
-
-/************************************************************
- *         PROJECTILE/GRENADE EXPLOSION,  STAIN             *
- ************************************************************/
-
+  // Projectile/grenade explosion, stain
   void ProjectileExplosion(void)
   {
     SetPredictable(TRUE);
@@ -920,11 +907,7 @@ functions:
     ParentToNearestPolygonAndStretch();
   };
 
-
-
-/************************************************************
- *                   SHOCK / LASER WAVE                     *
- ************************************************************/
+  // Shock/laser wave
   void ShockWave(void) {
     SetPredictable(TRUE);
     SetModel(MODEL_SHOCKWAVE);
@@ -965,13 +948,8 @@ functions:
     ParentToNearestPolygonAndStretch();
   };
 
-
-
-  /************************************************************
-   *                   TELEPORT                               *
-   ************************************************************/
-  void TeleportEffect(void)
-  {
+  // Teleport
+  void TeleportEffect(void) {
     SetPredictable(TRUE);
     Stretch();
     SetModel(MODEL_TELEPORT_EFFECT);
@@ -987,11 +965,8 @@ functions:
     m_bLightSource = FALSE;
   };
 
-  /************************************************************
-   *                SUMMONER STAR EXPLOSION                   *
-   ************************************************************/
-  void SummonerStarExplosion()
-  {
+  // Summoner star explosion
+  void SummonerStarExplosion(void) {
     SetPredictable(TRUE);
     SetModel(MODEL_BULLET_HIT);
     SetModelMainTexture(TEXTURE_BULLET_HIT);
@@ -1002,9 +977,7 @@ functions:
     Stretch();
   };
 
-  /************************************************************
- *                   BULLET HIT / STAIN                     *
- ************************************************************/
+  // Bullet hit/stain
   void BulletStainSand(BOOL bSound)
   {
     if( bSound)
@@ -1194,9 +1167,7 @@ functions:
     m_vStretch = vTemp;
   };
 
-/************************************************************
- *                  BLOOD SPILL / STAIN                     *
- ************************************************************/
+  // Blood spill/stain
 
   // bullet hitpoint wound
   void BloodExplode(void) {
@@ -1449,10 +1420,6 @@ functions:
   };
 
 procedures:
-
-/************************************************************
- *                    M  A  I  N                            *
- ************************************************************/
   Main(ESpawnEffect eSpawn) {
     if (eSpawn.betType == BET_GIZMO_SPLASH_FX
      || eSpawn.betType == BET_EXPLOSION_DEBRIS

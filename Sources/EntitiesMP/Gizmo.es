@@ -98,9 +98,6 @@ functions:
     PlaySound(m_soSound, SOUND_IDLE, SOF_3D);
   };
 
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
   void BlowUpNotify(void) {
     Explode();
   };
@@ -163,20 +160,17 @@ functions:
         // stain
         ese.colMuliplier = C_WHITE|CT_OPAQUE;
         ese.betType    = BET_GIZMOSTAIN;
-        ese.vStretch   = FLOAT3D( fStretch*0.75f, fStretch*0.75f, 1.0f);
-        ese.vNormal    = FLOAT3D( vPlaneNormal);
-        ese.vDirection = FLOAT3D( 0, 0, 0);
+        ese.vStretch   = FLOAT3D(fStretch*0.75f, fStretch*0.75f, 1.0f);
+        ese.vNormal    = FLOAT3D(vPlaneNormal);
+        ese.vDirection = FLOAT3D(0.0f, 0.0f, 0.0f);
         FLOAT3D vPos = vPoint+ese.vNormal/50.0f*(FRnd()+0.5f);
-        CEntityPointer penEffect = CreateEntity( CPlacement3D(vPos, ANGLE3D(0,0,0)), CLASS_BASIC_EFFECT);
+        CEntityPointer penEffect = CreateEntity(CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)), CLASS_BASIC_EFFECT);
         penEffect->Initialize(ese);
       }
     }
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   // close range -> move toward enemy and try to jump onto it
   PerformAttack(EVoid) : CEnemyBase::PerformAttack
   {
@@ -192,7 +186,7 @@ procedures:
       
       // stop moving
       SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
-      SetDesiredRotation(ANGLE3D(0, 0, 0));
+      SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
 
       // ------------ Wait for some time on the ground
       FLOAT fWaitTime = 0.25f+FRnd()*0.4f;
@@ -295,9 +289,6 @@ procedures:
     }
   };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

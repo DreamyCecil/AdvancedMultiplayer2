@@ -163,10 +163,7 @@ functions:
     if (Abs(m_fStretchZ)  >100.0f) { m_fStretchZ   = 100.0f*Sgn(m_fStretchZ); }
     if (m_fStretchAll>100.0f) { m_fStretchAll = 100.0f; }
 
-    GetModelObject()->StretchModel( FLOAT3D(
-      m_fStretchAll*m_fStretchX,
-      m_fStretchAll*m_fStretchY,
-      m_fStretchAll*m_fStretchZ) );
+    GetModelObject()->StretchModel(FLOAT3D(m_fStretchX, m_fStretchY, m_fStretchZ) * m_fStretchAll);
     ModelChangeNotify();
   };
 

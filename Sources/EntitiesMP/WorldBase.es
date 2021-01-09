@@ -901,16 +901,16 @@ public:
 
 static CFixedForce affFixedForces[] = 
 {
-  CFixedForce ("Normal D", FLOAT3D( 0,-1, 0), 30, 70),
-  CFixedForce ("Normal U", FLOAT3D( 0,+1, 0), 30, 70),
-  CFixedForce ("Normal N", FLOAT3D( 0, 0,-1), 30, 70),
-  CFixedForce ("Normal S", FLOAT3D( 0, 0,+1), 30, 70),
-  CFixedForce ("Normal E", FLOAT3D(-1, 0, 0), 30, 70),
-  CFixedForce ("Normal W", FLOAT3D(+1, 0, 0), 30, 70),
-  CFixedForce ("ZeroG",    FLOAT3D(+1, 0, 0), 0, 0),
-  CFixedForce ("Unused",   FLOAT3D(+1, 0, 0), 0, 0),
-  CFixedForce ("Unused",   FLOAT3D(+1, 0, 0), 0, 0),
-  CFixedForce ("Unused",   FLOAT3D(+1, 0, 0), 0, 0),
+  CFixedForce("Normal D", FLOAT3D( 0.0f, -1.0f,  0.0f), 30.0f, 70.0f),
+  CFixedForce("Normal U", FLOAT3D( 0.0f, +1.0f,  0.0f), 30.0f, 70.0f),
+  CFixedForce("Normal N", FLOAT3D( 0.0f,  0.0f, -1.0f), 30.0f, 70.0f),
+  CFixedForce("Normal S", FLOAT3D( 0.0f,  0.0f, +1.0f), 30.0f, 70.0f),
+  CFixedForce("Normal E", FLOAT3D(-1.0f,  0.0f,  0.0f), 30.0f, 70.0f),
+  CFixedForce("Normal W", FLOAT3D(+1.0f,  0.0f,  0.0f), 30.0f, 70.0f),
+  CFixedForce("ZeroG",    FLOAT3D(+1.0f,  0.0f,  0.0f), 0.0f, 0.0f),
+  CFixedForce("Unused",   FLOAT3D(+1.0f,  0.0f,  0.0f), 0.0f, 0.0f),
+  CFixedForce("Unused",   FLOAT3D(+1.0f,  0.0f,  0.0f), 0.0f, 0.0f),
+  CFixedForce("Unused",   FLOAT3D(+1.0f,  0.0f,  0.0f), 0.0f, 0.0f),
 };
 static INDEX ctFixedForces = ARRAYCOUNT(affFixedForces);
 extern void GetDefaultForce(INDEX iForce, const FLOAT3D &vPoint, 
@@ -1102,9 +1102,9 @@ functions:
           return;
         }
       }
-      fsGravity.fs_fAcceleration = 30;
-      fsGravity.fs_fVelocity = 70;
-      fsGravity.fs_vDirection = FLOAT3D(1,0,0);
+      fsGravity.fs_fAcceleration = 30.0f;
+      fsGravity.fs_fVelocity = 70.0f;
+      fsGravity.fs_vDirection = FLOAT3D(1.0f, 0.0f, 0.0f);
     }
     fsField.fs_fAcceleration = 0;
     fsField.fs_fVelocity = 0;

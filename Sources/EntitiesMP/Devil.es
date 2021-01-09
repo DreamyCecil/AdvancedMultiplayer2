@@ -129,14 +129,14 @@ properties:
   11 FLOAT m_tmLastPause = 0.0f,                        // last pause between two fireings
   12 enum DevilState m_dsDevilState = DS_NOT_EXISTING,// current devil state
   13 FLOAT m_tmLastAngry = -1.0f,                       // last angry state
-  14 CPlacement3D m_plTeleport = CPlacement3D(FLOAT3D(0,0,0), ANGLE3D(0,0,0)),
+  14 CPlacement3D m_plTeleport = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f)),
   16 FLOAT m_tmTemp = 0,
   17 enum DevilState m_dsLastDevilState = DS_REGENERATION_IMPULSE,// last devil state
   18 enum DevilAttackPower m_dapAttackPower = DAP_PLAYER_HUNT,// current devil state
   19 enum DevilAttackPower m_dapLastAttackPower = DAP_NOT_ATTACKING,
   20 BOOL m_bHasUpperWeapons = FALSE,
-  21 FLOAT3D m_vElectricitySource = FLOAT3D( 0,0,0),      // position of electricity ray target
-  22 FLOAT3D m_vElectricityTarget = FLOAT3D( 0,0,0),      // position of electricity ray target
+  21 FLOAT3D m_vElectricitySource = FLOAT3D(0.0f, 0.0f, 0.0f), // position of electricity ray target
+  22 FLOAT3D m_vElectricityTarget = FLOAT3D(0.0f, 0.0f, 0.0f), // position of electricity ray target
   23 BOOL m_bRenderElectricity = FALSE,                   // if electricity particles are rendered
   24 FLOAT m_fAdjustWeaponTime = 0.0f,                    // time for weapon to lock enemy
   25 BOOL m_bWasOnceInMainLoop = FALSE,                   // if MainLoop was called at least once 
@@ -146,8 +146,8 @@ properties:
   29 FLOAT m_fLastWalkTime = -1.0f,                       // last walk time
   30 FLOAT m_tmFireBreathStart = UpperLimit(0.0f),        // time when fire breath started
   31 FLOAT m_tmFireBreathStop = 0.0f,                     // time when fire breath stopped
-  32 FLOAT3D m_vFireBreathSource =  FLOAT3D( 0,0,0),      // position of fire breath source
-  33 FLOAT3D m_vFireBreathTarget =  FLOAT3D( 0,0,0),      // position of fire breath target
+  32 FLOAT3D m_vFireBreathSource =  FLOAT3D(0.0f, 0.0f, 0.0f), // position of fire breath source
+  33 FLOAT3D m_vFireBreathTarget =  FLOAT3D(0.0f, 0.0f, 0.0f), // position of fire breath target
   34 FLOAT m_tmRegenerationStart = UpperLimit(0.0f),      // time when regeneration started
   35 FLOAT m_tmRegenerationStop = 0.0f,                   // time when regeneration stopped
   36 FLOAT m_tmNextFXTime = 0.0f,                         // next effect time
@@ -584,7 +584,7 @@ functions:
   FLOAT3D GetWeaponPositionRelative(void)
   {
     CAttachmentModelObject &amo = *GetModelObject()->GetAttachmentModel(m_iAttID);
-    FLOAT3D vAttachment = FLOAT3D(0,0,0);
+    FLOAT3D vAttachment = FLOAT3D(0.0f, 0.0f, 0.0f);
     switch(m_iAttID)
     {
     case DEVIL_ATTACHMENT_LASER:
@@ -613,8 +613,8 @@ functions:
   FLOAT3D GetFireingPositionRelative(void)
   {
     CAttachmentModelObject &amo = *GetModelObject()->GetAttachmentModel(m_iAttID);
-    FLOAT3D vWeaponPipe = FLOAT3D(0,0,0);
-    FLOAT3D vAttachment = FLOAT3D(0,0,0);
+    FLOAT3D vWeaponPipe = FLOAT3D(0.0f, 0.0f, 0.0f);
+    FLOAT3D vAttachment = FLOAT3D(0.0f, 0.0f, 0.0f);
     switch(m_iAttID)
     {
     case DEVIL_ATTACHMENT_LASER:
@@ -1037,7 +1037,7 @@ functions:
     m_vDesiredPosition = CalculatePredictedPosition(vWpnPipeAbs, vTarget, fSpeedSrc,
       vSpeedDst, GetPlacement().pl_PositionVector(2) );
     // shoot predicted propelled projectile
-    ShootPredictedProjectile(PRT_DEVIL_ROCKET, m_vDesiredPosition, vWpnPipeRel, ANGLE3D(0, 0, 0));
+    ShootPredictedProjectile(PRT_DEVIL_ROCKET, m_vDesiredPosition, vWpnPipeRel, ANGLE3D(0.0f, 0.0f, 0.0f));
     //PlaySound(m_soSound, SOUND_FIRE, SOF_3D|SOF_LOOP);
     PlayLightAnim(LIGHT_ANIM_FIRE, AOF_LOOPING);
 
@@ -1085,11 +1085,7 @@ functions:
     return penAction;
   };
 
-/************************************************************
- *                PREDICTED PROJECTILE                      *
- ************************************************************/
-  void F_FirePredictedProjectile(void)
-  {
+  void F_FirePredictedProjectile(void) {
     PlayWeaponSound( SOUND_LAVABOMB);
     FLOAT3D vFireingRel = GetFireingPositionRelative();
     FLOAT3D vFireingAbs = GetFireingPositionAbsolute();
@@ -1145,12 +1141,8 @@ functions:
   }
 
 procedures:
-/************************************************************
- *                TRY TO REACH DESTINATION                  *
- ************************************************************/
   // move to given destination position
-  WalkTo(EVoid) 
-  {
+  WalkTo(EVoid) {
     autocall WaitCurrentAnimEnd() EReturn;
     WalkingAnim();
     m_vDesiredPosition = GetAction()->GetPlacement().pl_PositionVector;
@@ -1179,9 +1171,6 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                CITY DESTROYING                           *
- ************************************************************/
   DestroyCity()
   {
     m_soSound.Set3DParameters(1000.0f, 500.0f, 3.0f, 1.0f);
@@ -1381,14 +1370,14 @@ procedures:
     if( GetAction()->m_penToDestroy1 != NULL)
     {
       EBrushDestroyedByDevil ebdbd;
-      ebdbd.vDamageDir = FLOAT3D( -0.125f, 0.0f, -0.5f);
+      ebdbd.vDamageDir = FLOAT3D(-0.125f, 0.0f, -0.5f);
       GetAction()->m_penToDestroy1->SendEvent(ebdbd);
     }
     autowait(2.8f-1.0f);
     if( GetAction()->m_penToDestroy2 != NULL)
     {
       EBrushDestroyedByDevil ebdbd;
-      ebdbd.vDamageDir = FLOAT3D( -0.125f, 0.0f, -0.5f);
+      ebdbd.vDamageDir = FLOAT3D(-0.125f, 0.0f, -0.5f);
       GetAction()->m_penToDestroy2->SendEvent(ebdbd);
     }
     return EReturn();
@@ -1410,14 +1399,14 @@ procedures:
     if( GetAction()->m_penToDestroy1 != NULL)
     {
       EBrushDestroyedByDevil ebdbd;
-      ebdbd.vDamageDir = FLOAT3D( -0.125f, 0.0f, -0.5f);
+      ebdbd.vDamageDir = FLOAT3D(-0.125f, 0.0f, -0.5f);
       GetAction()->m_penToDestroy1->SendEvent(ebdbd);
     }
     autowait(2.8f-1.1f);
     if( GetAction()->m_penToDestroy2 != NULL)
     {
       EBrushDestroyedByDevil ebdbd;
-      ebdbd.vDamageDir = FLOAT3D( 0.125f, 0.0f, -0.5f);
+      ebdbd.vDamageDir = FLOAT3D(0.125f, 0.0f, -0.5f);
       GetAction()->m_penToDestroy2->SendEvent(ebdbd);
     }
 
@@ -1441,7 +1430,7 @@ procedures:
     eSpawnEffector.tmLifeTime = 6.0f;
     eSpawnEffector.fSize = 1.0f;
     eSpawnEffector.eetType = ET_HIT_GROUND;
-    eSpawnEffector.vDamageDir = FLOAT3D( 0.0f, 2.0f, 0.0f);
+    eSpawnEffector.vDamageDir = FLOAT3D(0.0f, 2.0f, 0.0f);
     // initialize spray
     penEffector->Initialize( eSpawnEffector);
 
@@ -1522,9 +1511,6 @@ procedures:
     return EReturn();
   }
 
-/************************************************************
- *                PROCEDURES WHEN HARMED                    *
- ************************************************************/
   // Play wound animation
   BeWounded(EDamage eDamage) : CEnemyBase::BeWounded 
   {
@@ -1534,9 +1520,7 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                C L O S E   A T T A C K                   *
- ************************************************************/
+  // Close attack
   Hit(EVoid) : CEnemyBase::Hit {
     autocall WaitCurrentAnimEnd() EReturn;
     StartModelAnim(DEVIL_ANIM_ATTACKCLOSE, AOF_SMOOTHCHANGE);
@@ -1547,7 +1531,7 @@ procedures:
     if( CalcDist(m_penEnemy) < m_fCloseDistance)
     {
       InflictDirectDamage(m_penEnemy, this, DMT_IMPACT, 1000.0f,
-        m_penEnemy->GetPlacement().pl_PositionVector, FLOAT3D(0,1,0));
+        m_penEnemy->GetPlacement().pl_PositionVector, FLOAT3D(0.0f, 1.0f, 0.0f));
     }
     InflictHoofDamage( DEVIL_HIT_HOOF_OFFSET);
 
@@ -1555,16 +1539,12 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
-  // initial preparation
+  // Initial preparation
   InitializeAttack(EVoid) : CEnemyBase::InitializeAttack {
     jump CEnemyBase::InitializeAttack();
   };
 
-  Fire(EVoid) : CEnemyBase::Fire
-  {
+  Fire(EVoid) : CEnemyBase::Fire {
     m_iToFireProjectiles = 0;
     m_fAttackFireTime = 10.0f;
     m_fPauseStretcher = 1.0f;
@@ -1687,7 +1667,7 @@ procedures:
     FLOAT3D vDir = (vEnemy-vAbsWeapon).Normalize();
     ANGLE3D aAngles;
     DirectionVectorToAngles(vDir, aAngles);
-    CPlacement3D plRelPl = CPlacement3D(FLOAT3D(0,0,0),aAngles);
+    CPlacement3D plRelPl = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f),aAngles);
     plRelPl.AbsoluteToRelative(GetPlacement());
     FLOAT fWantedHdg   = plRelPl.pl_OrientationAngle(1);
     FLOAT fWantedPitch = plRelPl.pl_OrientationAngle(2);
@@ -1940,20 +1920,20 @@ procedures:
             {
               // apply damage
               InflictDirectDamage( crRay.cr_penHit, this, DMT_BULLET, 50.0f*_pTimer->TickQuantum/0.5f,
-                FLOAT3D(0, 0, 0), (m_vElectricitySource-m_vElectricityTarget).Normalize());
+                FLOAT3D(0.0f, 0.0f, 0.0f), (m_vElectricitySource-m_vElectricityTarget).Normalize());
             }
 
             if( _pTimer->CurrentTick()>m_tmNextFXTime)
             {
               m_tmNextFXTime = _pTimer->CurrentTick()+0.125f+FRnd()*0.125f;
-              CPlacement3D plElectricityTarget =  CPlacement3D( m_vElectricityTarget, ANGLE3D(0,0,0));
+              CPlacement3D plElectricityTarget =  CPlacement3D(m_vElectricityTarget, ANGLE3D(0.0f, 0.0f, 0.0f));
               CEntity *penEffector = CreateEntity( plElectricityTarget, CLASS_EFFECTOR);
               // set spawn parameters
               ESpawnEffector eSpawnEffector;
               eSpawnEffector.tmLifeTime = 6.0f;
               eSpawnEffector.fSize = 0.025f;
               eSpawnEffector.eetType = ET_HIT_GROUND;
-              eSpawnEffector.vDamageDir = FLOAT3D( 0.0f, 2.0f, 0.0f);
+              eSpawnEffector.vDamageDir = FLOAT3D(0.0f, 2.0f, 0.0f);
               // initialize spray
               penEffector->Initialize( eSpawnEffector);
             }
@@ -2004,7 +1984,7 @@ procedures:
     // calculate breath source and target positions
     const FLOATmatrix3D &m = GetRotationMatrix();
     m_vFireBreathSource = GetPlacement().pl_PositionVector+MAGIC_PROJECTILE_EXIT*m;
-    m_vFireBreathTarget = m_penEnemy->GetPlacement().pl_PositionVector-FLOAT3D(0,20.0f,0);
+    m_vFireBreathTarget = m_penEnemy->GetPlacement().pl_PositionVector-FLOAT3D(0.0f, 20.0f, 0.0f);
     while (m_iFiredProjectiles<m_iToFireProjectiles)
     {
       m_tmLastPause = 0.45f;
@@ -2056,7 +2036,7 @@ procedures:
       }
       CPlacement3D plCurrent = GetPlacement();
       FLOAT aDelta = -35.0f/0.7f*_pTimer->TickQuantum;
-      plCurrent.pl_OrientationAngle+=FLOAT3D(aDelta,0,0);
+      plCurrent.pl_OrientationAngle+=FLOAT3D(aDelta, 0.0f, 0.0f);
       SetPlacement(plCurrent);
     }
 
@@ -2162,15 +2142,11 @@ procedures:
     }
   }
 
-  MPIntro(EVoid)
-  {
+  MPIntro(EVoid) {
     m_dsDevilState=DS_PYRAMID_FIGHT;
     jump ContinueInMainLoop();
   }
 
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
   Death(EVoid) : CEnemyBase::Death {
     SetFlags(GetFlags()&~ENF_ALIVE);
     StopFireBreathParticles();
@@ -2205,9 +2181,6 @@ procedures:
     return EEnd();
   };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     m_sptType = SPT_NONE;
     // declare yourself as a model

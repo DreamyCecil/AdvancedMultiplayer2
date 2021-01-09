@@ -249,7 +249,7 @@ properties:
  18 BOOL m_bDisableAnimating = FALSE,
 
 // player soft eyes on Y axis
- 20 FLOAT3D m_vLastPlayerPosition = FLOAT3D(0,0,0), // last player position for eyes movement
+ 20 FLOAT3D m_vLastPlayerPosition = FLOAT3D(0.0f, 0.0f, 0.0f), // last player position for eyes movement
  21 FLOAT m_fEyesYLastOffset = 0.0f,                 // eyes offset from player position
  22 FLOAT m_fEyesYOffset = 0.0f,
  23 FLOAT m_fEyesYSpeed = 0.0f,                      // eyes speed
@@ -756,8 +756,8 @@ functions:
       CAttachmentModelObject *pamo = pl.GetModelObject()->GetAttachmentModelList(PLAYER_ATTACHMENT_TORSO, BODY_ATTACHMENT_ITEM, -1);
       pmoModel = &(pamo->amo_moModelObject);
       pmoModel->Copy(*pmo);
-      pmoModel->StretchModel(FLOAT3D(1,1,1));
-      pamo->amo_plRelative = CPlacement3D(FLOAT3D(0,0,0), ANGLE3D(0,0,0));
+      pmoModel->StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
+      pamo->amo_plRelative = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
     }
     // sync apperances
     SyncWeapon();
@@ -776,10 +776,6 @@ functions:
     m_fBodyAnimTime = moBody.GetAnimLength(iAnimation);     // anim length
   };
 
-
-/************************************************************
- *                      INITIALIZE                          *
- ************************************************************/
   void Initialize(void) {
     // set internal properties
     m_bReference = TRUE;
@@ -798,9 +794,6 @@ functions:
     m_fWeaponYLastOffset = 0.0f;
     m_fWeaponYOffset = 0.0f;
     m_fWeaponYSpeed = 0.0f;
-//    m_fRecoilLastOffset = 0.0f;
-//    m_fRecoilOffset = 0.0f;
-//    m_fRecoilSpeed = 0.0f;
     
     // clear moving banking
     m_bMoving = FALSE;
@@ -817,18 +810,13 @@ functions:
     SetBodyAnimation(BODY_ANIM_COLT_STAND, AOF_LOOPING|AOF_NORESTART);
   };
 
-
-/************************************************************
- *                ANIMATE BANKING AND SOFT EYES             *
- ************************************************************/
   // store for lerping
   void StoreLast(void) {
     CPlayer &pl = (CPlayer&)*m_penPlayer;
-    m_vLastPlayerPosition = pl.GetPlacement().pl_PositionVector;  // store last player position
-    m_fEyesYLastOffset = m_fEyesYOffset;                          // store last eyes offset
+    m_vLastPlayerPosition = pl.GetPlacement().pl_PositionVector; // store last player position
+    m_fEyesYLastOffset = m_fEyesYOffset; // store last eyes offset
     m_fWeaponYLastOffset = m_fWeaponYOffset;
-//    m_fRecoilLastOffset = m_fRecoilOffset;
-    m_fMoveLastBanking = m_fMoveBanking;                          // store last banking for lerping
+    m_fMoveLastBanking = m_fMoveBanking; // store last banking for lerping
     m_fSidestepLastBanking = m_fSidestepBanking;
   };
 
@@ -950,9 +938,6 @@ functions:
     pl.pl_PositionVector(2) += fEyesOffsetY;
   }
 
-/************************************************************
- *                     ANIMATE PLAYER                       *
- ************************************************************/
   // body and head animation
   void BodyAndHeadOrientation(CPlacement3D &plView) {
     CPlayer &pl = (CPlayer&)*m_penPlayer;
@@ -960,7 +945,7 @@ functions:
     ANGLE3D a = plView.pl_OrientationAngle;
 
     if (!(pl.GetFlags()&ENF_ALIVE)) {
-      a = ANGLE3D(0,0,0);
+      a = ANGLE3D(0.0f, 0.0f, 0.0f);
     }
 
     pamoBody->amo_plRelative.pl_OrientationAngle = a;
@@ -1222,11 +1207,6 @@ functions:
     m_bAttacking = FALSE;
   };
 
-
-  
-/************************************************************
- *                  CHANGE BODY ANIMATION                   *
- ************************************************************/
   // body animation template
   void BodyAnimationTemplate(INDEX iNone, INDEX iColt, INDEX iShotgun, INDEX iMinigun, ULONG ulFlags) {
     INDEX iWeapon = ((CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons)).m_iCurrentWeapon;
@@ -1406,10 +1386,6 @@ functions:
     SyncWeapon();
   };
 
-
-/************************************************************
- *                      FIRE FLARE                          *
- ************************************************************/
   void OnPreRender(void) {
     ControlFlareAttachment();
 
@@ -1436,7 +1412,7 @@ functions:
     if (pamo!=NULL) {
       pamo->amo_plRelative.pl_OrientationAngle(3) = (rand()*360.0f)/RAND_MAX;
       CModelObject &mo = pamo->amo_moModelObject;
-      mo.StretchModel(FLOAT3D(1, 1, 1));
+      mo.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
     }
   };
 
@@ -1447,7 +1423,7 @@ functions:
       PLAYER_ATTACHMENT_TORSO, iAttachWeapon, iAttachObject, iAttachFlare, -1);
     if (pamo!=NULL) {
       CModelObject &mo = pamo->amo_moModelObject;
-      mo.StretchModel(FLOAT3D(0, 0, 0));
+      mo.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
     }
   };
 
@@ -1525,11 +1501,6 @@ functions:
     }
   };
 
-
-
-/************************************************************
- *                      PROCEDURES                          *
- ************************************************************/
 procedures:
   ReminderAction(EReminder er) {
     switch (er.iValue) {

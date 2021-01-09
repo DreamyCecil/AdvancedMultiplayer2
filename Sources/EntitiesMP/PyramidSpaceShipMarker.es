@@ -85,7 +85,7 @@ procedures:
     // set appearance
     SetModel(MODEL_MARKER);
     SetModelMainTexture(TEXTURE_MARKER);
-    GetModelObject()->StretchModel(FLOAT3D(4,4,4));
+    GetModelObject()->StretchModel(FLOAT3D(4.0f, 4.0f, 4.0f));
     ModelChangeNotify();
 
     if( m_penTarget!=NULL && !IsOfClass( m_penTarget, "Pyramid Space Ship Marker")) {

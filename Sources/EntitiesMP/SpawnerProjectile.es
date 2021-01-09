@@ -52,13 +52,11 @@ components:
  10 model   MODEL_INVISIBLE     "ModelsMP\\Enemies\\Summoner\\SpawnerProjectile\\Invisible.mdl",
     
 functions:
-  
-  void SpawnEntity()
-  {
+  void SpawnEntity(void) {
     CEntity *pen = NULL;
     // copy template entity
-    pen = GetWorld()->CopyEntityInWorld( *m_penTemplate,
-      CPlacement3D(FLOAT3D(-32000.0f+FRnd()*200.0f, -32000.0f+FRnd()*200.0f, 0), ANGLE3D(0, 0, 0)) );
+    pen = GetWorld()->CopyEntityInWorld(*m_penTemplate,
+      CPlacement3D(FLOAT3D(-32000.0f + FRnd()*200.0f, -32000.0f + FRnd()*200.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f)) );
     
     // change needed properties
     pen->End();
@@ -84,18 +82,16 @@ functions:
         penMonster.StartTacticsNow();
       }
     }
- 
   };
   
-  void Explode(void)
-  {
+  void Explode(void) {
     // spawn explosion
     CPlacement3D plExplosion = GetPlacement();
     CEntityPointer penExplosion = CreateEntity(plExplosion, CLASS_BASIC_EFFECT);
     ESpawnEffect eSpawnEffect;
     eSpawnEffect.colMuliplier = C_WHITE|CT_OPAQUE;
     eSpawnEffect.betType = BET_BOMB;
-    eSpawnEffect.vStretch = FLOAT3D(1.0f,1.0f,1.0f);
+    eSpawnEffect.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
     penExplosion->Initialize(eSpawnEffect);
 
     // explosion debris
@@ -107,32 +103,13 @@ functions:
     eSpawnEffect.betType = BET_EXPLOSION_SMOKE;
     CEntityPointer penExplosionSmoke = CreateEntity(plExplosion, CLASS_BASIC_EFFECT);
     penExplosionSmoke->Initialize(eSpawnEffect);
-    
-    /*
-    // spawn smoke effect
-    ESpawnEffect ese;
-    ese.colMuliplier = C_WHITE|CT_OPAQUE;
-    ese.betType = BET_CANNON;
-    ese.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
-    CEntityPointer penEffect = CreateEntity(this->GetPlacement(), CLASS_BASIC_EFFECT);
-    penEffect->Initialize(ese);
-    */
   };
   
   void RenderParticles(void) {
     Particles_AfterBurner( this, m_tmSpawn, 1.0f, 1);
-    if (m_bExploding)
-    {
-      //Particles_SummonerProjectileExplode( this, m_fSize, m_tmExplosionBegin, m_fExplosionDuration, m_fTimeAdjust );
-    }
-  }
+  };
   
- /************************************************************
-  *                   P R O C E D U R E S                    *
-  ************************************************************/
 procedures:
-  
-  // --->>> MAIN
   Main(ESpawnerProjectile esp) {
     // remember the initial parameters
     ASSERT(esp.penOwner!=NULL);

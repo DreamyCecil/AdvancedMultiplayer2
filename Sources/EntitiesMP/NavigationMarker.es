@@ -52,43 +52,41 @@ functions:
     ASSERT(m_ppnNode == NULL);
   }
 
-  /* Read from stream. */
-  void Read_t( CTStream *istr) // throw char *
-  {
+  // Read from stream
+  void Read_t(CTStream *istr) {
     CEntity::Read_t(istr);
     m_ppnNode = NULL;
-  }
+  };
   
-  CEntity *GetTarget(void) const { return m_penTarget0; };
+  CEntity *GetTarget(void) const {
+    return m_penTarget0;
+  };
 
-  /* Entity info */
+  // Entity info
   void *GetEntityInfo(void) {
     return &eiMarker;
   };
 
-  // get node used for pathfinding algorithm
-  CPathNode *GetPathNode(void)
-  {
-    if (m_ppnNode==NULL) {
+  // Get node used for pathfinding algorithm
+  CPathNode *GetPathNode(void) {
+    if (m_ppnNode == NULL) {
       m_ppnNode = new CPathNode(this);
     }
 
     return m_ppnNode;
-  }
+  };
 
-  CEntityPointer &TargetPointer(INDEX i)
-  {
+  CEntityPointer &TargetPointer(INDEX i) {
     ASSERT(i>=0 && i<MAX_TARGETS);
     return (&m_penTarget0)[i];
-  }
-  CNavigationMarker &Target(INDEX i)
-  {
+  };
+
+  CNavigationMarker &Target(INDEX i) {
     return (CNavigationMarker &)*TargetPointer(i);
-  }
+  };
 
   // get link with given index or null if no more (for iteration along the graph)
-  CNavigationMarker *GetLink(INDEX i)
-  {
+  CNavigationMarker *GetLink(INDEX i) {
     for(INDEX iTarget=0; iTarget<MAX_TARGETS; iTarget++) {
       CNavigationMarker *penLink = &Target(iTarget);
       if (penLink==NULL) {
@@ -99,23 +97,25 @@ functions:
       }
     }
     return NULL;
-  }
+  };
 
   const CTString &GetDescription(void) const {
     return m_strName;
-  }
+  };
 
-  /* Check if entity is moved on a route set up by its targets. */
+  // Check if entity is moved on a route set up by its targets
   BOOL MovesByTargetedRoute(CTString &strTargetProperty) const {
     strTargetProperty = "Target 0";
     return TRUE;
   };
-  /* Check if entity can drop marker for making linked route. */
+
+  // Check if entity can drop marker for making linked route
   BOOL DropsMarker(CTFileName &fnmMarkerClass, CTString &strTargetProperty) const {
     fnmMarkerClass = CTFILENAME("Classes\\NavigationMarker.ecl");
     strTargetProperty = "Target 0";
     return TRUE;
   }
+
   // this is MARKER
   virtual BOOL IsMarker(void) const {
     return TRUE;

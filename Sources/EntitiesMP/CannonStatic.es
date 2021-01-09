@@ -231,7 +231,7 @@ functions:
     eSpawnEffect.colMuliplier = C_WHITE|CT_OPAQUE;
     eSpawnEffect.betType = BET_CANNON;
     FLOAT fSize = m_fBlowUpSize*1.0f;
-    eSpawnEffect.vStretch = FLOAT3D(fSize,fSize,fSize);
+    eSpawnEffect.vStretch = FLOAT3D(fSize, fSize, fSize);
     penExplosion->Initialize(eSpawnEffect);
 
     // spawn shockwave
@@ -240,7 +240,7 @@ functions:
     eSpawnEffect.colMuliplier = C_WHITE|CT_OPAQUE;
     eSpawnEffect.betType = BET_CANNONSHOCKWAVE;
     fSize = m_fBlowUpSize*1.0f;
-    eSpawnEffect.vStretch = FLOAT3D(fSize,fSize,fSize);
+    eSpawnEffect.vStretch = FLOAT3D(fSize, fSize, fSize);
     penExplosion->Initialize(eSpawnEffect);
 
     // hide yourself (must do this after spawning debris)

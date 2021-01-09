@@ -79,10 +79,10 @@ properties:
 
  30 FLOAT m_tmAtMarker = 0.0f,                                        // time when current marker was reached
  31 FLOAT m_tmDelta = 0.0f,                                           // time to reach next marker
- 32 FLOAT3D m_vPNp0 = FLOAT3D(0,0,0),
- 33 FLOAT3D m_vPNp1 = FLOAT3D(0,0,0),
- 34 FLOAT3D m_vTNp0 = FLOAT3D(0,0,0),
- 35 FLOAT3D m_vTNp1 = FLOAT3D(0,0,0),
+ 32 FLOAT3D m_vPNp0 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 33 FLOAT3D m_vPNp1 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 34 FLOAT3D m_vTNp0 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 35 FLOAT3D m_vTNp1 = FLOAT3D(0.0f, 0.0f, 0.0f),
  36 FLOATquat3D m_qPNp0 = FLOATquat3D(0,0,0,0),
  37 FLOATquat3D m_qPNp1 = FLOATquat3D(0,0,0,0),
  38 FLOATquat3D m_qANp0 = FLOATquat3D(0,0,0,0),
@@ -442,37 +442,37 @@ functions:
   {
     // spawn small beam machine flares
     CPlacement3D plSpaceShip = GetPlacement();
-    CPlacement3D plFlare1 = CPlacement3D( FLOAT3D(  BM_DX, BM_DY+BM_FLARE_DY,      0), ANGLE3D(0,0,0));
-    CPlacement3D plFlare2 = CPlacement3D( FLOAT3D(      0, BM_DY+BM_FLARE_DY, -BM_DZ), ANGLE3D(0,0,0));
-    CPlacement3D plFlare3 = CPlacement3D( FLOAT3D( -BM_DX, BM_DY+BM_FLARE_DY,      0), ANGLE3D(0,0,0));
-    CPlacement3D plFlare4 = CPlacement3D( FLOAT3D(      0, BM_DY+BM_FLARE_DY,  BM_DZ), ANGLE3D(0,0,0));
+    CPlacement3D plFlare1 = CPlacement3D(FLOAT3D( BM_DX, BM_DY+BM_FLARE_DY,   0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
+    CPlacement3D plFlare2 = CPlacement3D(FLOAT3D(  0.0f, BM_DY+BM_FLARE_DY, -BM_DZ), ANGLE3D(0.0f, 0.0f, 0.0f));
+    CPlacement3D plFlare3 = CPlacement3D(FLOAT3D(-BM_DX, BM_DY+BM_FLARE_DY,   0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
+    CPlacement3D plFlare4 = CPlacement3D(FLOAT3D(  0.0f, BM_DY+BM_FLARE_DY,  BM_DZ), ANGLE3D(0.0f, 0.0f, 0.0f));
     
     plFlare1.RelativeToAbsolute(plSpaceShip);
     plFlare2.RelativeToAbsolute(plSpaceShip);
     plFlare3.RelativeToAbsolute(plSpaceShip);
     plFlare4.RelativeToAbsolute(plSpaceShip);
 
-    CEntity *penFlare1 = CreateEntity( plFlare1, CLASS_EFFECTOR);
-    CEntity *penFlare2 = CreateEntity( plFlare2, CLASS_EFFECTOR);
-    CEntity *penFlare3 = CreateEntity( plFlare3, CLASS_EFFECTOR);
-    CEntity *penFlare4 = CreateEntity( plFlare4, CLASS_EFFECTOR);
+    CEntity *penFlare1 = CreateEntity(plFlare1, CLASS_EFFECTOR);
+    CEntity *penFlare2 = CreateEntity(plFlare2, CLASS_EFFECTOR);
+    CEntity *penFlare3 = CreateEntity(plFlare3, CLASS_EFFECTOR);
+    CEntity *penFlare4 = CreateEntity(plFlare4, CLASS_EFFECTOR);
 
     ESpawnEffector eSpawnFlare;
     eSpawnFlare.tmLifeTime = SMALL_FLARES_LIFE_TIME;
     eSpawnFlare.tmLifeTime = 10.5f;
     eSpawnFlare.eetType = ET_SIZING_RING_FLARE;
 
-    penFlare1->Initialize( eSpawnFlare);
-    penFlare2->Initialize( eSpawnFlare);
-    penFlare3->Initialize( eSpawnFlare);
-    penFlare4->Initialize( eSpawnFlare);
+    penFlare1->Initialize(eSpawnFlare);
+    penFlare2->Initialize(eSpawnFlare);
+    penFlare3->Initialize(eSpawnFlare);
+    penFlare4->Initialize(eSpawnFlare);
   }
 
   void SpawnBeamMachineMainFlare(void)
   {
     // spawn main flare
     CPlacement3D plSpaceShip = GetPlacement();
-    CPlacement3D plFlare = CPlacement3D( FLOAT3D(0, BM_MASTER_Y+BM_FLARE_DY, 0), ANGLE3D(0,0,0));
+    CPlacement3D plFlare = CPlacement3D(FLOAT3D(0, BM_MASTER_Y+BM_FLARE_DY, 0), ANGLE3D(0.0f, 0.0f, 0.0f));
     plFlare.RelativeToAbsolute(GetPlacement());
     CEntity *penFlare = CreateEntity( plFlare, CLASS_EFFECTOR);
     ESpawnEffector eSpawnFlare;
@@ -511,12 +511,12 @@ functions:
   void SpawnBeamMachineLightnings(void)
   {
     // spawn beam lightnings
-    CPlacement3D plLightning1 = CPlacement3D( FLOAT3D(BM_DX, BM_DY, 0), ANGLE3D(0,0,0));
-    CPlacement3D plLightning2 = CPlacement3D( FLOAT3D(0, BM_DY, -BM_DZ), ANGLE3D(0,0,0));
-    CPlacement3D plLightning3 = CPlacement3D( FLOAT3D(-BM_DX, BM_DY, 0), ANGLE3D(0,0,0));
-    CPlacement3D plLightning4 = CPlacement3D( FLOAT3D(0, BM_DY, BM_DZ), ANGLE3D(0,0,0));
+    CPlacement3D plLightning1 = CPlacement3D(FLOAT3D( BM_DX, BM_DY,   0.0f),  ANGLE3D(0.0f, 0.0f, 0.0f));
+    CPlacement3D plLightning2 = CPlacement3D(FLOAT3D(  0.0f, BM_DY, -BM_DZ), ANGLE3D(0.0f, 0.0f, 0.0f));
+    CPlacement3D plLightning3 = CPlacement3D(FLOAT3D(-BM_DX, BM_DY,   0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
+    CPlacement3D plLightning4 = CPlacement3D(FLOAT3D(  0.0f, BM_DY,  BM_DZ),  ANGLE3D(0.0f, 0.0f, 0.0f));
     
-    CPlacement3D plLightningDest = CPlacement3D( FLOAT3D(0, BM_MASTER_Y, 0), ANGLE3D(0,0,0));
+    CPlacement3D plLightningDest = CPlacement3D(FLOAT3D(0.0f, BM_MASTER_Y, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
     CPlacement3D plSpaceShip = GetPlacement();
     plLightningDest.RelativeToAbsolute(plSpaceShip);
     
@@ -546,8 +546,8 @@ functions:
   void SpawnBeamMachineMainLightning(void)
   {
     // spawn main lightning
-    FLOAT3D vDestination = GetPlacement().pl_PositionVector + FLOAT3D( 0, BM_MASTER_Y, 0);
-    CPlacement3D plSource = CPlacement3D( vDestination, ANGLE3D(0,0,0));
+    FLOAT3D vDestination = GetPlacement().pl_PositionVector + FLOAT3D(0.0f, BM_MASTER_Y, 0.0f);
+    CPlacement3D plSource = CPlacement3D(vDestination, ANGLE3D(0.0f, 0.0f, 0.0f));
     if( m_penBeamHit != NULL)
     {
       plSource.pl_PositionVector = m_penBeamHit->GetPlacement().pl_PositionVector;
@@ -566,8 +566,8 @@ functions:
   {
     if( m_penBeamHit != NULL)
     {
-      FLOAT3D vStart = GetPlacement().pl_PositionVector + FLOAT3D( 0, BM_MASTER_Y, 0);
-      CPlacement3D plSource = CPlacement3D( vStart, ANGLE3D(0,0,0));
+      FLOAT3D vStart = GetPlacement().pl_PositionVector + FLOAT3D(0.0f, BM_MASTER_Y, 0.0f);
+      CPlacement3D plSource = CPlacement3D(vStart, ANGLE3D(0.0f, 0.0f, 0.0f));
       FLOAT3D vHitPlace = m_penBeamHit->GetPlacement().pl_PositionVector;
       CEntity *penEffector = CreateEntity( plSource, CLASS_EFFECTOR);
       ESpawnEffector eSpawnEffector;
@@ -834,7 +834,7 @@ procedures:
         if( m_penBeamHit != NULL && !m_bFireingDeactivatedBeam)
         {
           // cast ray
-          FLOAT3D vSource = GetPlacement().pl_PositionVector + FLOAT3D( 0, BM_MASTER_Y, 0);
+          FLOAT3D vSource = GetPlacement().pl_PositionVector + FLOAT3D(0.0f, BM_MASTER_Y, 0.0f);
           FLOAT3D vDestination = m_penBeamHit->GetPlacement().pl_PositionVector;
           CCastRay crRay( this, vSource, vDestination);
           crRay.cr_bHitTranslucentPortals = FALSE;
@@ -848,7 +848,7 @@ procedures:
           {
             InflictDirectDamage( crRay.cr_penHit, this, DMT_BULLET, 
               10000.0f/GetGameDamageMultiplier()*_pTimer->TickQuantum/0.5f/16.0f,
-              FLOAT3D(0, 0, 0), (vSource-vDestination).Normalize());
+              FLOAT3D(0.0f, 0.0f, 0.0f), (vSource-vDestination).Normalize());
             crRay.cr_penHit->SendEvent( EHitBySpaceShipBeam());
           }
         }

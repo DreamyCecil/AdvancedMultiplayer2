@@ -272,16 +272,13 @@ functions:
   
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   FlyFire(EVoid) : CEnemyFly::FlyFire {
     if (m_bKamikazeAttached) { return EReturn(); }
 
     // fire projectile
     StartModelAnim(WOMAN_ANIM_AIRATTACK02, 0);
     autowait(0.6f);
-    ShootProjectile(PRT_WOMAN_FIRE, FIRE_AIR, ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_WOMAN_FIRE, FIRE_AIR, ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
     autowait(0.6f);
     StandingAnim();
@@ -311,9 +308,6 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
   Death(EVoid) : CEnemyFly::Death {
     DropKamikaze();
     jump CEnemyFly::Death();
@@ -352,7 +346,7 @@ procedures:
     // fire projectile
     StartModelAnim(WOMAN_ANIM_GROUNDATTACK02, 0);
     autowait(0.3f);
-    ShootProjectile(PRT_WOMAN_FIRE, FIRE_GROUND, ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_WOMAN_FIRE, FIRE_GROUND, ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
     autowait(0.3f);
     StandingAnim();
@@ -386,11 +380,6 @@ procedures:
     return EReturn();
   };
 
-
-
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

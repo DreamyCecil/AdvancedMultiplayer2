@@ -109,11 +109,6 @@ functions:
     KickEntity(penHit, vSpeed);
   };
 
-
-
-/************************************************************
- *                   P R O C E D U R E S                    *
- ************************************************************/
 procedures:
   // --->>> PROJECTILE SLIDE ON BRUSH
   WaterFly(EVoid) {

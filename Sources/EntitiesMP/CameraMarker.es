@@ -23,7 +23,7 @@ properties:
   8 COLOR m_colFade      "Fade Color" 'C' = 0,     // camera fading color
   9 CEntityPointer m_penTrigger "Trigger" 'G', // camera triggers when at this marker
  10 CEntityPointer m_penViewTarget "View Target" 'V', // camera will targeting this entity
- 11 FLOAT3D m_vPosRatio = FLOAT3D(0,0,0),
+ 11 FLOAT3D m_vPosRatio = FLOAT3D(0.0f, 0.0f, 0.0f),
  12 FLOAT m_fRatioX "View pos ratio X" 'X' = 0.5f,
  13 FLOAT m_fRatioY "View pos ratio Y" 'Y' = 0.5f,
  14 FLOAT m_fRatioZ "View pos ratio Z" 'Z' = 0.5f,
@@ -59,12 +59,12 @@ procedures:
   Main()
   {
     // clamp parameters
-    m_fDeltaTime  = ClampDn( m_fDeltaTime, 0.001f);
-    m_fBias       = Clamp( m_fBias,       -1.0f, +1.0f);
-    m_fTension    = Clamp( m_fTension,    -1.0f, +1.0f);
-    m_fContinuity = Clamp( m_fContinuity, -1.0f, +1.0f);
+    m_fDeltaTime  = ClampDn(m_fDeltaTime, 0.001f);
+    m_fBias       = Clamp(m_fBias,       -1.0f, +1.0f);
+    m_fTension    = Clamp(m_fTension,    -1.0f, +1.0f);
+    m_fContinuity = Clamp(m_fContinuity, -1.0f, +1.0f);
     
-    m_vPosRatio=FLOAT3D(m_fRatioX, m_fRatioY, m_fRatioZ);
+    m_vPosRatio = FLOAT3D(m_fRatioX, m_fRatioY, m_fRatioZ);
 
     // init model
     InitAsEditorModel();

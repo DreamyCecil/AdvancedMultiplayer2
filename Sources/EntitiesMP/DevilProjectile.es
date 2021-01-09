@@ -31,7 +31,7 @@ properties:
 
  10 FLOAT m_fIgnoreTime = 0.0f,              // time when laucher will be ignored
  11 FLOAT m_fStartTime = 0.0f,               // start time when launched
- 12 FLOAT3D m_vDesiredAngle = FLOAT3D(0,0,0),
+ 12 FLOAT3D m_vDesiredAngle = FLOAT3D(0.0f, 0.0f, 0.0f),
  13 BOOL m_bFly = FALSE,
 
  20 CSoundObject m_soEffect,          // sound channel
@@ -85,11 +85,6 @@ functions:
     m_lsLightSource.SetLightSource(lsNew);
   };
 
-
-
-/************************************************************
- *                     MOVING FUNCTIONS                     *
- ************************************************************/
   // calculate rotation
   void CalcHeadingRotation(ANGLE aWantedHeadingRelative, ANGLE &aRotation) {
     // normalize it to [-180,+180] degrees
@@ -112,10 +107,7 @@ functions:
   // calculate angle from position
   void CalcAngleFromPosition() {
     // target enemy body
-    FLOAT3D vTarget;
-/*    EntityInfo *peiTarget = (EntityInfo*) (m_penTarget->GetEntityInfo());
-    GetEntityInfoPosition(m_penTarget, peiTarget->vTargetCenter, vTarget);*/
-    vTarget = m_penTarget->GetPlacement().pl_PositionVector;
+    FLOAT3D vTarget = m_penTarget->GetPlacement().pl_PositionVector;
     vTarget += FLOAT3D(m_penTarget->en_mRotation(1, 2),
                        m_penTarget->en_mRotation(2, 2),
                        m_penTarget->en_mRotation(3, 2)) * 2.0f;
@@ -177,7 +169,7 @@ functions:
 
   // stop rotating entity
   void StopRotating() {
-    SetDesiredRotation(ANGLE3D(0, 0, 0));
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
   };
 
   // stop translating
@@ -185,11 +177,6 @@ functions:
     SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
   };
 
-
-
-/************************************************************
- *             C O M M O N   F U N C T I O N S              *
- ************************************************************/
   void ProjectileTouch(CEntityPointer penHit) {
     // direct damage
     FLOAT3D vDirection;
@@ -198,11 +185,6 @@ functions:
                GetPlacement().pl_PositionVector, vDirection);
   };
 
-
-
-/************************************************************
- *                   P R O C E D U R E S                    *
- ************************************************************/
 procedures:
   Fly(EVoid) {
     // bounce loop

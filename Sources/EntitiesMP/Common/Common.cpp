@@ -60,9 +60,6 @@ void CCompMessageID::NewMessage(const CTFileName &fnm)
   cmi_bRead = FALSE;
 }
 
-/************************************************************
- *          COMMON FUNCTIONS FOR ENTITY CLASSES             *
- ************************************************************/
 // world change
 struct WorldChange _SwcWorldChange;
 
@@ -330,31 +327,27 @@ void SpawnHitTypeEffect(CEntity *pen, enum BulletHitType bhtType, BOOL bSound, F
       FLOAT fRVx = vIncommingBulletDir(1) - 2*fNx*fNV;
       FLOAT fRVy = vIncommingBulletDir(2) - 2*fNy*fNV;
       FLOAT fRVz = vIncommingBulletDir(3) - 2*fNz*fNV;
-      ese.vStretch = FLOAT3D( fRVx, fRVy, fRVz);
+      ese.vStretch = FLOAT3D(fRVx, fRVy, fRVz);
 
-      try
-      {
+      try {
         // spawn effect
         CPlacement3D plHit = CPlacement3D(vHitPoint-vIncommingBulletDir*0.1f, pen->GetPlacement().pl_OrientationAngle);
         CEntityPointer penHit = pen->GetWorld()->CreateEntity_t(plHit , CTFILENAME("Classes\\BasicEffect.ecl"));
         penHit->Initialize(ese);
-      }
-      catch (char *strError)
-      {
+      } catch (char *strError) {
         FatalError(TRANS("Cannot create basic effect class: %s"), strError);
       }
       break;
     }
+
     case BHT_FLESH:
-    case BHT_ACID:
-    {
+    case BHT_ACID: {
       // spawn bullet entry wound
       ESpawnEffect ese;
       ese.colMuliplier = C_WHITE|CT_OPAQUE;
       // if there is exit wound blood spill place
       FLOAT fDistance = vDistance.Length();
-      if( fDistance>0.01f && !(pen->IRnd()%2) )
-      {
+      if (fDistance > 0.01f && !(pen->IRnd() % 2)) {
         // spawn bullet exit wound blood patch
         ese.betType = BET_BLOODSPILL;
         if( bhtType == BHT_ACID)
@@ -368,11 +361,11 @@ void SpawnHitTypeEffect(CEntity *pen, enum BulletHitType bhtType, BOOL bSound, F
         ese.vNormal = vHitNormal;
         if (fDistance<25.0f)
         {
-          GetNormalComponent( vDistance/fDistance, vHitNormal, ese.vDirection);
+          GetNormalComponent(vDistance/fDistance, vHitNormal, ese.vDirection);
           FLOAT fLength = ese.vDirection.Length();
-          fLength   = Clamp( fLength*3, 1.0f, 3.0f);
-          fDistance = Clamp( log10(fDistance), 0.5, 2.0);
-          ese.vStretch = FLOAT3D( fDistance, fLength*fDistance, 1.0f);
+          fLength   = Clamp(fLength*3, 1.0f, 3.0f);
+          fDistance = Clamp(log10(fDistance), 0.5, 2.0);
+          ese.vStretch = FLOAT3D(fDistance, fLength*fDistance, 1.0f);
           try
           {
             // spawn effect
@@ -420,7 +413,7 @@ CEntityPointer SpawnFlame(CEntity *penOwner, CEntity *penAttach, const FLOAT3D &
 
   // create new flame
   try {
-    CPlacement3D plFlame(vPos, ANGLE3D(0, 0, 0));
+    CPlacement3D plFlame(vPos, ANGLE3D(0.0f, 0.0f, 0.0f));
     penFlame = penAttach->GetWorld()->CreateEntity_t(plFlame, CTFILENAME("Classes\\Flame.ecl"));
   } catch (char *strError) {
     FatalError(TRANS("Cannot create flame entity class: %s"), strError);
@@ -446,55 +439,45 @@ void KickEntity(CEntity *penTarget, FLOAT3D vSpeed) {
   }
 };
 
+// Set components
+void SetComponents(CEntity *pen, CModelObject &mo, ULONG ulIDModel, ULONG ulIDTexture,
+                    ULONG ulIDReflectionTexture, ULONG ulIDSpecularTexture, ULONG ulIDBumpTexture) {
+  // model data
+  mo.SetData(pen->GetModelDataForComponent(ulIDModel));
+  // texture data
+  mo.mo_toTexture.SetData(pen->GetTextureDataForComponent(ulIDTexture));
+  // reflection texture data
+  if (ulIDReflectionTexture>0) {
+    mo.mo_toReflection.SetData(pen->GetTextureDataForComponent(ulIDReflectionTexture));
+  } else {
+    mo.mo_toReflection.SetData(NULL);
+  }
+  // specular texture data
+  if (ulIDSpecularTexture>0) {
+    mo.mo_toSpecular.SetData(pen->GetTextureDataForComponent(ulIDSpecularTexture));
+  } else {
+    mo.mo_toSpecular.SetData(NULL);
+  }
+  // bump texture data
+  if (ulIDBumpTexture>0) {
+    mo.mo_toBump.SetData(pen->GetTextureDataForComponent(ulIDBumpTexture));
+  } else {
+    mo.mo_toBump.SetData(NULL);
+  }
+};
 
+// Add attachment to model
+void AddAttachmentToModel(CEntity *pen, CModelObject &mo, INDEX iAttachment, ULONG ulIDModel, ULONG ulIDTexture,
+                          ULONG ulIDReflectionTexture, ULONG ulIDSpecularTexture, ULONG ulIDBumpTexture) {
+  SetComponents(pen, mo.AddAttachmentModel(iAttachment)->amo_moModelObject, ulIDModel,
+                ulIDTexture, ulIDReflectionTexture, ulIDSpecularTexture, ulIDBumpTexture);
+};
 
-/************************************************************
- *                   SET MODEL AND ATTACHMENT               *
- ************************************************************/
-  // Set components
-  void SetComponents(CEntity *pen, CModelObject &mo, ULONG ulIDModel, ULONG ulIDTexture,
-                     ULONG ulIDReflectionTexture, ULONG ulIDSpecularTexture, ULONG ulIDBumpTexture) {
-    // model data
-    mo.SetData(pen->GetModelDataForComponent(ulIDModel));
-    // texture data
-    mo.mo_toTexture.SetData(pen->GetTextureDataForComponent(ulIDTexture));
-    // reflection texture data
-    if (ulIDReflectionTexture>0) {
-      mo.mo_toReflection.SetData(pen->GetTextureDataForComponent(ulIDReflectionTexture));
-    } else {
-      mo.mo_toReflection.SetData(NULL);
-    }
-    // specular texture data
-    if (ulIDSpecularTexture>0) {
-      mo.mo_toSpecular.SetData(pen->GetTextureDataForComponent(ulIDSpecularTexture));
-    } else {
-      mo.mo_toSpecular.SetData(NULL);
-    }
-    // bump texture data
-    if (ulIDBumpTexture>0) {
-      mo.mo_toBump.SetData(pen->GetTextureDataForComponent(ulIDBumpTexture));
-    } else {
-      mo.mo_toBump.SetData(NULL);
-    }
-  };
+// Remove attachment from model
+void RemoveAttachmentFromModel(CModelObject &mo, INDEX iAttachment) {
+  mo.RemoveAttachmentModel(iAttachment);
+};
 
-  // Add attachment to model
-  void AddAttachmentToModel(CEntity *pen, CModelObject &mo, INDEX iAttachment, ULONG ulIDModel, ULONG ulIDTexture,
-                            ULONG ulIDReflectionTexture, ULONG ulIDSpecularTexture, ULONG ulIDBumpTexture) {
-    SetComponents(pen, mo.AddAttachmentModel(iAttachment)->amo_moModelObject, ulIDModel,
-                  ulIDTexture, ulIDReflectionTexture, ulIDSpecularTexture, ulIDBumpTexture);
-  };
-
-  // Remove attachment from model
-  void RemoveAttachmentFromModel(CModelObject &mo, INDEX iAttachment) {
-    mo.RemoveAttachmentModel(iAttachment);
-  };
-
-
-
-/************************************************************
- *                          FLARES                          *
- ************************************************************/
 // lens flare variables
 CLensFlareType _lftStandard;
 CLensFlareType _lftStandardReflections;
@@ -661,29 +644,25 @@ void CloseLensFlares(void) {
 
 static BOOL _bFatalChecks = FALSE;
 
-
-/************************************************************
- *                      PLAYER APPEARANCE                   *
- ************************************************************/
-/* Set the model data */
+// Set the model data
 void SetModelData_t(CModelObject *pmo, const CTFileName &fnmModel) {
   ASSERT(pmo != NULL);
   pmo->SetData_t(fnmModel);   // load the new model data
 };
 
-/* Set the texture data */
+// Set the texture data
 void SetTextureData_t(CModelObject *pmo, const CTFileName &fnmTexture) {
   ASSERT(pmo != NULL);
   pmo->mo_toTexture.SetData_t(fnmTexture);    // load the texture data
 };
 
-/* Set model */
+// Set model
 void SetModel_t(CModelObject *pmo, const CTFileName &fnmModel, const CTFileName &fnmTexture) {
   SetModelData_t(pmo, fnmModel);
   SetTextureData_t(pmo, fnmTexture);
 };
 
-/* Add attachment to model */
+// Add attachment to model
 void ModelAddAttachment_t(CModelObject *pmo, INDEX iAttachment, 
                         const CTFileName &fnmModel, const CTFileName &fnmTexture) {
   ASSERT(pmo != NULL);
@@ -940,10 +919,6 @@ BOOL SetPlayerAppearance(CModelObject *pmo, CPlayerCharacter *ppc, CTString &str
   }
 }
 
-
-/************************************************************
- *                    DEBUGGING FUNCTIONS                   *
- ************************************************************/
 // debugging functions
 const char *PrintConsole(void)
 {
@@ -956,11 +931,7 @@ const char *PrintStack(CEntity *pen)
   return pen->PrintStackDebug();
 }
 
-
-
-/************************************************************
- *                          DEBRIS                          *
- ************************************************************/
+// Debris
 EntityInfoBodyType _Eeibt;
 enum DebrisParticlesType _dptParticles;
 enum BasicEffectType  _betStain;
@@ -1009,7 +980,7 @@ CEntityPointer Debris_Spawn(
 {
   // create debris at same world as spawner
   FLOAT3D vPos;
-  FLOAT3D vStretch=FLOAT3D(1,1,1);
+  FLOAT3D vStretch=FLOAT3D(1.0f, 1.0f, 1.0f);
   if( (penSpawner->en_RenderType==CEntity::RT_MODEL ||
        penSpawner->en_RenderType==CEntity::RT_EDITORMODEL) &&
        penSpawner->GetModelObject()!=NULL)
@@ -1018,7 +989,7 @@ CEntityPointer Debris_Spawn(
   }
   penSpawner->GetEntityPointRatio(vPosRatio, vPos);
   CEntityPointer penDebris = penSpawner->GetWorld()->CreateEntity_t(
-    CPlacement3D(vPos, ANGLE3D(0,0,0)), CTFILENAME("Classes\\Debris.ecl"));
+    CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)), CTFILENAME("Classes\\Debris.ecl"));
   // prepare parameters
   ESpawnDebris eSpawn;
   eSpawn.bImmaterialASAP=FALSE;
@@ -1033,7 +1004,7 @@ CEntityPointer Debris_Spawn(
   eSpawn.ptdBump = penComponents->GetTextureDataForComponent(idBumpTextureComponent);
   eSpawn.iModelAnim = iModelAnim;
   eSpawn.colDebris = _colDebris;
-  eSpawn.vStretch = FLOAT3D(1,1,1);
+  eSpawn.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
   if (fSize==0) {
     eSpawn.fSize = 1.0f;
   } else {
@@ -1103,14 +1074,13 @@ CEntityPointer Debris_Spawn_Independent(
   eSpawn.iModelAnim = iModelAnim;
   eSpawn.colDebris = _colDebris;
   eSpawn.fSize = fSize;
-  eSpawn.vStretch = FLOAT3D(1,1,1);
+  eSpawn.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
   
   // initialize it
   penDebris->Initialize(eSpawn);
 
   // move it 
-  ((CMovableEntity&)*penDebris).LaunchAsFreeProjectile(
-    vTranslation, (CMovableEntity*)penSpawner);
+  ((CMovableEntity&)*penDebris).LaunchAsFreeProjectile(vTranslation, (CMovableEntity*)penSpawner);
   ((CMovableEntity&)*penDebris).SetDesiredRotation(aRotation);
 
   return penDebris;
@@ -1207,11 +1177,6 @@ EntityInfo *GetStdEntityInfo(EntityInfoBodyType eibt)
   };
 }
 
-
-
-/************************************************************
- *                 DAMAGE CONTROL FUNCTIONS                 *
- ************************************************************/
 // damage control functions
 FLOAT DamageStrength(EntityInfoBodyType eibtBody, enum DamageType dtDamage)
 {

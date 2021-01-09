@@ -144,12 +144,12 @@ functions:
   FLOAT WaitForDust(FLOAT3D &vStretch) {
     if(GetModelObject()->GetAnim()==BONEMAN_ANIM_DEATHTOBACK)
     {
-      vStretch=FLOAT3D(1,1,2)*1.0f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 2.0f)*1.0f;
       return 0.48f;
     }
     else if(GetModelObject()->GetAnim()==BONEMAN_ANIM_DEATHTOFRONT)
     {
-      vStretch=FLOAT3D(1,1,2)*0.75f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 2.0f)*0.75f;
       return 0.48f;
     }
     return -1.0f;
@@ -206,9 +206,6 @@ functions:
     m_bRunSoundPlaying = FALSE;
   }
 
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
   // spawn body parts
   void BlowUp(void) {
     // get your size
@@ -242,18 +239,15 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   Fire(EVoid) : CEnemyBase::Fire {
     // fire projectile
     StartModelAnim(BONEMAN_ANIM_ATTACKCLOSELOOP, 0);
     DeactivateRunningSound();
     autowait(0.35f);
-    ShootProjectile(PRT_BONEMAN_FIRE, FIRE_RIGHT_HAND, ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_BONEMAN_FIRE, FIRE_RIGHT_HAND, ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
     autowait(0.45f);
-    ShootProjectile(PRT_BONEMAN_FIRE, FIRE_LEFT_HAND, ANGLE3D(0, 0, 0));
+    ShootProjectile(PRT_BONEMAN_FIRE, FIRE_LEFT_HAND, ANGLE3D(0.0f, 0.0f, 0.0f));
     PlaySound(m_soSound, SOUND_FIRE, SOF_3D);
     autowait(FRnd()/3+0.6f);
 
@@ -317,7 +311,7 @@ procedures:
       FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
       vDirection.Normalize();
       // damage enemy
-      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 10.0f, FLOAT3D(0, 0, 0), vDirection);
+      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 10.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       // push target left
       FLOAT3D vSpeed;
       GetHeadingDirection(AngleDeg(90.0f), vSpeed);
@@ -336,7 +330,7 @@ procedures:
       // damage enemy
       FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
       vDirection.Normalize();
-      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 10.0f, FLOAT3D(0, 0, 0), vDirection);
+      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 10.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       // push target left
       FLOAT3D vSpeed;
       GetHeadingDirection(AngleDeg(-90.0f), vSpeed);
@@ -346,11 +340,6 @@ procedures:
     return EReturn();
   };
 
-
-
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

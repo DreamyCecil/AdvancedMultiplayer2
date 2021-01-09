@@ -164,9 +164,6 @@ functions:
     return FALSE;
   };
 
-/************************************************************
- *                      INITALIZATION                       *
- ************************************************************/
   void Initialize(void) {
     InitAsModel();
     SetFlags(GetFlags()|ENF_SEETHROUGH);
@@ -184,7 +181,7 @@ functions:
 
     // set appearance
     ItemModel();
-    SetDesiredTranslation(FLOAT3D(0,0,0));  // just to add to movers
+    SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));  // just to add to movers
   };
 
   // [Cecil] Set item model
@@ -192,9 +189,6 @@ functions:
     SetModel(MODEL_ITEM);
   };
 
-/************************************************************
- *                   SET MODEL AND ATTACHMENT               *
- ************************************************************/
   // Add item
   void AddItem(ULONG ulIDModel, ULONG ulIDTexture,
                ULONG ulIDReflectionTexture, ULONG ulIDSpecularTexture, ULONG ulIDBumpTexture) {
@@ -300,20 +294,9 @@ functions:
   };
 
 procedures:
-
-/************************************************************
- *          VIRTUAL PROCEDURES THAT NEED OVERRIDE           *
- ************************************************************/
   ItemCollected(EPass epass) { return; };
 
-
-
-/************************************************************
- *                I  T  E  M    L  O  O  P                  *
- ************************************************************/
-
-  ItemLoop(EVoid)
-  {
+  ItemLoop(EVoid) {
     m_fCustomRespawnTime = ClampDn( m_fCustomRespawnTime, 0.0f);
     autowait(0.1f);
 

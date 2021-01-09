@@ -276,7 +276,7 @@ functions:
           ESpawnEffect eSpawnEffect;
           eSpawnEffect.colMuliplier = C_WHITE|CT_OPAQUE;
           eSpawnEffect.betType = m_betType;
-          eSpawnEffect.vStretch = FLOAT3D(m_fStretch,m_fStretch,m_fStretch);
+          eSpawnEffect.vStretch = FLOAT3D(m_fStretch, m_fStretch, m_fStretch);
           penEffect->Initialize(eSpawnEffect);
         }
         break;

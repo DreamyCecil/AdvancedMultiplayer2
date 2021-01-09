@@ -254,7 +254,7 @@ functions:
   FLOAT WaitForDust(FLOAT3D &vStretch) {
     if(GetModelObject()->GetAnim()==SCORPMAN_ANIM_DEATH)
     {
-      vStretch=FLOAT3D(1,1,1)*1.5f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 1.0f)*1.5f;
       return 1.3f;
     }
     return -1.0f;
@@ -293,19 +293,14 @@ functions:
     PlaySound(m_soSound, SOUND_DEATH, SOF_3D);
   };
 
-
-/************************************************************
- *                   FIRE BULLET / RAIL                     *
- ************************************************************/
-  BOOL CanFireAtPlayer(void)
-  {
+  BOOL CanFireAtPlayer(void) {
     // get ray source and target
     FLOAT3D vSource, vTarget;
     GetPositionCastRay(this, m_penEnemy, vSource, vTarget);
 
     // bullet start position
     CPlacement3D plBullet;
-    plBullet.pl_OrientationAngle = ANGLE3D(0,0,0);
+    plBullet.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     plBullet.pl_PositionVector = FLOAT3D(GUN_X, GUN_Y, 0);
     // offset are changed according to stretch factor
     if (m_smtType == SMT_MONSTER) {
@@ -326,12 +321,12 @@ functions:
 
     // if hit nothing (no brush) the entity can be seen
     return (crRay.cr_penHit==NULL);     
-  }
+  };
 
   void PrepareBullet(FLOAT fDamage) {
     // bullet start position
     CPlacement3D plBullet;
-    plBullet.pl_OrientationAngle = ANGLE3D(0,0,0);
+    plBullet.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     plBullet.pl_PositionVector = FLOAT3D(GUN_X, GUN_Y, 0);
     // offset are changed according to stretch factor
     if (m_smtType == SMT_MONSTER) {
@@ -351,7 +346,7 @@ functions:
     penBullet->Initialize(eInit);
   };
 
-  // fire bullet
+  // Fire bullet
   void FireBullet(void) {
     // binary divide counter
     m_bFireBulletCount++;
@@ -365,19 +360,14 @@ functions:
     ((CBullet&)*penBullet).DestroyBullet();
   };
 
-
-  // adjust sound and watcher parameters here if needed
-  void EnemyPostInit(void) 
-  {
+  // Adjust sound and watcher parameters here if needed
+  void EnemyPostInit(void) {
     // set sound default parameters
     m_soSound.Set3DParameters(160.0f, 50.0f, 1.0f, 1.0f);
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
-  // shoot
+  // Shoot
   Fire(EVoid) : CEnemyBase::Fire{
     if (!CanFireAtPlayer()) {
       return EReturn();
@@ -455,7 +445,7 @@ procedures:
     return EReturn();
   };
 
-  // hit enemy
+  // Hit enemy
   Hit(EVoid) : CEnemyBase::Hit {
     // close attack
     StartModelAnim(SCORPMAN_ANIM_SPIKEHIT, 0);
@@ -465,11 +455,11 @@ procedures:
       FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
       vDirection.Normalize();
       if (m_smtType == SMT_MONSTER) {
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 80.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 80.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       } else if (m_smtType == SMT_GENERAL) {
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 40.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 40.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       } else {
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 20.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 20.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       }
     }
     autowait(0.3f);
@@ -536,11 +526,8 @@ procedures:
       }
     }
     return EReturn();
-  }
+  };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     if (m_smtType==SMT_MONSTER) {
       m_smtType=SMT_GENERAL;

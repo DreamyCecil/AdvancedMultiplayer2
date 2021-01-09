@@ -256,7 +256,7 @@ functions:
           ese.betType = BET_CANNONEXPLOSIONSTAIN;
           ese.vNormal = FLOAT3D(vPlaneNormal);
           ese.vStretch = vStretchShockwave;
-          SpawnEffect(CPlacement3D(vOnPlane, ANGLE3D(0, 0, 0)), ese);
+          SpawnEffect(CPlacement3D(vOnPlane, ANGLE3D(0.0f, 0.0f, 0.0f)), ese);
         }
 
         if (bHasShockWave) {
@@ -265,17 +265,13 @@ functions:
           ese.betType = BET_CANNONSHOCKWAVE;
           ese.vNormal = FLOAT3D(vPlaneNormal);
           ese.vStretch = vStretchShockwave;
-          SpawnEffect(CPlacement3D(vOnPlane, ANGLE3D(0, 0, 0)), ese);
+          SpawnEffect(CPlacement3D(vOnPlane, ANGLE3D(0.0f, 0.0f, 0.0f)), ese);
         }
       }
     }
 
     RangeDamage();
   };
-
-/************************************************************
- *             C O M M O N   F U N C T I O N S              *
- ************************************************************/
 
   // ball touch his valid target
   BOOL BallTouchExplode(CEntityPointer penHit) {
@@ -339,25 +335,19 @@ functions:
     penEffect->Initialize(eSpawnEffect);
   };
 
-/************************************************************
- *                      S O U N D S                         *
- ************************************************************/
-void BounceSound(FLOAT fSpeed) {
-  FLOAT fVolume = Clamp(fSpeed/6.0f, 0.0f, 1.0f);
+  void BounceSound(FLOAT fSpeed) {
+    FLOAT fVolume = Clamp(fSpeed/6.0f, 0.0f, 1.0f);
 
-  if (fVolume < 0.1f) {
-    return;
-  }
+    if (fVolume < 0.1f) {
+      return;
+    }
 
-  CSoundObject &so = (&m_soBounce0)[m_iNextChannel];
-  m_iNextChannel = (m_iNextChannel+1)%5;
-  so.Set3DParameters(70.0f, 10.0f, fVolume, 1.0f);
-  PlaySound(so, SOUND_BALL_BOUNCE, SOF_3D);
-};
+    CSoundObject &so = (&m_soBounce0)[m_iNextChannel];
+    m_iNextChannel = (m_iNextChannel+1)%5;
+    so.Set3DParameters(70.0f, 10.0f, fVolume, 1.0f);
+    PlaySound(so, SOUND_BALL_BOUNCE, SOF_3D);
+  };
 
-/************************************************************
- *                   P R O C E D U R E S                    *
- ************************************************************/
 procedures:
   Bounce(EVoid) {
     // if already inside some entity

@@ -52,43 +52,46 @@ properties:
   33 FLOAT m_fNextRockingA = 0.0f,
   34 FLOAT m_tmRockingChange=1,         // how many second to change rocking parameters
   35 FLOAT m_tmRockingChangeStart=-1,   // when changing of rocking parameters has started
+
 components:
+
 functions:
-  /* Check if entity is moved on a route set up by its targets. */
+  // Check if entity is moved on a route set up by its targets
   BOOL MovesByTargetedRoute(CTString &strTargetProperty) const {
     strTargetProperty = "Target";
     return TRUE;
   };
-  /* Check if entity can drop marker for making linked route. */
+
+  // Check if entity can drop marker for making linked route
   BOOL DropsMarker(CTFileName &fnmMarkerClass, CTString &strTargetProperty) const {
     fnmMarkerClass = CTFILENAME("Classes\\ShipMarker.ecl");
     strTargetProperty = "Target";
     return TRUE;
-  }
+  };
+
   const CTString &GetDescription(void) const {
     ((CTString&)m_strDescription).PrintF("-><none>");
     if (m_penTarget!=NULL) {
       ((CTString&)m_strDescription).PrintF("->%s", m_penTarget->GetName());
     }
     return m_strDescription;
-  }
-  /* Get anim data for given animation property - return NULL for none. */
-  CAnimData *GetAnimData(SLONG slPropertyOffset) 
-  {
-    if((slPropertyOffset==offsetof(CShip, m_iSailUpAnim)
-      ||slPropertyOffset==offsetof(CShip, m_iSailDownAnim)
-      ||slPropertyOffset==offsetof(CShip, m_iSailSailAnim)
-      ||slPropertyOffset==offsetof(CShip, m_iSailWaveingAnim))
-      &&m_penSail!=NULL) {
-      return m_penSail->GetModelObject()->GetData();
-    } else {
-      return CEntity::GetAnimData(slPropertyOffset);
-    }
   };
 
-  // calculate velocities towards marker
-  void SetMovingSpeeds(void)
-  {
+  // Get anim data for given animation property - return NULL for none
+  CAnimData *GetAnimData(SLONG slPropertyOffset) {
+    if((slPropertyOffset == offsetof(CShip, m_iSailUpAnim)
+     || slPropertyOffset == offsetof(CShip, m_iSailDownAnim)
+     || slPropertyOffset == offsetof(CShip, m_iSailSailAnim)
+     || slPropertyOffset == offsetof(CShip, m_iSailWaveingAnim))
+     && m_penSail != NULL) {
+      return m_penSail->GetModelObject()->GetData();
+    }
+
+    return CEntity::GetAnimData(slPropertyOffset);
+  };
+
+  // Calculate velocities towards marker
+  void SetMovingSpeeds(void) {
     // if the brush should not be moving, or there is no target
     if (!m_bMoving || m_penTarget==NULL) {
       // just rock
@@ -122,7 +125,7 @@ functions:
     SetDesiredRotation(aAngle);
 
     // set speed
-    SetDesiredTranslation(FLOAT3D(0,0,-m_fSpeed));
+    SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, -m_fSpeed));
 
     en_fAcceleration = m_fAcceleration;
     en_fDeceleration = m_fAcceleration;
@@ -227,8 +230,8 @@ functions:
   void StopSailing(void)
   {
     m_bMoving = FALSE;
-    SetDesiredRotation(ANGLE3D(0,0,GetDesiredRotation()(3)));
-    SetDesiredTranslation(FLOAT3D(0,0,0));
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, GetDesiredRotation()(3)));
+    SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
   }
 
   // do moving
@@ -329,7 +332,7 @@ procedures:
       on (EBlock eBlock) : {
         // inflict damage to entity that block brush
         InflictDirectDamage(eBlock.penOther, this, DMT_BRUSH, 10.0f,
-          FLOAT3D(0.0f,0.0f,0.0f), (FLOAT3D &)eBlock.plCollision);
+          FLOAT3D(0.0f, 0.0f, 0.0f), (FLOAT3D &)eBlock.plCollision);
         resume;
       }
     }

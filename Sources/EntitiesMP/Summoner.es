@@ -775,7 +775,7 @@ functions:
           pamo->amo_moModelObject.GetAttachmentTransformations( STAFF_ATTACHMENT_PARTICLES, mRot, vPos, TRUE);
           vPos=GetPlacement().pl_PositionVector+vPos*GetRotationMatrix();
 
-          FLOAT3D vSpeed=FLOAT3D( 0.1f+RAND_05, 0.1f+RAND_05, -1.0f-RAND_05);
+          FLOAT3D vSpeed = FLOAT3D(0.1f+RAND_05, 0.1f+RAND_05, -1.0f-RAND_05);
           vSpeed=vSpeed.Normalize()*8.0f;
           m_emEmiter.AddParticle(vPos, vSpeed*mRot*mEn, RAND_05*360.0f, fRotSpeed, tmBirth, fLife, fStretch, col);
         }
@@ -947,13 +947,7 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
-  
-  Die(EDeath eDeath) : CEnemyBase::Die
-  {
-  
+  Die(EDeath eDeath) : CEnemyBase::Die {
     m_bDying = TRUE;
 
     m_penDeathInflictor = eDeath.eLastDamage.penInflictor;
@@ -1259,13 +1253,9 @@ procedures:
         resume;
       }
     }
-  }
+  };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
-    
     // declare yourself as a model
     InitAsEditorModel();
     

@@ -183,17 +183,13 @@ functions:
       PlaySound(m_soFeet, SOUND_RUN, SOF_3D|SOF_LOOP);
       m_bRunSoundPlaying = TRUE;
     }
-  }
-  void DeactivateRunningSound(void)
-  {
+  };
+
+  void DeactivateRunningSound(void) {
     m_soFeet.Stop();
     m_bRunSoundPlaying = FALSE;
-  }
+  };
 
-
-/************************************************************
- *                      ATTACK FUNCTIONS                    *
- ************************************************************/
   // touched another live entity
   void LiveEntityTouched(ETouch etouch) {
     if (m_penLastTouched!=etouch.penOther || _pTimer->CurrentTick()>=m_fLastTouchedTime+0.25f) {
@@ -215,7 +211,7 @@ functions:
         FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
         vDirection.Normalize();
         InflictDirectDamage(etouch.penOther, this, DMT_CLOSERANGE, -aHitAngle*40.0f,
-          FLOAT3D(0, 0, 0), vDirection);
+          FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
         // kick touched entity
         FLOAT3D vSpeed = -FLOAT3D(etouch.plCollision);
         vSpeed = vSpeed*10.0f;
@@ -249,9 +245,6 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
   // hit enemy
   Hit(EVoid) : CEnemyBase::Hit {
     if (CalcDist(m_penEnemy) < HIT_DISTANCE) {
@@ -269,7 +262,7 @@ procedures:
       if (m_bHornHit) {
         FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
         vDirection.Normalize();
-        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 20.0f, FLOAT3D(0, 0, 0), vDirection);
+        InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 20.0f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
         FLOAT3D vSpeed;
         GetPitchDirection(AngleDeg(90.0f), vSpeed);
         vSpeed = vSpeed * 10.0f;
@@ -282,11 +275,6 @@ procedures:
     return EReturn();
   };
 
-
-
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();
@@ -299,11 +287,8 @@ procedures:
 
     // set your appearance
     SetModel(MODEL_WEREBULL);
-//    if (m_bcChar==BUC_SUMMER) {
-      SetModelMainTexture(TEXTURE_WEREBULL_SUMMER);
-//    } else {
-//      SetModelMainTexture(TEXTURE_WEREBULL_WINTER);
-//    }
+    SetModelMainTexture(TEXTURE_WEREBULL_SUMMER);
+
     StandingAnim();
     // setup moving speed
     m_fWalkSpeed = FRnd() + 2.5f;

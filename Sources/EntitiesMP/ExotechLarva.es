@@ -102,9 +102,9 @@ properties:
  60 FLOAT m_tmLastTargateChange = 0.0f,
 
  // internal positions for explosions
- 70 CPlacement3D m_plExpArmPos = CPlacement3D(FLOAT3D(0,0,0), ANGLE3D(0,0,0)),
+ 70 CPlacement3D m_plExpArmPos = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f)),
  71 FLOAT3D m_aExpArmRot = FLOAT3D(0.0f, 0.0f, 0.0f),
- 72 CPlacement3D m_plExpGunPos = CPlacement3D(FLOAT3D(0,0,0), ANGLE3D(0,0,0)),
+ 72 CPlacement3D m_plExpGunPos = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f)),
  73 FLOAT3D m_aExpGunRot = FLOAT3D(0.0f, 0.0f, 0.0f),
  74 FLOAT3D m_vExpDamage = FLOAT3D(0.0f, 0.0f, 0.0f),
  75 INDEX m_iExplosions = 0,
@@ -411,7 +411,7 @@ functions:
     }
 
     // spawn blood spray
-    CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0, 0, 0));
+    CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0.0f, 0.0f, 0.0f));
     m_penSpray = CreateEntity( plSpray, CLASS_BLOOD_SPRAY);
     ESpawnSpray eSpawnSpray;
     eSpawnSpray.colBurnColor=C_WHITE|CT_OPAQUE;
@@ -820,7 +820,7 @@ functions:
 
       // apply damage
       InflictDirectDamage( crRay1.cr_penHit, this, DMT_BURNING, 25.0f,
-          FLOAT3D(0, 0, 0), (m_vFirePosLeftLaserAbs-m_vLeftLaserTarget).Normalize());
+          FLOAT3D(0.0f, 0.0f, 0.0f), (m_vFirePosLeftLaserAbs-m_vLeftLaserTarget).Normalize());
       
       if (crRay1.cr_penHit->GetRenderType()!=RT_BRUSH) {
         crRay1.cr_ttHitModels = CCastRay::TT_NONE;
@@ -848,7 +848,7 @@ functions:
 
       // apply damage
       InflictDirectDamage( crRay2.cr_penHit, this, DMT_BURNING, 25.0f,
-          FLOAT3D(0, 0, 0), (m_vFirePosRightLaserAbs-m_vRightLaserTarget).Normalize());
+          FLOAT3D(0.0f, 0.0f, 0.0f), (m_vFirePosRightLaserAbs-m_vRightLaserTarget).Normalize());
 
       if (crRay2.cr_penHit->GetRenderType()!=RT_BRUSH) {
         crRay2.cr_ttHitModels = CCastRay::TT_NONE;
@@ -914,14 +914,8 @@ functions:
         m_vLeftLaserTarget, 5.0f, 25.0f);
     }    
   }
-  
-
-/****************************************/
-/*         P R O C E D U R E S          */
-/****************************************/
 
 procedures:
-  
   // override wounding so that Larva doesn't stutter
   BeWounded(EDamage eDamage) : CEnemyBase::BeWounded { 
     return EReturn();
@@ -945,7 +939,7 @@ procedures:
       amo0.amo_moModelObject.GetAttachmentTransformations(ARM_ATTACHMENT_PLASMAGUN, mRot, vPos, FALSE);
       m_plExpGunPos.pl_PositionVector = vPos*GetRotationMatrix() + GetPlacement().pl_PositionVector;
       m_plExpGunPos.pl_OrientationAngle = GetPlacement().pl_OrientationAngle;
-      m_vExpDamage = FLOAT3D( +12.0f, 15.0f, 0.0f);
+      m_vExpDamage = FLOAT3D(12.0f, 15.0f, 0.0f);
 
       if (m_penLeftArmDestroyTarget) {
         SendToTarget(m_penLeftArmDestroyTarget, EET_TRIGGER, FixupCausedToPlayer(this, m_penEnemy));
@@ -964,7 +958,7 @@ procedures:
       amo0.amo_moModelObject.GetAttachmentTransformations(ARM_ATTACHMENT_PLASMAGUN, mRot, vPos, FALSE);
       m_plExpGunPos.pl_PositionVector = vPos*GetRotationMatrix() + GetPlacement().pl_PositionVector;
       m_plExpGunPos.pl_OrientationAngle = GetPlacement().pl_OrientationAngle;
-      m_vExpDamage = FLOAT3D( -12.0f, 15.0f, 0.0f);
+      m_vExpDamage = FLOAT3D(-12.0f, 15.0f, 0.0f);
 
       if (m_penRightArmDestroyTarget) {        
         SendToTarget(m_penRightArmDestroyTarget, EET_TRIGGER, FixupCausedToPlayer(this, m_penEnemy));
@@ -1083,7 +1077,7 @@ procedures:
     penExplosion = CreateEntity(plExplosion, CLASS_BASIC_EFFECT);
     penExplosion->Initialize(eSpawnEffect);
     // end debris
-    m_vExpDamage = FLOAT3D( 0.0f, 15.0f, 0.0f);
+    m_vExpDamage = FLOAT3D(0.0f, 15.0f, 0.0f);
     FLOAT3D vTranslation = m_vExpDamage;
     CPlacement3D plDebris = GetPlacement();
     plDebris.pl_PositionVector += FLOAT3D(0.0f, LARVA_HANDLE_TRANSLATE, 0.0f);
@@ -1104,7 +1098,7 @@ procedures:
     // explosion
     eSpawnEffect.colMuliplier = C_WHITE|CT_OPAQUE;
     eSpawnEffect.betType = BET_EXPLOSION_DEBRIS;
-    eSpawnEffect.vStretch = FLOAT3D(1,1,1);
+    eSpawnEffect.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
     penExplosion = CreateEntity(plExplosion, CLASS_BASIC_EFFECT);
     penExplosion->Initialize(eSpawnEffect);
     // explosion smoke
@@ -1148,7 +1142,7 @@ procedures:
       while(m_iRnd>0) {
         if (m_bLeftArmActive) {
           PlaySound(m_soFire1, SOUND_FIRE_PLASMA, SOF_3D);
-          ShootProjectile(PRT_LARVA_PLASMA, m_vFirePosLeftPlasmaRel, ANGLE3D(0, 0, 0));
+          ShootProjectile(PRT_LARVA_PLASMA, m_vFirePosLeftPlasmaRel, ANGLE3D(0.0f, 0.0f, 0.0f));
           RemoveAttachmentFromModel(*PlasmaLeftModel(), PLASMAGUN_ATTACHMENT_PROJECTILE);
           autowait(0.25f);
           PlasmaLeftModel()->PlayAnim(PLASMAGUN_ANIM_SPAWNING, 0);  
@@ -1159,7 +1153,7 @@ procedures:
         }
         if (m_bRightArmActive) {
           PlaySound(m_soFire2, SOUND_FIRE_PLASMA, SOF_3D);
-          ShootProjectile(PRT_LARVA_PLASMA, m_vFirePosRightPlasmaRel, ANGLE3D(0, 0, 0));
+          ShootProjectile(PRT_LARVA_PLASMA, m_vFirePosRightPlasmaRel, ANGLE3D(0.0f, 0.0f, 0.0f));
           RemoveAttachmentFromModel(*PlasmaRightModel(), PLASMAGUN_ATTACHMENT_PROJECTILE);
           autowait(0.25f);
           PlasmaRightModel()->PlayAnim(PLASMAGUN_ANIM_SPAWNING, 0);  

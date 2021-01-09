@@ -74,8 +74,8 @@ properties:
 
   1 enum EffectorEffectType m_eetType = ET_NONE,                     // type of effect
   2 FLOAT m_tmStarted = 0.0f,                                        // time when spawned
-  3 FLOAT3D m_vDamageDir = FLOAT3D(0,0,0),                           // direction of damage
-  4 FLOAT3D m_vFXDestination = FLOAT3D(0,0,0),                       // FX destination
+  3 FLOAT3D m_vDamageDir = FLOAT3D(0.0f, 0.0f, 0.0f),                           // direction of damage
+  4 FLOAT3D m_vFXDestination = FLOAT3D(0.0f, 0.0f, 0.0f),                       // FX destination
   5 FLOAT m_tmLifeTime = 5.0f,                                       // how long effect lives
   6 FLOAT m_fSize = 1.0f,                                            // effect's stretcher
   8 INDEX m_ctCount = 0,                                             // misc count
@@ -360,14 +360,9 @@ functions:
     m_lsLightSource.ls_penEntity = this;
     m_lsLightSource.SetLightSource(lsNew);
   }
-/************************************************************
- *                          MAIN                            *
- ************************************************************/
 
 procedures:
-
-  Main( ESpawnEffector eSpawn)
-  {
+  Main(ESpawnEffector eSpawn) {
     // set appearance
     InitAsEditorModel();
 
@@ -399,7 +394,7 @@ procedures:
       SetModelMainTexture(TEXTURE_POWER_RING);
       en_fAcceleration = 1e6f;
       FLOAT fSpeed = 550.0f;
-      SetDesiredTranslation(FLOAT3D(0,-fSpeed,0));
+      SetDesiredTranslation(FLOAT3D(0.0f, -fSpeed, 0.0f));
       FLOAT fPathLen = GetPlacement().pl_PositionVector(2)-m_vFXDestination(2);
       // t=s/v
       m_tmLifeTime = fPathLen/fSpeed;

@@ -566,11 +566,11 @@ functions:
     pen->Initialize(EVoid());
     // set moving
     if (m_EecChar==ELC_LARGE) {
-      ((CElemental&)*pen).LaunchAsFreeProjectile(FLOAT3D(0, 0, -40.0f), this);
+      ((CElemental&)*pen).LaunchAsFreeProjectile(FLOAT3D(0.0f, 0.0f, -40.0f), this);
     } else {
-      ((CElemental&)*pen).LaunchAsFreeProjectile(FLOAT3D(0, 0, -20.0f), this);
+      ((CElemental&)*pen).LaunchAsFreeProjectile(FLOAT3D(0.0f, 0.0f, -20.0f), this);
     }
-    ((CElemental&)*pen).SetDesiredRotation(ANGLE3D(0, 0, FRnd()*360-180));
+    ((CElemental&)*pen).SetDesiredRotation(ANGLE3D(0.0f, 0.0f, FRnd()*360.0f-180.0f));
 
     // spawn particle debris explosion
     CEntity *penSpray = CreateEntity( pl, CLASS_BLOOD_SPRAY);
@@ -579,7 +579,7 @@ functions:
     eSpawnSpray.fDamagePower = 4.0f;
     eSpawnSpray.fSizeMultiplier = 0.5f;
     eSpawnSpray.sptType = SPT_LAVA_STONES;
-    eSpawnSpray.vDirection = FLOAT3D(0,-0.5f,0);
+    eSpawnSpray.vDirection = FLOAT3D(0.0f, -0.5f, 0.0f);
     eSpawnSpray.colBurnColor=C_WHITE|CT_OPAQUE;
     eSpawnSpray.penOwner = pen;
     penSpray->Initialize( eSpawnSpray);
@@ -595,7 +595,7 @@ functions:
     switch (m_EecChar) {
       case ELC_LARGE: {
         vPos = FIRE_ROCKS_LARGE;
-        ShootProjectile(EptProjectile, vPos, ANGLE3D(0, 0, 0));
+        ShootProjectile(EptProjectile, vPos, ANGLE3D(0.0f, 0.0f, 0.0f));
         aAngle = ANGLE3D(FRnd()*5.0f+5.0f, FRnd()*3.0f-2.0f, 0);
         ShootProjectile(EptProjectile, vPos, aAngle);
         aAngle = ANGLE3D(FRnd()*-5.0f-5.0f, FRnd()*3.0f-2.0f, 0);
@@ -603,7 +603,7 @@ functions:
         break; }
       case ELC_BIG: {
         vPos = FIRE_ROCKS_BIG;
-        ShootProjectile(EptProjectile, vPos, ANGLE3D(0, 0, 0));
+        ShootProjectile(EptProjectile, vPos, ANGLE3D(0.0f, 0.0f, 0.0f));
         aAngle = ANGLE3D(FRnd()*4.0f+4.0f, FRnd()*3.0f-2.0f, 0);
         ShootProjectile(EptProjectile, vPos, aAngle);
         aAngle = ANGLE3D(FRnd()*-4.0f-4.0f, FRnd()*3.0f-2.0f, 0);
@@ -611,7 +611,7 @@ functions:
         break; }
       default: {
         vPos = FIRE_ROCKS;
-        ShootProjectile(EptProjectile, vPos, ANGLE3D(0, 0, 0));
+        ShootProjectile(EptProjectile, vPos, ANGLE3D(0.0f, 0.0f, 0.0f));
         aAngle = ANGLE3D(FRnd()*3.0f+3.0f, FRnd()*3.0f-2.0f, 0);
         ShootProjectile(EptProjectile, vPos, aAngle);
         aAngle = ANGLE3D(FRnd()*-3.0f-3.0f, FRnd()*3.0f-2.0f, 0);
@@ -726,31 +726,31 @@ functions:
     if (m_EecChar==ELC_LARGE) {
       ew.EwsSize = WTS_LARGE;
       // launch
-      PreparePropelledProjectile(pl, vShootTarget, WATER_LARGE_LEFT, ANGLE3D(0, 0, 0));
+      PreparePropelledProjectile(pl, vShootTarget, WATER_LARGE_LEFT, ANGLE3D(0.0f, 0.0f, 0.0f));
       CEntityPointer penWater = CreateEntity(pl, CLASS_WATER);
       penWater->Initialize(ew);
       // launch
-      PreparePropelledProjectile(pl, vShootTarget, WATER_LARGE_RIGHT, ANGLE3D(0, 0, 0));
+      PreparePropelledProjectile(pl, vShootTarget, WATER_LARGE_RIGHT, ANGLE3D(0.0f, 0.0f, 0.0f));
       penWater = CreateEntity(pl, CLASS_WATER);
       penWater->Initialize(ew);
     } else if (m_EecChar==ELC_BIG) {
       ew.EwsSize = WTS_BIG;
       // launch
-      PreparePropelledProjectile(pl, vShootTarget, WATER_BIG_LEFT, ANGLE3D(0, 0, 0));
+      PreparePropelledProjectile(pl, vShootTarget, WATER_BIG_LEFT, ANGLE3D(0.0f, 0.0f, 0.0f));
       CEntityPointer penWater = CreateEntity(pl, CLASS_WATER);
       penWater->Initialize(ew);
       // launch
-      PreparePropelledProjectile(pl, vShootTarget, WATER_BIG_RIGHT, ANGLE3D(0, 0, 0));
+      PreparePropelledProjectile(pl, vShootTarget, WATER_BIG_RIGHT, ANGLE3D(0.0f, 0.0f, 0.0f));
       penWater = CreateEntity(pl, CLASS_WATER);
       penWater->Initialize(ew);
     } else {
       ew.EwsSize = WTS_SMALL;
       // launch
-      PreparePropelledProjectile(pl, vShootTarget, WATER_LEFT, ANGLE3D(0, 0, 0));
+      PreparePropelledProjectile(pl, vShootTarget, WATER_LEFT, ANGLE3D(0.0f, 0.0f, 0.0f));
       CEntityPointer penWater = CreateEntity(pl, CLASS_WATER);
       penWater->Initialize(ew);
       // launch
-      PreparePropelledProjectile(pl, vShootTarget, WATER_RIGHT, ANGLE3D(0, 0, 0));
+      PreparePropelledProjectile(pl, vShootTarget, WATER_RIGHT, ANGLE3D(0.0f, 0.0f, 0.0f));
       penWater = CreateEntity(pl, CLASS_WATER);
       penWater->Initialize(ew);
     }
@@ -821,9 +821,6 @@ functions:
     }
   };
 
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
   // spawn body parts
   void BlowUp(void) {
     // get your size
@@ -907,9 +904,6 @@ functions:
   };
 
 procedures:
-/************************************************************
- *                    CLASS INTERNAL                        *
- ************************************************************/
   FallOnFloor(EVoid) {
     // drop to floor
     SetPhysicsFlags(EPF_MODEL_WALKING);
@@ -932,14 +926,8 @@ procedures:
     return EReturn();
   };
 
-
-
-/************************************************************
- *                      FIRE PROCEDURES                     *
- ************************************************************/
-  //
   // STONEMAN
-  //
+
 /*  StonemanFire(EVoid) {
     StartModelAnim(STONEMAN_ANIM_ATTACK05, 0);
     autowait(0.7f);
@@ -972,9 +960,7 @@ procedures:
   };
   */
 
-  //
   // LAVAMAN
-  //
 
   LavamanFire(EVoid)
   {
@@ -1037,7 +1023,7 @@ procedures:
       FLOAT tmWait = mo.GetAnimLength( mo.ao_iCurrentAnim )-mo.GetPassedTime();
       StartModelAnim(ELEMENTALLAVA_ANIM_ATTACKLEFTHAND, AOF_SMOOTHCHANGE);
       autowait(tmWait+0.8f);
-      ShootProjectile(PRT_LAVAMAN_STONE, LAVAMAN_FIRE_SMALL, ANGLE3D(0, 0, 0));
+      ShootProjectile(PRT_LAVAMAN_STONE, LAVAMAN_FIRE_SMALL, ANGLE3D(0.0f, 0.0f, 0.0f));
       PlaySound(m_soSound, SOUND_LAVA_FIRE, SOF_3D);
     }
 
@@ -1088,9 +1074,8 @@ procedures:
   };
 
 /*
-  //
   // ICEMAN
-  //
+
   IcemanFire(EVoid) {
     StartModelAnim(STONEMAN_ANIM_ATTACK05, 0);
     autowait(0.7f);
@@ -1122,10 +1107,8 @@ procedures:
     return EReturn();
   };
 
-
-  //
   // AIRMAN
-  //
+
   AirmanFire(EVoid) {
     StartModelAnim(STONEMAN_ANIM_ATTACK06, 0);
     autowait(1.0f);
@@ -1156,10 +1139,8 @@ procedures:
     return EReturn();
   };
 
-
-  //
   // WATERMAN
-  //
+
   WatermanFire(EVoid) {
     StartModelAnim(STONEMAN_ANIM_ATTACK02, 0);
     autowait(0.5f);
@@ -1174,10 +1155,6 @@ procedures:
   };
   */
 
-
-/************************************************************
- *                PROCEDURES WHEN HARMED                    *
- ************************************************************/
   // Play wound animation and falling body part
   BeWounded(EDamage eDamage) : CEnemyBase::BeWounded {
     // spawn additional elemental
@@ -1188,9 +1165,6 @@ procedures:
     jump CEnemyBase::BeWounded(eDamage);
   };
 
-/************************************************************
- *                 CHANGE STATE PROCEDURES                  *
- ************************************************************/
    // box to normal
   BoxToNormal(EVoid) {
     m_EesCurrentState = ELS_NORMAL;
@@ -1233,9 +1207,7 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
+  // Attack enemy
   InitializeAttack(EVoid) : CEnemyBase::InitializeAttack {
     // change state from box to normal
     if (m_EesCurrentState==ELS_BOX)
@@ -1274,9 +1246,6 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                    D  E  A  T  H                         *
- ************************************************************/
   Death(EVoid) : CEnemyBase::Death
   {
     if (m_bSpawnOnBlowUp && (m_EecChar==ELC_LARGE || m_EecChar==ELC_BIG)) {
@@ -1340,11 +1309,8 @@ procedures:
       autocall BossAppear() EReturn;
     }
     return EReturn();
-  }
+  };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     if (m_EetType!=ELT_LAVA) {
       m_EetType=ELT_LAVA;

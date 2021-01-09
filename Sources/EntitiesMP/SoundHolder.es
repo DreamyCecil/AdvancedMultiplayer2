@@ -101,7 +101,7 @@ procedures:
     if (fFactor<SOUND_MINSIZE) {
       fFactor=SOUND_MINSIZE;
     }
-    GetModelObject()->mo_Stretch = FLOAT3D( fFactor, fFactor, fFactor);
+    GetModelObject()->mo_Stretch = FLOAT3D(fFactor, fFactor, fFactor);
 
     // set appearance
     SetModel(MODEL_MARKER);

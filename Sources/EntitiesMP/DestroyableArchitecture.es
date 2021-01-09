@@ -48,91 +48,87 @@ thumbnail "Thumbnails\\DestroyableArchitecture.tbn";
 features  "HasName", "IsTargetable";
 
 properties:
+  1 CTString m_strName                  "Name" 'N' = "DestroyableArchitecture",
+  2 FLOAT m_fHealth                     "Health" 'H' = -1.0f,
+  3 enum EffectorEffectType m_etType    "Type" 'Y' = ET_DESTROY_OBELISK,
+  4 FLOAT3D m_vDamageDir = FLOAT3D(0.0f, 0.0f, 0.0f), // direction of damage
+  5 FLOAT m_fStretch             "Stretch" 'S' = 1.0f, // debris stretch
+  6 CEntityPointer m_penGradient "Gradient" 'R',
 
-  1 CTString m_strName                  "Name" 'N' = "DestroyableArchitecture",              // name
-  2 FLOAT m_fHealth                     "Health" 'H' = -1.0f,                                // health
-  3 enum EffectorEffectType m_etType    "Type" 'Y' = ET_DESTROY_OBELISK,                     // name
-  4 FLOAT3D m_vDamageDir = FLOAT3D(0,0,0),                                                   // direction of damage
-  5 FLOAT m_fStretch                    "Stretch" 'S' = 1.0f,                                // debris stretch
-  6 CEntityPointer m_penGradient        "Gradient" 'R',
-
- 10 COLOR m_colDebrises         "Color of debrises" = C_WHITE,
- 11 INDEX m_ctDebrises          "Debris count" = 12,
- 12 FLOAT m_fCandyEffect        "Debris blow power" = 0.0f,
- 13 FLOAT m_fCubeFactor         "Cube factor" = 1.0f,
- 14 BOOL m_bBlowupByDamager     "Blowup by Damager" = FALSE,   // if only damager can destroy brush
- 15 FLOAT m_fDustStretch        "Dust stretch" = 0.0f,
-
+ 10 COLOR m_colDebrises     "Color of debrises" = C_WHITE,
+ 11 INDEX m_ctDebrises      "Debris count" = 12,
+ 12 FLOAT m_fCandyEffect    "Debris blow power" = 0.0f,
+ 13 FLOAT m_fCubeFactor     "Cube factor" = 1.0f,
+ 14 BOOL m_bBlowupByDamager "Blowup by Damager" = FALSE, // if only damager can destroy brush
+ 15 FLOAT m_fDustStretch    "Dust stretch" = 0.0f,
 
 components:
 
 // ************** DEBRIS PARTS **************
- 10 texture   TEXTURE_OBELISK        "Models\\CutSequences\\Obelisk\\Obelisk.tex",
- 11 model     MODEL_OBELISK01        "Models\\CutSequences\\Obelisk\\Part01.mdl",
- 12 model     MODEL_OBELISK02        "Models\\CutSequences\\Obelisk\\Part02.mdl",
- 13 model     MODEL_OBELISK03        "Models\\CutSequences\\Obelisk\\Part03.mdl",
- 14 model     MODEL_OBELISK04        "Models\\CutSequences\\Obelisk\\Part04.mdl",
- 15 model     MODEL_OBELISK05        "Models\\CutSequences\\Obelisk\\Part05.mdl",
- 16 model     MODEL_OBELISK06        "Models\\CutSequences\\Obelisk\\Part06.mdl",
- 17 model     MODEL_OBELISK07        "Models\\CutSequences\\Obelisk\\Part07.mdl",
- 18 model     MODEL_OBELISK08        "Models\\CutSequences\\Obelisk\\Part08.mdl",
- 19 model     MODEL_OBELISK09        "Models\\CutSequences\\Obelisk\\Part09.mdl",
+ 10 texture TEXTURE_OBELISK "Models\\CutSequences\\Obelisk\\Obelisk.tex",
+ 11 model   MODEL_OBELISK01 "Models\\CutSequences\\Obelisk\\Part01.mdl",
+ 12 model   MODEL_OBELISK02 "Models\\CutSequences\\Obelisk\\Part02.mdl",
+ 13 model   MODEL_OBELISK03 "Models\\CutSequences\\Obelisk\\Part03.mdl",
+ 14 model   MODEL_OBELISK04 "Models\\CutSequences\\Obelisk\\Part04.mdl",
+ 15 model   MODEL_OBELISK05 "Models\\CutSequences\\Obelisk\\Part05.mdl",
+ 16 model   MODEL_OBELISK06 "Models\\CutSequences\\Obelisk\\Part06.mdl",
+ 17 model   MODEL_OBELISK07 "Models\\CutSequences\\Obelisk\\Part07.mdl",
+ 18 model   MODEL_OBELISK08 "Models\\CutSequences\\Obelisk\\Part08.mdl",
+ 19 model   MODEL_OBELISK09 "Models\\CutSequences\\Obelisk\\Part09.mdl",
  
- 20 texture   TEXTURE_PYLON          "Models\\CutSequences\\Pylon\\Pylon.tex",
- 21 model     MODEL_PYLON01          "Models\\CutSequences\\Pylon\\Part01.mdl",
- 22 model     MODEL_PYLON02          "Models\\CutSequences\\Pylon\\Part02.mdl",
- 23 model     MODEL_PYLON03          "Models\\CutSequences\\Pylon\\Part03.mdl",
- 24 model     MODEL_PYLON04          "Models\\CutSequences\\Pylon\\Part04.mdl",
- 25 model     MODEL_PYLON05          "Models\\CutSequences\\Pylon\\Part05.mdl",
- 26 model     MODEL_PYLON06          "Models\\CutSequences\\Pylon\\Part06.mdl",
- 27 model     MODEL_PYLON07          "Models\\CutSequences\\Pylon\\Part07.mdl",
- 28 model     MODEL_PYLON08          "Models\\CutSequences\\Pylon\\Part08.mdl",
- 29 model     MODEL_PYLON09          "Models\\CutSequences\\Pylon\\Part09.mdl",
+ 20 texture TEXTURE_PYLON "Models\\CutSequences\\Pylon\\Pylon.tex",
+ 21 model   MODEL_PYLON01 "Models\\CutSequences\\Pylon\\Part01.mdl",
+ 22 model   MODEL_PYLON02 "Models\\CutSequences\\Pylon\\Part02.mdl",
+ 23 model   MODEL_PYLON03 "Models\\CutSequences\\Pylon\\Part03.mdl",
+ 24 model   MODEL_PYLON04 "Models\\CutSequences\\Pylon\\Part04.mdl",
+ 25 model   MODEL_PYLON05 "Models\\CutSequences\\Pylon\\Part05.mdl",
+ 26 model   MODEL_PYLON06 "Models\\CutSequences\\Pylon\\Part06.mdl",
+ 27 model   MODEL_PYLON07 "Models\\CutSequences\\Pylon\\Part07.mdl",
+ 28 model   MODEL_PYLON08 "Models\\CutSequences\\Pylon\\Part08.mdl",
+ 29 model   MODEL_PYLON09 "Models\\CutSequences\\Pylon\\Part09.mdl",
  
 // ************** NEEDED CLASSES **************
- 30 class     CLASS_DEBRIS       "Classes\\Debris.ecl",
- 31 class     CLASS_EFFECTOR     "Classes\\Effector.ecl",
+ 30 class CLASS_DEBRIS   "Classes\\Debris.ecl",
+ 31 class CLASS_EFFECTOR "Classes\\Effector.ecl",
 
 // ************** STONE PARTS **************
- 32 model     MODEL_STONE        "Models\\Effects\\Debris\\Stone\\Stone.mdl",
- 33 texture   TEXTURE_STONE      "Models\\Effects\\Debris\\Stone\\Stone.tex",
-
+ 32 model   MODEL_STONE   "Models\\Effects\\Debris\\Stone\\Stone.mdl",
+ 33 texture TEXTURE_STONE "Models\\Effects\\Debris\\Stone\\Stone.tex",
 
 functions:
+  void Precache(void) {
+    PrecacheClass(CLASS_DEBRIS);
+    PrecacheClass(CLASS_EFFECTOR);
+    PrecacheModel(MODEL_STONE);
+    PrecacheTexture(TEXTURE_STONE);
 
-  void Precache(void)
-  {
-    PrecacheClass     (CLASS_DEBRIS           );
-    PrecacheClass     (CLASS_EFFECTOR         );
-    PrecacheModel     (MODEL_STONE            );
-    PrecacheTexture   (TEXTURE_STONE          );
     // precache acording to destroying architecture
-    switch( m_etType)
-    {
-    case ET_DESTROY_OBELISK:
-      PrecacheTexture   (TEXTURE_OBELISK        );
-      PrecacheModel     (MODEL_OBELISK01        );
-      PrecacheModel     (MODEL_OBELISK02        );
-      PrecacheModel     (MODEL_OBELISK03        );
-      PrecacheModel     (MODEL_OBELISK04        );
-      PrecacheModel     (MODEL_OBELISK05        );
-      PrecacheModel     (MODEL_OBELISK06        );
-      PrecacheModel     (MODEL_OBELISK07        );
-      PrecacheModel     (MODEL_OBELISK08        );
-      PrecacheModel     (MODEL_OBELISK09        );
-      break;
-    case ET_DESTROY_PYLON:
-      PrecacheTexture   (TEXTURE_PYLON          );
-      PrecacheModel     (MODEL_PYLON01          );
-      PrecacheModel     (MODEL_PYLON02          );
-      PrecacheModel     (MODEL_PYLON03          );
-      PrecacheModel     (MODEL_PYLON04          );
-      PrecacheModel     (MODEL_PYLON05          );
-      PrecacheModel     (MODEL_PYLON06          );
-      PrecacheModel     (MODEL_PYLON07          );
-      PrecacheModel     (MODEL_PYLON08          );
-      PrecacheModel     (MODEL_PYLON09          );
-      break;
+    switch (m_etType) {
+      case ET_DESTROY_OBELISK:
+        PrecacheTexture(TEXTURE_OBELISK);
+        PrecacheModel(MODEL_OBELISK01);
+        PrecacheModel(MODEL_OBELISK02);
+        PrecacheModel(MODEL_OBELISK03);
+        PrecacheModel(MODEL_OBELISK04);
+        PrecacheModel(MODEL_OBELISK05);
+        PrecacheModel(MODEL_OBELISK06);
+        PrecacheModel(MODEL_OBELISK07);
+        PrecacheModel(MODEL_OBELISK08);
+        PrecacheModel(MODEL_OBELISK09);
+        break;
+
+      case ET_DESTROY_PYLON:
+        PrecacheTexture(TEXTURE_PYLON);
+        PrecacheModel(MODEL_PYLON01);
+        PrecacheModel(MODEL_PYLON02);
+        PrecacheModel(MODEL_PYLON03);
+        PrecacheModel(MODEL_PYLON04);
+        PrecacheModel(MODEL_PYLON05);
+        PrecacheModel(MODEL_PYLON06);
+        PrecacheModel(MODEL_PYLON07);
+        PrecacheModel(MODEL_PYLON08);
+        PrecacheModel(MODEL_PYLON09);
+        break;
     }
   }
 
@@ -152,9 +148,8 @@ functions:
     return CEntity::IsTargetValid(slPropertyOffset, penTarget);
   }
 
-  /* Get gradient type name, return empty string if not used. */
-  const CTString &GetGradientName(INDEX iGradient)
-  {
+  // Get gradient type name, return empty string if not used
+  const CTString &GetGradientName(INDEX iGradient) {
     static const CTString strDummyName("");
     static const CTString strMarkerUnused("Marker not set");
     if (iGradient==1)
@@ -167,20 +162,19 @@ functions:
       }
     }
     return strDummyName;
-  }
-  /* Uncache shadows for given gradient */
-  void UncacheShadowsForGradient(class CGradientMarker *penDiscard)
-  {
+  };
+
+  // Uncache shadows for given gradient
+  void UncacheShadowsForGradient(class CGradientMarker *penDiscard) {
     CGradientMarker *pgm = (CGradientMarker *)&*m_penGradient;
     if(pgm == penDiscard)
     {
       CEntity::UncacheShadowsForGradient(1);
     }
-  }
+  };
 
-  /* Get gradient, return FALSE for none. */
-  BOOL GetGradient(INDEX iGradient, class CGradientParameters &fpGradient)
-  {
+  // Get gradient, return FALSE for none
+  BOOL GetGradient(INDEX iGradient, class CGradientParameters &fpGradient) {
     if ( iGradient==1)
     {
       CGradientMarker *pgm = (CGradientMarker *)&*m_penGradient;
@@ -189,9 +183,9 @@ functions:
       }
     }
     return FALSE;
-  }
+  };
   
-  /* Receive damage */
+  // Receive damage
   void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
     FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) 
   {
@@ -225,10 +219,10 @@ functions:
     for( INDEX iDebris=0; iDebris<ARRAYCOUNT(_ObeliskDebrisInfo); iDebris++)
     {
       DebrisInfo &di = _ObeliskDebrisInfo[iDebris];
-      FLOAT3D vOffset = FLOAT3D( di.vOffset[0], di.vOffset[1], di.vOffset[2])*m_fStretch;
+      FLOAT3D vOffset = FLOAT3D(di.vOffset[0], di.vOffset[1], di.vOffset[2])*m_fStretch;
       FLOAT3D vPos = GetPlacement().pl_PositionVector+vOffset;
       CEntityPointer penDebris = GetWorld()->CreateEntity_t(
-        CPlacement3D(vPos, ANGLE3D(0,0,0)), CTFILENAME("Classes\\Debris.ecl"));
+        CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)), CTFILENAME("Classes\\Debris.ecl"));
       // prepare parameters
       ESpawnDebris eSpawn;
       eSpawn.fDustStretch=m_fDustStretch;
@@ -245,26 +239,25 @@ functions:
       eSpawn.ptdBump = NULL;
       eSpawn.iModelAnim = 0;
       eSpawn.fSize = m_fStretch;
-      eSpawn.vStretch = FLOAT3D(1,1,1);
+      eSpawn.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
       eSpawn.penFallFXPapa=NULL;
       // initialize it
       penDebris->Initialize(eSpawn);
 
       // speed it up
       FLOAT fHeightRatio = di.vOffset[1]*m_fStretch/120.0f;
-      FLOAT3D vSpeed = FLOAT3D( FRnd()-0.5f, 0.0f, FRnd()-0.5f)*(1.0f-fHeightRatio)*160.0f;
-      FLOAT3D vRot   = FLOAT3D( FRnd()-0.5f, (FRnd()-0.5f)*(1.0f-fHeightRatio), FRnd()-0.5f)*200.0f;
-      /*
-      vSpeed = FLOAT3D( 0,0,0);
-      vRot   = FLOAT3D( 0,0,0);*/
-      ((CMovableEntity&)*penDebris).LaunchAsFreeProjectile( vSpeed, NULL);
-      ((CMovableEntity&)*penDebris).SetDesiredRotation( vRot);
+      FLOAT3D vSpeed = FLOAT3D(FRnd()-0.5f, 0.0f, FRnd()-0.5f)*(1.0f-fHeightRatio)*160.0f;
+      FLOAT3D vRot = FLOAT3D(FRnd()-0.5f, (FRnd()-0.5f)*(1.0f-fHeightRatio), FRnd()-0.5f)*200.0f;
+
+      ((CMovableEntity&)*penDebris).LaunchAsFreeProjectile(vSpeed, NULL);
+      ((CMovableEntity&)*penDebris).SetDesiredRotation(vRot);
     }
 
     // notify children
     FOREACHINLIST( CEntity, en_lnInParent, en_lhChildren, iten) {
       iten->SendEvent( EBrushDestroyed());
     }
+
     m_fHealth = -1;
     ForceFullStop();
     SetDefaultProperties();
@@ -292,10 +285,10 @@ functions:
     for( INDEX iDebris=0; iDebris<ARRAYCOUNT(_PylonDebrisInfo); iDebris++)
     {
       DebrisInfo &di = _PylonDebrisInfo[iDebris];
-      FLOAT3D vOffset = FLOAT3D( di.vOffset[0], di.vOffset[1], di.vOffset[2])*m_fStretch;
+      FLOAT3D vOffset = FLOAT3D(di.vOffset[0], di.vOffset[1], di.vOffset[2])*m_fStretch;
       FLOAT3D vPos = GetPlacement().pl_PositionVector+vOffset;
       CEntityPointer penDebris = GetWorld()->CreateEntity_t(
-        CPlacement3D(vPos, ANGLE3D(0,0,0)), CTFILENAME("Classes\\Debris.ecl"));
+        CPlacement3D(vPos, ANGLE3D(0.0f, 0.0f, 0.0f)), CTFILENAME("Classes\\Debris.ecl"));
       // prepare parameters
       ESpawnDebris eSpawn;
       eSpawn.fDustStretch=m_fDustStretch;
@@ -312,15 +305,15 @@ functions:
       eSpawn.ptdBump = NULL;
       eSpawn.iModelAnim = 0;
       eSpawn.fSize = m_fStretch;
-      eSpawn.vStretch = FLOAT3D(1,1,1);
+      eSpawn.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
       eSpawn.penFallFXPapa=NULL;
       // initialize it
       penDebris->Initialize(eSpawn);
 
       // speed it up
       FLOAT fHeightRatio = di.vOffset[1]*m_fStretch/120.0f;
-      FLOAT3D vSpeed = (m_vDamageDir*2.0f+FLOAT3D( FRnd()-0.5f, 0.0f, FRnd()))*fHeightRatio*160.0f;
-      FLOAT3D vRot   = FLOAT3D( FRnd()-0.5f, (FRnd()-0.5f)*fHeightRatio, FRnd()-0.5f)*300.0f;
+      FLOAT3D vSpeed = (m_vDamageDir*2.0f+FLOAT3D(FRnd()-0.5f, 0.0f, FRnd()))*fHeightRatio*160.0f;
+      FLOAT3D vRot   = FLOAT3D(FRnd()-0.5f, (FRnd()-0.5f)*fHeightRatio, FRnd()-0.5f)*300.0f;
       ((CMovableEntity&)*penDebris).LaunchAsFreeProjectile( vSpeed, NULL);
       ((CMovableEntity&)*penDebris).SetDesiredRotation( vRot);
     }
@@ -404,8 +397,8 @@ procedures:
         }
         FLOAT fEntitySize = pow(box.Size()(1)*box.Size()(2)*box.Size()(3)/m_ctDebrises, 1.0f/3.0f)*m_fCubeFactor;
         
-        Debris_Begin(EIBT_ROCK, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(1.0f,2.0f,3.0f),
-          FLOAT3D(0,0,0), 1.0f+m_fCandyEffect/2.0f, m_fCandyEffect, m_colDebrises);
+        Debris_Begin(EIBT_ROCK, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(1.0f, 2.0f, 3.0f),
+          FLOAT3D(0.0f, 0.0f, 0.0f), 1.0f+m_fCandyEffect/2.0f, m_fCandyEffect, m_colDebrises);
         for(INDEX iDebris = 0; iDebris<m_ctDebrises; iDebris++) {
           Debris_Spawn(this, this, MODEL_STONE, TEXTURE_STONE, 0, 0, 0, IRnd()%4, 1.0f,
             FLOAT3D(FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f));

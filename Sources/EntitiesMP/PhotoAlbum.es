@@ -71,7 +71,7 @@ procedures:
     {
       autowait( m_tmPageWait);
       AddAttachment(BOOK_ATTACHMENT_PAGE03, MODEL_PAGE, m_iCurrentPage);
-      GetModelObject()->StretchModel( FLOAT3D(m_fStretch,m_fStretch,m_fStretch));
+      GetModelObject()->StretchModel(FLOAT3D(m_fStretch, m_fStretch, m_fStretch));
       CModelObject &mo3=GetModelObject()->GetAttachmentModel(BOOK_ATTACHMENT_PAGE03)->amo_moModelObject;
       mo3.PlayAnim(COVERPAGES_ANIM_OPENING, 0);
       PlaySound(m_soPage, SOUND_PAGE, SOF_3D);
@@ -89,9 +89,6 @@ procedures:
     return EReturn();
   }
 
- /************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();
@@ -114,7 +111,7 @@ procedures:
     pmo=&pamo->amo_moModelObject;
     pmo->PlayAnim(COVERPAGES_ANIM_RIGHTCLOSED, 0);
 
-    GetModelObject()->StretchModel( FLOAT3D(m_fStretch,m_fStretch,m_fStretch));
+    GetModelObject()->StretchModel(FLOAT3D(m_fStretch, m_fStretch, m_fStretch));
     ModelChangeNotify();
 
     wait()

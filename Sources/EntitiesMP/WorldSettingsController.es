@@ -26,7 +26,7 @@ properties:
  15 FLOAT m_tmPyramidMorphRoomActivated = 1e6,    // time when pyramid morph room has been activated
 
  20 FLOAT m_tmShakeStarted = -1.0f,       // time when shaking started
- 21 FLOAT3D m_vShakePos = FLOAT3D(0,0,0), // shake position
+ 21 FLOAT3D m_vShakePos = FLOAT3D(0.0f, 0.0f, 0.0f), // shake position
  22 FLOAT m_fShakeFalloff = 100.0f,       // fall off with distance
  23 FLOAT m_fShakeFade = 1.0f,            // fall off with time
  24 FLOAT m_fShakeIntensityY = 1.0f,      // shake strength
@@ -39,9 +39,6 @@ properties:
 
  28 CEntityPointer m_penEnvPartHolder "Environment Particles Holder" 'T',
  29 BOOL  m_bNoSaveGame "No QuickSave on level start"= FALSE, // TRUE means no quicksave will be made when starting this level
- //28 CTFileName m_fnHeightMap "Height map" 'R' = CTString(""),
- //29 CModelObject m_moHeightMapHolder,
- //30 FLOATaabbox3D m_boxHeightMap "Height map box" 'B' = FLOATaabbox3D(FLOAT3D(0,0,0), FLOAT3D(1,1,1)),
 
  41 FLOAT m_tmGlaringStarted = -1.0f,          // glaring start time
  42 FLOAT m_tmGlaringEnded = -1.0f,            // glaring end time
@@ -56,8 +53,6 @@ properties:
 
  55 BOOL m_bApplyShadingToModels "Apply shading to models" = FALSE,
  
- //60 FLOAT m_tmRainStart = -1.0f,                 // Rain start time
- //61 FLOAT m_tmRainEnd = -1.0f,                   // Rain end time
  62 FLOAT m_tmStormAppearTime = 10.0f,
  63 FLOAT m_tmStormDisappearTime = 10.0f,
 

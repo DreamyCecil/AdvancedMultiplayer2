@@ -11,7 +11,7 @@ features  "HasName", "IsTargetable";
 properties:
   1 CTString m_strName          "Name" 'N' = "AreaMarker",
   2 CTString m_strDescription = "",
-  3 FLOATaabbox3D m_boxArea "Area box" 'B' = FLOATaabbox3D(FLOAT3D(0,0,0), FLOAT3D(10,10,10)),
+  3 FLOATaabbox3D m_boxArea "Area box" 'B' = FLOATaabbox3D(FLOAT3D(0.0f, 0.0f, 0.0f), FLOAT3D(10.0f, 10.0f, 10.0f)),
 
 components:
   1 model   MODEL_AREAMARKER     "Models\\Editor\\Axis.mdl",

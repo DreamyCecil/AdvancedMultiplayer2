@@ -176,7 +176,7 @@ functions:
     FLOAT fEntitySize = box.Size().MaxNorm();
     switch(m_ddtDebris) {
     case DDT_STONE: {
-      Debris_Begin(EIBT_ROCK, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(0,0,0), FLOAT3D(0,0,0), 1.0f, 0.0f);
+      Debris_Begin(EIBT_ROCK, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(0.0f, 0.0f, 0.0f), FLOAT3D(0.0f, 0.0f, 0.0f), 1.0f, 0.0f);
       for(INDEX iDebris = 0; iDebris<m_ctDebris; iDebris++) {
         Debris_Spawn(penmhDestroyed, this, MODEL_STONE, TEXTURE_STONE, 0, 0, 0, IRnd()%4, m_fDebrisSize,
           FLOAT3D(FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f));
@@ -184,7 +184,7 @@ functions:
                     } break;
     case DDT_WOOD:
     {
-      Debris_Begin(EIBT_WOOD, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(0,0,0), FLOAT3D(0,0,0), 1.0f, 0.0f);
+      Debris_Begin(EIBT_WOOD, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(0.0f, 0.0f, 0.0f), FLOAT3D(0.0f, 0.0f, 0.0f), 1.0f, 0.0f);
       for(INDEX iDebris = 0; iDebris<m_ctDebris; iDebris++)
       {
         Debris_Spawn(penmhDestroyed, this, MODEL_WOOD, TEXTURE_WOOD, 0, 0, 0, 0, m_fDebrisSize,
@@ -194,7 +194,7 @@ functions:
     }
     case DDT_CHILDREN_CUSTOM:
     {
-      Debris_Begin(EIBT_WOOD, DPT_NONE, BET_NONE, 1.0f, FLOAT3D(10,10,10), FLOAT3D(0,0,0), 5.0f, 2.0f);
+      Debris_Begin(EIBT_WOOD, DPT_NONE, BET_NONE, 1.0f, FLOAT3D(10.0f, 10.0f, 10.0f), FLOAT3D(0.0f, 0.0f, 0.0f), 5.0f, 2.0f);
       // launch all children of model holder type
       FOREACHINLIST( CEntity, en_lnInParent, en_lhChildren, iten)
       {
@@ -248,7 +248,7 @@ functions:
       break;
     }
     case DDT_PALM: {
-      Debris_Begin(EIBT_WOOD, DPT_NONE, BET_NONE, fEntitySize, penmhDestroyed->m_vDamage*0.3f, FLOAT3D(0,0,0), 1.0f, 0.0f);
+      Debris_Begin(EIBT_WOOD, DPT_NONE, BET_NONE, fEntitySize, penmhDestroyed->m_vDamage*0.3f, FLOAT3D(0.0f, 0.0f, 0.0f), 1.0f, 0.0f);
       Debris_Spawn(penmhDestroyed, this, MODEL_WOOD, TEXTURE_WOOD, 0, 0, 0, 0, m_fDebrisSize,
         FLOAT3D(0.5f, 0.2f, 0.5f));
       Debris_Spawn(penmhDestroyed, this, MODEL_WOOD, TEXTURE_WOOD, 0, 0, 0, 1, m_fDebrisSize,
@@ -277,12 +277,12 @@ functions:
       {
         FLOAT fY=fMinHeight+iDust*fHeightSteep;
         CPlacement3D plDust=penmhDestroyed->GetPlacement();
-        plDust.pl_PositionVector=plDust.pl_PositionVector+FLOAT3D(0,fY,0);
+        plDust.pl_PositionVector=plDust.pl_PositionVector+FLOAT3D(0.0f, fY, 0.0f);
         // spawn dust effect
         ESpawnEffect ese;
         ese.colMuliplier = C_WHITE|CT_OPAQUE;
         ese.vStretch = FLOAT3D(m_fDustStretch,m_fDustStretch,m_fDustStretch);
-        ese.vNormal = FLOAT3D(0,1,0);
+        ese.vNormal = FLOAT3D(0.0f, 1.0f, 0.0f);
         ese.betType = BET_DUST_FALL;
         CEntityPointer penFX = CreateEntity(plDust, CLASS_BASIC_EFFECT);
         penFX->Initialize(ese);

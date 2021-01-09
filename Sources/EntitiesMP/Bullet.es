@@ -38,13 +38,13 @@ thumbnail "";
 features "ImplementsOnPrecache";
 
 properties:
-  1 CEntityPointer m_penOwner,        // entity which owns it
-  2 FLOAT m_fDamage = 0.0f,                   // damage
-  3 FLOAT3D m_vTarget = FLOAT3D(0,0,0),       // bullet target point in space
-  4 FLOAT3D m_vTargetCopy = FLOAT3D(0,0,0),   // copy of bullet target point in space for jitter
-  6 FLOAT3D m_vHitPoint = FLOAT3D(0,0,0),     // hit point
-  8 INDEX m_iBullet = 0,                // bullet for lerped launch
-  9 enum DamageType m_EdtDamage = DMT_BULLET,   // damage type
+  1 CEntityPointer m_penOwner, // entity which owns it
+  2 FLOAT m_fDamage = 0.0f, // damage
+  3 FLOAT3D m_vTarget = FLOAT3D(0.0f, 0.0f, 0.0f),     // bullet target point in space
+  4 FLOAT3D m_vTargetCopy = FLOAT3D(0.0f, 0.0f, 0.0f), // copy of bullet target point in space for jitter
+  6 FLOAT3D m_vHitPoint = FLOAT3D(0.0f, 0.0f, 0.0f),   // hit point
+  8 INDEX m_iBullet = 0, // bullet for lerped launch
+  9 enum DamageType m_EdtDamage = DMT_BULLET, // damage type
  10 FLOAT m_fBulletSize = 0.0f, // bullet can have radius, for hitting models only
 
  // [Cecil] Bullet punch
@@ -54,10 +54,6 @@ components:
   1 class   CLASS_BASIC_EFFECT "Classes\\BasicEffect.ecl"
 
 functions:
-
-/************************************************************
- *                      BULLET LAUNCH                       *
- ************************************************************/
   // set bullet damage
   void SetDamage(FLOAT fDamage) {
     m_fDamage = fDamage;
@@ -231,7 +227,7 @@ functions:
             else
             {
               vDistance = FLOAT3D(0.0f, 0.0f, 0.0f);
-              vHitNormal = FLOAT3D(0,0,0);
+              vHitNormal = FLOAT3D(0.0f, 0.0f, 0.0f);
             }
 
             if(IsOfClass(penOfFlesh, "Gizmo") ||
@@ -265,11 +261,6 @@ functions:
     Destroy();
   };
 
-
-
-/************************************************************
- *                        EFFECTS                           *
- ************************************************************/
   // spawn trail of this bullet
   void SpawnTrail(void) 
   {

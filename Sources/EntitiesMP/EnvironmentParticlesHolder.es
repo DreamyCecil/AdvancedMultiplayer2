@@ -20,7 +20,7 @@ properties:
   1 CTString m_strName "Name" 'N' = "Env. particles holder", // class name
   6 CTString m_strDescription = "",
   2 CTFileName m_fnHeightMap "Height map" 'R' = CTString(""),
-  3 FLOATaabbox3D m_boxHeightMap "Height map box" 'B' = FLOATaabbox3D(FLOAT3D(0,0,0), FLOAT3D(1,1,1)),
+  3 FLOATaabbox3D m_boxHeightMap "Height map box" 'B' = FLOATaabbox3D(FLOAT3D(0.0f, 0.0f, 0.0f), FLOAT3D(1.0f, 1.0f, 1.0f)),
   4 enum EnvironmentParticlesHolderType m_eptType "Type" 'Y' = EPTH_NONE,
   5 CEntityPointer m_penNextHolder "Next env. particles holder" 'T',
 

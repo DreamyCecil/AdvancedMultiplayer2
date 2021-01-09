@@ -99,7 +99,7 @@ void InitializeProjectile(void) {
   PlaySound(m_soEffect, SOUND_LARVETTE, SOF_3D|SOF_LOOP);
   // start moving
   LaunchAsPropelledProjectile(FLOAT3D(0.0f, 0.0f, -30.0f), (CMovableEntity*)(CEntity*)m_penLauncher);
-  SetDesiredRotation(ANGLE3D(0, 0, 0));
+  SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
   m_fFlyTime = 12.0f;
   m_fDamageAmount = 10.0f;
   m_aRotateSpeed = 275.0f;
@@ -115,7 +115,7 @@ void LarvaTailExplosion(void) {
   // explosion
   ese.colMuliplier = C_WHITE|CT_OPAQUE;
   ese.betType = BET_ROCKET;
-  ese.vStretch = FLOAT3D(1,1,1);
+  ese.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
   SpawnEffect(GetPlacement(), ese);
   // spawn sound event in range
   if( IsDerivedFromClass( m_penLauncher, "Player")) {
@@ -136,26 +136,20 @@ void LarvaTailExplosion(void) {
       // stain
       ese.betType = BET_EXPLOSIONSTAIN;
       ese.vNormal = FLOAT3D(vPlaneNormal);
-      SpawnEffect(CPlacement3D(vPoint, ANGLE3D(0, 0, 0)), ese);
+      SpawnEffect(CPlacement3D(vPoint, ANGLE3D(0.0f, 0.0f, 0.0f)), ese);
       // shock wave
       ese.betType = BET_SHOCKWAVE;
       ese.vNormal = FLOAT3D(vPlaneNormal);
-      SpawnEffect(CPlacement3D(vPoint, ANGLE3D(0, 0, 0)), ese);
+      SpawnEffect(CPlacement3D(vPoint, ANGLE3D(0.0f, 0.0f, 0.0f)), ese);
       // second explosion on plane
       ese.betType = BET_ROCKET_PLANE;
       ese.vNormal = FLOAT3D(vPlaneNormal);
-      SpawnEffect(CPlacement3D(vPoint+ese.vNormal/50.0f, ANGLE3D(0, 0, 0)), ese);
+      SpawnEffect(CPlacement3D(vPoint+ese.vNormal/50.0f, ANGLE3D(0.0f, 0.0f, 0.0f)), ese);
     }
   }
 }
 
-
-/************************************************************
- *             C O M M O N   F U N C T I O N S              *
- ************************************************************/
-
-void ProjectileTouch(CEntityPointer penHit)
-{
+void ProjectileTouch(CEntityPointer penHit) {
   // explode if needed
   ProjectileHit();
 
@@ -228,11 +222,7 @@ ANGLE GetRotationSpeed(ANGLE aWantedAngle, ANGLE aRotateSpeed, FLOAT fWaitFreque
   return aResult;
 }
 
-/************************************************************
- *                   P R O C E D U R E S                    *
- ************************************************************/
 procedures:
-   
   LarvaOffspringGuidedSlide(EVoid) {
     // if already inside some entity
     CEntity *penObstacle;
@@ -265,7 +255,7 @@ procedures:
         FLOAT fMinSpeedRatio = 0.5f;
         FLOAT fWantedSpeed = fMaxSpeed*( fMinSpeedRatio+(1-fMinSpeedRatio)*fSpeedDecreasingFactor);
         // adjust translation velocity
-        SetDesiredTranslation( FLOAT3D(0, 0, -fWantedSpeed));
+        SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, -fWantedSpeed));
       
         // adjust rotation speed
         m_aRotateSpeed = 75.0f*(1+0.5f*fSpeedDecreasingFactor);

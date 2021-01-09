@@ -25,9 +25,6 @@ components:
   2 texture TEXTURE_WATCHPLAYERS    "Models\\Editor\\WatchPlayers.tex"
 
 functions:
-/************************************************************
- *                      USER FUNCTIONS                      *
- ************************************************************/
   // check if any player is close
   BOOL IsAnyPlayerClose(void) {
     // far enough to not move at all

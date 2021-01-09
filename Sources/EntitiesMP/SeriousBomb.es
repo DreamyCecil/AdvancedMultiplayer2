@@ -73,20 +73,19 @@ functions:
   }
     
 
-  void ExplodeBomb( void )
-  {
+  void ExplodeBomb(void) {
     // for each entity in the world
     {FOREACHINDYNAMICCONTAINER(this->GetWorld()->wo_cenEntities, CEntity, iten) {
       CEntity *pen = iten;
       if (IsDerivedFromClass(pen, "Enemy Base")) {
         CEnemyBase *penEnemy = (CEnemyBase *)pen;
-        if (penEnemy->m_bBoss==TRUE || DistanceTo(this, penEnemy)>250.0f) {
+        if (penEnemy->m_bBoss || DistanceTo(this, penEnemy) > 250.0f) {
           continue;
         }
-        this->InflictDirectDamage(pen, this, DMT_EXPLOSION, penEnemy->GetHealth()+100.0f, pen->GetPlacement().pl_PositionVector, FLOAT3D(0,1,0));
+        InflictDirectDamage(pen, this, DMT_EXPLOSION, penEnemy->GetHealth()+100.0f, pen->GetPlacement().pl_PositionVector, FLOAT3D(0.0f, 1.0f, 0.0f));
       }
     }}
-  }
+  };
   
 procedures:
   

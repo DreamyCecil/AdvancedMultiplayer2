@@ -41,8 +41,8 @@ properties:
   1 CEntityPointer m_penOwner,            // class which owns it
   2 INDEX m_iViewType=0,                  // view type
   3 FLOAT m_fDistance = 1.0f,             // current distance
-  4 FLOAT3D m_vZLast = FLOAT3D(0,0,0), 
-  5 FLOAT3D m_vTargetLast = FLOAT3D(0,0,0), 
+  4 FLOAT3D m_vZLast = FLOAT3D(0.0f, 0.0f, 0.0f), 
+  5 FLOAT3D m_vTargetLast = FLOAT3D(0.0f, 0.0f, 0.0f), 
   6 BOOL m_bFixed = FALSE,  // fixed view (player falling in abyss)
 
 components:

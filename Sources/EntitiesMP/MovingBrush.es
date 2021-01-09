@@ -68,17 +68,17 @@ properties:
  18 FLOAT m_tmBankingRotation "Banking rotation speed" = 0.0f, // set if only banking rotation
 
  // class properties
- 20 BOOL m_bMoving = FALSE,           // the brush is moving
- 78 BOOL m_bRotating = FALSE,         // the brush is rotating
- 79 BOOL m_bForceStop = FALSE,        // the brush should stop immediately
- 80 BOOL m_bNoRotation = FALSE,       // don't rotate to marker orientation
- 21 FLOAT3D m_vDesiredTranslation = FLOAT3D(0,0,0),    // desired translation
- 22 ANGLE3D m_aDesiredRotation = FLOAT3D(0,0,0),       // desired rotation
- 23 BOOL m_bInverseRotate = FALSE,    // use inverse rotation to target
- 24 BOOL m_bStopMoving = FALSE,       // stop moving brush on next target
- 25 BOOL m_bMoveToMarker = FALSE,     // PerMoving acknowledge od brush moving
- 26 BOOL m_bSkipMarker = FALSE,       // when obstructed skip next marker (actually stop moving)
- 27 BOOL m_bValidMarker = FALSE,      // internal for moving through valid markers
+ 20 BOOL m_bMoving = FALSE,     // the brush is moving
+ 78 BOOL m_bRotating = FALSE,   // the brush is rotating
+ 79 BOOL m_bForceStop = FALSE,  // the brush should stop immediately
+ 80 BOOL m_bNoRotation = FALSE, // don't rotate to marker orientation
+ 21 FLOAT3D m_vDesiredTranslation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 22 ANGLE3D m_aDesiredRotation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 23 BOOL m_bInverseRotate = FALSE, // use inverse rotation to target
+ 24 BOOL m_bStopMoving = FALSE,    // stop moving brush on next target
+ 25 BOOL m_bMoveToMarker = FALSE,  // PerMoving acknowledge od brush moving
+ 26 BOOL m_bSkipMarker = FALSE,    // when obstructed skip next marker (actually stop moving)
+ 27 BOOL m_bValidMarker = FALSE,   // internal for moving through valid markers
  
  // moving limits
  30 FLOAT m_fXLimitSign = 0.0f,
@@ -89,12 +89,12 @@ properties:
  35 ANGLE m_aBLimitSign = 0.0f,
 
  // continuous speed change
- 40 FLOAT3D m_vStartTranslation = FLOAT3D(0,0,0),  // start translation
- 41 ANGLE3D m_aStartRotation = ANGLE3D(0,0,0),     // start rotation
- 42 FLOAT m_fCourseLength = 0.0f,        // course length
- 43 ANGLE m_aHeadLenght = 0.0f,          // head lenght  
- 44 ANGLE m_aPitchLenght = 0.0f,         // pitch lenght
- 45 ANGLE m_aBankLenght = 0.0f,          // bank lenght
+ 40 FLOAT3D m_vStartTranslation = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 41 ANGLE3D m_aStartRotation = ANGLE3D(0.0f, 0.0f, 0.0f),
+ 42 FLOAT m_fCourseLength = 0.0f, // course length
+ 43 ANGLE m_aHeadLenght = 0.0f,   // head lenght  
+ 44 ANGLE m_aPitchLenght = 0.0f,  // pitch lenght
+ 45 ANGLE m_aBankLenght = 0.0f,   // bank lenght
 
  // sound target
  50 CEntityPointer m_penSoundStart    "Sound start entity" 'Q',   // sound start entity
@@ -139,26 +139,23 @@ components:
 
 
 functions:
-
- // get visibility tweaking bits
-  ULONG GetVisTweaks(void)
-  {
+  // Get visibility tweaking bits
+  ULONG GetVisTweaks(void) {
     return m_cbClassificationBits|m_vbVisibilityBits;
-  }
+  };
  
- void Precache(void)
-  {
+  void Precache(void) {
     PrecacheClass(CLASS_DEBRIS);
     PrecacheModel(MODEL_STONE);
     PrecacheTexture(TEXTURE_STONE);
-  }
-  /* Get force in given point. */
-  void GetForce(INDEX iForce, const FLOAT3D &vPoint, 
-    CForceStrength &fsGravity, CForceStrength &fsField)
-  {
+  };
+
+  // Get force in given point
+  void GetForce(INDEX iForce, const FLOAT3D &vPoint, CForceStrength &fsGravity, CForceStrength &fsField) {
     GetDefaultForce(iForce, vPoint, fsGravity, fsField);
-  }
-  /* Receive damage */
+  };
+
+  // Receive damage
   void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
     FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) 
   {
@@ -191,7 +188,7 @@ functions:
         // kill the bull in place, but make sure it doesn't blow up
         ((CLiveEntity*)penInflictor)->SetHealth(0.0f);
         InflictDirectDamage(penInflictor, this, DMT_IMPACT, 1.0f, 
-          GetPlacement().pl_PositionVector, FLOAT3D(0,1,0));
+          GetPlacement().pl_PositionVector, FLOAT3D(0.0f, 1.0f, 0.0f));
       }
     }
     else if(m_bBlowupByDamager)
@@ -222,25 +219,28 @@ functions:
   };
 
 
-  /* Check if entity is moved on a route set up by its targets. */
+  // Check if entity is moved on a route set up by its targets
   BOOL MovesByTargetedRoute(CTString &strTargetProperty) const {
     strTargetProperty = "Target";
     return TRUE;
   };
-  /* Check if entity can drop marker for making linked route. */
+
+  // Check if entity can drop marker for making linked route
   BOOL DropsMarker(CTFileName &fnmMarkerClass, CTString &strTargetProperty) const {
     fnmMarkerClass = CTFILENAME("Classes\\MovingBrushMarker.ecl");
     strTargetProperty = "Target";
     return TRUE;
-  }
+  };
+
   const CTString &GetDescription(void) const {
     ((CTString&)m_strDescription).PrintF("-><none>");
     if (m_penTarget!=NULL) {
       ((CTString&)m_strDescription).PrintF("->%s", m_penTarget->GetName());
     }
     return m_strDescription;
-  }
-  /* Get mirror type name, return empty string if not used. */
+  };
+
+  // Get mirror type name, return empty string if not used
   const CTString &GetMirrorName(INDEX iMirror)
   {
     static const CTString strDummyName("");
@@ -274,7 +274,7 @@ functions:
     return strDummyName;
   }
 
-  /* Get mirror, return FALSE for none. */
+  // Get mirror, return FALSE for none
   BOOL GetMirror(INDEX iMirror, class CMirrorParameters &mpMirror)
   {
     if (iMirror==0) {
@@ -377,7 +377,7 @@ functions:
         } else if (!m_tmBankingRotation && !m_bNoRotation) {
           SetDesiredRotation(aSpeed);
         } else {
-          SetDesiredRotation(ANGLE3D(0,0,0));
+          SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
         }
       }
 
@@ -544,7 +544,7 @@ functions:
   void DeactivateRotation(void)
   {
     m_bRotating = FALSE;
-    SetDesiredRotation(ANGLE3D(0.0f,0.0f,0.0f));  
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));  
   }
 
   void SetCombinedRotation(ANGLE3D aRotAngle, ANGLE3D aAddAngle)
@@ -631,7 +631,7 @@ procedures:
       on (EBlock eBlock) : {
         // inflict damage to entity that block brush
         InflictDirectDamage(eBlock.penOther, this, DMT_BRUSH, m_fBlockDamage,
-          FLOAT3D(0.0f,0.0f,0.0f), (FLOAT3D &)eBlock.plCollision);
+          FLOAT3D(0.0f, 0.0f, 0.0f), (FLOAT3D &)eBlock.plCollision);
         if (m_ebaAction == BA_BOUNCE) {
           // change direction for two ticks
           SetDesiredTranslation(-m_vDesiredTranslation);
@@ -667,42 +667,6 @@ procedures:
     }
     return;
   }
-
-  /*Rotating()
-  {
-    if (m_bAutoStart) {
-      jump RotActive();
-    } else {
-      jump RotInactive();
-    }
-  }
-
-  RotInactive()
-  {
-    SetDesiredRotation(ANGLE3D(0,0,0));
-    wait() {
-      on (EActivate) : {
-        jump RotActive();
-      }
-      otherwise() : {
-        resume;
-      }
-    };
-  }
-
-  RotActive()
-  {
-    SetDesiredRotation(ANGLE3D(0,0,360.0f/m_tmBankingRotation));
-
-    wait() {
-      on (EDeactivate) : {
-        jump RotInactive();
-      }
-      otherwise() : {
-        resume;
-      }
-    };
-  }*/
 
   // move brush
   MoveBrush() 
@@ -838,10 +802,6 @@ procedures:
     // load marker parameters
     m_bValidMarker = LoadMarkerParameters();
 
-    /*if (m_tmBankingRotation!=0) {
-      jump Rotating();
-    }*/
-
     // start moving
     wait() {
       on (EBegin) : {
@@ -894,7 +854,7 @@ procedures:
             if (fImpactSpeed>m_fHealth) {
               // receive artificial impact damage
               ReceiveDamage(eTouch.penOther, DMT_IMPACT, m_fHealth*2, 
-                FLOAT3D(0,0,0), FLOAT3D(0,0,0));
+                FLOAT3D(0.0f, 0.0f, 0.0f), FLOAT3D(0.0f, 0.0f, 0.0f));
             }
           }
         }
@@ -960,7 +920,7 @@ procedures:
           FLOAT fEntitySize = pow(box.Size()(1)*box.Size()(2)*box.Size()(3)/m_ctDebrises, 1.0f/3.0f)*m_fCubeFactor;
           
           Debris_Begin(EIBT_ROCK, DPT_NONE, BET_NONE, fEntitySize, FLOAT3D(1.0f,2.0f,3.0f),
-            FLOAT3D(0,0,0), 1.0f+m_fCandyEffect/2.0f, m_fCandyEffect, m_colDebrises);
+            FLOAT3D(0.0f, 0.0f, 0.0f), 1.0f+m_fCandyEffect/2.0f, m_fCandyEffect, m_colDebrises);
           for(INDEX iDebris = 0; iDebris<m_ctDebrises; iDebris++) {
             Debris_Spawn(this, this, MODEL_STONE, TEXTURE_STONE, 0, 0, 0, IRnd()%4, 1.0f,
               FLOAT3D(FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f, FRnd()*0.8f+0.1f));

@@ -87,7 +87,7 @@ functions:
     if((dmtType!=DMT_BURNING) && (m_tmSpraySpawned<=_pTimer->CurrentTick()-_pTimer->TickQuantum*8))
     {
       // spawn blood spray
-      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0, 0, 0));
+      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0.0f, 0.0f, 0.0f));
       m_penSpray = CreateEntity( plSpray, CLASS_BLOOD_SPRAY);
       m_penSpray->SetParent(this);
       ESpawnSpray eSpawnSpray;

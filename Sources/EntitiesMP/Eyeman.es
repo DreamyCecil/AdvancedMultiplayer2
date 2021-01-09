@@ -205,17 +205,17 @@ functions:
   FLOAT WaitForDust(FLOAT3D &vStretch) {
     if(GetModelObject()->GetAnim()==EYEMAN_ANIM_DEATH01)
     {
-      vStretch=FLOAT3D(1,1,1)*0.75f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 1.0f)*0.75f;
       return 0.5f;
     }
     else if(GetModelObject()->GetAnim()==EYEMAN_ANIM_DEATH02)
     {
-      vStretch=FLOAT3D(1,1,1)*0.75f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 1.0f)*0.75f;
       return 0.5f;
     }
     else if(GetModelObject()->GetAnim()==EYEMAN_ANIM_MORPHDEATH)
     {
-      vStretch=FLOAT3D(1,1,1)*1.0f;
+      vStretch=FLOAT3D(1.0f, 1.0f, 1.0f)*1.0f;
       return 0.5f;
     }
     return -1.0f;
@@ -301,9 +301,6 @@ functions:
     PlaySound(m_soSound, SOUND_DEATH, SOF_3D);
   };
 
-/************************************************************
- *                 BLOW UP FUNCTIONS                        *
- ************************************************************/
   // spawn body parts
   /*void BlowUp(void)
   {
@@ -343,9 +340,6 @@ functions:
     SetCollisionFlags(ECF_IMMATERIAL);
   };*/
 
-/************************************************************
- *                     MOVING FUNCTIONS                     *
- ************************************************************/
   // check whether may move while attacking
   BOOL MayMoveToAttack(void) 
   {
@@ -364,10 +358,6 @@ functions:
     return FALSE;
   };
 procedures:
-/************************************************************
- *                A T T A C K   E N E M Y                   *
- ************************************************************/
-
   FlyHit(EVoid) : CEnemyFly::FlyHit {
     if (CalcDist(m_penEnemy) > BITE_AIR) {
       m_fShootTime = _pTimer->CurrentTick() + 0.25f;
@@ -382,12 +372,12 @@ procedures:
     if (CalcDist(m_penEnemy) < BITE_AIR) {
       FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
       vDirection.SafeNormalize();
-      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 3.5f, FLOAT3D(0, 0, 0), vDirection);
+      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 3.5f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       // spawn blood cloud
       ESpawnEffect eSpawnEffect;
       eSpawnEffect.colMuliplier = C_WHITE|CT_OPAQUE;
       eSpawnEffect.betType = BET_BLOODEXPLODE;
-      eSpawnEffect.vStretch = FLOAT3D(1,1,1);
+      eSpawnEffect.vStretch = FLOAT3D(1.0f, 1.0f, 1.0f);
       CPlacement3D plOne = GetPlacement();
       GetEntityPointRatio(
         FLOAT3D(Lerp(-0.2f, +0.2f, FRnd()), Lerp(-0.2f, +0.2f, FRnd()), -1.0f),
@@ -414,7 +404,7 @@ procedures:
     if (CalcDist(m_penEnemy) < HIT_GROUND) {
       FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
       vDirection.SafeNormalize();
-      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 3.5f, FLOAT3D(0, 0, 0), vDirection);
+      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 3.5f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       PlaySound(m_soSound, SOUND_PUNCH, SOF_3D);
     }
     autowait(0.3f);
@@ -422,7 +412,7 @@ procedures:
     if (CalcDist(m_penEnemy) < HIT_GROUND) {
       FLOAT3D vDirection = m_penEnemy->GetPlacement().pl_PositionVector-GetPlacement().pl_PositionVector;
       vDirection.SafeNormalize();
-      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 3.5f, FLOAT3D(0, 0, 0), vDirection);
+      InflictDirectDamage(m_penEnemy, this, DMT_CLOSERANGE, 3.5f, FLOAT3D(0.0f, 0.0f, 0.0f), vDirection);
       PlaySound(m_soSound, SOUND_PUNCH, SOF_3D);
     }
     autowait(0.4f);
@@ -431,9 +421,6 @@ procedures:
     return EReturn();
   };
 
-/************************************************************
- *                       M  A  I  N                         *
- ************************************************************/
   Main(EVoid) {
     // declare yourself as a model
     InitAsModel();

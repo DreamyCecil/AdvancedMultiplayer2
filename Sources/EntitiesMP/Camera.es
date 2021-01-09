@@ -24,18 +24,18 @@ properties:
 
  10 FLOAT m_tmAtMarker = 0.0f, // time when current marker was reached
  11 FLOAT m_tmDelta = 0.0f, // time to reach next marker
- 13 FLOAT3D m_vPNp0 = FLOAT3D(0,0,0),
- 14 FLOAT3D m_vPNp1 = FLOAT3D(0,0,0),
- 15 FLOAT3D m_vTNp0 = FLOAT3D(0,0,0),
- 16 FLOAT3D m_vTNp1 = FLOAT3D(0,0,0),
+ 13 FLOAT3D m_vPNp0 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 14 FLOAT3D m_vPNp1 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 15 FLOAT3D m_vTNp0 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 16 FLOAT3D m_vTNp1 = FLOAT3D(0.0f, 0.0f, 0.0f),
  17 FLOAT m_fFOVp0 = 0.0f,
  18 FLOAT m_fFOVp1 = 0.0f,
  19 FLOAT m_fTFOVp0 = 0.0f,
  20 FLOAT m_fTFOVp1 = 0.0f,
- 31 FLOATquat3D m_qPNp0 = FLOATquat3D(0,0,0,0),
- 32 FLOATquat3D m_qPNp1 = FLOATquat3D(0,0,0,0),
- 33 FLOATquat3D m_qANp0 = FLOATquat3D(0,0,0,0),
- 34 FLOATquat3D m_qANp1 = FLOATquat3D(0,0,0,0),
+ 31 FLOATquat3D m_qPNp0 = FLOATquat3D(0.0f, 0.0f, 0.0f, 0.0f),
+ 32 FLOATquat3D m_qPNp1 = FLOATquat3D(0.0f, 0.0f, 0.0f, 0.0f),
+ 33 FLOATquat3D m_qANp0 = FLOATquat3D(0.0f, 0.0f, 0.0f, 0.0f),
+ 34 FLOATquat3D m_qANp1 = FLOATquat3D(0.0f, 0.0f, 0.0f, 0.0f),
  
  40 CEntityPointer m_penLast,    // previous marker
  41 CEntityPointer m_penPlayer,  // player viewing this camera
@@ -48,8 +48,8 @@ properties:
  53 CEntityPointer m_penViewTarget0,
  54 CEntityPointer m_penViewTarget1,
 
- 55 FLOAT3D m_vPosRatio0 = FLOAT3D(0,0,0),
- 56 FLOAT3D m_vPosRatio1 = FLOAT3D(0,0,0),
+ 55 FLOAT3D m_vPosRatio0 = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 56 FLOAT3D m_vPosRatio1 = FLOAT3D(0.0f, 0.0f, 0.0f),
 
  60 FLOAT m_fMyTimer = 0.0f,
  61 FLOAT m_fMyTimerLast = 0.0f,
@@ -64,7 +64,7 @@ properties:
 
  70 CEntityPointer m_penAutoCameraEndTarget "Auto camera end target",
  71 enum EventEType m_eetAutoCameraEndEvent "Auto camera end event" = EET_STOP,
- 72 FLOAT3D m_vRelTargetOffset = FLOAT3D(0,0,0),
+ 72 FLOAT3D m_vRelTargetOffset = FLOAT3D(0.0f, 0.0f, 0.0f),
 
 components:
 
@@ -144,7 +144,7 @@ functions:
       FLOATmatrix3D mRot;
       CPlacement3D plNew;
       // get target placement
-      FLOAT3D vTarget=FLOAT3D(0,0,0);
+      FLOAT3D vTarget = FLOAT3D(0.0f, 0.0f, 0.0f);
       if( m_penTarget!=NULL)
       {
         CCameraMarker *pcm = &(CCameraMarker&)*m_penTarget;
@@ -222,7 +222,7 @@ functions:
       FLOATmatrix3D mRot;
       CPlacement3D plNew;
       // get target placement
-      FLOAT3D vTarget=FLOAT3D(0,0,0);
+      FLOAT3D vTarget = FLOAT3D(0.0f, 0.0f, 0.0f);
       if( m_penTarget!=NULL)
       {
         CCameraMarker *pcm = &(CCameraMarker&)*m_penTarget;
@@ -302,8 +302,8 @@ functions:
       m_colFade1 = cmNp1.m_colFade;
       m_penViewTarget0 = cmNp0.m_penViewTarget;
       m_penViewTarget1 = cmNp1.m_penViewTarget;
-      m_vPosRatio0=FLOAT3D(0,0,0);
-      m_vPosRatio1=FLOAT3D(0,0,0);
+      m_vPosRatio0 = FLOAT3D(0.0f, 0.0f, 0.0f);
+      m_vPosRatio1 = FLOAT3D(0.0f, 0.0f, 0.0f);
       if( m_penViewTarget0!=NULL)
       {
         m_vPosRatio0=cmNp0.m_vPosRatio;
@@ -702,13 +702,13 @@ procedures:
       autowait(0.1f);
     }
 
-    m_vRelTargetOffset=FLOAT3D(0,0,0);
+    m_vRelTargetOffset=FLOAT3D(0.0f, 0.0f, 0.0f);
     if( m_penTarget!=NULL)
     {
       CCameraMarker *pcm = &(CCameraMarker&)*m_penTarget;
       if( pcm->m_penViewTarget!=NULL)
       {
-        FLOAT3D vAbsTarget=FLOAT3D(0,0,0);
+        FLOAT3D vAbsTarget=FLOAT3D(0.0f, 0.0f, 0.0f);
         pcm->m_penViewTarget->GetEntityPointRatio(pcm->m_vPosRatio, vAbsTarget, FALSE);
         m_vRelTargetOffset=vAbsTarget-pcm->m_penViewTarget->GetPlacement().pl_PositionVector;
       }

@@ -21,7 +21,7 @@ properties:
 
 components:
 functions:
-  /* Receive damage */
+  // Receive damage
   void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
     FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) 
   {
@@ -41,9 +41,8 @@ functions:
     SetDesiredRotation( ANGLE3D(0, 0, m_fSpeed));
   }
 
-  /* Post moving */
-  void PostMoving()
-  {
+  // Post moving
+  void PostMoving(void) {
     CMovableBrushEntity::PostMoving();
     ANGLE fCurrentBanking = GetPlacement().pl_OrientationAngle(3);
     FLOAT fNewSpeed = m_fSpeed*m_fDampFactor-m_fPendulumFactor*fCurrentBanking;

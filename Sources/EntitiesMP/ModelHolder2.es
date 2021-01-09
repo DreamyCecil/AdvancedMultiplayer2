@@ -73,11 +73,11 @@ properties:
  51 FLOAT m_fStretchRndY    "Stretch RND Y (%)"   =  0.2f, // random stretch height
  53 FLOAT m_fStretchRndZ    "Stretch RND Z (%)"   =  0.2f, // random stretch depth
  54 FLOAT m_fStretchRndAll  "Stretch RND All (%)" =  0.0f, // random stretch all
- 55 FLOAT3D m_fStretchRandom = FLOAT3D(1, 1, 1),
+ 55 FLOAT3D m_fStretchRandom = FLOAT3D(1.0f, 1.0f, 1.0f),
 
  // destruction values
  60 CEntityPointer m_penDestruction "Destruction" 'Q' COLOR(C_BLACK|0x20),    // model destruction entity
- 61 FLOAT3D m_vDamage = FLOAT3D(0,0,0),    // current damage impact
+ 61 FLOAT3D m_vDamage = FLOAT3D(0.0f, 0.0f, 0.0f),    // current damage impact
  62 FLOAT m_tmLastDamage = -1000.0f,
  63 CEntityPointer m_penDestroyTarget "Destruction Target" COLOR(C_WHITE|0xFF), // targeted when destroyed
  64 CEntityPointer m_penLastDamager,
@@ -124,18 +124,14 @@ functions:
   }
 
   // classification box multiplier
-  FLOAT3D GetClassificationBoxStretch(void)
-  {
-    return FLOAT3D( m_fClassificationStretch, m_fClassificationStretch, m_fClassificationStretch);
-  }
-
+  FLOAT3D GetClassificationBoxStretch(void) {
+    return FLOAT3D(m_fClassificationStretch, m_fClassificationStretch, m_fClassificationStretch);
+  };
 
   // maximum allowed tessellation level for this model (for Truform/N-Patches support)
-  FLOAT GetMaxTessellationLevel(void)
-  {
+  FLOAT GetMaxTessellationLevel(void) {
     return m_fMaxTessellationLevel;
-  }
-
+  };
 
   /* Receive damage */
   void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
@@ -193,14 +189,14 @@ functions:
 
     // fade damage out
     if (tmDelta>=_pTimer->TickQuantum*3) {
-      m_vDamage=FLOAT3D(0,0,0);
+      m_vDamage = FLOAT3D(0.0f, 0.0f, 0.0f);
     }
     // add new damage
     FLOAT3D vDirectionFixed;
-    if (vDirection.ManhattanNorm()>0.5f) {
+    if (vDirection.ManhattanNorm() > 0.5f) {
       vDirectionFixed = vDirection;
     } else {
-      vDirectionFixed = FLOAT3D(0,1,0);
+      vDirectionFixed = FLOAT3D(0.0f, 1.0f, 0.0f);
     }
     FLOAT3D vDamageOld = m_vDamage;
     m_vDamage += vDirectionFixed*fKickDamage;
@@ -227,7 +223,7 @@ functions:
       m_fSprayDamage+fNewDamage>50.0f))
     {
       // spawn blood spray
-      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0, 0, 0));
+      CPlacement3D plSpray = CPlacement3D( vHitPoint, ANGLE3D(0.0f, 0.0f, 0.0f));
       m_penSpray = CreateEntity( plSpray, CLASS_BLOOD_SPRAY);
       m_penSpray->SetParent( this);
       ESpawnSpray eSpawnSpray;
@@ -328,10 +324,6 @@ functions:
       }
       // adjust for stretch
       FLOAT fMipForFade = fMipFactor;
-      // TODO: comment the next 3 lines for mip factors conversion
-      /*if (pmo->mo_Stretch != FLOAT3D(1,1,1)) {
-        fMipForFade -= Log2( Max(pmo->mo_Stretch(1),Max(pmo->mo_Stretch(2),pmo->mo_Stretch(3))));
-      }*/
 
       // if not visible
       if (fMipForFade>m_fMipFadeDist) {

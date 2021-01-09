@@ -20,7 +20,7 @@ properties:
   5 CEntityPointer m_penTarget    "Target" 'T',
   6 CEntityPointer m_penWatcher,
   7 FLOAT m_fWatcherFrequency     "Watcher frequency" = 2.0f,   // watcher will look every x seconds for players
-  8 FLOAT3D m_vDesiredPosition = FLOAT3D(0, 0, 0),              // desired position for moving
+  8 FLOAT3D m_vDesiredPosition = FLOAT3D(0.0f, 0.0f, 0.0f),              // desired position for moving
 
  10 FLOAT m_fMoveSpeed            "Move speed" 'V' = 2.0f,
  11 FLOAT m_fRotateSpeed          "Rotate speed" 'B' = 60.0f,
@@ -95,11 +95,6 @@ functions:
     }
   };
 
-
-
-/************************************************************
- *                      MOVE FUNCTIONS                      *
- ************************************************************/
   // switch to next marker
   BOOL NextMarker(void) {
     if (m_penTarget==NULL) {
@@ -149,7 +144,7 @@ functions:
 
   // stop moving
   void StopMoving(void) {
-    SetDesiredRotation(ANGLE3D(0, 0, 0));
+    SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
     SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
   };
 
@@ -199,11 +194,6 @@ functions:
     }
   };
 
-
-
-/************************************************************
- *                  INITIALIZE FUNCTIONS                    *
- ************************************************************/
   void Initialize(void) {
     // declare yourself as a model
     InitAsModel();
@@ -250,12 +240,8 @@ functions:
       WarningMessage("Target '%s' is not of Environment Marker class!", m_penTarget->GetName());
       m_penTarget = NULL;
     }
-};
+  };
 
-
-/************************************************************
- *                    WATCHER FUNCTIONS                     *
- ************************************************************/
   void InitializeWatcher(FLOAT fWaitTime) {
     // spawn player watcher
     m_penWatcher = CreateEntity(GetPlacement(), CLASS_WATCHPLAYERS);
@@ -271,11 +257,6 @@ functions:
     pw.m_eetEventFar = EET_ENVIRONMENTSTOP;
   };
 
-
-
-/************************************************************
- *                    ANIMATION FUCNTIONS                   *
- ************************************************************/
   // play default anim
   void PlayDefaultAnim(void) {
     GetModelObject()->PlayAnim(m_iAnim, AOF_LOOPING|AOF_NORESTART);
@@ -311,9 +292,6 @@ functions:
 
 
 procedures:
-/************************************************************
- *                    SUPPORT PROCEDURES                    *
- ************************************************************/
   // move to marker
   MoveToMarker(EVoid) {
     // if next marker exist
@@ -336,11 +314,6 @@ procedures:
     return EEnd();
   };
 
-
-
-/************************************************************
- *                    A C T I O N S                         *
- ************************************************************/
   // activate
   Activate(EVoid) {
     wait() {
@@ -379,11 +352,6 @@ procedures:
     }
   };
 
-
-
-/************************************************************
- *                M  A  I  N    L  O  O  P                  *
- ************************************************************/
   // main loop
   MainLoop(EVoid) {
     autocall Stop() EEnd;

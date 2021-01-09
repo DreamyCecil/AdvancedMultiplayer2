@@ -141,7 +141,7 @@ functions:
       if (bCopy) {
         // copy template entity
         pen = GetWorld()->CopyEntityInWorld( *m_penTarget,
-          CPlacement3D(FLOAT3D(-32000.0f+FRnd()*200.0f, -32000.0f+FRnd()*200.0f, 0), ANGLE3D(0, 0, 0)) );
+          CPlacement3D(FLOAT3D(-32000.0f+FRnd()*200.0f, -32000.0f+FRnd()*200.0f, 0), ANGLE3D(0.0f, 0.0f, 0.0f)) );
 
         // change needed properties
         pen->End();
@@ -170,7 +170,7 @@ functions:
       // calculate new position
       FLOAT fR = fInnerCircle + FRnd()*(fOuterCircle-fInnerCircle);
       FLOAT fA = FRnd()*360.0f;
-      CPlacement3D pl(FLOAT3D(CosFast(fA)*fR, 0.05f, SinFast(fA)*fR), ANGLE3D(0, 0, 0));
+      CPlacement3D pl(FLOAT3D(CosFast(fA)*fR, 0.05f, SinFast(fA)*fR), ANGLE3D(0.0f, 0.0f, 0.0f));
       pl.RelativeToAbsolute(GetPlacement());
 
       // teleport back
