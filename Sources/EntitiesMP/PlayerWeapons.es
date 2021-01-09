@@ -3444,11 +3444,10 @@ functions:
       }
 
       return TRUE;
+    }
 
     // no weapon or not enough ammo
-    } else {
-      return FALSE;
-    }
+    return FALSE;
   };
 
   // select new weapon when no more ammo
@@ -3756,7 +3755,7 @@ functions:
     INDEX wti = wtOrg;
 
     FOREVER {
-      (INDEX&)wti += iDir;
+      wti += iDir;
 
       // [Cecil] 1 -> 0
       if (wti < 0) {
@@ -3774,12 +3773,14 @@ functions:
 
       // [Cecil] No position remapping
       WeaponType wt = (WeaponType)wti;
-      if ((1<<(wt - 1)) & m_iAvailableWeapons && HasAmmo(wt)) {
+
+      if (WeaponExists(m_iAvailableWeapons, wt) && HasAmmo(wt)) {
         return wt;
       }
     }
+
     return m_iWantedWeapon;
-  }
+  };
 
   // select new weapon
   void SelectWeaponChange(INDEX iSelect) {
@@ -3793,7 +3794,7 @@ functions:
     m_tmWeaponChangeRequired = _pTimer->CurrentTick();
 
     // if storing current weapon
-    if (iSelect==0) {
+    if (iSelect == 0) {
       m_bChangeWeapon = TRUE;
       m_iWantedWeapon = WEAPON_NONE;
       return;
@@ -3801,7 +3802,7 @@ functions:
 
     // if restoring best weapon
     if (iSelect == -4) {
-      SelectNewWeapon() ;
+      SelectNewWeapon();
       return;
     }
 

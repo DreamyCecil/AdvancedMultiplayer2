@@ -655,7 +655,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   }
   
   // set button pressed flags
-  paAction.pa_ulButtons = (pctlCurrent.bWeaponFlip    ? PLACT_WEAPON_FLIP : 0)
+  paAction.pa_ulButtons |= (pctlCurrent.bWeaponFlip   ? PLACT_WEAPON_FLIP : 0)
                         | (pctlCurrent.bFire          ? PLACT_FIRE : 0)
                         | (pctlCurrent.bReload        ? PLACT_RELOAD : 0)
                         | (pctlCurrent.bUse           ? PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE : 0)
@@ -1254,6 +1254,7 @@ properties:
  161 FLOAT m_tmInvulnerability = 0.0f,
  162 FLOAT m_tmSeriousDamage   = 0.0f,
  163 FLOAT m_tmSeriousSpeed    = 0.0f,
+
  166 FLOAT m_tmInvisibilityMax    = 30.0f,
  167 FLOAT m_tmInvulnerabilityMax = 30.0f,
  168 FLOAT m_tmSeriousDamageMax   = 40.0f,
@@ -1612,6 +1613,61 @@ functions:
     }
   };
 
+  // [Cecil] Purchase a random powerup with tokens
+  void PurchasePowerup(void) {
+    if (m_iTokens < 10) {
+      PrintCenterMessage(this, this, TRANS("Not enough tokens!"), 3.0f, MSS_INFO);
+      return;
+    }
+
+    m_iTokens -= 10;
+    PlaySound(m_soMessage, SOUND_POWERUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
+
+    // list of powerups that player doesn't have
+    CDList<INDEX> aiPowerups;
+
+    // a powerup with least active time
+    INDEX iLeastTimeType = -1;
+    FLOAT fLeastTime = -1.0f;
+
+    for (INDEX iType = PUIT_INVULNER; iType <= PUIT_SPEED; iType++) {
+      // current powerup time
+      FLOAT fPowerup = (&m_tmInvisibility)[iType] - _pTimer->CurrentTick();
+
+      // not activated yet
+      if (fPowerup <= 0.0f) {
+        aiPowerups.Add(iType);
+        continue;
+      }
+
+      // time percentage
+      FLOAT fTimeDiff = (fPowerup / (&m_tmInvisibilityMax)[iType]);
+
+      // less time than others
+      if (fLeastTime < 0.0f || fTimeDiff < fLeastTime) {
+        iLeastTimeType = iType;
+        fLeastTime = fTimeDiff;
+      }
+    }
+
+    // random powerup
+    EPowerUp ePowerUp;
+    ePowerUp.puitType = PUIT_SPEED;
+
+    // pick from the list
+    INDEX ctList = aiPowerups.Count();
+
+    if (ctList > 0) {
+      ePowerUp.puitType = (PowerUpItemType)aiPowerups[IRnd() % ctList];
+
+    // pick with least time
+    } else if (iLeastTimeType != -1) {
+      ePowerUp.puitType = (PowerUpItemType)iLeastTimeType;
+    }
+
+    ReceiveItem(ePowerUp);
+  };
+
   INDEX GenderSound(INDEX iSound) {
     return iSound + m_iGender*GENDEROFFSET;
   };
@@ -1771,7 +1827,7 @@ functions:
   // Check character data for invalid values
   void ValidateCharacter(void) {
     // use default model in single player or flyover
-    if (GetSP()->sp_bSinglePlayer) {
+    if (!GetSP()->sp_bSinglePlayer) {
       return;
     }
 
@@ -5039,18 +5095,7 @@ functions:
 
     // [Cecil] Spend tokens
     if (ulNewButtons & PLACT_TOKENS && GetSP()->sp_fComboTime > 0.0f && GetSP()->sp_fTokenPayout > 0.0f) {
-      if (m_iTokens >= 10) {
-        m_iTokens -= 10;
-        PlaySound(m_soMessage, SOUND_POWERUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
-
-        // random powerup
-        EPowerUp ePowerUp;
-        ePowerUp.puitType = PowerUpItemType(IRnd() % 3 + 1);
-        ReceiveItem(ePowerUp);
-
-      } else {
-        PrintCenterMessage(this, this, TRANS("Not enough tokens!"), 3.0f, MSS_INFO);
-      }
+      PurchasePowerup();
     }
 
     // if use is pressed
