@@ -15,4 +15,8 @@
 #include <EntitiesMP/Common/Common.h>
 #include <EntitiesMP/Common/GameInterface.h>
 #include <EntitiesMP/Player.h>
+
+// [Cecil] Function patching
+#include "EntitiesMP/Common/Patcher/StockFuncPatcher.h"
+
 #undef DECL_DLL

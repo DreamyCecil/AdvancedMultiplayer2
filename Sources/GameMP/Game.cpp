@@ -1004,14 +1004,13 @@ void CGame::GameHandleTimer(void)
 /*
  * Global game object (in our case Flesh) initialization function
  */
-void CGame::InitInternal( void)
-{
+void CGame::InitInternal(void) {
   gam_strCustomLevel = ""; // filename of custom level chosen
   gam_strSessionName = TRANS("Unnamed session"); // name of multiplayer network session
   gam_strJoinAddress = TRANS("serveraddress");   // join address
 
-  gm_MenuSplitScreenCfg    = SSC_PLAY1;
-  gm_StartSplitScreenCfg   = SSC_PLAY1;
+  gm_MenuSplitScreenCfg = SSC_PLAY1;
+  gm_StartSplitScreenCfg = SSC_PLAY1;
   gm_CurrentSplitScreenCfg = SSC_PLAY1;
   gm_iLastSetHighScore = 0;
   gm_iSinglePlayer = 0;
@@ -1026,25 +1025,26 @@ void CGame::InitInternal( void)
   memset(gm_aiStartLocalPlayers, 0, sizeof(gm_aiStartLocalPlayers));
 
   // first assign translated to make dependcy catcher extract the translations
-  gm_astrAxisNames[AXIS_MOVE_UD] = TRANS("move u/d");      
-  gm_astrAxisNames[AXIS_MOVE_LR] = TRANS("move l/r");      
-  gm_astrAxisNames[AXIS_MOVE_FB] = TRANS("move f/b");      
-  gm_astrAxisNames[AXIS_TURN_UD] = TRANS("look u/d");      
-  gm_astrAxisNames[AXIS_TURN_LR] = TRANS("turn l/r");      
-  gm_astrAxisNames[AXIS_TURN_BK] = TRANS("banking");       
-  gm_astrAxisNames[AXIS_LOOK_UD] = TRANS("view u/d");      
-  gm_astrAxisNames[AXIS_LOOK_LR] = TRANS("view l/r");      
-  gm_astrAxisNames[AXIS_LOOK_BK] = TRANS("view banking");  
+  gm_astrAxisNames[AXIS_MOVE_UD] = TRANS("move u/d");
+  gm_astrAxisNames[AXIS_MOVE_LR] = TRANS("move l/r");
+  gm_astrAxisNames[AXIS_MOVE_FB] = TRANS("move f/b");
+  gm_astrAxisNames[AXIS_TURN_UD] = TRANS("look u/d");
+  gm_astrAxisNames[AXIS_TURN_LR] = TRANS("turn l/r");
+  gm_astrAxisNames[AXIS_TURN_BK] = TRANS("banking");
+  gm_astrAxisNames[AXIS_LOOK_UD] = TRANS("view u/d");
+  gm_astrAxisNames[AXIS_LOOK_LR] = TRANS("view l/r");
+  gm_astrAxisNames[AXIS_LOOK_BK] = TRANS("view banking");
+
   // but we must not really use the translation for loading
-  gm_astrAxisNames[AXIS_MOVE_UD] = "move u/d";     // 
-  gm_astrAxisNames[AXIS_MOVE_LR] = "move l/r";     // 
-  gm_astrAxisNames[AXIS_MOVE_FB] = "move f/b";     // 
-  gm_astrAxisNames[AXIS_TURN_UD] = "look u/d";     // 
-  gm_astrAxisNames[AXIS_TURN_LR] = "turn l/r";     // 
-  gm_astrAxisNames[AXIS_TURN_BK] = "banking";      // 
-  gm_astrAxisNames[AXIS_LOOK_UD] = "view u/d";     // 
-  gm_astrAxisNames[AXIS_LOOK_LR] = "view l/r";     // 
-  gm_astrAxisNames[AXIS_LOOK_BK] = "view banking"; // 
+  gm_astrAxisNames[AXIS_MOVE_UD] = "move u/d";
+  gm_astrAxisNames[AXIS_MOVE_LR] = "move l/r";
+  gm_astrAxisNames[AXIS_MOVE_FB] = "move f/b";
+  gm_astrAxisNames[AXIS_TURN_UD] = "look u/d";
+  gm_astrAxisNames[AXIS_TURN_LR] = "turn l/r";
+  gm_astrAxisNames[AXIS_TURN_BK] = "banking";
+  gm_astrAxisNames[AXIS_LOOK_UD] = "view u/d";
+  gm_astrAxisNames[AXIS_LOOK_LR] = "view l/r";
+  gm_astrAxisNames[AXIS_LOOK_BK] = "view banking";
 
   gm_csConsoleState = CS_OFF;
   gm_csComputerState = CS_OFF;
@@ -1263,9 +1263,9 @@ void CGame::InitInternal( void)
   _pShell->Execute(CTString("include \"")+fnmStartupScript+"\";");
 
   // check the size and pointer of player control variables that are local to each player
-  if (ctl_slPlayerControlsSize<=0
-    ||ctl_slPlayerControlsSize>sizeof(((CLocalPlayer*)NULL)->lp_ubPlayerControlsState)
-    ||ctl_pvPlayerControls==NULL) {
+  if (ctl_slPlayerControlsSize <= 0
+   || ctl_slPlayerControlsSize > sizeof(((CLocalPlayer*)NULL)->lp_ubPlayerControlsState)
+   || ctl_pvPlayerControls == NULL) {
     FatalError(TRANS("Current player controls are invalid."));
   }
 
@@ -1299,11 +1299,13 @@ void CGame::InitInternal( void)
 
   // provide URL to the engine
   _strModURL = "http://www.croteam.com/mods/TheSecondEncounter";
-}
+
+  // [Cecil] Patch the ECL parsing function
+  CStockPatcher::SetPatch();
+};
 
 // internal cleanup
-void CGame::EndInternal(void)
-{
+void CGame::EndInternal(void) {
   // stop game if eventually started
   StopGame();
   // remove game timer handler
@@ -1339,7 +1341,10 @@ void CGame::EndInternal(void)
   } catch (char *strError) {
     WarningMessage("Cannot load game settings:\n%s\nUsing defaults!", strError);
   }
-}
+
+  // [Cecil] Unpatch the function
+  CStockPatcher::UnsetPatch();
+};
 
 BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, CSessionProperties &sp) {
   gam_iObserverConfig = 0;
@@ -1353,7 +1358,7 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, C
   }
 
   // try to start current network provider
-  if( !StartProviderFromName()) {
+  if (!StartProviderFromName()) {
     return FALSE;
     gm_bFirstLoading = FALSE;
   }

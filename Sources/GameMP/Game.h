@@ -201,10 +201,10 @@ public:
   void *gm_pvGlobalPlayerControls;
   // index of local player
   // (-1) if not active
-  INDEX gm_aiMenuLocalPlayers[ 4];
-  INDEX gm_aiStartLocalPlayers[ 4];
+  INDEX gm_aiMenuLocalPlayers[4];
+  INDEX gm_aiStartLocalPlayers[4];
   // players that are currently playing on local machine (up to 4)
-  CLocalPlayer gm_lpLocalPlayers[ 4];
+  CLocalPlayer gm_lpLocalPlayers[4];
 
   // Operations
   void InitInternal(void);

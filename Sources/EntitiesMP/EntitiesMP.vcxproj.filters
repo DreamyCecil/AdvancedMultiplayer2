@@ -77,6 +77,12 @@
     <Filter Include="Header Files\Weapons headers">
       <UniqueIdentifier>{2fada064-952a-4ee0-92f2-81ce96096ae0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Patcher">
+      <UniqueIdentifier>{a3969102-78da-4b69-ae79-3bcf98508932}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Patcher headers">
+      <UniqueIdentifier>{fea89f0b-abb1-4ce8-a8ca-20e685a3d53b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Common.cpp">
@@ -597,6 +603,15 @@
     </ClCompile>
     <ClCompile Include="GlobalController.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Patcher\patcher.cpp">
+      <Filter>Source Files\Patcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Patcher\StockPatch.cpp">
+      <Filter>Source Files\Patcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Patcher\StockFuncPatcher.cpp">
+      <Filter>Source Files\Patcher</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1616,6 +1631,18 @@
     </ClInclude>
     <ClInclude Include="GlobalController_tables.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Patcher\patcher.h">
+      <Filter>Header Files\Patcher headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Patcher\patcher_defines.h">
+      <Filter>Header Files\Patcher headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Patcher\StockPatch.h">
+      <Filter>Header Files\Patcher headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Patcher\StockFuncPatcher.h">
+      <Filter>Header Files\Patcher headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
