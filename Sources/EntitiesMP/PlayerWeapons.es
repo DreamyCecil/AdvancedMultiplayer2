@@ -2995,7 +2995,7 @@ functions:
 
     // [Cecil] Define ammo amounts
     FLOAT fPickupAmmo = Max(FLOAT(ws.iPickup), pw.MaxAmmo() * fMaxAmmoRatio);
-    FLOAT fPickupAlt = Max(FLOAT(ws.iPickupAlt), pw.MaxAlt() * fMaxAmmoRatio);
+    INDEX iPickupAlt = ws.iPickupAlt;
 
     // [Cecil] Ammo references
     SPlayerAmmo *pAmmo = pw.pAmmo;
@@ -3007,10 +3007,10 @@ functions:
       AddManaToPlayer(fPickupAmmo * ws.fMana * MANA_AMMO);
     }
 
-    // [Cecil] NOTE: Crashes around here
+    // [Cecil] Add alt ammo
     if (pAlt != NULL) {
-      pAlt->iAmount += fPickupAlt;
-      AddManaToPlayer(fPickupAlt * ws.fMana * MANA_AMMO);
+      pAlt->iAmount += iPickupAlt;
+      AddManaToPlayer(iPickupAlt * ws.fMana * MANA_AMMO);
     }
 
     // make sure we don't have more ammo than maximum

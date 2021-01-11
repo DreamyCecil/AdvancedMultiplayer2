@@ -1,5 +1,35 @@
 #include "StdH.h"
 #include "StockPatch.h"
+#include "EntitiesMP/Common/ConfigFunc.h"
+
+// Patch config
+static DJSON_Block _cbConfig;
+static INDEX _ctConfigEntries = 0;
+
+// Load the config
+void LoadClassPatchConfig(CTString strWorld) {
+  _cbConfig.Clear();
+  _ctConfigEntries = 0;
+
+  HookConfigFunctions();
+
+  // get level config
+  CTString strConfigFile;
+  strConfigFile.PrintF("LevelPatches\\Classes\\%s.json", strWorld);
+
+  // no config
+  if (!FileExists(strConfigFile)) {
+    return;
+  }
+
+  // can't parse the config
+  if (ParseConfig(strConfigFile, _cbConfig) != DJSON_OK) {
+    FatalError("Cannot parse class patch \"%s\"", strConfigFile);
+    return;
+  }
+
+  _ctConfigEntries = _cbConfig.Count();
+};
 
 // READER FUNCTIONS
 
@@ -51,8 +81,37 @@ void CEntityClassPatch::Read_t(CTStream *istr) {
   CTString strClassName;
   strClassName.ReadFromText_t(*istr, "Class: ");
 
-  // [Cecil] NOTE: Replace DLL and class strings with the ones from the patch config here
-  //CPrintF("%s : %s\n", strClassName, fnmDLL);
+  // [Cecil] Go through the replacement config
+  if (_ctConfigEntries > 0) {
+    CTString strLibraryName = fnmDLL.FileName().str_String;
+
+    for (INDEX iClass = 0; iClass < _ctConfigEntries; iClass++) {
+      string strReplace = _cbConfig.GetKey(iClass);
+      CConfigValue valNewClass = _cbConfig.GetValue(iClass);
+
+      if (valNewClass.cv_eType != CVT_STRING) {
+        FatalError("Replacement for \"%s\" is not a string!", strReplace.c_str());
+      }
+
+      // wrong class
+      if (strClassName != strReplace.c_str()) {
+        continue;
+      }
+
+      string strNewClass = valNewClass.cv_strValue;
+
+      // ignore the same classes
+      if (strClassName == strNewClass.c_str() && strLibraryName == "Entities") {
+        continue;
+      }
+
+      // replace the library
+      fnmDLL = fnmDLL.FileDir() + CTFILENAME("Entities") + fnmDLL.FileExt();
+
+      // replace the class
+      strClassName = strNewClass.c_str();
+    }
+  }
 
   // create name of dll
   #ifndef NDEBUG

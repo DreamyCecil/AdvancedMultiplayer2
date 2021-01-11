@@ -1429,6 +1429,9 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, C
   _actTriangles.Clear();
   gm_bProfileDemo = FALSE;
 
+  // [Cecil] Load patch config for classes
+  LoadClassPatchConfig(fnWorld.FileName().str_String);
+
   // start the new session
   try {
     if (dem_bPlay) {
@@ -1445,7 +1448,7 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, C
 
     } else {
       BOOL bWaitAllPlayers = sp.sp_bWaitAllPlayers && _pNetwork->IsNetworkEnabled();
-      _pNetwork->StartPeerToPeer_t( strSessionName, fnWorld, sp.sp_ulSpawnFlags, sp.sp_ctMaxPlayers, bWaitAllPlayers, &sp);
+      _pNetwork->StartPeerToPeer_t(strSessionName, fnWorld, sp.sp_ulSpawnFlags, sp.sp_ctMaxPlayers, bWaitAllPlayers, &sp);
 
       // [Cecil] Create global controller entity
       CWorld *pwo = &_pNetwork->ga_World;

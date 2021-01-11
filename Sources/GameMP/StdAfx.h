@@ -18,5 +18,6 @@
 
 // [Cecil] Function patching
 #include "EntitiesMP/Common/Patcher/StockFuncPatcher.h"
+#include "EntitiesMP/Common/Patcher/StockPatch.h"
 
 #undef DECL_DLL

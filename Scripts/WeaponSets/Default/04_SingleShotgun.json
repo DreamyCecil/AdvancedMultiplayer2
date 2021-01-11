@@ -17,6 +17,6 @@
   "PosFire" : [0.0, 0.0],
   
   "PickupAmmo" : 10,
-  "PickupAlt"  : 30,
+  "PickupAlt"  : 3,
   "Mana" : 70.0,
 }

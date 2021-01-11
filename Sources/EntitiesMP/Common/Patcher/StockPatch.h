@@ -1,5 +1,6 @@
 #pragma once
 
+// Entity class
 #include "Engine/Entities/EntityClass.h"
 
 // ECL reader patch
@@ -18,3 +19,6 @@ class CClassStockPatch {
     // Free all unused elements of the stock
     void FreeUnused(void);
 };
+
+// Load the config
+DECL_DLL void LoadClassPatchConfig(CTString strWorld);
