@@ -86,14 +86,16 @@ functions:
   {
     CEntity *penClosestPlayer = NULL;
     FLOAT fClosestPlayer = UpperLimit(0.0f);
+
     // for all players
     for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
       CEntity *penPlayer = GetPlayerEntity(iPlayer);
+
       // if player is alive and visible
-      if (penPlayer!=NULL && penPlayer->GetFlags()&ENF_ALIVE && !(penPlayer->GetFlags()&ENF_INVISIBLE)) {
+      if (penPlayer != NULL && IsAlive(penPlayer) && !(penPlayer->GetFlags() & ENF_INVISIBLE)) {
         // calculate distance to player
-        FLOAT fDistance = 
-          (penPlayer->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
+        FLOAT fDistance = (penPlayer->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
+
         // update if closer
         if (fDistance<fClosestPlayer) {
           fClosestPlayer = fDistance;
@@ -145,7 +147,7 @@ functions:
     }
 
     // if this one is dead or invisible
-    if (!(penPlayer->GetFlags()&ENF_ALIVE) || (penPlayer->GetFlags()&ENF_INVISIBLE)) {
+    if (!IsAlive(penPlayer) || (penPlayer->GetFlags() & ENF_INVISIBLE)) {
       // do nothing
       return;
     }
@@ -240,10 +242,10 @@ functions:
         continue;
       }
       // if player is alive and visible
-      if ((penPlayer->GetFlags()&ENF_ALIVE) && !(penPlayer->GetFlags()&ENF_INVISIBLE)) {
+      if (IsAlive(penPlayer) && !(penPlayer->GetFlags() & ENF_INVISIBLE)) {
         // calculate distance to player
-        FLOAT fDistance = 
-          (penPlayer->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
+        FLOAT fDistance = (penPlayer->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
+
         // if closer than current and you can see him
         if (fDistance<fClosestPlayer && 
             GetOwner()->SeeEntity(penPlayer, Cos(GetOwner()->m_fViewAngle/2.0f))) {
@@ -283,7 +285,7 @@ functions:
         continue;
       }
       // if player is alive and visible
-      if ((penPlayer->GetFlags()&ENF_ALIVE) && !(penPlayer->GetFlags()&ENF_INVISIBLE)) {
+      if (IsAlive(penPlayer) && !(penPlayer->GetFlags() & ENF_INVISIBLE)) {
         // calculate distance to player
         FLOAT fDistance = 
           (penPlayer->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();

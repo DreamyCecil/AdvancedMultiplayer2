@@ -86,19 +86,19 @@ components:
 200 sound   SOUND_SPIN            "ModelsMP\\Enemies\\AirElemental\\Sounds\\TwisterSpin.wav",
 
 functions:
-  /* Entity info */
+  // Entity info
   void *GetEntityInfo(void) {
     return &eiTwister;
   };
 
-  /* Receive damage */
+  // Receive damage
   void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
     FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) 
   {
     return;
   };
 
-  // render burning particles
+  // Render burning particles
   void RenderParticles(void)
   {
     if(m_bMovingAllowed)

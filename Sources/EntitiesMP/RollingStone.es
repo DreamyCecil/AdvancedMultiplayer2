@@ -65,11 +65,7 @@ functions:
     if (en_penReference!=NULL) {
       // adjust rotation and translation speeds
       AdjustSpeeds(en_vReferencePlane);
-      //CPrintF("adjusting\n");
-    } else {
-      //CPrintF("not adjusting\n");
     }
-//    m_fASpeed *= m_fDeceleration;
 
     m_qALast = m_qA;
 
@@ -83,10 +79,9 @@ functions:
     }
   }
 
-  /* Adjust model mip factor if needed. */
-  void AdjustMipFactor(FLOAT &fMipFactor)
-  {
-    fMipFactor = 0;// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // Adjust model mip factor if needed
+  void AdjustMipFactor(FLOAT &fMipFactor) {
+    fMipFactor = 0;
 
     FLOATquat3D qA;
     qA = Slerp(_pTimer->GetLerpFactor(), m_qALast, m_qA);
@@ -135,15 +130,14 @@ functions:
     GetParallelAndNormalComponents(en_vCurrentTranslationAbsolute, vPlane, vTranslationNormal, vTranslationParallel);
 
     // check if rolling
-    BOOL bRolling = vTranslationNormal.Length()<0.1f;
+    BOOL bRolling = vTranslationNormal.Length() < 0.1f;
+
     // if rolling
     if (bRolling) {
       // get rotation direction from speed, if possible
       FLOAT fSpeedTra = vTranslationParallel.Length();
-/*      if (fSpeedTra>0.01f) {
-        m_vR = (vTranslationParallel/fSpeedTra)*vPlane;
-      }*/
       RollSound(fSpeedTra);
+
     } else {
       RollSound(0);
     }

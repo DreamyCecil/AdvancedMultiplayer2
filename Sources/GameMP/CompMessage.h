@@ -47,6 +47,4 @@ public:
   CTString GetLine(INDEX iLine);
 };
 
-
-#endif  /* include-once check. */
-
+#endif /* include-once check. */

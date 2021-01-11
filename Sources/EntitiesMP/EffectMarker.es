@@ -91,7 +91,7 @@ functions:
     return TRUE;
   }
 
-  /* Handle an event, return false if the event is not handled. */
+  // Handle an event, return false if the event is not handled
   BOOL HandleEvent(const CEntityEvent &ee)
   {
     if (ee.ee_slEvent==EVENTCODE_ETrigger)

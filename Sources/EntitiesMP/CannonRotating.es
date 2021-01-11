@@ -367,7 +367,7 @@ procedures:
       // check for players
       CPlayer *pTarget = AcquireTarget();
       if (pTarget) {
-          if ((pTarget->GetFlags()&ENF_ALIVE) && !(pTarget->GetFlags()&ENF_DELETED)) {
+        if (IsAlive(pTarget) && !(pTarget->GetFlags() & ENF_DELETED)) {
           // stop rotations
           m_fRotSpeedRotator = FLOAT3D(0.0f, 0.0f, 0.0f);
           m_penEnemy = pTarget;

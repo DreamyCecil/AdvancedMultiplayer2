@@ -72,13 +72,12 @@ components:
 
 
 functions:
-
-  /* Entity info */
+  // Entity info
   void *GetEntityInfo(void) {
     return GetStdEntityInfo((EntityInfoBodyType)m_iBodyType);
   };
 
-  /* Receive damage */
+  // Receive damage
   void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
     FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) 
   {

@@ -4,7 +4,7 @@
   #pragma once
 #endif
 
-// collision flags
+// Collision flags
 #define ECBI_BRUSH              (1UL<<0)
 #define ECBI_MODEL              (1UL<<1)
 #define ECBI_PROJECTILE_MAGIC   (1UL<<2)
@@ -15,11 +15,8 @@
 #define ECBI_CORPSE_SOLID       (1UL<<7)
 #define ECBI_PLAYER             (1UL<<8)
 
-// standard flag combinations:
+// COLLISION COMBINATIONS
 
-/*
- *  COLLISION COMBINATIONS
- */
 #define ECF_IMMATERIAL (0UL)
 
 // brush
@@ -88,9 +85,8 @@
   ((ECBI_MODEL)<<ECB_IS) |\
   ((ECBI_BRUSH)<<ECB_PASS) )
 
-/*
- *  PHYSIC COMBINATIONS
- */
+// PHYSIC COMBINATIONS
+
 // model that walks around on feet (CMovableModelEntity)
 #define EPF_MODEL_WALKING ( \
   EPF_ONBLOCK_CLIMBORSLIDE|EPF_ORIENTEDBYGRAVITY|\
@@ -151,7 +147,4 @@
 // brush that is not physically present - just a decoration (CEntity)
 #define EPF_BRUSH_IMMATERIAL (0UL)
 
-
-
 #endif  /* include-once check. */
-

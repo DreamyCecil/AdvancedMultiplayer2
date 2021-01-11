@@ -356,6 +356,11 @@ static const INDEX _aiWeaponItemFlags[13] = {
 // [Cecil] Assert entity existence
 #define ASSERT_ENTITY(_Entity) (_Entity != NULL && !(_Entity->GetFlags() & ENF_DELETED))
 
+// [Cecil] Check if entity is alive
+inline BOOL IsAlive(const CEntity *pen) {
+  return (pen->GetFlags() & ENF_ALIVE);
+};
+
 // [Cecil] Model path
 inline CTFileName GetModelPath(CModelObject *pmo) {
   if (pmo->GetData() == NULL) {

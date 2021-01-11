@@ -35,6 +35,4 @@ DECL_DLL void PATH_FindFirstMarker(
 DECL_DLL void PATH_FindNextMarker(
     CEntity *penThis, const FLOAT3D &vSrc, const FLOAT3D &vDst, CEntity *&penMarker, FLOAT3D &vPath);
 
-
-#endif  /* include-once check. */
-
+#endif /* include-once check. */

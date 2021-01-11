@@ -15,13 +15,13 @@ void CStockPatcher::SetPatch(void) {
   
   // no functions
   if (pObtain == NULL) {
-		FatalError("Cannot retrieve %s function pointer!", strPatch[0]);
+    FatalError("Cannot retrieve %s function pointer!", strPatch[0]);
   }
   if (pRelease == NULL) {
-		FatalError("Cannot retrieve %s function pointer!", strPatch[1]);
+    FatalError("Cannot retrieve %s function pointer!", strPatch[1]);
   }
   if (pFree == NULL) {
-		FatalError("Cannot retrieve %s function pointer!", strPatch[2]);
+    FatalError("Cannot retrieve %s function pointer!", strPatch[2]);
   }
 
   // obtain function
@@ -53,14 +53,14 @@ void CStockPatcher::SetPatch(void) {
 void CStockPatcher::UnsetPatch(void) {
   // go through all patches
   for (int i = 0; i < 3; i++) {
-	  if (m_pPatch[i] == NULL) {
+    if (m_pPatch[i] == NULL) {
       continue;
     }
 
     // delete the patch
-	  m_pPatch[i]->remove_patch(true);
+    m_pPatch[i]->remove_patch(true);
 
-	  delete m_pPatch[i];
-	  m_pPatch[i] = NULL;
+    delete m_pPatch[i];
+    m_pPatch[i] = NULL;
   }
 };

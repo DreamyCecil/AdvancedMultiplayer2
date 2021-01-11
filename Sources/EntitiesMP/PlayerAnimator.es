@@ -944,7 +944,7 @@ functions:
     CAttachmentModelObject *pamoBody = pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
     ANGLE3D a = plView.pl_OrientationAngle;
 
-    if (!(pl.GetFlags()&ENF_ALIVE)) {
+    if (!(pl.GetFlags() & ENF_ALIVE)) {
       a = ANGLE3D(0.0f, 0.0f, 0.0f);
     }
 

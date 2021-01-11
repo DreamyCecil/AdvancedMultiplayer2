@@ -42,28 +42,28 @@ properties:
 
 
 components:
-  1 class   CLASS_LIGHT         "Classes\\Light.ecl",
+  1 class CLASS_LIGHT "Classes\\Light.ecl",
 
-// ********* WATER *********
- 10 model   MODEL_WATER         "Models\\Enemies\\Elementals\\Projectile\\WaterDrop.mdl",
- 11 texture TEXTURE_WATER       "Models\\Enemies\\Elementals\\WaterManFX.tex",
+ // Water
+ 10 model   MODEL_WATER   "Models\\Enemies\\Elementals\\Projectile\\WaterDrop.mdl",
+ 11 texture TEXTURE_WATER "Models\\Enemies\\Elementals\\WaterManFX.tex",
 
-// ************** SPECULAR **************
-210 texture TEX_SPEC_WEAK           "Models\\SpecularTextures\\Weak.tex",
-211 texture TEX_SPEC_MEDIUM         "Models\\SpecularTextures\\Medium.tex",
-212 texture TEX_SPEC_STRONG         "Models\\SpecularTextures\\Strong.tex",
+// Specular
+210 texture TEX_SPEC_WEAK   "Models\\SpecularTextures\\Weak.tex",
+211 texture TEX_SPEC_MEDIUM "Models\\SpecularTextures\\Medium.tex",
+212 texture TEX_SPEC_STRONG "Models\\SpecularTextures\\Strong.tex",
 
 
 
 functions:
-  /* Read from stream. */
+  // Read from stream
   void Read_t( CTStream *istr) // throw char *
   {
     CRationalEntity::Read_t(istr);
     SetupLightSource();
   };
 
-  /* Get static light source information. */
+  // Get static light source information
   CLightSource *GetLightSource(void)
   {
     if (!IsPredictor()) {

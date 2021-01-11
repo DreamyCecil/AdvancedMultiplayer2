@@ -143,14 +143,6 @@ functions:
     CEnemyBase::Write_t(istr);
     m_emEmiter.Write_t(*istr);
   }
-
-  /*BOOL IsTargetValid(SLONG slPropertyOffset, CEntity *penTarget)
-  {
-    if( slPropertyOffset == offsetof(Classname, propert_var) {
-      if (IsOfClass(penTarget, "???")) { return TRUE; }
-      else { return FALSE; }
-    return CEntity::IsTargetValid(slPropertyOffset, penTarget);
-  }*/
   
   // describe how this enemy killed player
   virtual CTString GetPlayerKillDescription(const CTString &strPlayerName, const EDeath &eDeath)
@@ -369,7 +361,6 @@ functions:
     ETwister et;
     CEntityPointer penTwister = CreateEntity(pl, CLASS_TWISTER);
     et.penOwner = this;
-//    et.fSize = FRnd()*15.0f+5.0f;
     et.fSize = FRnd()*10.0f+m_fAttSizeCurrent/5.0f+3.0f;
     et.fDuration = 15.0f + FRnd()+5.0f;
     et.sgnSpinDir = (INDEX)(Sgn(FRnd()-0.5f));
@@ -379,32 +370,6 @@ functions:
     
     ((CMovableEntity &)*penTwister).LaunchAsFreeProjectile(FLOAT3D(0.0f, 0.0f, -fLaunchSpeed), (CMovableEntity*)(CEntity*)this);
   }
-
-  void PreMoving() {
-
-    // TODO: decomment this when shockwave is fixed
-    /*// see if any of the players are really close to us
-    INDEX ctMaxPlayers = GetMaxPlayers();
-    CEntity *penPlayer;
-        
-    for(INDEX i=0; i<ctMaxPlayers; i++) {
-      penPlayer=GetPlayerEntity(i);
-      if (penPlayer!=NULL) {
-        if (DistanceTo(this, penPlayer)<m_fShockwaveTreshold &&
-          _pTimer->CurrentTick()>(m_tmLastShockwave+m_fShockwavePeriod)) {
-          EAirShockwave eas;
-          CEntityPointer penShockwave = CreateEntity(GetPlacement(), CLASS_AIRSHOCKWAVE);
-          eas.penLauncher = this;
-          eas.fHeight = 15.0f + m_iSize*10.0f;
-          eas.fEndWidth = 80.0f + m_iSize*30.0f;
-          eas.fDuration = 3.0f;
-          penShockwave->Initialize(eas);
-          m_tmLastShockwave = _pTimer->CurrentTick();
-        }
-      }
-    }*/
-    CEnemyBase::PreMoving();
-  };
 
   void GetAirElementalAttachmentData(INDEX iAttachment, FLOATmatrix3D &mRot, FLOAT3D &vPos)
   {
@@ -688,20 +653,6 @@ procedures:
     m_emEmiter.em_etType=ET_AIR_ELEMENTAL;
     
     m_tmDeath = 1e6f;
-
-    /*
-    CPlacement3D pl=GetPlacement();
-    ETwister et;
-    CEntityPointer penTwister = CreateEntity(pl, CLASS_TWISTER);
-    et.penOwner = this;
-    et.fSize = 6.0f;
-    et.fDuration = 1e6;
-    et.sgnSpinDir = (INDEX)(Sgn(FRnd()-0.5f));
-    et.bMovingAllowed=FALSE;
-    et.bGrow = FALSE;
-    penTwister->Initialize(et);
-    penTwister->SetParent(this);
-    */
 
     // wait to be triggered
     wait() {

@@ -445,7 +445,7 @@ procedures:
       autowait(0.20f);
       CPlayer *pTarget = AcquireTarget();
       if (pTarget) {
-        if ((pTarget->GetFlags()&ENF_ALIVE) && !(pTarget->GetFlags()&ENF_DELETED)) {
+        if (IsAlive(pTarget) && !(pTarget->GetFlags() & ENF_DELETED)) {
           m_penEnemy = pTarget;
           m_fDistanceToPlayer = DistanceTo(this, pTarget);
           autocall FireCannon() EReturn;

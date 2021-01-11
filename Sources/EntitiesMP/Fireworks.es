@@ -63,20 +63,12 @@ functions:
         FLOAT fLiving=tmNow-ep.ep_tmEmitted;
         FLOAT fSpeed=0.0f;
 
-        if( fLiving>=6.0f)
-        {
-          fSpeed=0.0f;
+        if (fLiving >= 6.0f) {
+          fSpeed = 0.0f;
+        } else {
+          fSpeed = (1.77f*pow(0.421f,fLiving))*LAUNCH_SPEED;
         }
-        else
-        {
-          //fSpeed=(0.996f+0.387f*fLiving-0.158f*fLiving*fLiving)*LAUNCH_SPEED;
 
-          fSpeed=(1.77f*pow(0.421f,fLiving))*LAUNCH_SPEED;
-          /*
-          FLOAT fSpeedRatio=1.0f-(Clamp(fLiving,2.0f,4.0f)-2.0f)/2.0f;
-          fSpeed=fSpeedRatio*LAUNCH_SPEED;
-          */
-        }
         FLOAT3D vNormalized=ep.ep_vSpeed;
         vNormalized.Normalize();
         ep.ep_vSpeed=vNormalized*(4.0f+fSpeed);
@@ -116,12 +108,6 @@ procedures:
       vSpeed=vSpeed.Normalize()*LAUNCH_SPEED;
       FLOAT fRotSpeed=RAND_05*360.0f;
       
-      /*
-      UBYTE ubRndH = UBYTE( FRnd()*16);
-      UBYTE ubRndS = UBYTE( 255);
-      UBYTE ubRndV = UBYTE( 255);
-      COLOR col=HSVToColor(ubRndH, ubRndS, ubRndV)|CT_OPAQUE;
-      */
       COLOR col=C_WHITE|CT_OPAQUE;
       m_emEmiter.AddParticle(vPos, vSpeed, RAND_05*360.0f, fRotSpeed, tmBirth, fLife, fStretch, col);
     }

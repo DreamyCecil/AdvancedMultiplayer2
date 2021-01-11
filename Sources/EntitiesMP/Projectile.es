@@ -642,7 +642,7 @@ functions:
     }
   };
 
-  /* Read from stream. */
+  // Read from stream
   void Read_t( CTStream *istr) // throw char *
   {
     CMovableModelEntity::Read_t(istr);
@@ -670,7 +670,7 @@ functions:
     }
   }
 
-  /* Get static light source information. */
+  // Get static light source information
   CLightSource *GetLightSource(void)
   {
     if( m_bLightSource && !IsPredictor()) {
@@ -887,7 +887,7 @@ functions:
             if (IsOfClass(prLast.m_penParticles, "Player Weapons")) {
               CPlayerWeapons &plw = (CPlayerWeapons&)*prLast.m_penParticles;
 
-              if (!(plw.GetPlayer()->GetFlags() & ENF_ALIVE)) {
+              if (!IsAlive(plw.GetPlayer())) {
                 return;
               }
 
@@ -918,7 +918,7 @@ functions:
           } else if (IsOfClass(m_penParticles, "Player Weapons")) {
             CPlayerWeapons &plw = (CPlayerWeapons&)*m_penParticles;
 
-            if (!(plw.GetPlayer()->GetFlags() & ENF_ALIVE)) {
+            if (!IsAlive(plw.GetPlayer())) {
               return;
             }
 
@@ -2958,9 +2958,6 @@ void ShooterFireball(void) {
   // start moving
   LaunchAsPropelledProjectile(FLOAT3D(0.0f, 0.0f, -30.0f), (CMovableEntity*)(CEntity*)m_penLauncher);
   SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
-  /*// play the flying sound
-  m_soEffect.Set3DParameters(20.0f, 2.0f, 1.0f, 1.0f);
-  PlaySound(m_soEffect, SOUND_FLYING, SOF_3D|SOF_LOOP);*/
   m_fFlyTime = 10.0f;
   if (GetSP()->sp_gdGameDifficulty<=CSessionProperties::GD_EASY) {
     m_fDamageAmount = 7.5f;
@@ -3176,7 +3173,7 @@ ANGLE GetRotationSpeed(ANGLE aWantedAngle, ANGLE aRotateSpeed, FLOAT fWaitFreque
 }
 
 
-/* Receive damage */
+// Receive damage
 void ReceiveDamage(CEntity *penInflictor, enum DamageType dmtType,
                    FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection) 
 {
@@ -3262,13 +3259,7 @@ procedures:
     while( _pTimer->CurrentTick()<(m_fStartTime+m_fFlyTime))
     {
       FLOAT fWaitFrequency = 0.1f;
-      // beast big projectile destroys soon after passing near the player
-      /*if (m_prtType==PRT_BEAST_BIG_PROJECTILE &&
-          DistanceTo(this, m_penTarget)<20.0f &&
-          (m_fStartTime+m_fFlyTime-_pTimer->CurrentTick())>1.5f)
-      { 
-        m_fFlyTime = _pTimer->CurrentTick() - m_fStartTime + 1.5f;
-      }*/
+
       if (m_penTarget!=NULL) {
         // calculate desired position and angle
         EntityInfo *pei= (EntityInfo*) (m_penTarget->GetEntityInfo());
@@ -3277,10 +3268,6 @@ procedures:
         FLOAT3D vDesiredDirection = (vDesiredPosition-GetPlacement().pl_PositionVector).Normalize();
         // for heading
         ANGLE aWantedHeading = GetRelativeHeading( vDesiredDirection);
-        /*if (m_prtType==PRT_BEAST_BIG_PROJECTILE && m_fStartTime+m_fFlyTime-_pTimer->CurrentTick()<1.5f)
-        {
-          m_aRotateSpeed = 10.0f;
-        }*/
         ANGLE aHeading = GetRotationSpeed( aWantedHeading, m_aRotateSpeed, fWaitFrequency);
 
         // factor used to decrease speed of projectiles oriented opposite of its target
@@ -3383,7 +3370,7 @@ procedures:
         FLOAT3D vDesiredDirection = (vDesiredPosition-GetPlacement().pl_PositionVector).Normalize();
         // for heading
         ANGLE aWantedHeading = GetRelativeHeading( vDesiredDirection);
-        ANGLE aHeading = GetRotationSpeed( aWantedHeading, 5.0f/*m_aRotateSpeed*/, fWaitFrequency);
+        ANGLE aHeading = GetRotationSpeed( aWantedHeading, 5.0f, fWaitFrequency);
 
         // factor used to decrease speed of projectiles oriented opposite of its target
         FLOAT fSpeedDecreasingFactor = ((180-abs(aWantedHeading))/180.0f);

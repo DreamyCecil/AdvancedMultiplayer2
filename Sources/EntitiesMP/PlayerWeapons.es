@@ -773,7 +773,7 @@ functions:
       CEntity *pen = iten;
 
       // pick only alive enemies
-      if (pen == NULL || pen->GetFlags() & ENF_DELETED || !(pen->GetFlags() & ENF_ALIVE) || !IsDerivedFromClass(pen, "Enemy Base")) {
+      if (pen == NULL || pen->GetFlags() & ENF_DELETED || !IsAlive(pen) || !IsDerivedFromClass(pen, "Enemy Base")) {
         continue;
       }
 
@@ -1623,8 +1623,7 @@ functions:
     {
       CEntity *pen = m_penRayHit;
       // if alive 
-      if( pen->GetFlags()&ENF_ALIVE)
-      {
+      if (IsAlive(pen)) {
         // check the target for time prediction updating
         CheckTargetPrediction(pen);
 

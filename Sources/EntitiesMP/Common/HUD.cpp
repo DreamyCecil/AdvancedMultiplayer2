@@ -1088,7 +1088,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   // draw oxygen info if needed
   BOOL bOxygenOnScreen = FALSE;
   fValue = _penPlayer->en_tmMaxHoldBreath - (_pTimer->CurrentTick() - _penPlayer->en_tmLastBreathed);
-  if( _penPlayer->IsConnected() && (_penPlayer->GetFlags()&ENF_ALIVE) && fValue<30.0f) { 
+  if (_penPlayer->IsConnected() && IsAlive(_penPlayer) && fValue<30.0f) { 
     // prepare and draw oxygen info
     fRow = pixTopBound + fOneUnit + fNextUnit;
     fCol = 280.0f;
@@ -1108,7 +1108,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     CMusicHolder &mh = (CMusicHolder&)*_penPlayer->m_penMainMusicHolder;
     fNormValue = 0;
 
-    if( mh.m_penBoss!=NULL && (mh.m_penBoss->en_ulFlags&ENF_ALIVE)) {
+    if (mh.m_penBoss != NULL && IsAlive(mh.m_penBoss)) {
       CEnemyBase &eb = (CEnemyBase&)*mh.m_penBoss;
       ASSERT( eb.m_fMaxHealth>0);
       fValue = eb.GetHealth();

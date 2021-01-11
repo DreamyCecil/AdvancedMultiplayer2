@@ -60,6 +60,4 @@ DECL_DLL extern BOOL cmp_bUpdateInBackground;
 // set for initial calling computer without rendering game
 DECL_DLL extern BOOL cmp_bInitialStart;
 
-
-#endif  /* include-once check. */
-
+#endif /* include-once check. */

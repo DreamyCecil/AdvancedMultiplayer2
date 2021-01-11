@@ -633,9 +633,6 @@
     <ClInclude Include="StdH\StdH.h">
       <Filter>Header Files\Common headers</Filter>
     </ClInclude>
-    <ClInclude Include="Common\WeaponPositions.h">
-      <Filter>Header Files\Common headers</Filter>
-    </ClInclude>
     <ClInclude Include="AirElemental.h">
       <Filter>Header Files</Filter>
     </ClInclude>

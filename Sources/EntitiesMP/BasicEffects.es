@@ -374,7 +374,7 @@ functions:
     strm.FPrintF_t("Type: %d\n", m_betType);
   }
 
-  /* Read from stream. */
+  // Read from stream
   void Read_t( CTStream *istr) // throw char *
   {
     CRationalEntity::Read_t(istr);
@@ -384,7 +384,7 @@ functions:
     }
   }
 
-  /* Get static light source information. */
+  // Get static light source information
   CLightSource *GetLightSource(void)
   {
     if( m_bLightSource && !IsPredictor()) {
@@ -459,9 +459,7 @@ functions:
   }
 
 
-/* RENDER PARTICLES */
-
-
+  // Render particles
   void RenderParticles(void) {
     if (m_eptType != EPT_NONE) {
       FLOAT fStretch = 0.3f;
@@ -1488,7 +1486,7 @@ procedures:
       case BET_BULLETSTAINWOODNOSOUND: BulletStainWood(FALSE); break;
       case BET_EXPLOSION_DEBRIS: ExplosionDebris(); break;
       case BET_COLLECT_ENERGY: CollectEnergy(); break;
-      /*case BET_SNIPER_RESIDUE: SniperResidue(); break;*/
+      //case BET_SNIPER_RESIDUE: SniperResidue(); break;
       case BET_EXPLOSION_SMOKE: ExplosionSmoke(); break;
       case BET_SUMMONERSTAREXPLOSION: SummonerStarExplosion(); break;
       case BET_GROWING_SWIRL: GrowingSwirl(); break;

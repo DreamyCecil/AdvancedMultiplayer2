@@ -805,8 +805,9 @@ void CWorldBase_OnWorldRender(CWorld *pwo) {
   pwo->wo_attTextureTransformations[15].tt_mdTransformation.md_fUOffset=Sin( tmNow*15);
   pwo->wo_attTextureTransformations[15].tt_mdTransformation.md_fVOffset=Cos( tmNow*25);
 
-  // ----------- Obtain world settings controller
+  // obtain world settings controller
   CWorldSettingsController *pwsc = NULL;
+
   // obtain bcg viewer
   CBackgroundViewer *penBcgViewer = (CBackgroundViewer *) pwo->GetBackgroundViewer();
   if( penBcgViewer != NULL)
@@ -815,10 +816,10 @@ void CWorldBase_OnWorldRender(CWorld *pwo) {
     pwsc = (CWorldSettingsController *) &*penBcgViewer->m_penWorldSettingsController;
   }
   
-  // ***** Storm effects
+  // Storm effects
+
   // if world settings controller is valid
-  if( pwsc != NULL)
-  {
+  if (pwsc != NULL) {
     FLOAT fStormFactor = pwsc->GetStormFactor();
     COLOR colBlend = LerpColor( pwsc->m_colBlendStart, pwsc->m_colBlendStop, fStormFactor);
     pwo->wo_atbTextureBlendings[8].tb_colMultiply = colBlend;
@@ -1065,7 +1066,7 @@ functions:
     return CEntity::IsTargetValid(slPropertyOffset, penTarget);
   }
 
-  /* Get force type name, return empty string if not used. */
+  // Get force type name, return empty string if not used
   const CTString &GetForceName(INDEX iForce)
   {
     static const CTString strDummyName("");
@@ -1087,7 +1088,8 @@ functions:
       return strDummyName;
     }
   }
-  /* Get force in given point. */
+
+  // Get force in given point
   void GetForce(INDEX iForce, const FLOAT3D &vPoint, 
     CForceStrength &fsGravity, CForceStrength &fsField)
   {
@@ -1110,7 +1112,7 @@ functions:
     fsField.fs_fVelocity = 0;
   }
 
-  /* Get entity that controls the force, used for change notification checking. */
+  // Get entity that controls the force, used for change notification checking
   CEntity *GetForceController(INDEX iForce)
   {
     INDEX ctGravityMarkers = &m_penGravity9-&m_penGravity0+1;
@@ -1126,7 +1128,8 @@ functions:
     }
     return NULL;
   }
-  /* Get fog type name, return empty string if not used. */
+
+  // Get fog type name, return empty string if not used
   const CTString &GetFogName(INDEX iFog)
   {
     INDEX ctFogMarkers = &m_penFog9-&m_penFog0+1;
@@ -1142,7 +1145,8 @@ functions:
     }
     return strDummyName;
   }
-  /* Get fog, return FALSE for none. */
+
+  // Get fog, return FALSE for none
   BOOL GetFog(INDEX iFog, class CFogParameters &fpFog)
   {
     INDEX ctFogMarkers = &m_penFog8-&m_penFog0+1;
@@ -1156,7 +1160,7 @@ functions:
     return FALSE;
   }
   
-  /* Get haze type name, return empty string if not used. */
+  // Get haze type name, return empty string if not used
   const CTString &GetHazeName(INDEX iHaze)
   {
     INDEX ctHazeMarkers = &m_penHaze4-&m_penHaze0+1;
@@ -1173,7 +1177,7 @@ functions:
     return strDummyName;
   }
   
-  /* Get haze, return FALSE for none. */
+  // Get haze, return FALSE for none
   BOOL GetHaze(INDEX iHaze, class CHazeParameters &hpHaze, FLOAT3D &vViewDir)
   {
     INDEX ctHazeMarkers = &m_penHaze4-&m_penHaze0+1;
@@ -1187,7 +1191,7 @@ functions:
     return FALSE;
   }
 
-  /* Get mirror type name, return empty string if not used. */
+  // Get mirror type name, return empty string if not used
   const CTString &GetMirrorName(INDEX iMirror)
   {
     static const CTString strDummyName("");
@@ -1221,7 +1225,7 @@ functions:
     return strDummyName;
   }
 
-  /* Get mirror, return FALSE for none. */
+  // Get mirror, return FALSE for none
   BOOL GetMirror(INDEX iMirror, class CMirrorParameters &mpMirror)
   {
     if (iMirror==0) {
@@ -1243,7 +1247,7 @@ functions:
     return FALSE;
   }
   
-  /* Get gradient type name, return empty string if not used. */
+  // Get gradient type name, return empty string if not used
   const CTString &GetGradientName(INDEX iGradient)
   {
     INDEX ctGradientMarkers = &m_penGradient19-&m_penGradient0+1;
@@ -1259,7 +1263,8 @@ functions:
     }
     return strDummyName;
   }
-  /* Uncache shadows for given gradient */
+
+  // Uncache shadows for given gradient
   void UncacheShadowsForGradient(class CGradientMarker *penDiscard)
   {
     INDEX ctGradientMarkers = &m_penGradient19-&m_penGradient0+1;
@@ -1273,7 +1278,7 @@ functions:
     }
   }
 
-  /* Get gradient, return FALSE for none. */
+  // Get gradient, return FALSE for none
   BOOL GetGradient(INDEX iGradient, class CGradientParameters &fpGradient)
   {
     INDEX ctGradientMarkers = &m_penGradient19-&m_penGradient0+1;
@@ -1286,7 +1291,7 @@ functions:
     return FALSE;
   }
   
-  /* Handle an event, return false if the event is not handled. */
+  // Handle an event, return false if the event is not handled
   BOOL HandleEvent(const CEntityEvent &ee)
   {
     // when someone in range is destroyed

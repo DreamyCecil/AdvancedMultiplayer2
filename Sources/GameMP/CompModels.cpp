@@ -746,9 +746,6 @@ extern void SetupCompModel_t(const CTString &strName)
     _plModel = CPlacement3D(FLOAT3D(0.0f, -1.0f, -6.0f), ANGLE3D(0,-10.0f,0));
     _aRotation = ANGLE3D(60,0,0);
     _fFOV = 40.0f;
-    /*_plModel = CPlacement3D(FLOAT3D(tmp_af[5],tmp_af[6],tmp_af[7]), ANGLE3D(0,tmp_af[8],0));
-    _fFOV = tmp_af[9];
-    CPrintF("%f %f %f : %f : %f\n", tmp_af[5],tmp_af[6],tmp_af[7], tmp_af[8], tmp_af[9]);*/
 
     pmo->StretchModel(FLOAT3D(3.0f, 3.0f, 3.0f));
     _bHasFloor = TRUE;

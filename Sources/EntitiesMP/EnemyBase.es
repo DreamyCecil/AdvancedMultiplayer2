@@ -702,8 +702,7 @@ functions:
 
     FLOAT fMassFactor = 300.0f/((EntityInfo*)GetEntityInfo())->fMass;
     
-    if( !(en_ulFlags & ENF_ALIVE))
-    {
+    if (!IsAlive(this)) {
       fMassFactor /= 3;
     }
 
@@ -920,17 +919,19 @@ functions:
   BOOL ShouldCeaseAttack(void)
   {
     // if there is no valid the enemy
-    if (m_penEnemy==NULL ||
-      !(m_penEnemy->GetFlags()&ENF_ALIVE) || 
-       (m_penEnemy->GetFlags()&ENF_DELETED)) {
+    if (m_penEnemy == NULL
+     || !IsAlive(m_penEnemy)
+     || (m_penEnemy->GetFlags()&ENF_DELETED)) {
       // cease attack
       return TRUE;
     }
+
     // if not active in fighting
     if (_pTimer->CurrentTick()>m_tmLastFussTime+m_tmGiveUp) {
       // cease attack
       return TRUE;
     }
+
     // otherwise, continue
     return FALSE;
   }
@@ -2693,7 +2694,7 @@ procedures:
       // if you touch some entity
       on (ETouch etouch) : {
         // if it is alive and in front
-        if ((etouch.penOther->GetFlags()&ENF_ALIVE) && IsInPlaneFrustum(etouch.penOther, CosFast(60.0f))) {
+        if (IsAlive(etouch.penOther) && IsInPlaneFrustum(etouch.penOther, CosFast(60.0f))) {
           // get your direction
           FLOAT3D vSpeed;
           GetHeadingDirection(m_fChargeHitAngle, vSpeed);

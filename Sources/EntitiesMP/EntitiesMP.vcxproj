@@ -467,7 +467,6 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="PoisonCloud.h" />
     <ClInclude Include="PoisonCloud_tables.h" />
     <ClInclude Include="StdH\StdH.h" />
-    <ClInclude Include="Common\WeaponPositions.h" />
     <ClInclude Include="AirElemental.h" />
     <ClInclude Include="AirElemental_tables.h" />
     <ClInclude Include="AirShockwave.h">

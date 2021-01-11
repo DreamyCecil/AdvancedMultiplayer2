@@ -162,7 +162,7 @@ functions:
     return TRUE;
   }
 
-  /* Check if entity can drop marker for making linked route. */
+  // Check if entity can drop marker for making linked route
   BOOL DropsMarker( CTFileName &fnmMarkerClass, CTString &strTargetProperty) const
   {
     fnmMarkerClass = CTFILENAME("Classes\\PyramidSpaceShipMarker.ecl");
@@ -632,17 +632,8 @@ functions:
         {
           FLOAT fT = _pTimer->CurrentTick()-m_tmHitFlareTime;
           FLOAT fRatio = (Sin(fT*2000)*0.5f+0.5f)*(Sin(fT*1333)*0.5f+0.5f);
-          /*if(fRatio>0.5f)
-          {
-            fRatio=0.0f;
-          }
-          else
-          {
-            fRatio=1.0f;
-          }*/
 
           UBYTE ub = UBYTE((200+55*fRatio)*fBeamRatio);
-          //ub = 255;
           COLOR col = RGBAToColor(ub,ub,ub,ub);
           pmo->mo_colBlendColor = col;
         }

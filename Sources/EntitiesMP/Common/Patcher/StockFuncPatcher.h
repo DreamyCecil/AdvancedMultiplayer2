@@ -7,7 +7,7 @@ typedef CEntityClass *(CStock_CEntityClass::*CObtainFunc)(const CTFileName &);
 typedef void (CStock_CEntityClass::*CReleaseFunc)(CEntityClass *);
 typedef void (CStock_CEntityClass::*CFreeFunc)(void);
 
-// ECL stock patch
+// Class stock patcher
 class DECL_DLL CStockPatcher : public CStock_CEntityClass {
   public:
     CStockPatcher(void);

@@ -64,7 +64,7 @@ functions:
       return FALSE;
     }
     // never react on non-live or dead entities
-    if (!(pen->GetFlags()&ENF_ALIVE)) {
+    if (!IsAlive(pen)) {
       return FALSE;
     }
 

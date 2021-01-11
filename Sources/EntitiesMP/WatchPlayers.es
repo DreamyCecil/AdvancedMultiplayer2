@@ -32,12 +32,15 @@ functions:
     FLOAT fDistance;
 
     m_penCurrentWatch = NULL;
+
     // for all players
     for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
       CEntity *penPlayer = GetPlayerEntity(iPlayer);
+
       // if player is alive and visible
-      if (penPlayer!=NULL && penPlayer->GetFlags()&ENF_ALIVE && !(penPlayer->GetFlags()&ENF_INVISIBLE)) {
+      if (penPlayer != NULL && IsAlive(penPlayer) && !(penPlayer->GetFlags() & ENF_INVISIBLE)) {
         fDistance = 100000.0f;
+
         if (m_bRangeWatcher) {
           // calculate distance to player from wathcer
           fDistance = (penPlayer->GetPlacement().pl_PositionVector-

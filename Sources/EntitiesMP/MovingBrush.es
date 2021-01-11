@@ -130,13 +130,11 @@ properties:
 
 
 components:
-
-// ************** STONE PARTS **************
- 14 model     MODEL_STONE        "Models\\Effects\\Debris\\Stone\\Stone.mdl",
- 15 texture   TEXTURE_STONE      "Models\\Effects\\Debris\\Stone\\Stone.tex",
- 16 class     CLASS_DEBRIS       "Classes\\Debris.ecl",
-  4 class     CLASS_BASIC_EFFECT "Classes\\BasicEffect.ecl",
-
+ // Stone parts
+ 14 model   MODEL_STONE        "Models\\Effects\\Debris\\Stone\\Stone.mdl",
+ 15 texture TEXTURE_STONE      "Models\\Effects\\Debris\\Stone\\Stone.tex",
+ 16 class   CLASS_DEBRIS       "Classes\\Debris.ecl",
+  4 class   CLASS_BASIC_EFFECT "Classes\\BasicEffect.ecl",
 
 functions:
   // Get visibility tweaking bits
@@ -462,7 +460,7 @@ functions:
       return FALSE;
     }
     // never react on non-live or dead entities
-    if (!(pen->GetFlags()&ENF_ALIVE)) {
+    if (!IsAlive(pen)) {
       return FALSE;
     }
 

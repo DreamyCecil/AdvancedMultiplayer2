@@ -534,8 +534,8 @@ functions:
     {
       if (IsDerivedFromClass(apenNearEntities[i], "Enemy Base") &&
         !IsOfClass(apenNearEntities[i], "Summoner")) {
-        if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate &&
-          apenNearEntities[i]->GetFlags()&ENF_ALIVE) {
+        if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate
+         && IsAlive(apenNearEntities[i])) {
           m_fFuss += ((CEnemyBase &)*apenNearEntities[i]).m_iScore;
           m_iEnemyCount  ++;
         }
@@ -579,8 +579,8 @@ functions:
     {
       if (IsDerivedFromClass(apenNearEntities[i], "Enemy Base") &&
         !IsOfClass(apenNearEntities[i], "Summoner")) {
-        if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate &&
-          apenNearEntities[i]->GetFlags()&ENF_ALIVE) {
+        if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate
+         && IsAlive(apenNearEntities[i])) {
           fScore += ((CEnemyBase &)*apenNearEntities[i]).m_iScore;
           iEnemies  ++;
         }
@@ -707,8 +707,8 @@ functions:
     {
       if (IsDerivedFromClass(apenNearEntities[i], "Enemy Base") &&
         !IsOfClass(apenNearEntities[i], "Summoner")) {
-        if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate &&
-          apenNearEntities[i]->GetFlags()&ENF_ALIVE) {
+        if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate
+         && IsAlive(apenNearEntities[i])) {
           eDeath2.eLastDamage.penInflictor = eDeath.eLastDamage.penInflictor;
           eDeath2.eLastDamage.vDirection = apenNearEntities[i]->GetPlacement().pl_PositionVector;
           eDeath2.eLastDamage.vHitPoint = eDeath2.eLastDamage.vDirection;

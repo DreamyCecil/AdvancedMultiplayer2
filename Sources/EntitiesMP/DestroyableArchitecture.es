@@ -63,8 +63,7 @@ properties:
  15 FLOAT m_fDustStretch    "Dust stretch" = 0.0f,
 
 components:
-
-// ************** DEBRIS PARTS **************
+ // Debris parts
  10 texture TEXTURE_OBELISK "Models\\CutSequences\\Obelisk\\Obelisk.tex",
  11 model   MODEL_OBELISK01 "Models\\CutSequences\\Obelisk\\Part01.mdl",
  12 model   MODEL_OBELISK02 "Models\\CutSequences\\Obelisk\\Part02.mdl",
@@ -87,11 +86,11 @@ components:
  28 model   MODEL_PYLON08 "Models\\CutSequences\\Pylon\\Part08.mdl",
  29 model   MODEL_PYLON09 "Models\\CutSequences\\Pylon\\Part09.mdl",
  
-// ************** NEEDED CLASSES **************
+ // Classes
  30 class CLASS_DEBRIS   "Classes\\Debris.ecl",
  31 class CLASS_EFFECTOR "Classes\\Effector.ecl",
 
-// ************** STONE PARTS **************
+ // Stone parts
  32 model   MODEL_STONE   "Models\\Effects\\Debris\\Stone\\Stone.mdl",
  33 texture TEXTURE_STONE "Models\\Effects\\Debris\\Stone\\Stone.tex",
 

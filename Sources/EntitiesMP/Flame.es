@@ -106,7 +106,7 @@ functions:
     en_plLastPlacement = en_plPlacement;
   };
 
-  /* Read from stream. */
+  // Read from stream
   void Read_t( CTStream *istr) // throw char *
   {
     CMovableModelEntity::Read_t(istr);
@@ -136,7 +136,7 @@ functions:
     return isIntersector.IsIntersecting();
   }
 
-  /* Get static light source information. */
+  // Get static light source information
   CLightSource *GetLightSource(void)
   {
     if (!IsPredictor()) {
