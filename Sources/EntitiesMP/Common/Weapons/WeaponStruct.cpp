@@ -5,13 +5,13 @@
 #include "EntitiesMP/Common/ConfigFunc.h"
 
 // Weapon ammo and properties for the world
-extern CDList<SWeaponAmmo> _aWeaponAmmo = CDList<SWeaponAmmo>();
-extern CDList<SWeaponStruct> _aPlayerWeapons = CDList<SWeaponStruct>();
+extern CDList<SWeaponAmmo> _awaWeaponAmmo = CDList<SWeaponAmmo>();
+extern CDList<SWeaponStruct> _awsPlayerWeapons = CDList<SWeaponStruct>();
 extern CWeaponIcons _aAmmoIcons = CWeaponIcons();
 extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 
 // Ammo pointer
-#define AP(_Ammo) (_Ammo < _aWeaponAmmo.Count() ? &_aWeaponAmmo[_Ammo] : NULL)
+#define AP(_Ammo) (_Ammo < _awaWeaponAmmo.Count() ? &_awaWeaponAmmo[_Ammo] : NULL)
 
 // Set icon
 void SWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
@@ -73,14 +73,14 @@ void SWeaponStruct::Write(CTStream *strm) {
   *strm << strPickup;
 
   // ammo position in the list
-  if (pAmmo != NULL) {
-    *strm << _aWeaponAmmo.FindIndex(*pAmmo);
+  if (pwaAmmo != NULL) {
+    *strm << _awaWeaponAmmo.FindIndex(*pwaAmmo);
   } else {
     *strm << INDEX(-1);
   }
 
-  if (pAlt != NULL) {
-    *strm << _aWeaponAmmo.FindIndex(*pAlt);
+  if (pwaAlt != NULL) {
+    *strm << _awaWeaponAmmo.FindIndex(*pwaAlt);
   } else {
     *strm << INDEX(-1);
   }
@@ -99,19 +99,19 @@ void SWeaponStruct::Read(CTStream *strm) {
 
   // set ammo
   if (iAmmo != -1) {
-    pAmmo = &_aWeaponAmmo[iAmmo];
+    pwaAmmo = &_awaWeaponAmmo[iAmmo];
   }
   if (iAlt != -1) {
-    pAlt = &_aWeaponAmmo[iAlt];
+    pwaAlt = &_awaWeaponAmmo[iAlt];
   }
 };
 
 // Add new ammo to the list
 void AddAmmo(SWeaponAmmo &wa) {
-  int iAmmo = _aWeaponAmmo.Add(wa);
+  int iAmmo = _awaWeaponAmmo.Add(wa);
 
   // set ID of the added ammo
-  SWeaponAmmo &waAdded = _aWeaponAmmo[iAmmo];
+  SWeaponAmmo &waAdded = _awaWeaponAmmo[iAmmo];
   waAdded.ulID = iAmmo;
 
   // create the icon
@@ -120,10 +120,10 @@ void AddAmmo(SWeaponAmmo &wa) {
 
 // Add new weapon to the list
 void AddWeapon(SWeaponStruct &wp) {
-  int iWeapon = _aPlayerWeapons.Add(wp);
+  int iWeapon = _awsPlayerWeapons.Add(wp);
 
   // set ID of the added weapon
-  SWeaponStruct &wsAdded = _aPlayerWeapons[iWeapon];
+  SWeaponStruct &wsAdded = _awsPlayerWeapons[iWeapon];
   wsAdded.ulID = iWeapon;
 
   // create the icon
@@ -200,10 +200,10 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
   int iPickupAlt = -1;
 
   if (cb.GetValue("Ammo", iAmmo)) {
-    ws.pAmmo = (iAmmo != -1 ? AP(iAmmo) : NULL);
+    ws.pwaAmmo = (iAmmo != -1 ? AP(iAmmo) : NULL);
   }
   if (cb.GetValue("AltAmmo", iAlt)) {
-    ws.pAlt = (iAlt != -1 ? AP(iAlt) : NULL);
+    ws.pwaAlt = (iAlt != -1 ? AP(iAlt) : NULL);
   }
   if (cb.GetValue("Mag", iMag)) {
     ws.iMaxMag = ceil(iMag * AmmoMul());
@@ -283,8 +283,8 @@ extern void LoadWorldWeapons(CWorld *pwo) {
 
 // Weapons and ammo cleanup
 extern void ClearWorldWeapons(void) {
-  _aWeaponAmmo.Clear();
-  _aPlayerWeapons.Clear();
+  _awaWeaponAmmo.Clear();
+  _awsPlayerWeapons.Clear();
 
   // delete icons
   INDEX iIcon;

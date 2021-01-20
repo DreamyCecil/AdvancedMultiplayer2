@@ -873,33 +873,33 @@ functions:
   // [Cecil] Constructor
   void CPlayerWeapons(void) {
     // copy ammo
-    INDEX ctAmmo = _aWeaponAmmo.Count();
+    INDEX ctAmmo = _awaWeaponAmmo.Count();
     m_aAmmo.New(ctAmmo);
 
     for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
-      m_aAmmo[iAmmo].pAmmoStruct = &_aWeaponAmmo[iAmmo];
+      m_aAmmo[iAmmo].pwaAmmoStruct = &_awaWeaponAmmo[iAmmo];
     }
 
     // copy weapons
-    INDEX ctWeapons = _aPlayerWeapons.Count();
+    INDEX ctWeapons = _awsPlayerWeapons.Count();
     m_aWeapons.New(ctWeapons);
 
     for (INDEX iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
-      pw.pWeaponStruct = &_aPlayerWeapons[iWeapon];
+      pw.pwsWeapon = &_awsPlayerWeapons[iWeapon];
 
       // set ammo
       ULONG *pulID = pw.GetAmmoID();
 
       if (pulID != NULL) {
-        pw.pAmmo = &m_aAmmo[*pulID];
+        pw.ppaAmmo = &m_aAmmo[*pulID];
       }
       
       // set alt ammo
       pulID = pw.GetAltID();
 
       if (pulID != NULL) {
-        pw.pAlt = &m_aAmmo[*pulID];
+        pw.ppaAlt = &m_aAmmo[*pulID];
       }
     }
 
@@ -908,7 +908,7 @@ functions:
     for (iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
 
-      str.PrintF("%s%d: ammo: %d, alt %d\n", str, pw.pWeapon->ulID, (pw.GetAmmoID() != NULL ? *pw.GetAmmoID() : -1), (pw.GetAltID() != NULL ? *pw.GetAltID() : -1));
+      str.PrintF("%s%d: ammo: %d, alt %d\n", str, pw.pwsWeapon->ulID, (pw.GetAmmoID() != NULL ? *pw.GetAmmoID() : -1), (pw.GetAltID() != NULL ? *pw.GetAltID() : -1));
     }
     FatalError(str);*/
   };
@@ -958,33 +958,33 @@ functions:
 
   // [Cecil] Get current ammo
   INDEX CurrentAmmo(void) {
-    SPlayerAmmo *pAmmo = PredTail()->CUR_WEAPON.pAmmo;
-    return (pAmmo == NULL ? 0 : pAmmo->iAmount);
+    SPlayerAmmo *ppaAmmo = PredTail()->CUR_WEAPON.ppaAmmo;
+    return (ppaAmmo == NULL ? 0 : ppaAmmo->iAmount);
   };
 
   INDEX CurrentAlt(void) {
-    SPlayerAmmo *pAlt = PredTail()->CUR_WEAPON.pAlt;
-    return (pAlt == NULL ? 0 : pAlt->iAmount);
+    SPlayerAmmo *ppaAlt = PredTail()->CUR_WEAPON.ppaAlt;
+    return (ppaAlt == NULL ? 0 : ppaAlt->iAmount);
   };
 
   // [Cecil] Get weapon's ammo
   SPlayerAmmo *GetWeaponAmmo(BOOL bAlt) {
-    SPlayerAmmo *pAmmo = CUR_WEAPON.pAmmo;
-    SPlayerAmmo *pAlt = CUR_WEAPON.pAlt;
+    SPlayerAmmo *ppaAmmo = CUR_WEAPON.ppaAmmo;
+    SPlayerAmmo *ppaAlt = CUR_WEAPON.ppaAlt;
 
-    return (bAlt ? pAlt : pAmmo);
+    return (bAlt ? ppaAlt : ppaAmmo);
   };
 
   // [Cecil] Get weapon damage
   FLOAT GetDamage(INDEX iWeapon) {
-    SWeaponStruct &ws = *m_aWeapons[iWeapon].pWeaponStruct;
+    SWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
     BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageDM <= 0.0f);
     
     return (bCoop ? ws.fDamage : ws.fDamageDM);
   };
 
   FLOAT GetDamageAlt(INDEX iWeapon) {
-    SWeaponStruct &ws = *m_aWeapons[iWeapon].pWeaponStruct;
+    SWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
     BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageAltDM <= 0.0f);
     
     return (bCoop ? ws.fDamageAlt : ws.fDamageAltDM);
@@ -999,12 +999,12 @@ functions:
     SPlayerWeapon &pw = m_aWeapons[iWeapon];
 
     if (bAlt) {
-      if (pw.pAlt != NULL) {
-        pw.pAlt->iAmount -= iDec;
+      if (pw.ppaAlt != NULL) {
+        pw.ppaAlt->iAmount -= iDec;
       }
 
-    } else if (pw.pAmmo != NULL) {
-      pw.pAmmo->iAmount -= iDec;
+    } else if (pw.ppaAmmo != NULL) {
+      pw.ppaAmmo->iAmount -= iDec;
     }
   };
 
@@ -1018,7 +1018,7 @@ functions:
     SPlayerWeapon &pw = m_aWeapons[iWeapon];
 
     // no mag
-    if (pw.pWeaponStruct->iMaxMag <= 0) {
+    if (pw.pwsWeapon->iMaxMag <= 0) {
       return;
     }
 
@@ -2991,25 +2991,25 @@ functions:
     
     // [Cecil] Get weapon
     SPlayerWeapon &pw = m_aWeapons[iWeapon];
-    SWeaponStruct &ws = *pw.pWeaponStruct;
+    SWeaponStruct &ws = *pw.pwsWeapon;
 
     // [Cecil] Define ammo amounts
     FLOAT fPickupAmmo = Max(FLOAT(ws.iPickup), pw.MaxAmmo() * fMaxAmmoRatio);
     INDEX iPickupAlt = ws.iPickupAlt;
 
     // [Cecil] Ammo references
-    SPlayerAmmo *pAmmo = pw.pAmmo;
-    SPlayerAmmo *pAlt = pw.pAlt;
+    SPlayerAmmo *ppaAmmo = pw.ppaAmmo;
+    SPlayerAmmo *ppaAlt = pw.ppaAlt;
 
     // [Cecil] Add ammo
-    if (pAmmo != NULL) {
-      pAmmo->iAmount += fPickupAmmo;
+    if (ppaAmmo != NULL) {
+      ppaAmmo->iAmount += fPickupAmmo;
       AddManaToPlayer(fPickupAmmo * ws.fMana * MANA_AMMO);
     }
 
     // [Cecil] Add alt ammo
-    if (pAlt != NULL) {
-      pAlt->iAmount += iPickupAlt;
+    if (ppaAlt != NULL) {
+      ppaAlt->iAmount += iPickupAlt;
       AddManaToPlayer(iPickupAlt * ws.fMana * MANA_AMMO);
     }
 
@@ -3293,10 +3293,10 @@ functions:
     // [Cecil] Add ammo
     paAmmo.iAmount += iAmmo;
 
-    CTString &strPick = paAmmo.pAmmoStruct->strPickup;
+    CTString &strPick = paAmmo.pwaAmmoStruct->strPickup;
     ((CPlayer&)*m_penPlayer).ItemPicked(Translate(strPick.str_String), iAmmo);
 
-    AddManaToPlayer(iAmmo * paAmmo.pAmmoStruct->fMana * MANA_AMMO);
+    AddManaToPlayer(iAmmo * paAmmo.pwaAmmoStruct->fMana * MANA_AMMO);
 
     // make sure we don't have more ammo than maximum
     ClampAllAmmo();
@@ -3369,7 +3369,7 @@ functions:
           }
 
           // [Cecil] Print the type
-          CTString &strPick = m_aAmmo[i].pAmmoStruct->strPickup;
+          CTString &strPick = m_aAmmo[i].pwaAmmoStruct->strPickup;
           strMessage.PrintF("%s%s %d", strMessage, Translate(strPick.str_String), aiSet[i-1]);
         }
       }

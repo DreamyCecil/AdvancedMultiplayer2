@@ -794,25 +794,25 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       continue;
     }
 
-    SPlayerAmmo *pAmmo = aWeapons[iCheckWeapon].pAmmo;
-    SPlayerAmmo *pAlt = aWeapons[iCheckWeapon].pAlt;
+    SPlayerAmmo *ppaAmmo = aWeapons[iCheckWeapon].ppaAmmo;
+    SPlayerAmmo *ppaAlt = aWeapons[iCheckWeapon].ppaAlt;
 
     // have weapons for this ammo type
-    if (pAmmo != NULL) {
-      pAmmo->bWeapon = TRUE;
+    if (ppaAmmo != NULL) {
+      ppaAmmo->bWeapon = TRUE;
     }
-    if (pAlt != NULL) {
-      pAlt->bWeapon = TRUE;
+    if (ppaAlt != NULL) {
+      ppaAlt->bWeapon = TRUE;
     }
   }
 
   // determine corresponding ammo and weapon texture component
-  ptoWantedWeapon = aWeapons[iWantedWeapon].pWeaponStruct->ptoIcon;
+  ptoWantedWeapon = aWeapons[iWantedWeapon].pwsWeapon->ptoIcon;
 
   // [Cecil] New system
   SPlayerWeapon &pwCurrent = aWeapons[iCurrentWeapon];
-  SWeaponAmmo *pAmmo = pwCurrent.GetAmmo();
-  SWeaponAmmo *pAltAmmo = pwCurrent.GetAlt();
+  SWeaponAmmo *pwaAmmo = pwCurrent.GetAmmo();
+  SWeaponAmmo *pwaAltAmmo = pwCurrent.GetAlt();
   
   CTextureObject *ptoAmmo = NULL;
   FLOAT fAmmo = 0.0f;
@@ -824,11 +824,11 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   FLOAT fAltMaxAmmo = 1.0f;
 
   // [Cecil] Ammo available
-  if (pAmmo != NULL) {
-    ptoAmmo = pAmmo->ptoIcon;
+  if (pwaAmmo != NULL) {
+    ptoAmmo = pwaAmmo->ptoIcon;
 
     // display magazine
-    INDEX iMaxMag = pwCurrent.pWeaponStruct->iMaxMag;
+    INDEX iMaxMag = pwCurrent.pwsWeapon->iMaxMag;
 
     if (iMaxMag > 0) {
       fAmmo = pwCurrent.iMag;
@@ -838,15 +838,15 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     // display ammo
     } else {
       fAmmo = pwCurrent.CurrentAmmo();
-      fMaxAmmo = pAmmo->iMaxAmount;
+      fMaxAmmo = pwaAmmo->iMaxAmount;
     }
   }
 
   // [Cecil] Alt ammo available
-  if (_penWeapons->AltFireExists(iCurrentWeapon) && pAltAmmo != NULL) {
-    ptoAltAmmo = pAltAmmo->ptoIcon;
+  if (_penWeapons->AltFireExists(iCurrentWeapon) && pwaAltAmmo != NULL) {
+    ptoAltAmmo = pwaAltAmmo->ptoIcon;
     fAltAmmo = pwCurrent.CurrentAlt();
-    fAltMaxAmmo = pAltAmmo->iMaxAmount;
+    fAltMaxAmmo = pwaAltAmmo->iMaxAmount;
   }
 
   // [Cecil] Adjust size based on max ammo
@@ -949,7 +949,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       SPlayerAmmo &pa = aAmmo[iAmmo];
 
       // [Cecil] Don't display
-      if (!pa.pAmmoStruct->bDisplay) {
+      if (!pa.pwaAmmoStruct->bDisplay) {
         continue;
       }
 
@@ -961,7 +961,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       // display ammo info
       colIcon = (pa.iAmount == 0) ? C_mdGRAY : C_WHITE;
 
-      CTextureObject *ptoDrawIcon = pa.pAmmoStruct->ptoIcon;
+      CTextureObject *ptoDrawIcon = pa.pwaAmmoStruct->ptoIcon;
 
       // [Cecil] This icon matches the current ammo/alt icon
       if (ptoDrawIcon != NULL && (ptoAmmo == ptoDrawIcon || ptoAltAmmo == ptoDrawIcon)) {
@@ -1057,7 +1057,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
         colBorder = 0xffcc0000;
       }
 
-      CTextureObject *ptoDrawIcon = pw.pWeaponStruct->ptoIcon;
+      CTextureObject *ptoDrawIcon = pw.pwsWeapon->ptoIcon;
 
       // no ammo
       if (!pw.HasAmmo(_penWeapons->AltFireExists(iWeapon))) {

@@ -19,17 +19,17 @@ ULONG *SPlayerWeapon::GetAltID(void) {
 // Check for ammo
 BOOL SPlayerWeapon::HasAmmo(BOOL bCheckAlt) {
   // infinite ammo
-  if (pAmmo == NULL && pAlt == NULL) {
+  if (ppaAmmo == NULL && ppaAlt == NULL) {
     return TRUE;
   }
 
   INDEX iAmmo = 0;
 
-  if (pAmmo != NULL) {
-    iAmmo += pAmmo->iAmount;
+  if (ppaAmmo != NULL) {
+    iAmmo += ppaAmmo->iAmount;
   }
-  if (bCheckAlt && pAlt != NULL) {
-    iAmmo += pAlt->iAmount;
+  if (bCheckAlt && ppaAlt != NULL) {
+    iAmmo += ppaAlt->iAmount;
   }
 
   return (iAmmo > 0);
@@ -40,9 +40,9 @@ void SPlayerWeapon::Reload(BOOL bMax) {
   INDEX iAmmo = CurrentAmmo();
 
   if (bMax || iAmmo < 0) {
-    iMag = pWeaponStruct->iMaxMag;
+    iMag = pwsWeapon->iMaxMag;
     return;
   }
 
-  iMag = Min(iAmmo, pWeaponStruct->iMaxMag);
+  iMag = Min(iAmmo, pwsWeapon->iMaxMag);
 };
