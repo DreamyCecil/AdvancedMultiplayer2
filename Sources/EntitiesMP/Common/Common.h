@@ -312,8 +312,14 @@ void SpawnHitTypeEffect(CEntity *pen, enum BulletHitType bhtType, BOOL bSound, F
 #define FRndIn(a, b) (a + FRnd()*(b - a))
 
 // [Cecil] Check for a singleplayer world in multiplayer
-inline BOOL SPWorld(CEntity *pen) {
+inline BOOL SPWorld(void) {
   return (!GetSP()->sp_bSinglePlayer && GetSP()->sp_gmGameMode == CSessionProperties::GM_SINGLEPLAYER);
+};
+
+// [Cecil] Check if using global controller for cutscenes
+inline BOOL GlobalCutscenes(void) {
+  //return FALSE; // [Cecil] TEMP
+  return SPWorld();
 };
 
 // [Cecil] Fire speed multiplier

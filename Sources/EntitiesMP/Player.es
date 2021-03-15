@@ -79,6 +79,34 @@ static struct SVoiceCommandsKey {
 
 extern INDEX ctl_bVoiceCommands = FALSE; // show voice commands menu
 extern INDEX _iVoiceCommand = 0; // current voice command
+
+// [Cecil] Global controller
+#include "EntitiesMP/GlobalController.h"
+extern CEntity *_penGlobalController;
+
+// [Cecil] Cutscenes
+inline CCamera *GetGlobalCamera(void) {
+  CCamera *pen = (CCamera*)&*((CGlobalController*)_penGlobalController)->m_penCamera;
+  return pen;
+};
+
+inline CPlayerActionMarker *GetGlobalAction(void) {
+  CPlayerActionMarker *pen = (CPlayerActionMarker*)&*((CGlobalController*)_penGlobalController)->m_penAction;
+  return pen;
+};
+
+inline INDEX &GetGlobalStopMask(void) {
+  return ((CGlobalController*)_penGlobalController)->m_iStopMask;
+};
+
+// [Cecil] Center messages
+inline CTString GetGlobalMessage(void) {
+  return ((CGlobalController*)_penGlobalController)->m_strMessage;
+};
+
+inline FLOAT GetGlobalMessageTime(void) {
+  return ((CGlobalController*)_penGlobalController)->m_tmMessage;
+};
 %}
 
 // Player view type
@@ -1505,7 +1533,7 @@ functions:
   // [Cecil] Render player tags
   void RenderPlayerTags(CPerspectiveProjection3D &prProjection, CDrawPort *pdp, CPlacement3D &plView) {
     // only in coop
-    if (!GetSP()->sp_bCooperative) {
+    if (!hud_bShowAll || !GetSP()->sp_bCooperative) {
       return;
     }
 
@@ -1604,13 +1632,6 @@ functions:
 
     // enable animating
     GetPlayerAnimator()->m_bDisableAnimating = FALSE;
-
-    // show the player
-    if (GetRenderType() != RT_MODEL) {
-      SwitchToModel();
-      SetPhysicsFlags(GetPhysicsFlags() | EPF_TRANSLATEDBYGRAVITY);
-      SetCollisionFlags(GetCollisionFlags() & ~((ECBI_PLAYER)<<ECB_PASS));
-    }
   };
 
   // [Cecil] Purchase a random powerup with tokens
@@ -1666,6 +1687,68 @@ functions:
     }
 
     ReceiveItem(ePowerUp);
+  };
+
+  // [Cecil] Get cutscene camera
+  CEntity *GetCamera(void) {
+    if (GlobalCutscenes()) {
+      return GetGlobalCamera();
+    }
+    return m_penCamera;
+  };
+
+  // [Cecil] Reset cutscene camera
+  void ResetCamera(void) {
+    if (GlobalCutscenes()) {
+      // only the current player can reset
+      if (((CGlobalController*)_penGlobalController)->m_penPlayer == this) {
+        _penGlobalController->SendEvent(ECameraStop());
+      }
+      return;
+    }
+    m_penCamera = NULL;
+  };
+
+  // [Cecil] Get current action
+  CEntity *GetAction(void) {
+    if (GlobalCutscenes()) {
+      return GetGlobalAction();
+    }
+    return m_penActionMarker;
+  };
+
+  // [Cecil] Set current action
+  void SetAction(CEntity *pen) {
+    if (GlobalCutscenes()) {
+      // only the first player can set
+      if (((CGlobalController*)_penGlobalController)->m_penPlayer == this) {
+        ((CGlobalController*)_penGlobalController)->m_penAction = pen;
+
+        // clear the player if no more actions
+        if (!ASSERT_ENTITY(pen)) {
+          ((CGlobalController*)_penGlobalController)->m_penPlayer = NULL;
+        }
+      }
+      return;
+    }
+
+    m_penActionMarker = pen;
+  };
+
+  // [Cecil] Get center message
+  CTString GetCenterMessage(void) {
+    if (GlobalCutscenes()) {
+      return GetGlobalMessage();
+    }
+    return m_strCenterMessage;
+  };
+
+  // [Cecil] Get center message time
+  FLOAT GetMessageTime(void) {
+    if (GlobalCutscenes()) {
+      return GetGlobalMessageTime();
+    }
+    return m_tmCenterMessageEnd;
   };
 
   INDEX GenderSound(INDEX iSound) {
@@ -2585,7 +2668,7 @@ functions:
 
   // Wrapper for action marker getting
   class CPlayerActionMarker *GetActionMarker(void) {
-    return (CPlayerActionMarker *)&*m_penActionMarker;
+    return (CPlayerActionMarker*)GetAction();
   };
 
   // Find main music holder if not remembered
@@ -2768,10 +2851,10 @@ functions:
 
     INDEX iViewState = m_iViewState;
     
-    if (m_penCamera != NULL && bCamera) {
+    if (GetCamera() != NULL && bCamera) {
       iViewState = PVT_SCENECAMERA;
-      plViewer = m_penCamera->GetLerpedPlacement();
-      penViewer = m_penCamera;
+      plViewer = GetCamera()->GetLerpedPlacement();
+      penViewer = GetCamera();
     }
 
     // init projection parameters
@@ -2804,7 +2887,7 @@ functions:
     colBlend = 0;
 
     if (iViewState == PVT_SCENECAMERA) {
-      CCamera *pcm = (CCamera*)&*m_penCamera;
+      CCamera *pcm = (CCamera*)GetCamera();
       prPerspectiveProjection.FOVL() = Lerp(pcm->m_fLastFOV, pcm->m_fFOV, _pTimer->GetLerpFactor());
 
       if (pcm->m_tmDelta > 0.001f) {
@@ -2960,8 +3043,8 @@ functions:
     pdp->SetTextAspect(1.0f);
 
     // print center message
-    if (_pTimer->CurrentTick() < m_tmCenterMessageEnd) {
-      pdp->PutTextCXY(m_strCenterMessage, pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
+    if (_pTimer->CurrentTick() < GetMessageTime()) {
+      pdp->PutTextCXY(GetCenterMessage(), pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
 
     // print picked item
     } else if (_pTimer->CurrentTick() < m_tmLastPicked + PICKEDREPORT_TIME) {
@@ -2990,7 +3073,7 @@ functions:
     }
 
     // [Cecil] Print combo amount
-    if (GetSP()->sp_fComboTime > 0.0f && m_iCombo > 1) {
+    if (hud_bShowAll && GetSP()->sp_fComboTime > 0.0f && m_iCombo > 1) {
       pdp->SetFont(&_fdComboFont);
       pdp->SetTextScaling(fScale);
       pdp->SetTextAspect(1.0f);
@@ -3023,14 +3106,14 @@ functions:
         pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*2.5f, 0xCCCCCCFF);
       }
     }
-  }
+  };
 
   // Render view from camera
   void RenderCameraView(CDrawPort *pdp, BOOL bListen) {
     CDrawPort dpCamera;
     CDrawPort *pdpCamera = pdp;
 
-    if (m_penCamera != NULL && ((CCamera&)*m_penCamera).m_bWideScreen) {
+    if (GetCamera() != NULL && ((CCamera&)*GetCamera()).m_bWideScreen) {
       pdp->MakeWideScreen(&dpCamera);
       pdpCamera = &dpCamera;
     }
@@ -3098,7 +3181,7 @@ functions:
     }
 
     // print center message
-    if (_pTimer->CurrentTick() < m_tmCenterMessageEnd) {
+    if (_pTimer->CurrentTick() < GetMessageTime()) {
       PIX pixDPWidth = pdp->GetWidth();
       PIX pixDPHeight = pdp->GetHeight();
       FLOAT fScale = (FLOAT)pixDPWidth/640.0f;
@@ -3107,7 +3190,7 @@ functions:
       pdp->SetTextScaling(fScale);
       pdp->SetTextAspect(1.0f);
 
-      pdp->PutTextCXY(m_strCenterMessage, pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
+      pdp->PutTextCXY(GetCenterMessage(), pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
     }
   };
 
@@ -3143,10 +3226,10 @@ functions:
     }
 
     // check for dualhead
-    BOOL bDualHead = (pdp->IsDualHead() && GetSP()->sp_gmGameMode != CSessionProperties::GM_FLYOVER && m_penActionMarker == NULL);
+    BOOL bDualHead = (pdp->IsDualHead() && GetSP()->sp_gmGameMode != CSessionProperties::GM_FLYOVER && GetAction() == NULL);
 
     // if dualhead, or no camera active
-    if (bDualHead || m_penCamera == NULL) {
+    if (bDualHead || GetCamera() == NULL) {
       // make left player view
       CDrawPort dpView(pdp, TRUE);
 
@@ -3158,9 +3241,9 @@ functions:
     }
 
     // if camera active
-    if (m_penCamera != NULL) {
+    if (GetCamera() != NULL) {
       // make left or right camera view
-      CDrawPort dpView(pdp, m_penActionMarker != NULL);
+      CDrawPort dpView(pdp, GetAction() != NULL);
 
       if (dpView.Lock()) {
         // draw it, listen if not dualhead
@@ -3595,24 +3678,24 @@ functions:
     // if any damage
     if (fSubHealth > 0) { 
       // if camera is active
-      if (m_penCamera != NULL) {
+      if (GetCamera() != NULL) {
         // if the camera has onbreak
-        CEntity *penOnBreak = ((CCamera&)*m_penCamera).m_penOnBreak;
+        CEntity *penOnBreak = ((CCamera&)*GetCamera()).m_penOnBreak;
 
         if (penOnBreak != NULL) {
           // trigger it
           SendToTarget(penOnBreak, EET_TRIGGER, this);
 
-        // if it doesn't
+        // just deactivate camera
         } else {
-          // just deactivate camera
-          m_penCamera = NULL; 
+          // [Cecil] Changed to a function
+          ResetCamera();
         }
       }
     }
 
     // if the player is doing autoactions
-    if (m_penActionMarker != NULL) {
+    if (GetAction() != NULL) {
       // ignore all damage
       return;
     }
@@ -3888,9 +3971,10 @@ functions:
     // *********** KEYS ***********
     else if (ee.ee_slEvent == EVENTCODE_EKey) {
       // don't pick up key if in auto action mode
-      if (m_penActionMarker!=NULL) {
+      if (GetAction() != NULL) {
         return FALSE;
       }
+
       // make key mask
       ULONG ulKey = 1<<INDEX(((EKey&)ee).kitType);
       EKey &eKey = (EKey&)ee;
@@ -4267,7 +4351,7 @@ functions:
     // if alive
     if (IsAlive(this)) {
       // if not in auto-action mode
-      if (m_penActionMarker == NULL) {
+      if (GetAction() == NULL) {
         // apply actions
         AliveActions(paAction);
 
@@ -4278,7 +4362,7 @@ functions:
       }
 
       // [Cecil] Turn collision back on if needed
-      if (SPWorld(this) && GetSP()->sp_iPlayerCollision == 1) {
+      if (SPWorld() && GetSP()->sp_iPlayerCollision == 1) {
         if ((m_vSpawnPoint - GetPlacement().pl_PositionVector).Length() > 3.0f) {
           SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
         }
@@ -4288,24 +4372,43 @@ functions:
     } else {
       DeathActions(paAction);
     }
+    
+    // [Cecil] In singleplayer cutscenes for other players
+    if (GlobalCutscenes() && ((CGlobalController*)_penGlobalController)->m_penPlayer != this) {
+      // [Cecil] Hide players during actions
+      if (GetAction() != NULL) {
+        if (GetRenderType() != RT_EDITORMODEL) {
+          SwitchToEditorModel();
+          SetPhysicsFlags(GetPhysicsFlags() & ~EPF_TRANSLATEDBYGRAVITY);
+          SetCollisionFlags(GetCollisionFlags() | ((ECBI_PLAYER)<<ECB_PASS));
+        }
 
-    if (Abs(_pTimer->CurrentTick()-m_tmAnalyseEnd)<_pTimer->TickQuantum*2) {
+      // [Cecil] Otherwise show
+      } else if (GetRenderType() != RT_MODEL) {
+        SwitchToModel();
+        SetPhysicsFlags(GetPhysicsFlags() | EPF_TRANSLATEDBYGRAVITY);
+        SetCollisionFlags(GetCollisionFlags() & ~((ECBI_PLAYER)<<ECB_PASS));
+      }
+    }
+
+    if (Abs(_pTimer->CurrentTick() - m_tmAnalyseEnd) < _pTimer->TickQuantum*2) {
       m_tmAnalyseEnd = 0;
       m_bPendingMessage = TRUE;
       m_tmMessagePlay = 0;
     }
+
     if (m_bPendingMessage && !IsFuss()) {
       m_bPendingMessage = FALSE;
       m_tmMessagePlay = _pTimer->CurrentTick()+1.0f;
       m_tmAnimateInbox = _pTimer->CurrentTick();
     }
-    if (Abs(_pTimer->CurrentTick()-m_tmMessagePlay)<_pTimer->TickQuantum*2) {
+
+    if (Abs(_pTimer->CurrentTick() - m_tmMessagePlay) < _pTimer->TickQuantum*2) {
       m_bPendingMessage = FALSE;
       m_tmAnalyseEnd = 0;
 
       if (!m_bComputerInvoked && GetSP()->sp_bSinglePlayer) {
-        PrintCenterMessage(this, this, 
-          TRANS("Press USE to read the message!"), 5.0f, MSS_NONE);
+        PrintCenterMessage(this, this, TRANS("Press USE to read the message!"), 5.0f, MSS_NONE);
       }
     }
 
@@ -4354,6 +4457,24 @@ functions:
         m_iCombo = 0;
         m_iComboScore = 0;
       }
+    }
+
+    // [Cecil] Stop players globally
+    if (GlobalCutscenes() && GetGlobalStopMask() & (1 << GetMyPlayerIndex())) {
+      // stop moving if no marker
+      if (GetGlobalAction() == NULL) {
+        SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
+        SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
+      }
+
+      // stop firing
+      ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+
+      // remove from the mask
+      EStopMask eStop;
+      eStop.iPlayer = GetMyPlayerIndex();
+
+      _penGlobalController->SendEvent(eStop);
     }
   };
 
@@ -4429,16 +4550,16 @@ functions:
     CPlayerAction paAction = pa;
 
     // if camera is active
-    if (m_penCamera != NULL) {
+    if (GetCamera() != NULL) {
       // ignore keyboard/mouse/joystick commands
       paAction.pa_vTranslation  = FLOAT3D(0.0f, 0.0f, 0.0f);
       paAction.pa_aRotation     = ANGLE3D(0.0f, 0.0f, 0.0f);
       paAction.pa_aViewRotation = ANGLE3D(0.0f, 0.0f, 0.0f);
 
-      // if fire or use is pressed
+      // stop if fire or use is pressed
       if (ulNewButtons & (PLACT_FIRE|PLACT_USE)) {
-        // stop camera
-        m_penCamera = NULL;
+        // [Cecil] Changed to a function
+        ResetCamera();
       }
 
     } else {
@@ -4460,12 +4581,11 @@ functions:
   }
 
   // Auto-actions
-  void AutoActions(const CPlayerAction &pa) 
-  {
+  void AutoActions(const CPlayerAction &pa) {
     // if fire, use or computer is pressed
     if (ulNewButtons&(PLACT_FIRE|PLACT_USE|PLACT_COMPUTER)) {
-      if (m_penCamera != NULL) {
-        CEntity *penOnBreak = ((CCamera&)*m_penCamera).m_penOnBreak;
+      if (GetCamera() != NULL) {
+        CEntity *penOnBreak = ((CCamera&)*GetCamera()).m_penOnBreak;
 
         if (penOnBreak != NULL) {
           SendToTarget(penOnBreak, EET_TRIGGER, this);
@@ -4474,6 +4594,7 @@ functions:
     }
 
     CPlayerAction paAction = pa;
+
     // ignore keyboard/mouse/joystick commands
     paAction.pa_vTranslation  = FLOAT3D(0.0f, 0.0f, 0.0f);
     paAction.pa_aRotation     = ANGLE3D(0.0f, 0.0f, 0.0f);
@@ -4481,12 +4602,11 @@ functions:
 
     // if moving towards the marker is enabled
     if (m_fAutoSpeed > 0) {
-      FLOAT3D vDelta = 
-        m_penActionMarker->GetPlacement().pl_PositionVector-
-        GetPlacement().pl_PositionVector;
+      FLOAT3D vDelta = GetAction()->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector;
       FLOAT fDistance = vDelta.Length();
+
       if (fDistance > 0.1f) {
-        vDelta/=fDistance;
+        vDelta /= fDistance;
         ANGLE aDH = GetRelativeHeading(vDelta);
 
         // if should hit the marker exactly
@@ -4495,6 +4615,7 @@ functions:
           // adjust speed
           fSpeed = Min(fSpeed, fDistance/_pTimer->TickQuantum);
         }
+
         // adjust rotation
         if (Abs(aDH) > 5.0f) {
           if (fSpeed>m_fAutoSpeed-0.1f) {
@@ -4502,6 +4623,7 @@ functions:
           }
           paAction.pa_aRotation = ANGLE3D(aDH/_pTimer->TickQuantum,0,0);
         }
+
         // set forward speed
         paAction.pa_vTranslation = FLOAT3D(0.0f, 0.0f, -fSpeed);
       }
@@ -4511,33 +4633,30 @@ functions:
     }
 
     CPlayerActionMarker *ppam = GetActionMarker();
-    ASSERT( ppam != NULL);
-    if( ppam->m_paaAction == PAA_LOGO_FIRE_MINIGUN || ppam->m_paaAction == PAA_LOGO_FIRE_INTROSE)
-    {
-      if( m_tmMinigunAutoFireStart != -1)
-      {
-        FLOAT tmDelta = _pTimer->CurrentTick()-m_tmMinigunAutoFireStart;
-        FLOAT aDH=0.0f;
-        FLOAT aDP=0.0f;
-        if( tmDelta>=0.0f && tmDelta<=0.75f)
-        {
+    ASSERT(ppam != NULL);
+
+    if (ppam->m_paaAction == PAA_LOGO_FIRE_MINIGUN || ppam->m_paaAction == PAA_LOGO_FIRE_INTROSE) {
+      if (m_tmMinigunAutoFireStart != -1) {
+        FLOAT tmDelta = _pTimer->CurrentTick() - m_tmMinigunAutoFireStart;
+        FLOAT aDH = 0.0f;
+        FLOAT aDP = 0.0f;
+        if (tmDelta >= 0.0f && tmDelta <= 0.75f) {
           aDH = 0.0f;
-        }
-        else if( tmDelta>=0.75f)
-        {
-          FLOAT fDT = tmDelta-0.75f;
+        } else if (tmDelta >= 0.75f) {
+          FLOAT fDT = tmDelta - 0.75f;
           aDH = 1.0f*cos(fDT+PI/2.0f);
           aDP = 0.5f*cos(fDT);
         }
-        if(ppam->m_paaAction == PAA_LOGO_FIRE_INTROSE)
-        {
-          FLOAT fRatio=CalculateRatio(tmDelta,0.25,5,0.1f,0.1f);
-          aDP=2.0f*sin(tmDelta*200.0f)*fRatio;
-          if(tmDelta>2.5f)
-          {
+
+        if (ppam->m_paaAction == PAA_LOGO_FIRE_INTROSE) {
+          FLOAT fRatio = CalculateRatio(tmDelta, 0.25f, 5.0f, 0.1f, 0.1f);
+          aDP = 2.0f*sin(tmDelta*200.0f)*fRatio;
+
+          if (tmDelta > 2.5f) {
             aDP+=(tmDelta-2.5f)*4.0f;
           }
         }
+
         paAction.pa_aRotation = ANGLE3D(aDH/_pTimer->TickQuantum, aDP/_pTimer->TickQuantum,0);
       }
     }
@@ -5270,7 +5389,7 @@ functions:
 
   // check if cheats can be active
   BOOL CheatsEnabled(void) {
-    return (GetSP()->sp_ctMaxPlayers == 1 || GetSP()->sp_bQuickTest) && m_penActionMarker == NULL;
+    return (GetSP()->sp_ctMaxPlayers == 1 || GetSP()->sp_bQuickTest) && GetAction() == NULL;
   };
 
   // Cheats
@@ -5477,14 +5596,16 @@ functions:
                  CPlacement3D &plAbsoluteLerpedView)
   {
     CPlacement3D plViewOld = prProjection.ViewerPlacementR();
-    BOOL bSniping = ((CPlayerWeapons&)*m_penWeapons).m_bSniping;
+
     // render weapon models if needed
-    // do not render weapon if sniping
     BOOL bRenderModels = _pShell->GetINDEX("gfx_bRenderModels");
-    if( hud_bShowWeapon && bRenderModels && !bSniping) {
+    // do not render weapon if sniping
+    BOOL bSniping = ((CPlayerWeapons&)*m_penWeapons).m_bSniping;
+
+    if (hud_bShowWeapon && bRenderModels && !bSniping) {
       // render weapons only if view is from player eyes
-      ((CPlayerWeapons&)*m_penWeapons).RenderWeaponModel(prProjection, pdp, 
-       vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
+      ((CPlayerWeapons&)*m_penWeapons).RenderWeaponModel(prProjection, pdp, vViewerLightDirection,
+                                                         colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
     }
 
     // if is first person
@@ -5505,14 +5626,17 @@ functions:
 
     // render crosshair if sniper zoom not active
     CPlacement3D plView;
+
     if (m_iViewState == PVT_PLAYEREYES) {
       // player view
       plView = en_plViewpoint;
       plView.RelativeToAbsolute(GetPlacement());
+
     } else if (m_iViewState == PVT_3RDPERSONVIEW) {
       // camera view
       plView = ((CPlayerView&)*m_pen3rdPersonView).GetPlacement();
     }
+
     if (!bSniping) {
       ((CPlayerWeapons&)*m_penWeapons).RenderCrosshair(prProjection, pdp, plView);
     }
@@ -5520,20 +5644,24 @@ functions:
     // get your prediction tail
     CPlayer *pen = (CPlayer*)GetPredictionTail();
     // do screen blending
-    ULONG ulR=255, ulG=0, ulB=0; // red for wounding
+    ULONG ulR = 255, ulG = 0, ulB = 0; // red for wounding
     ULONG ulA = pen->m_fDamageAmmount*5.0f;
     
     // if less than few seconds elapsed since last damage
     FLOAT tmSinceWounding = _pTimer->CurrentTick() - pen->m_tmWoundedTime;
-    if( tmSinceWounding<4.0f) {
+
+    if (tmSinceWounding < 4.0f) {
       // decrease damage ammount
-      if( tmSinceWounding<0.001f) { ulA = (ulA+64)/2; }
+      if (tmSinceWounding < 0.001f) {
+        ulA = (ulA + 64) / 2;
+      }
     }
 
     // [Cecil] Blood screen
     if (amp_bBloodScreen) {
       // add rest of blend ammount
-      ulA = ClampUp( ulA, (ULONG)224);
+      ulA = ClampUp(ulA, (ULONG)224);
+
       if (m_iViewState == PVT_PLAYEREYES) {
         pdp->dp_ulBlendingRA += ulR*ulA;
         pdp->dp_ulBlendingGA += ulG*ulA;
@@ -5680,7 +5808,7 @@ functions:
     SetPhysicsFlags(EPF_MODEL_WALKING|EPF_HASLUNGS);
     
     // [Cecil] Turn off collision if needed
-    if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 0) {
+    if (SPWorld() && GetSP()->sp_iPlayerCollision != 0) {
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     } else {
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
@@ -5702,7 +5830,7 @@ functions:
     //FLOAT3D vOffsetRel = FLOAT3D(0.0f, fOffsetY, 0.0f);
 
     // [Cecil] No offset on singleplayer maps or if ignoring collision
-    if (GetSP()->sp_bSinglePlayer || (SPWorld(this) && GetSP()->sp_iPlayerCollision != 0)) {
+    if (GetSP()->sp_bSinglePlayer || (SPWorld() && GetSP()->sp_iPlayerCollision != 0)) {
       return FLOAT3D(0.0f, fOffsetY, 0.0f);
     }
 
@@ -5712,7 +5840,7 @@ functions:
       FLOAT fCol = FLOAT(iPlayer % 4);
 
       // [Cecil] Standard offset in coop maps
-      if (!SPWorld(this)) {
+      if (!SPWorld()) {
         return FLOAT3D(-3.0f + fCol*2.0f, fOffsetY, -3.0f + fRow*2.0f);
       }
       
@@ -5974,8 +6102,9 @@ functions:
         // [Cecil] No telefrag
         Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0.0f, 0.0f, 0.0f)), FALSE);
       }
+
       // if there is a start trigger target
-      if(CpmStart.m_penTarget!=NULL) {
+      if (CpmStart.m_penTarget != NULL) {
         SendToTarget(CpmStart.m_penTarget, EET_TRIGGER, this);
       }
 
@@ -6138,35 +6267,11 @@ functions:
     }
   }
 
-  // [Cecil] Get first alive player
-  CEntity *GetFirstPlayer(void) {
-    CEntity *penOne = NULL;
-    CSessionState &ses = _pNetwork->ga_sesSessionState;
-
-    for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
-      if (!ses.ses_apltPlayers[iPlayer].plt_bActive) {
-        continue;
-      }
-
-      CEntity *pen = ses.ses_apltPlayers[iPlayer].plt_penPlayerEntity;
-
-      if (ASSERT_ENTITY(pen)) {
-        penOne = pen;
-        if (IsAlive(pen)) {
-          return pen;
-        }
-      }
-    }
-
-    CPrintF("  ^cff0000WARNING! Cutscene chain is broken, unable to find alive players!\n^r(executed by %s^r)", GetPlayerName());
-    return penOne;
-  };
-
   // [Cecil] Replaced CPlayerActionMarker with CEntity, added everyone flag
   void TeleportToAutoMarker(CEntity *penMarker, BOOL bEveryone) 
   {
     // [Cecil] Allow teleporting everyone
-    if (GetSP()->sp_bCooperative && (!SPWorld(this) || bEveryone)) {
+    if (GetSP()->sp_bCooperative && (!SPWorld() || bEveryone)) {
       // for each player
       for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
         CEntity *penPlayer = GetPlayerEntity(iPlayer);
@@ -6186,8 +6291,10 @@ functions:
           ppl->m_vDied = pl.pl_PositionVector;
           ppl->m_aDied = pl.pl_OrientationAngle;
 
-          // [Cecil] New spawn point
-          ppl->m_vSpawnPoint = pl.pl_PositionVector;
+          // [Cecil] New spawn point for dead players
+          if (!IsAlive(penPlayer)) {
+            ppl->m_vSpawnPoint = pl.pl_PositionVector;
+          }
         }
       }
 
@@ -6687,8 +6794,7 @@ procedures:
 
 
   // auto action - go to current marker
-  AutoGoToMarker(EVoid)
-  {
+  AutoGoToMarker(EVoid) {
     ULONG ulFlags = AOF_LOOPING|AOF_NORESTART;
 
     INDEX iAnim = GetModelObject()->GetAnim();
@@ -6707,9 +6813,7 @@ procedures:
     }
 
     // while not at marker
-    while (
-      (m_penActionMarker->GetPlacement().pl_PositionVector-
-       GetPlacement().pl_PositionVector).Length()>1.0f) {
+    while ((GetAction()->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > 1.0f) {
       // wait a bit
       autowait(_pTimer->TickQuantum);
     }
@@ -6737,7 +6841,7 @@ procedures:
     }
 
     // wait a bit while not at marker
-    while ((m_penActionMarker->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > m_fAutoSpeed*_pTimer->TickQuantum * 2.0f) {
+    while ((GetAction()->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > m_fAutoSpeed*_pTimer->TickQuantum * 2.0f) {
       autowait(_pTimer->TickQuantum);
     }
 
@@ -6766,30 +6870,32 @@ procedures:
 
     // item appears
     CPlayerActionMarker *ppam = GetActionMarker();
+
     if (IsOfClass(ppam->m_penItem, "KeyItem")) {
       CModelObject &moItem = ppam->m_penItem->GetModelObject()->GetAttachmentModel(0)->amo_moModelObject;
       GetPlayerAnimator()->SetItem(&moItem);
     }
 
-    autowait(2.20f-0.2f);
+    autowait(2.0f);
 
     // the item is in place
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.BodyRemoveItem();
+
     // if marker points to a trigger
-    if (GetActionMarker()->m_penTrigger!=NULL) {
+    if (GetActionMarker()->m_penTrigger != NULL) {
       // trigger it
       SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
     }
 
     // fake that player has passed through the door controller
-    if (GetActionMarker()->m_penDoorController!=NULL) {
+    if (GetActionMarker()->m_penDoorController != NULL) {
       EPass ePass;
       ePass.penOther = this;
       GetActionMarker()->m_penDoorController->SendEvent(ePass);
     }
     
-    autowait(3.25f-2.20f);
+    autowait(1.05f);
 
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.BodyRemoveItem();
@@ -6808,22 +6914,24 @@ procedures:
     autowait(1.2f);
 
     // if marker points to a trigger
-    if (GetActionMarker()->m_penTrigger!=NULL) {
+    if (GetActionMarker()->m_penTrigger != NULL) {
       // trigger it
       SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
     }
 
     // item appears
     CPlayerActionMarker *ppam = GetActionMarker();
+
     if (IsOfClass(ppam->m_penItem, "KeyItem")) {
       CModelObject &moItem = ppam->m_penItem->GetModelObject()->GetAttachmentModel(0)->amo_moModelObject;
       GetPlayerAnimator()->SetItem(&moItem);
+
       EPass ePass;
       ePass.penOther = this;
       ppam->m_penItem->SendEvent(ePass);
     }
 
-    autowait(3.6f-1.2f+GetActionMarker()->m_tmWait);
+    autowait(2.4f + GetActionMarker()->m_tmWait);
 
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.BodyRemoveItem();
@@ -6884,7 +6992,7 @@ procedures:
 
   AutoTeleport(EVoid) {
     // teleport there
-    TeleportToAutoMarker(m_penActionMarker, FALSE);
+    TeleportToAutoMarker(GetAction(), FALSE);
 
     // return to auto-action loop
     return EReturn();
@@ -6896,10 +7004,12 @@ procedures:
 
     // put it at marker
     Teleport(GetActionMarker()->GetPlacement());
+
     // make it rotate in spawnpose
     SetPhysicsFlags(GetPhysicsFlags() & ~(EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY));
-    m_ulFlags|=PLF_AUTOMOVEMENTS;
-    SetDesiredRotation(ANGLE3D(60,0,0));
+    m_ulFlags |= PLF_AUTOMOVEMENTS;
+
+    SetDesiredRotation(ANGLE3D(60.0f, 0.0f, 0.0f));
 
     // [Cecil] SPAWNPOSE -> DEATH_SPIKES
     StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
@@ -6948,11 +7058,13 @@ procedures:
   TravellingInBeam() {
     // put it at marker
     Teleport(GetActionMarker()->GetPlacement());
+
     // make it rotate in spawnpose
     SetPhysicsFlags(GetPhysicsFlags() & ~(EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY));
-    m_ulFlags|=PLF_AUTOMOVEMENTS;
-    SetDesiredRotation(ANGLE3D(60,0,0));
-    SetDesiredTranslation(ANGLE3D(0,20.0f,0));
+    m_ulFlags |= PLF_AUTOMOVEMENTS;
+
+    SetDesiredRotation(ANGLE3D(60.0f, 0.0f, 0.0f));
+    SetDesiredTranslation(ANGLE3D(0.0f, 20.0f, 0.0f));
 
     // [Cecil] SPAWNPOSE -> DEATH_SPIKES
     StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
@@ -6970,8 +7082,9 @@ procedures:
   LogoFireMinigun(EVoid) {
     // put it at marker
     CPlacement3D pl = GetActionMarker()->GetPlacement();
-    pl.pl_PositionVector += FLOAT3D(0, 0.01f, 0)*GetActionMarker()->en_mRotation;
+    pl.pl_PositionVector += FLOAT3D(0.0f, 0.01f, 0.0f)*GetActionMarker()->en_mRotation;
     Teleport(pl);
+
     en_plViewpoint.pl_OrientationAngle(1) = 20.0f;
     en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle;
 
@@ -7070,7 +7183,7 @@ procedures:
     plan.m_bDisableAnimating = TRUE;
 
     // [Cecil] Disable collision
-    if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 2) {
+    if (SPWorld() && GetSP()->sp_iPlayerCollision != 2) {
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     }
 
@@ -7079,8 +7192,8 @@ procedures:
     m_bActionLoopBreak = FALSE;
 
     // while there is some marker
-    while (!m_bActionLoopBreak && m_penActionMarker != NULL && IsOfClass(m_penActionMarker, "PlayerActionMarker")) {
-      
+    while (!m_bActionLoopBreak && GetAction() != NULL && IsOfClass(GetAction(), "PlayerActionMarker"))
+    {
       // if should wait
       if (GetActionMarker()->m_paaAction == PAA_WAIT) {
         // play still anim
@@ -7162,10 +7275,12 @@ procedures:
 
       // if releasing player
       } else if (GetActionMarker()->m_paaAction == PAA_RELEASEPLAYER) {
-        if (m_penCamera != NULL) {
-          ((CCamera*)&*m_penCamera)->m_bStopMoving = TRUE;
+        if (GetCamera() != NULL) {
+          ((CCamera*)&*GetCamera())->m_bStopMoving = TRUE;
         }
-        m_penCamera = NULL;
+
+        // [Cecil] Changed to a function
+        ResetCamera();
 
         // if currently not having any weapon in hand
         if (GetPlayerWeapons()->m_iCurrentWeapon == WEAPON_NONE) {
@@ -7270,9 +7385,9 @@ procedures:
       }
 
       // [Cecil] Safety check
-      if (!ASSERT_ENTITY(m_penActionMarker)) {
+      if (!ASSERT_ENTITY(GetAction())) {
         m_bActionLoopBreak = TRUE;
-        m_penActionMarker = NULL;
+        SetAction(NULL);
         m_penLastAction = NULL;
 
       } else {
@@ -7284,9 +7399,9 @@ procedures:
         }
 
         // [Cecil] Save last marker
-        m_penLastAction = m_penActionMarker;
+        m_penLastAction = GetAction();
 
-        m_penActionMarker = GetActionMarker()->m_penTarget;
+        SetAction(GetActionMarker()->m_penTarget);
       }
     }
     
@@ -7294,7 +7409,7 @@ procedures:
     m_fAutoSpeed = 0.0f;
 
     // [Cecil] If it's a singleplayer map
-    if (SPWorld(this)) {
+    if (SPWorld()) {
       autowait(0.05f);
 
       // [Cecil] Teleport everyone back after the sequence
@@ -7310,15 +7425,10 @@ procedures:
             EStopActions eStop;
             eStop.pen = m_penLastAction;
             penPlayer->SendEvent(eStop);
-            //penPlayer->m_penActionMarker = NULL;
           }
         }
-
-        // teleport the first player after everyone else relatively
-        //TeleportToAutoMarker(m_penLastAction, FALSE);
       }
 
-      // [Cecil] NOTE: Doesn't execute in some cases for some reason
       // [Cecil] Autosave after the cutscene
       if (GetSP()->sp_iAMPOptions & AMP_AUTOSAVE) {
         CPlacement3D plStart = GetPlacement();
@@ -7338,20 +7448,18 @@ procedures:
         ETrigger eTrigger;
         eTrigger.penCaused = this;
         penStart->SendEvent(eTrigger);
-
-        //CPrintF("%s^r: Checkpoint with %s\n", GetPlayerName(), ppmStart->m_strGroup); // [Cecil] TEMP
       }
     }
 
     // must clear marker, in case it was invalid
-    m_penActionMarker = NULL;
+    SetAction(NULL);
 
     // enable playeranimator animating
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.m_bDisableAnimating = FALSE;
 
     // [Cecil] Enable collision
-    if (SPWorld(this) && GetSP()->sp_iPlayerCollision != 2) {
+    if (SPWorld() && GetSP()->sp_iPlayerCollision != 2) {
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
     }
 
@@ -7495,18 +7603,20 @@ procedures:
 
       on (ECameraStart eStart) : {
         m_penCamera = eStart.penCamera;
+
         // stop player
-        if (m_penActionMarker==NULL) {
+        if (GetAction() == NULL) {
           SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
           SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
         }
+
         // stop firing
         ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
         resume;
       }
 
       on (ECameraStop eCameraStop) : {
-        if (m_penCamera==eCameraStop.penCamera) {
+        if (m_penCamera == eCameraStop.penCamera) {
           m_penCamera = NULL;
         }
         resume;
@@ -7515,7 +7625,8 @@ procedures:
       on (ECenterMessage eMsg) : {
         m_strCenterMessage = eMsg.strMessage;
         m_tmCenterMessageEnd = _pTimer->CurrentTick()+eMsg.tmLength;
-        if (eMsg.mssSound==MSS_INFO) {
+
+        if (eMsg.mssSound == MSS_INFO) {
           m_soMessage.Set3DParameters(25.0f, 5.0f, 1.0f, 1.0f);
           PlaySound(m_soMessage, SOUND_INFO, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
         }
@@ -7533,44 +7644,8 @@ procedures:
       }
 
       on (EAutoAction eAutoAction) : {
-        // [Cecil] Reset just in case
-        ReleasePlayer();
-
-        // [Cecil] Safety check
-        if (eAutoAction.penFirstMarker == NULL) {
-          resume;
-        }
-
-        CPlayerActionMarker *penAction = (CPlayerActionMarker*)&*eAutoAction.penFirstMarker;
-
-        // [Cecil] Just teleport
-        if (penAction->m_paaAction == PAA_TELEPORT && penAction->m_penTarget == NULL) {
-          TeleportToAutoMarker(penAction, FALSE);
-
-          // trigger if needed
-          if (penAction->m_penTrigger != NULL) {
-            SendToTarget(penAction->m_penTrigger, EET_TRIGGER, this);
-          }
-
-          //CPrintF("%s^r: Teleported\n", GetPlayerName()); // [Cecil] TEMP
-          resume;
-        }
-
         // remember first marker
         m_penActionMarker = eAutoAction.penFirstMarker;
-    
-        // [Cecil] Only the first player does auto actions on singleplayer maps
-        if (SPWorld(this) && GetFirstPlayer() != this) {
-          // hide the player
-          SwitchToEditorModel();
-          SetPhysicsFlags(GetPhysicsFlags() & ~EPF_TRANSLATEDBYGRAVITY);
-          SetCollisionFlags(GetCollisionFlags() | ((ECBI_PLAYER)<<ECB_PASS));
-
-          //CPrintF("%s^r: Skipping action\n", GetPlayerName()); // [Cecil] TEMP
-          resume;
-        }
-
-        //CPrintF("%s^r: DoAutoActions()\n", GetPlayerName()); // [Cecil] TEMP
 
         // do the actions
         call DoAutoActions();

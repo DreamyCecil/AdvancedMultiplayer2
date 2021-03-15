@@ -1,6 +1,10 @@
 220
 %{
 #include "StdH.h"
+
+// [Cecil] Global controller
+#include "EntitiesMP/GlobalController.h"
+extern CEntity *_penGlobalController;
 %}
 
 uses "EntitiesMP/Player";
@@ -465,14 +469,8 @@ procedures:
     eStart.penCamera = this;
 
     // [Cecil] Start camera for everyone
-    if (SPWorld(this)) {
-      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-        CEntity *pen = GetPlayerEntity(i);
-
-        if (ASSERT_ENTITY(pen)) {
-          pen->SendEvent(eStart);
-        }
-      }
+    if (GlobalCutscenes()) {
+      _penGlobalController->SendEvent(eStart);
     } else {
       m_penPlayer->SendEvent(eStart);
     }
@@ -482,14 +480,8 @@ procedures:
     eStop.penCamera = this;
 
     // [Cecil] Stop camera for everyone
-    if (SPWorld(this)) {
-      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-        CEntity *pen = GetPlayerEntity(i);
-
-        if (ASSERT_ENTITY(pen)) {
-          pen->SendEvent(eStop);
-        }
-      }
+    if (GlobalCutscenes()) {
+      _penGlobalController->SendEvent(eStop);
     } else {
       m_penPlayer->SendEvent(eStop);
     }
@@ -506,33 +498,21 @@ procedures:
     eStart.penCamera = this;
     
     // [Cecil] Start camera for everyone
-    if (SPWorld(this) || m_penTarget == NULL) {
-      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-        CEntity *pen = GetPlayerEntity(i);
-
-        if (ASSERT_ENTITY(pen)) {
-          pen->SendEvent(eStart);
-        }
-      }
+    if (GlobalCutscenes() || m_penTarget == NULL) {
+      _penGlobalController->SendEvent(eStart);
     } else {
       m_penPlayer->SendEvent(eStart);
     }
 
     // roll, baby, roll ...
     wait() {
-      on( EStop) : {
+      on (EStop) : {
         ECameraStop eStop;
         eStop.penCamera = this;
         
         // [Cecil] Stop camera for everyone
-        if (SPWorld(this) || m_penTarget == NULL) {
-          for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-            CEntity *pen = GetPlayerEntity(i);
-
-            if (ASSERT_ENTITY(pen)) {
-              pen->SendEvent(eStop);
-            }
-          }
+        if (GlobalCutscenes() || m_penTarget == NULL) {
+          _penGlobalController->SendEvent(eStop);
         } else {
           m_penPlayer->SendEvent(eStop);
         }
@@ -557,14 +537,8 @@ procedures:
     eStart.penCamera = this;
     
     // [Cecil] Start camera for everyone
-    if (SPWorld(this) || m_penTarget == NULL) {
-      for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-        CEntity *pen = GetPlayerEntity(i);
-
-        if (ASSERT_ENTITY(pen)) {
-          pen->SendEvent(eStart);
-        }
-      }
+    if (GlobalCutscenes() || m_penTarget == NULL) {
+      _penGlobalController->SendEvent(eStart);
     } else {
       m_penPlayer->SendEvent(eStart);
     }
@@ -632,14 +606,8 @@ procedures:
         eStop.penCamera = this;
     
         // [Cecil] Start camera for everyone
-        if (SPWorld(this) || m_penTarget == NULL) {
-          for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-            CEntity *pen = GetPlayerEntity(i);
-
-            if (ASSERT_ENTITY(pen)) {
-              pen->SendEvent(eStop);
-            }
-          }
+        if (GlobalCutscenes() || m_penTarget == NULL) {
+          _penGlobalController->SendEvent(eStop);
         } else {
           m_penPlayer->SendEvent(eStop);
         }

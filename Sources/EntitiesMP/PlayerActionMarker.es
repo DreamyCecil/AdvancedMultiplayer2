@@ -1,6 +1,10 @@
 407
 %{
 #include "StdH.h"
+
+// [Cecil] Global controller
+#include "EntitiesMP/GlobalController.h"
+extern CEntity *_penGlobalController;
 %}
 
 uses "EntitiesMP/Marker";
@@ -84,28 +88,24 @@ functions:
         eAutoAction.penFirstMarker = this;
 
         // [Cecil] Send actions to everyone
-        if (SPWorld(this)) {
-          // [Cecil] NOTE: Might not send to all players and cause desync, not sure.
-          for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-            CEntity *pen = GetPlayerEntity(i);
+        if (GlobalCutscenes()) {
+          EGlobalAction eAction;
+          eAction.penCaused = eTrigger.penCaused;
+          eAction.penAction = this;
 
-            if (ASSERT_ENTITY(pen)) {
-              pen->SendEvent(eAutoAction);
-            }
-          }
+          _penGlobalController->SendEvent(eAction);
         } else {
           eTrigger.penCaused->SendEvent(eAutoAction);
         }
       }
       return TRUE;
     }
-    return FALSE;
-  }
 
+    return FALSE;
+  };
 
 procedures:
-  Main()
-  {
+  Main() {
     InitAsEditorModel();
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
@@ -119,4 +119,3 @@ procedures:
     return;
   }
 };
-

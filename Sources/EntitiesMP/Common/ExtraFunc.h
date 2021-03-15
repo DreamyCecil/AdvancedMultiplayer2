@@ -9,3 +9,6 @@ inline BOOL WeaponExists(const INDEX &iFlags, const INDEX &iWeapon) {
 
 // [Cecil] Properly remove decorations from the string
 DECL_DLL void ProperUndecorate(CTString &str);
+
+// [Cecil] Get first alive player
+DECL_DLL CEntity *GetFirstPlayer(const CTString &strExecutor = "<unknown>");

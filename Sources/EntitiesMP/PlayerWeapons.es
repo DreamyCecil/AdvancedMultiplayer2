@@ -398,7 +398,7 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
   // precache animator too
   extern void CPlayerAnimator_Precache(ULONG ulAvailable);
   CPlayerAnimator_Precache(ulAvailable);
-}
+};
 
 void CPlayerWeapons_Init(void) {
   // declare weapon position controls
@@ -428,7 +428,7 @@ void CPlayerWeapons_Init(void) {
 
   // precache base weapons
   CPlayerWeapons_Precache(0x03);
-}
+};
 
 // [Cecil] FLOAT[3] -> FLOAT3D
 // extra weapon positions for shells dropout
@@ -1272,13 +1272,14 @@ functions:
       return;
     }
 
-    _mrpModelRenderPrefs.SetRenderType( RT_TEXTURE|RT_SHADING_PHONG);
+    _mrpModelRenderPrefs.SetRenderType(RT_TEXTURE|RT_SHADING_PHONG);
 
     // flare attachment
     ControlFlareAttachment();
 
-    if( !bRender || m_iCurrentWeapon==WEAPON_NONE
-     || GetPlayer()->GetSettings()->ps_ulFlags&PSF_HIDEWEAPON) { return; }
+    if (!bRender || GetPlayer()->GetSettings()->ps_ulFlags & PSF_HIDEWEAPON) {
+      return;
+    }
 
     // nuke and iron cannons have the same view settings
     INDEX iWeaponData = m_iCurrentWeapon;
@@ -1841,8 +1842,20 @@ functions:
 
   // show flare
   void ShowFlare(CModelObject &moWeapon, INDEX iAttachObject, INDEX iAttachFlare, FLOAT fSize) {
+    // [Cecil] Safety check
+    CAttachmentModelObject *pamoObject = moWeapon.GetAttachmentModel(iAttachObject);
+    if (pamoObject == NULL) {
+      return;
+    }
+
     CModelObject *pmo = &(moWeapon.GetAttachmentModel(iAttachObject)->amo_moModelObject);
     CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttachFlare);
+
+    // [Cecil] Safety check
+    if (pamo == NULL) {
+      return;
+    }
+
     pamo->amo_plRelative.pl_OrientationAngle(3) = (rand()*360.0f)/RAND_MAX;
     pmo = &(pamo->amo_moModelObject);
     pmo->StretchModel(FLOAT3D(fSize, fSize, fSize));
@@ -1850,13 +1863,25 @@ functions:
 
   // hide flare
   void HideFlare(CModelObject &moWeapon, INDEX iAttachObject, INDEX iAttachFlare) {
+    // [Cecil] Safety check
+    CAttachmentModelObject *pamoObject = moWeapon.GetAttachmentModel(iAttachObject);
+    if (pamoObject == NULL) {
+      return;
+    }
+
     CModelObject *pmo = &(moWeapon.GetAttachmentModel(iAttachObject)->amo_moModelObject);
-    pmo = &(pmo->GetAttachmentModel(iAttachFlare)->amo_moModelObject);
+
+    // [Cecil] Safety check
+    CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttachFlare);
+    if (pamo == NULL) {
+      return;
+    }
+
+    pmo = &(pamo->amo_moModelObject);
     pmo->StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
   };
 
-  void SetFlare(INDEX iFlare, INDEX iAction)
-  {
+  void SetFlare(INDEX iFlare, INDEX iAction) {
     // if not a prediction head
     if (!IsPredictionHead()) {
       // do nothing
@@ -1877,13 +1902,15 @@ functions:
   // flare attachment
   void ControlFlareAttachment(void) {
     // get your prediction tail
-    CPlayerWeapons *pen = (CPlayerWeapons *)GetPredictionTail();
+    CPlayerWeapons *pen = (CPlayerWeapons*)GetPredictionTail();
+
     // second colt only
     if (m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
       // add flare
       if (pen->m_iSecondFlare == FLARE_ADD) {
         pen->m_iSecondFlare = FLARE_REMOVE;
         ShowFlare(m_moWeaponSecond, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE, 1.0f);
+
       // remove flare
       } else if (pen->m_iSecondFlare == FLARE_REMOVE) {
         HideFlare(m_moWeaponSecond, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE);
@@ -1895,6 +1922,7 @@ functions:
       if (pen->m_iSecondFlare == FLARE_ADD) {
         pen->m_iSecondFlare = FLARE_REMOVE;
         ShowFlare(m_moWeaponSecond, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, 1.25f);
+
       // remove flare
       } else if (pen->m_iSecondFlare == FLARE_REMOVE) {
         HideFlare(m_moWeaponSecond, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
@@ -1902,9 +1930,10 @@ functions:
     }
 
     // add flare
-    if (pen->m_iFlare==FLARE_ADD) {
+    if (pen->m_iFlare == FLARE_ADD) {
       pen->m_iFlare = FLARE_REMOVE;
-      switch(m_iCurrentWeapon) {
+
+      switch (m_iCurrentWeapon) {
         case WEAPON_DOUBLECOLT: case WEAPON_COLT:
           ShowFlare(m_moWeapon, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE, 0.75f);
           break;
@@ -1924,9 +1953,10 @@ functions:
           ShowFlare(m_moWeapon, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, 1.25f);
           break;
       }
+
     // remove
-    } else if (pen->m_iFlare==FLARE_REMOVE) {
-      switch(m_iCurrentWeapon) {
+    } else if (pen->m_iFlare == FLARE_REMOVE) {
+      switch (m_iCurrentWeapon) {
         case WEAPON_DOUBLECOLT: case WEAPON_COLT:
           HideFlare(m_moWeapon, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE);
           break;
@@ -1946,11 +1976,11 @@ functions:
           HideFlare(m_moWeapon, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
           break;
       }
+
     } else {
       ASSERT(FALSE);
     }
   };
-
 
   // play light animation
   void PlayLightAnim(INDEX iAnim, ULONG ulFlags) {
@@ -1959,7 +1989,6 @@ functions:
       pl.m_aoLightAnimation.PlayAnim(iAnim, ulFlags);
     }
   };
-
 
   // Set weapon model for current weapon.
   void SetCurrentWeaponModel(void) {
@@ -2931,9 +2960,12 @@ functions:
     m_aMiniGunLast = 0;
     m_aMiniGunSpeed = 0;
 
+    // [Cecil] Remember last weapon
+    m_iPreviousWeapon = m_iCurrentWeapon;
+
     // select best weapon
     SelectNewWeapon();
-    m_iCurrentWeapon=m_iWantedWeapon;
+    m_iCurrentWeapon = m_iWantedWeapon;
     wpn_iCurrent = m_iCurrentWeapon;
     m_bChangeWeapon = FALSE;
 
@@ -3527,7 +3559,7 @@ functions:
       ulFlags |= AOF_SMOOTHCHANGE;
     }
 
-    switch(m_iCurrentWeapon) {
+    switch (m_iCurrentWeapon) {
       case WEAPON_NONE: break;
 
       case WEAPON_KNIFE:
@@ -3855,7 +3887,7 @@ functions:
     CPlayer &pl = (CPlayer&)*m_penPlayer;
 
     if (pl.m_pstState != PST_DIVE) {
-      BOOL b3rdPersonView = (pl.m_penCamera != NULL || pl.m_pen3rdPersonView != NULL);
+      BOOL b3rdPersonView = (pl.GetCamera() != NULL || pl.m_pen3rdPersonView != NULL);
 
       // [Cecil] Pipe position
       FLOAT3D vPipe = (b3rdPersonView ? _vMinigunPipe3rdView : _vMinigunPipe);
@@ -5120,7 +5152,7 @@ procedures:
 
         // [Cecil] Drop bullets
         CPlayer &pl = (CPlayer&)*m_penPlayer;
-        FLOAT3D vPos = (pl.m_penCamera == NULL && pl.m_pen3rdPersonView == NULL) ? _vMinigunShellPos : _vMinigunShellPos3rdView;
+        FLOAT3D vPos = (pl.GetCamera() == NULL && pl.m_pen3rdPersonView == NULL) ? _vMinigunShellPos : _vMinigunShellPos3rdView;
 
         DropBulletShell(vPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET, amp_bWeaponMirrored);
         SpawnBubbleEffect(_vMinigunShellPos, FLOAT3D(0.3f, 0.0f, 0.0f), amp_bWeaponMirrored);

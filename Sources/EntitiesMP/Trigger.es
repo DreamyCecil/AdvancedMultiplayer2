@@ -134,18 +134,7 @@ procedures:
       m_fScore = 0;
     }
     if (m_strMessage != "") {
-      // [Cecil] Send message to everyone
-      if (SPWorld(this)) {
-        for (INDEX i = 0; i < GetMaxPlayers(); i++) {
-          CEntity *pen = GetPlayerEntity(i);
-
-          if (ASSERT_ENTITY(pen)) {
-            PrintCenterMessage(this, pen, TranslateConst(m_strMessage), m_fMessageTime, m_mssMessageSound);
-          }
-        }
-      } else {
-        PrintCenterMessage(this, m_penCaused, TranslateConst(m_strMessage), m_fMessageTime, m_mssMessageSound);
-      }
+      PrintCenterMessage(this, m_penCaused, TranslateConst(m_strMessage), m_fMessageTime, m_mssMessageSound);
     }
 
     // if max trig count is used for counting

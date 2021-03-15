@@ -12,6 +12,10 @@
 #include "ModelsMP/Player/SeriousSam/Head.h"
 extern INDEX ent_bReportBrokenChains;
 
+// [Cecil] Global controller
+#include "EntitiesMP/GlobalController.h"
+extern CEntity *_penGlobalController;
+
 void CCompMessageID::Clear(void)
 {
   cmi_fnmFileName.Clear();
@@ -1250,15 +1254,19 @@ FLOAT DamageStrength(EntityInfoBodyType eibtBody, enum DamageType dtDamage)
 void PrintCenterMessage(CEntity *penThis, CEntity *penCaused, 
   const CTString &strMessage, TIME tmLength, enum MessageSound mssSound)
 {
-  penCaused = FixupCausedToPlayer(penThis, penCaused);
+  // [Cecil] Send to the global controller
+  if (GlobalCutscenes()) {
+    penCaused = _penGlobalController;
+  } else {
+    penCaused = FixupCausedToPlayer(penThis, penCaused);
+  }
 
   ECenterMessage eMsg;
   eMsg.strMessage = strMessage;
   eMsg.tmLength = tmLength;
   eMsg.mssSound = mssSound;
   penCaused->SendEvent(eMsg);
-}
-
+};
 
 // i.e. weapon sound when fireing or exploding
 void SpawnRangeSound( CEntity *penPlayer, CEntity *penPos, enum SoundType st, FLOAT fRange)

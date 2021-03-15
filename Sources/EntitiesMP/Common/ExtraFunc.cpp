@@ -66,6 +66,7 @@ extern void ConvertWorld(CEntity *penWorld) {
 
     // [Cecil] Check for the entities that NEED to be updated rather than the ones that don't
     if (!IsDerivedFromClass(pen, "Enemy Base") && !IsOfClass(pen, "Enemy Spawner")
+     && !IsOfClass(pen, "Camera")
      && !IsOfClass(pen, "Trigger") && !IsOfClass(pen, "KeyItem") && !IsOfClass(pen, "Moving Brush")
      && !IsOfClass(pen, "Storm controller") && !IsOfClass(pen, "PyramidSpaceShip") && !IsOfClass(pen, "Lightning")
      && !IsOfClass(pen, "DoorController") && !IsOfClass(pen, "Touch Field")
@@ -206,4 +207,28 @@ void ProperUndecorate(CTString &str) {
   
   *pchDst++ = 0;
   str = strResult;
+};
+
+// [Cecil] Get first alive player
+CEntity *GetFirstPlayer(const CTString &strExecutor) {
+  CEntity *penOne = NULL;
+  
+  // [Cecil] NOTE: May potentially be the cause of the crashes by not being able to decide the first player for other clients
+  for (INDEX iPlayer = 0; iPlayer < CEntity::GetMaxPlayers(); iPlayer++) {
+    CEntity *pen = CEntity::GetPlayerEntity(iPlayer);
+
+    if (ASSERT_ENTITY(pen)) {
+      penOne = pen;
+
+      if (IsAlive(pen)) {
+        if (pen->IsPredictor()) {
+          return pen->GetPredicted();
+        }
+        return pen;
+      }
+    }
+  }
+
+  CPrintF("  ^cff0000WARNING! Cutscene chain is broken, unable to find alive players!\n^r(executed by %s^r)", strExecutor);
+  return penOne;
 };
