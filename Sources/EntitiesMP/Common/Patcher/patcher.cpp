@@ -1,3 +1,4 @@
+#include "StdH.h"
 
 //patcher.cpp
 #include "patcher.h"
@@ -8,38 +9,110 @@
 #pragma comment(linker, "/IGNORE:4786")
 #endif
 
+//typedef BOOL int;
+
+//#define CPATCHER_SE1_DEGUG_OUT
+
 HANDLE CPatch::s_hHeap = 0;
 bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 {
 	bool instruction_found;
 	int read_len = 0;
 	int instruction_len;
+	//CPrintF("okToRewriteTragetInstructionSet\n");
 	do
 	{
+		
 		instruction_len = 0;
 		instruction_found = false;
 		if(*reinterpret_cast<char*>(addr) == (char)0xE9) //jmp XX XX XX XX
 		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("jmp XX XX XX XX \n");
+			#endif
 			instruction_len = 5;
 			m_old_jmp = 5 + addr + *reinterpret_cast<long*>(addr + 1);
 		}else if( *reinterpret_cast<char*>(addr) == (char)0x68 ||               //push???
 			      *reinterpret_cast<char*>(addr) == (char)0xB8 ||               //mov EAX, XX XX XX XX
 			!memcmp(reinterpret_cast<char*>(addr), "\xB8\x1E", 2))
 		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("2 \n");
+			#endif
 			instruction_len = 5;
+			instruction_found = true;
+			
+		} else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x55", 2)) // MOV EDX, [EBP + arg_0]
+		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("mov edx, [ebp+arg0]\n");
+			#endif
+			instruction_len = 3;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\xFF", 2) || 
 				 !memcmp(reinterpret_cast<char*>(addr), "\x8B\xEC", 2) ||
+				 !memcmp(reinterpret_cast<char*>(addr), "\x8B\xF1", 2) || // MOV
 				 *reinterpret_cast<char*>(addr) == (char)0x6A)               //push XX
 		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("3 \n");
+			#endif
 			instruction_len = 2;
 			instruction_found = true;
-		}else if(*reinterpret_cast<char*>(addr) == (char)0x55)
+		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x46", 2))    
 		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("MOV ECX, [EBP + arg_0] \n");
+			#endif
+			instruction_len = 3;
+			instruction_found = true;
+		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x4D", 2))    // MOV ECX, [EBP + arg_0]
+		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("MOV ECX, [EBP + arg_0] \n");
+			#endif
+			instruction_len = 3;
+			instruction_found = true;
+		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x75", 2))
+		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("mov esi, [ebp+arg_0] \n");
+			#endif
+			instruction_len = 3;
+			instruction_found = true;
+		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8D\x45", 2))    // lea     eax, [ebp+...]
+		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("lea     eax, [ebp+...] \n");
+			#endif
+			instruction_len = 3;
+			instruction_found = true;
+		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x64\xA1", 2))    // MOV EAX, large FS
+		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("MOV EAX, large FS \n");
+			#endif
+			instruction_len = 6;
+			instruction_found = true;
+		}else if((*reinterpret_cast<char*>(addr) >= (char)0x50) && (*reinterpret_cast<char*>(addr) < (char)0x58)) // PUSH
+		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("push xxx\n");
+			#endif
 			instruction_len = 1;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x83\xEC", 2)) // sub esp, byte + N 
 		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("sub esp, byte + N \n");
+			#endif
+			instruction_len = 3;
+			instruction_found = true;
+		}else if(*reinterpret_cast<char*>(addr) == (char)0x89) // MOV
+		{
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("mov\n");
+			#endif
 			instruction_len = 3;
 			instruction_found = true;
 		}
@@ -50,10 +123,14 @@ bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 		if(read_len >= 5)
 		{
 			rw_len = read_len;
+			#ifdef CPATCHER_SE1_DEGUG_OUT
+			CPrintF("Finished: read_len >= 5 \n\n");
+			#endif
 			return true;
 		}
 	}while(instruction_found);
-
+	//CPrintF("Not found instruction! \n\n");
+	
 	return false;
 }
 
@@ -89,12 +166,14 @@ BOOL CPatch::HookFunction(long FuncToHook, long  MyHook, long* NewCallAddress, b
 
 			*NewCallAddress = reinterpret_cast<long>(m_PatchInstructionSet);
 			m_RestorePatchSet = new char[rewrite_len]; //not executable memory backup
-			char InstructionSet[long_jmp_len] = {0xE9, 0x00, 0x00, 0x00, 0x00};
+			
+			// 5 bytes(jmp+address) = jmp XX XX XX XX
+			char InstructionSet[long_jmp_len] = {(char)0xE9, (char)0x00, (char)0x00, (char)0x00, (char)0x00};
 			//ZeroMemory(m_PatchInstructionSet, new_instruction_set_len);
 
 			//generating code
 			memcpy(m_PatchInstructionSet, reinterpret_cast<char*>(FuncToHook), rewrite_len); //copy old bytes
-			if(m_old_jmp == 0) m_PatchInstructionSet [rewrite_len] = 0xE9;                   //long jmp
+			if(m_old_jmp == 0) m_PatchInstructionSet [rewrite_len] = (char)0xE9;                   //long jmp
 			long jmp_new = m_old_jmp ? m_old_jmp : FuncToHook + rewrite_len;
 
 			*reinterpret_cast<int*>(m_PatchInstructionSet + (new_instruction_set_len - long_jmp_len) + 1) =

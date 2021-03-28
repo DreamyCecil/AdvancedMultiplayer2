@@ -1,5 +1,6 @@
 #include "StdH.h"
 #include "ExtraFunc.h"
+#include "ConfigFunc.h"
 
 #include "EntitiesMP/DoorController.h"
 #include "EntitiesMP/KeyItem.h"
@@ -231,4 +232,167 @@ CEntity *GetFirstPlayer(const CTString &strExecutor) {
 
   CPrintF("  ^cff0000WARNING! Cutscene chain is broken, unable to find alive players!\n^r(executed by %s^r)", strExecutor);
   return penOne;
+};
+
+// [Cecil] Check for the right type
+#define ASSERT_VALUE_TYPE(_Value, _Type) \
+  if (_Value.cv_eType != CVT_##_Type) { \
+    ThrowF_t("Expected %s value for the '%s' argument!", #_Type, strName.c_str()); \
+  }
+
+// [Cecil] Parse model config
+void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment) {
+  INDEX ctValues = mapBlock.Count();
+
+  for (INDEX iValue = 0; iValue < ctValues; iValue++) {
+    // get config value
+    string strName = mapBlock.GetKey(iValue);
+    CConfigValue &cv = mapBlock.GetValue(iValue);
+
+    // load model
+    if (strName == "Model") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+
+      CTString strModel = CTString(cv.cv_strValue);
+      if (pmo->GetData() == NULL || pmo->GetData()->ser_FileName != strModel) {
+        pmo->SetData_t(strModel);
+      }
+
+    // load textures
+    } else if (strName == "Texture") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+      pmo->mo_toTexture.SetData_t(CTString(cv.cv_strValue));
+
+    } else if (strName == "Reflection") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+      pmo->mo_toReflection.SetData_t(CTString(cv.cv_strValue));
+
+    } else if (strName == "Specular") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+      pmo->mo_toSpecular.SetData_t(CTString(cv.cv_strValue));
+
+    } else if (strName == "Bump") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+      pmo->mo_toBump.SetData_t(CTString(cv.cv_strValue));
+
+    // apply animation
+    } else if (strName == "Animation") {
+      ASSERT_VALUE_TYPE(cv, INDEX);
+
+      // get animation number
+      INDEX iAnim = Clamp(INDEX(cv.cv_iValue), INDEX(0), INDEX(pmo->GetAnimsCt() - 1));
+      pmo->PlayAnim(iAnim, AOF_LOOPING);
+
+    // include another model
+    } else if (strName == "Include") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+      
+      // load model config
+      CConfigBlock cbInclude;
+      BOOL bFailed = !LoadJSON(CTString(cv.cv_strValue), cbInclude);
+
+      // set model
+      if (!bFailed) {
+        bFailed = !SetModelFromJSON(pmo, cbInclude);
+      }
+
+      if (bFailed) {
+        ThrowF_t("Couldn't parse the included model! (%s)", cv.cv_strValue);
+      }
+
+    // attachment position
+    } else if (strName == "Pos" || strName == "PosAdd") {
+      if (pamoAttachment == NULL) {
+        continue;
+
+      } else {
+        ASSERT_VALUE_TYPE(cv, ARRAY);
+
+        DJSON_Array &aPos = cv.cv_aArray;
+        if (aPos.Count() < 6) {
+          ThrowF_t("Not enough attachment positions!");
+        }
+
+        // check the values
+        for (INDEX iCheck = 0; iCheck < 6; iCheck++) {
+          CConfigValue &cvPos = aPos[iCheck];
+
+          if (cvPos.cv_eType != CVT_FLOAT && cvPos.cv_eType != CVT_INDEX) {
+            ThrowF_t("One of the position values isn't a float number!");
+          }
+        }
+
+        FLOAT3D vPos = FLOAT3D(aPos[0].GetNumber(), aPos[1].GetNumber(), aPos[2].GetNumber());
+        ANGLE3D aRot = ANGLE3D(aPos[3].GetNumber(), aPos[4].GetNumber(), aPos[5].GetNumber());
+
+        // set or add
+        if (strName == "PosAdd") {
+          pamoAttachment->amo_plRelative.pl_PositionVector += vPos;
+          pamoAttachment->amo_plRelative.pl_OrientationAngle += aRot;
+        } else {
+          pamoAttachment->amo_plRelative = CPlacement3D(vPos, aRot);
+        }
+      }
+
+    // attachments
+    } else if (CTString(strName.c_str()).HasPrefix("Attachment")) {
+      INDEX iAttach;
+
+      if (CTString(strName.c_str()).ScanF("Attachment %i", &iAttach) > 0) {
+        ASSERT_VALUE_TYPE(cv, BLOCK);
+
+        // Invalid index
+        if (iAttach < 0) {
+          ThrowF_t("Invalid attachment number!");
+        }
+
+        CModelData *pmd = (CModelData*)pmo->GetData();
+
+        // Too many attachments
+        if (iAttach >= pmd->md_aampAttachedPosition.Count()) {
+          ThrowF_t("Attachment %d does not exist!", iAttach);
+        }
+
+        // Attach the model
+        CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttach);
+        if (pamo == NULL) {
+          pamo = pmo->AddAttachmentModel(iAttach);
+        }
+
+        ParseModelConfig(cv.cv_mapBlock, &pamo->amo_moModelObject, pamo);
+
+      } else {
+        ThrowF_t("Expected attachment index for the attachment!");
+      }
+
+    // invalid argument
+    } else {
+      ThrowF_t("Invalid model argument '%s'!", strName.c_str());
+    }
+  }
+};
+
+// [Cecil] Load JSON config
+BOOL LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel) {
+  HookConfigFunctions();
+
+  // load the config
+  return ParseConfig(fnJSON.str_String, mapModel);
+};
+
+// [Cecil] Set model from a JSON config
+BOOL SetModelFromJSON(CModelObject *pmo, DJSON_Block &mapModel) {
+  HookConfigFunctions();
+
+  // parse the model
+  try {
+    ParseModelConfig(mapModel, pmo, NULL);
+    return TRUE;
+
+  } catch (char *strError) {
+    CPrintF("[^cff0000JSON Error^r]: %s\n", strError);
+    return FALSE;
+  }
+
+  return FALSE;
 };

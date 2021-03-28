@@ -8,6 +8,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>$(SolutionDir)../../../Bin/SeriousSam.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>+game MODNAME</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>+game AMP2</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
