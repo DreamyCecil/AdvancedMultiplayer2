@@ -35,239 +35,8 @@ extern INDEX gam_bGibs;
 extern INDEX gam_bUseExtraEnemies;
 extern CTString gam_strGameSpyExtras;
 
-// [Cecil] World Options
-extern INDEX amp_bEnableOptions;
-extern INDEX amp_bConversion;
-
-extern FLOAT amp_fSpeedMultiplier;
-extern FLOAT amp_fJumpMultiplier;
-extern FLOAT amp_fStartHealth;
-extern FLOAT amp_fMaxHealth;
-extern FLOAT amp_fMaxArmor;
-
-extern INDEX amp_iEnemyMultiplier;
-extern INDEX amp_bBalancedEnemies;
-extern FLOAT amp_fFireSpeed;
-extern FLOAT amp_fAmmoMultiplier;
-extern FLOAT amp_fPowerupTimeMul;
-extern INDEX amp_bHeatDamage;
-extern INDEX amp_bImpactDamage;
-extern FLOAT amp_fEnemyDamage;
-extern FLOAT amp_fPlayerDamage;
-extern FLOAT amp_fSelfDamage;
-
-// [Cecil] Gameplay Options
-extern INDEX amp_bStartAmmo;
-extern INDEX amp_bRocketDestruction;
-
-extern INDEX amp_iAltFire;
-extern INDEX amp_bShotgunAlt;
-extern INDEX amp_bDShotgunAlt;
-extern INDEX amp_bTommygunAlt;
-extern INDEX amp_bMinigunAlt;
-extern INDEX amp_bRLauncherAlt;
-extern INDEX amp_bGLauncherAlt;
-extern INDEX amp_bFlamerAlt;
-extern INDEX amp_bSniperAlt;
-extern INDEX amp_bLaserAlt;
-extern INDEX amp_bCannonAlt;
-
-extern FLOAT amp_fComboTime;
-extern INDEX amp_bUnlimitedCombos;
-extern FLOAT amp_fTokenPayout;
-extern INDEX amp_bStrongerEnemies;
-extern FLOAT amp_fBossResistance;
-extern INDEX amp_bNoRocketJump;
-
-extern INDEX amp_bKeepSecrets;
-extern INDEX amp_bSharedWeapons;
-extern INDEX amp_iPlayerCollision;
-extern INDEX amp_bAutosave;
-
-// [Cecil] Weapon Giver
-extern INDEX amp_bKnifeEnable;
-extern INDEX amp_bChainsawEnable;
-extern INDEX amp_bColtEnable;
-extern INDEX amp_bDColtEnable;
-extern INDEX amp_bShotgunEnable;
-extern INDEX amp_bDShotgunEnable;
-extern INDEX amp_bTommygunEnable;
-extern INDEX amp_bMinigunEnable;
-extern INDEX amp_bRLauncherEnable;
-extern INDEX amp_bGLauncherEnable;
-extern INDEX amp_bFlamerEnable;
-extern INDEX amp_bSniperEnable;
-extern INDEX amp_bLaserEnable;
-extern INDEX amp_bCannonEnable;
-
-// [Cecil] Item Removal
-extern INDEX amp_iWeaponItems;
-extern INDEX amp_iReplaceWeapons;
-extern INDEX amp_bTakeWeapons;
-
-extern INDEX amp_bKnifeItemEnable;
-extern INDEX amp_bChainsawItemEnable;
-extern INDEX amp_bColtItemEnable;
-extern INDEX amp_bShotgunItemEnable;
-extern INDEX amp_bDShotgunItemEnable;
-extern INDEX amp_bTommygunItemEnable;
-extern INDEX amp_bMinigunItemEnable;
-extern INDEX amp_bRLauncherItemEnable;
-extern INDEX amp_bGLauncherItemEnable;
-extern INDEX amp_bFlamerItemEnable;
-extern INDEX amp_bSniperItemEnable;
-extern INDEX amp_bLaserItemEnable;
-extern INDEX amp_bCannonItemEnable;
-
-extern INDEX amp_bInvulItem;
-extern INDEX amp_bInvisItem;
-extern INDEX amp_bDamageItem;
-extern INDEX amp_bSpeedItem;
-
-// [Cecil] Get seasonal event
-ESpecialEvent CurrentSeasonalEvent(void) {
-  // get current time
-  struct tm *tmNow;
-  time_t slTime;
-  time(&slTime);
-  tmNow = localtime(&slTime);
-
-  // current day
-  const int iMonth = tmNow->tm_mon;
-  const int iDay = tmNow->tm_mday;
-
-  // get month
-  switch (iMonth) {
-    // February (Valentine's day)
-    case 1:
-      if (iDay >= 10 && iDay <= 17) {
-        return ESE_VALENTINE;
-      }
-      break;
-
-    // March (Sam's birthday)
-    case 2:
-      if (iDay >= 19 && iDay <= 23) {
-        return ESE_BIRTHDAY;
-      }
-      break;
-
-    // October (Halloween)
-    case 9: return ESE_HALLOWEEN;
-
-    // December (Christmas)
-    case 11:
-      if (tmNow->tm_mday >= 15) {
-        return ESE_CHRISTMAS;
-      }
-      break;
-
-    // January (Christmas)
-    case 0:
-      if (tmNow->tm_mday <= 15) {
-        return ESE_CHRISTMAS;
-      }
-      break;
-  }
-
-  return ESE_NONE;
-};
-
-// [Cecil] Set new options
-static void SetAdvancedParameters(CSessionProperties &sp) {
-  const BOOL bOpt = amp_bEnableOptions;
-
-  sp.sp_fSpeedMultiplier = (bOpt ? amp_fSpeedMultiplier : 1.0f);
-  sp.sp_fJumpMultiplier  = (bOpt ? amp_fJumpMultiplier : 1.0f);
-  sp.sp_fStartHealth     = (bOpt ? amp_fStartHealth : 100.0f);
-  sp.sp_fMaxHealth       = (bOpt ? amp_fMaxHealth : 200.0f);
-  sp.sp_fMaxArmor        = (bOpt ? amp_fMaxArmor : 200.0f);
-
-  sp.sp_iEnemyMultiplier = (bOpt ? amp_iEnemyMultiplier : 1);
-  sp.sp_fFireSpeed       = (bOpt ? Clamp(amp_fFireSpeed, 0.01f, 100.0f) : 1.0f);
-  sp.sp_fAmmoMultiplier  = (bOpt ? amp_fAmmoMultiplier : 1.0f);
-  sp.sp_fPowerupTimeMul  = (bOpt ? amp_fPowerupTimeMul : 1.0f);
-  sp.sp_fEnemyDamage     = (bOpt ? amp_fEnemyDamage : 1.0f);
-  sp.sp_fPlayerDamage    = (bOpt ? amp_fPlayerDamage : 1.0f);
-  sp.sp_fSelfDamage      = (bOpt ? amp_fSelfDamage : 1.0f);
-
-  sp.sp_iPlayerCollision = amp_iPlayerCollision;
-  sp.sp_iWeaponItems = amp_iWeaponItems;
-  sp.sp_iReplaceWeapons = amp_iReplaceWeapons;
-
-  sp.sp_fComboTime = amp_fComboTime;
-  sp.sp_fTokenPayout = amp_fTokenPayout;
-  sp.sp_fBossResistance = amp_fBossResistance;
-
-  // main options
-  sp.sp_iAMPOptions = (amp_bEnableOptions ? AMP_ENABLE : 0)
-                    | (amp_bConversion    ? AMP_CONVERSION : 0)
-                    | ((bOpt && amp_bHeatDamage)      ? AMP_HEAT : 0)
-                    | ((bOpt && amp_bImpactDamage)    ? AMP_IMPACT : 0)
-                    | ((bOpt && amp_bBalancedEnemies) ? AMP_BALANCED : 0)
-                    | (amp_bStartAmmo         ? AMP_STARTAMMO : 0)
-                    | (amp_bRocketDestruction ? AMP_ROCKETS : 0)
-                    | (amp_bUnlimitedCombos   ? AMP_UNLIMITCOMBO : 0)
-                    | (amp_bStrongerEnemies   ? AMP_ENEMIES : 0)
-                    | (amp_bKeepSecrets       ? AMP_KEEPSECRETS : 0)
-                    | (amp_bSharedWeapons     ? AMP_SHAREWEAPONS : 0)
-                    | (amp_bAutosave          ? AMP_AUTOSAVE : 0)
-                    | (amp_bTakeWeapons       ? AMP_TAKEWEAPONS : 0)
-                    | (amp_bNoRocketJump      ? AMP_NOROCKETJUMP : 0);
-
-  // weapon alt fire
-  sp.sp_iAltFire = (amp_bShotgunAlt   ? WAF_SHOTGUN : 0)
-                 | (amp_bDShotgunAlt  ? WAF_DSHOTGUN : 0)
-                 | (amp_bTommygunAlt  ? WAF_TOMMYGUN : 0)
-                 | (amp_bMinigunAlt   ? WAF_MINIGUN : 0)
-                 | (amp_bRLauncherAlt ? WAF_RLAUNCHER : 0)
-                 | (amp_bGLauncherAlt ? WAF_GLAUNCHER : 0)
-                 | (amp_bFlamerAlt    ? WAF_FLAMER : 0)
-                 | (amp_bSniperAlt    ? WAF_SNIPER : 0)
-                 | (amp_bLaserAlt     ? WAF_LASER : 0)
-                 | (amp_bCannonAlt    ? WAF_CANNON : 0);
-
-  // two bits for the alt fire mode
-  sp.sp_iAltFire |= (amp_iAltFire & 0x3);
-
-  // weapon giver
-  sp.sp_iWeaponGiver = (amp_bKnifeEnable     ? IRF_KNIFE : 0)
-                     | (amp_bChainsawEnable  ? IRF_CHAINSAW : 0)
-                     | (amp_bColtEnable      ? IRF_COLT : 0)
-                     | (amp_bDColtEnable     ? IRF_DCOLT : 0)
-                     | (amp_bShotgunEnable   ? IRF_SHOTGUN : 0)
-                     | (amp_bDShotgunEnable  ? IRF_DSHOTGUN : 0)
-                     | (amp_bTommygunEnable  ? IRF_TOMMYGUN : 0)
-                     | (amp_bMinigunEnable   ? IRF_MINIGUN : 0)
-                     | (amp_bRLauncherEnable ? IRF_RLAUNCHER : 0)
-                     | (amp_bGLauncherEnable ? IRF_GLAUNCHER : 0)
-                     | (amp_bFlamerEnable    ? IRF_FLAMER : 0)
-                     | (amp_bSniperEnable    ? IRF_SNIPER : 0)
-                     | (amp_bLaserEnable     ? IRF_LASER : 0)
-                     | (amp_bCannonEnable    ? IRF_CANNON : 0);
-
-  // item removal
-  sp.sp_iItemRemoval = (amp_bKnifeItemEnable     ? IRF_KNIFE : 0)
-                     | (amp_bChainsawItemEnable  ? IRF_CHAINSAW : 0)
-                     | (amp_bColtItemEnable      ? IRF_COLT|IRF_DCOLT : 0)
-                     | (amp_bShotgunItemEnable   ? IRF_SHOTGUN : 0)
-                     | (amp_bDShotgunItemEnable  ? IRF_DSHOTGUN : 0)
-                     | (amp_bTommygunItemEnable  ? IRF_TOMMYGUN : 0)
-                     | (amp_bMinigunItemEnable   ? IRF_MINIGUN : 0)
-                     | (amp_bRLauncherItemEnable ? IRF_RLAUNCHER : 0)
-                     | (amp_bGLauncherItemEnable ? IRF_GLAUNCHER : 0)
-                     | (amp_bFlamerItemEnable    ? IRF_FLAMER : 0)
-                     | (amp_bSniperItemEnable    ? IRF_SNIPER : 0)
-                     | (amp_bLaserItemEnable     ? IRF_LASER : 0)
-                     | (amp_bCannonItemEnable    ? IRF_CANNON : 0)
-                     | (amp_bInvulItem  ? IRF_INVUL : 0)
-                     | (amp_bInvisItem  ? IRF_INVIS : 0)
-                     | (amp_bDamageItem ? IRF_DAMAGE : 0)
-                     | (amp_bSpeedItem  ? IRF_SPEED : 0);
-  
-  // seasonal event
-  sp.sp_eEvent = CurrentSeasonalEvent();
-};
+// [Cecil] Mod parameters
+extern void SetAdvancedParameters(CSessionProperties &sp);
 
 static void SetGameModeParameters(CSessionProperties &sp) {
   sp.sp_gmGameMode = (CSessionProperties::GameMode) Clamp(INDEX(gam_iStartMode), -1L, 3L);
@@ -382,6 +151,7 @@ void CGame::SetSinglePlayerSession(CSessionProperties &sp) {
 
   sp.sp_bGibs  = gam_bGibs;
 
+  // [Cecil] Set new parameters
   SetAdvancedParameters(sp);
 };
 
@@ -444,7 +214,8 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp) {
   sp.sp_tmSpawnInvulnerability = gam_tmSpawnInvulnerability;
 
   sp.sp_bUseExtraEnemies = gam_bUseExtraEnemies;
-
+  
+  // [Cecil] Set new parameters
   SetAdvancedParameters(sp);
 
   // set credits and limits

@@ -185,6 +185,7 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClCompile Include="LCDDrawing.cpp" />
     <ClCompile Include="LoadingHook.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="ModSymbols.cpp" />
     <ClCompile Include="SessionProperties.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
