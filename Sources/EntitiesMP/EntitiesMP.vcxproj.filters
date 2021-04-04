@@ -83,6 +83,12 @@
     <Filter Include="Header Files\Patcher headers">
       <UniqueIdentifier>{fea89f0b-abb1-4ce8-a8ca-20e685a3d53b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Custom Patches">
+      <UniqueIdentifier>{8a40829d-44a7-4a80-bd75-f7964b810141}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Custom Patches headers">
+      <UniqueIdentifier>{a3ce00e3-5f1c-4048-b3b2-588064c7bcef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Common.cpp">
@@ -574,44 +580,53 @@
     <ClCompile Include="DummyEnemy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Values\ConfigValue.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Parser\ConfigParser.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Base\Compatibility.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Base\Formatting.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Values\ConfigBlock.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Values\ConfigElement.cpp">
-      <Filter>Source Files\DreamyJSON sources</Filter>
-    </ClCompile>
     <ClCompile Include="Common\ConfigFunc.cpp">
       <Filter>Source Files\Common sources</Filter>
-    </ClCompile>
-    <ClCompile Include="Common\Weapons\PlayerArsenal.cpp">
-      <Filter>Source Files\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="Common\Weapons\WeaponStruct.cpp">
-      <Filter>Source Files\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="GlobalController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Common\Patcher\patcher.cpp">
+    <ClCompile Include="..\Depends\DreamyJSON\Base\Compatibility.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Depends\DreamyJSON\Base\Formatting.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Depends\DreamyJSON\Parser\ConfigParser.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Depends\DreamyJSON\Values\ConfigBlock.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Depends\DreamyJSON\Values\ConfigElement.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Depends\DreamyJSON\Values\ConfigValue.cpp">
+      <Filter>Source Files\DreamyJSON sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Depends\Patcher\patcher.cpp">
       <Filter>Source Files\Patcher</Filter>
     </ClCompile>
-    <ClCompile Include="Common\Patcher\StockPatch.cpp">
-      <Filter>Source Files\Patcher</Filter>
+    <ClCompile Include="Common\Patches\StockFuncPatcher.cpp">
+      <Filter>Source Files\Custom Patches</Filter>
     </ClCompile>
-    <ClCompile Include="Common\Patcher\StockFuncPatcher.cpp">
-      <Filter>Source Files\Patcher</Filter>
+    <ClCompile Include="Common\Patches\StockPatch.cpp">
+      <Filter>Source Files\Custom Patches</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\PlayerAmmo.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\PlayerWeapon.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\WeaponAmmo.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\WeaponBase.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\WeaponStruct.cpp">
+      <Filter>Source Files\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1569,59 +1584,8 @@
     <ClInclude Include="DummyEnemy_tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataArray.h">
-      <Filter>Header Files\DreamyStructures</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataList.h">
-      <Filter>Header Files\DreamyStructures</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataMap.h">
-      <Filter>Header Files\DreamyStructures</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataStack.h">
-      <Filter>Header Files\DreamyStructures</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataStructures.h">
-      <Filter>Header Files\DreamyStructures</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataTemplates.h">
-      <Filter>Header Files\DreamyStructures</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\ConfigBase.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\DreamyJSON.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Base\Compatibility.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Base\Formatting.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Parser\ConfigParser.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Parser\ParserToken.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Values\ConfigValue.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Values\ConfigBlock.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DreamyJSON\Values\ConfigElement.h">
-      <Filter>Header Files\DreamyJSON headers</Filter>
-    </ClInclude>
     <ClInclude Include="Common\ConfigFunc.h">
       <Filter>Header Files\Common headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\Weapons\PlayerArsenal.h">
-      <Filter>Header Files\Weapons headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\Weapons\WeaponStruct.h">
-      <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
     <ClInclude Include="GlobalController.h">
       <Filter>Header Files</Filter>
@@ -1629,17 +1593,80 @@
     <ClInclude Include="GlobalController_tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Patcher\patcher.h">
+    <ClInclude Include="..\Depends\Patcher\patcher.h">
       <Filter>Header Files\Patcher headers</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Patcher\patcher_defines.h">
+    <ClInclude Include="..\Depends\Patcher\patcher_defines.h">
       <Filter>Header Files\Patcher headers</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Patcher\StockPatch.h">
-      <Filter>Header Files\Patcher headers</Filter>
+    <ClInclude Include="Common\Patches\StockFuncPatcher.h">
+      <Filter>Header Files\Custom Patches headers</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Patcher\StockFuncPatcher.h">
-      <Filter>Header Files\Patcher headers</Filter>
+    <ClInclude Include="Common\Patches\StockPatch.h">
+      <Filter>Header Files\Custom Patches headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\ConfigBase.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyJSON.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\Base\Compatibility.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\Base\Formatting.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\Parser\ConfigParser.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\Parser\ParserToken.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\Values\ConfigBlock.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\Values\ConfigElement.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\Values\ConfigValue.h">
+      <Filter>Header Files\DreamyJSON headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataArray.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataList.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataMap.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataStructures.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataTemplates.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\PlayerAmmo.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\PlayerWeapon.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\WeaponAmmo.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\WeaponBase.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\WeaponStruct.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\StructHeader.h">
+      <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2527,16 +2554,16 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\DreamyJSON\DreamyStructures\DataArray.inl">
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataArray.inl">
       <Filter>Header Files\DreamyStructures</Filter>
     </None>
-    <None Include="..\DreamyJSON\DreamyStructures\DataList.inl">
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataList.inl">
       <Filter>Header Files\DreamyStructures</Filter>
     </None>
-    <None Include="..\DreamyJSON\DreamyStructures\DataMap.inl">
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataMap.inl">
       <Filter>Header Files\DreamyStructures</Filter>
     </None>
-    <None Include="..\DreamyJSON\DreamyStructures\DataStack.inl">
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.inl">
       <Filter>Header Files\DreamyStructures</Filter>
     </None>
   </ItemGroup>

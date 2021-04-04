@@ -1,6 +1,6 @@
 #pragma once
 
-#include "patcher.h"
+#include "Depends/Patcher/patcher.h"
 #include "Engine/Templates/Stock_CEntityClass.h"
 
 typedef CEntityClass *(CStock_CEntityClass::*CObtainFunc)(const CTFileName &);

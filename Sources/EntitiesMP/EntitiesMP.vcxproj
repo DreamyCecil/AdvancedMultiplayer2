@@ -176,29 +176,26 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\DreamyJSON\Base\Compatibility.cpp">
+    <ClCompile Include="..\Depends\DreamyJSON\Base\Compatibility.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Base\Formatting.cpp">
+    <ClCompile Include="..\Depends\DreamyJSON\Base\Formatting.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Parser\ConfigParser.cpp">
+    <ClCompile Include="..\Depends\DreamyJSON\Parser\ConfigParser.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Values\ConfigBlock.cpp">
+    <ClCompile Include="..\Depends\DreamyJSON\Values\ConfigBlock.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Values\ConfigElement.cpp">
+    <ClCompile Include="..\Depends\DreamyJSON\Values\ConfigElement.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\DreamyJSON\Values\ConfigValue.cpp">
+    <ClCompile Include="..\Depends\DreamyJSON\Values\ConfigValue.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\Depends\Patcher\patcher.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Common\Common.cpp" />
     <ClCompile Include="Common\ConfigFunc.cpp" />
@@ -206,17 +203,13 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClCompile Include="Common\ExtraFunc.cpp" />
     <ClCompile Include="Common\HUD.cpp" />
     <ClCompile Include="Common\Particles.cpp" />
-    <ClCompile Include="Common\Patcher\StockFuncPatcher.cpp" />
-    <ClCompile Include="Common\Patcher\patcher.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Common\Patcher\StockPatch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="Common\Patches\StockFuncPatcher.cpp" />
+    <ClCompile Include="Common\Patches\StockPatch.cpp" />
     <ClCompile Include="Common\PathFinding.cpp" />
-    <ClCompile Include="Common\Weapons\PlayerArsenal.cpp" />
+    <ClCompile Include="Common\Weapons\PlayerAmmo.cpp" />
+    <ClCompile Include="Common\Weapons\PlayerWeapon.cpp" />
+    <ClCompile Include="Common\Weapons\WeaponAmmo.cpp" />
+    <ClCompile Include="Common\Weapons\WeaponBase.cpp" />
     <ClCompile Include="Common\Weapons\WeaponStruct.cpp" />
     <ClCompile Include="DummyEnemy.cpp" />
     <ClCompile Include="GlobalController.cpp" />
@@ -432,33 +425,37 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClCompile Include="WorldSettingsController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\DreamyJSON\Base\Compatibility.h" />
-    <ClInclude Include="..\DreamyJSON\Base\Formatting.h" />
-    <ClInclude Include="..\DreamyJSON\ConfigBase.h" />
-    <ClInclude Include="..\DreamyJSON\DreamyJSON.h" />
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataArray.h" />
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataList.h" />
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataMap.h" />
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataStack.h" />
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataStructures.h" />
-    <ClInclude Include="..\DreamyJSON\DreamyStructures\DataTemplates.h" />
-    <ClInclude Include="..\DreamyJSON\Parser\ConfigParser.h" />
-    <ClInclude Include="..\DreamyJSON\Parser\ParserToken.h" />
-    <ClInclude Include="..\DreamyJSON\Values\ConfigBlock.h" />
-    <ClInclude Include="..\DreamyJSON\Values\ConfigElement.h" />
-    <ClInclude Include="..\DreamyJSON\Values\ConfigValue.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\Base\Compatibility.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\Base\Formatting.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\ConfigBase.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyJSON.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataArray.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataList.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataMap.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataStructures.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataTemplates.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\Parser\ConfigParser.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\Parser\ParserToken.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\Values\ConfigBlock.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\Values\ConfigElement.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\Values\ConfigValue.h" />
+    <ClInclude Include="..\Depends\Patcher\patcher.h" />
+    <ClInclude Include="..\Depends\Patcher\patcher_defines.h" />
     <ClInclude Include="Common\Common.h" />
     <ClInclude Include="Common\ConfigFunc.h" />
     <ClInclude Include="Common\ExtraFunc.h" />
     <ClInclude Include="Common\Flags.h" />
     <ClInclude Include="Common\GameInterface.h" />
     <ClInclude Include="Common\Particles.h" />
-    <ClInclude Include="Common\Patcher\StockFuncPatcher.h" />
-    <ClInclude Include="Common\Patcher\patcher.h" />
-    <ClInclude Include="Common\Patcher\patcher_defines.h" />
-    <ClInclude Include="Common\Patcher\StockPatch.h" />
+    <ClInclude Include="Common\Patches\StockFuncPatcher.h" />
+    <ClInclude Include="Common\Patches\StockPatch.h" />
     <ClInclude Include="Common\PathFinding.h" />
-    <ClInclude Include="Common\Weapons\PlayerArsenal.h" />
+    <ClInclude Include="Common\Weapons\PlayerAmmo.h" />
+    <ClInclude Include="Common\Weapons\PlayerWeapon.h" />
+    <ClInclude Include="Common\Weapons\StructHeader.h" />
+    <ClInclude Include="Common\Weapons\WeaponAmmo.h" />
+    <ClInclude Include="Common\Weapons\WeaponBase.h" />
     <ClInclude Include="Common\Weapons\WeaponStruct.h" />
     <ClInclude Include="DummyEnemy.h" />
     <ClInclude Include="DummyEnemy_tables.h" />
@@ -2750,10 +2747,6 @@ ecc EntitiesMP/%(Filename).es </Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\DreamyJSON\DreamyStructures\DataArray.inl" />
-    <None Include="..\DreamyJSON\DreamyStructures\DataList.inl" />
-    <None Include="..\DreamyJSON\DreamyStructures\DataMap.inl" />
-    <None Include="..\DreamyJSON\DreamyStructures\DataStack.inl" />
     <CustomBuild Include="GlobalController.es">
       <FileType>Document</FileType>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).cpp;%(Outputs)</Outputs>
@@ -2761,6 +2754,12 @@ ecc EntitiesMP/%(Filename).es </Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd $(SolutionDir)
 ecc EntitiesMP/%(Filename).es </Command>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataArray.inl" />
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataList.inl" />
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataMap.inl" />
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

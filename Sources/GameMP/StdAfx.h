@@ -17,7 +17,7 @@
 #include <EntitiesMP/Player.h>
 
 // [Cecil] Function patching
-#include "EntitiesMP/Common/Patcher/StockFuncPatcher.h"
-#include "EntitiesMP/Common/Patcher/StockPatch.h"
+#include "EntitiesMP/Common/Patches/StockFuncPatcher.h"
+#include "EntitiesMP/Common/Patches/StockPatch.h"
 
 #undef DECL_DLL

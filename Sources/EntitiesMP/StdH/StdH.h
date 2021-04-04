@@ -16,7 +16,7 @@
 typedef std::string string;
 
 // [Cecil] Config parser
-#include "DreamyJSON/DreamyJSON.h"
+#include "Depends/DreamyJSON/DreamyJSON.h"
 
 #include "../Global.h"
 #include "../Common/Flags.h"
@@ -25,5 +25,5 @@ typedef std::string string;
 #include "../Common/EmanatingParticles.h"
 #include "../Common/GameInterface.h"
 
-// [Cecil] Ammo and weapon structures
-#include "../Common/Weapons/PlayerArsenal.h"
+// [Cecil] Weapon structures
+#include "EntitiesMP/Common/Weapons/StructHeader.h"

@@ -71,6 +71,7 @@ void ResetWeaponPosition(void) {
 
 // [Cecil] Tesla lightning
 #include "EntitiesMP/TeslaLightning.h"
+
 // [Cecil] Extra functions
 #include "EntitiesMP/Common/ExtraFunc.h"
 
