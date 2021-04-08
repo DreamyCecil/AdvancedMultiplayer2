@@ -79,6 +79,7 @@ Sources/EntitiesMP/*.cpp
 Controls/01-*
 Demos/*
 !Demos/empty
+LevelPatches/*
 Models/*
 Players/*
 !Players/empty
