@@ -1,6 +1,10 @@
 {
   "Name" : "XM214-A Minigun",
-  "Icon" : "TexturesMP\Interface\WMinigun.tex",
+  "Icon" : "TexturesMP/Interface/WMinigun.tex",
+  
+  "Model1" : "Models1/07_Minigun.json",
+  "Model2" : "Models1/07_Minigun_2.json",
+  "Model3" : "Models3/07_Minigun.json",
   
   "Damage" : 10.0,
   "DamageAlt" : 20.0,

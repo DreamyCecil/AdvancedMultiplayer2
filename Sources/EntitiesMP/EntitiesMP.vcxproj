@@ -93,6 +93,7 @@
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
       <DisableSpecificWarnings>4996;4333</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -142,6 +143,7 @@ copy Release\$(TargetName).lib $(SolutionDir)..\Bin\ &gt;nul</Command>
       <ObjectFileName>Debug\</ObjectFileName>
       <ProgramDataBaseFileName>Debug\</ProgramDataBaseFileName>
       <DisableSpecificWarnings>4996;4333</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -210,6 +212,7 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClCompile Include="Common\Weapons\PlayerWeapon.cpp" />
     <ClCompile Include="Common\Weapons\WeaponAmmo.cpp" />
     <ClCompile Include="Common\Weapons\WeaponBase.cpp" />
+    <ClCompile Include="Common\Weapons\WeaponModel.cpp" />
     <ClCompile Include="Common\Weapons\WeaponStruct.cpp" />
     <ClCompile Include="DummyEnemy.cpp" />
     <ClCompile Include="GlobalController.cpp" />
@@ -456,6 +459,7 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="Common\Weapons\StructHeader.h" />
     <ClInclude Include="Common\Weapons\WeaponAmmo.h" />
     <ClInclude Include="Common\Weapons\WeaponBase.h" />
+    <ClInclude Include="Common\Weapons\WeaponModel.h" />
     <ClInclude Include="Common\Weapons\WeaponStruct.h" />
     <ClInclude Include="DummyEnemy.h" />
     <ClInclude Include="DummyEnemy_tables.h" />

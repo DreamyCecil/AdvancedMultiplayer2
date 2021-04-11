@@ -1,0 +1,7 @@
+{
+  "Model"   : "Models/Weapons/RocketLauncher/Projectile/Rocket.mdl",
+  "Texture" : "Models/Weapons/RocketLauncher/Projectile/Rocket.tex",
+  
+  "Reflection" : "Models/ReflectionTextures/LightMetal01.tex",
+  "Specular"   : "Models/SpecularTextures/Medium.tex",
+}

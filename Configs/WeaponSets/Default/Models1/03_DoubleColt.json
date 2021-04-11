@@ -1,0 +1,7 @@
+{
+  // Colt model
+  "Include" : "Configs/WeaponSets/Default/Models/02_Colt.json",
+  
+  // Mirror
+  "Stretch" : [-1.0, 1.0, 1.0],
+}

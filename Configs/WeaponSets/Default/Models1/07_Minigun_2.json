@@ -1,0 +1,7 @@
+{
+  // Minigun model
+  "Include" : "Configs/WeaponSets/Default/Models/07_Minigun.json",
+  
+  // Mirror
+  "Stretch" : [-1.0, 1.0, 1.0],
+}

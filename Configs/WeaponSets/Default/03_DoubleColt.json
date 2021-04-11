@@ -1,3 +1,5 @@
 {
-  "Include" : "Scripts\WeaponSets\Default\02_Colt.json",
+  "Include" : "02_Colt.json",
+  
+  "Model2" : "Models1/03_DoubleColt.json",
 }

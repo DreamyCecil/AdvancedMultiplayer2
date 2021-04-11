@@ -1,0 +1,31 @@
+{
+  "Model"   : "Models/Weapons/SingleShotgun/SingleShotgun.mdl",
+  "Texture" : "Models/Weapons/Hand.tex",
+  
+  "Attachment 1" : {
+    "Model"   : "Models/Weapons/SingleShotgun/Barrels.mdl",
+    "Texture" : "Models/Weapons/SingleShotgun/Barrels.tex",
+    
+    "Reflection" : "Models/ReflectionTextures/DarkMetal.tex",
+    "Specular"   : "Models/SpecularTextures/Weak.tex",
+    
+    // Flare attachment
+    "Include" : "Configs/WeaponFlare1.json",
+  },
+  
+  "Attachment 0" : {
+    "Model"   : "Models/Weapons/SingleShotgun/Handle.mdl",
+    "Texture" : "Models/Weapons/SingleShotgun/Handle.tex",
+    
+    "Reflection" : "Models/ReflectionTextures/DarkMetal.tex",
+    "Specular"   : "Models/SpecularTextures/Medium.tex",
+  },
+  
+  "Attachment 2" : {
+    "Model"   : "Models/Weapons/SingleShotgun/Slider.mdl",
+    "Texture" : "Models/Weapons/SingleShotgun/Barrels.tex",
+    
+    "Reflection" : "Models/ReflectionTextures/DarkMetal.tex",
+    "Specular"   : "Models/SpecularTextures/Medium.tex",
+  },
+}

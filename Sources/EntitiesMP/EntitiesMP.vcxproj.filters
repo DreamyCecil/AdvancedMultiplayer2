@@ -628,6 +628,9 @@
     <ClCompile Include="Common\Weapons\WeaponStruct.cpp">
       <Filter>Source Files\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="Common\Weapons\WeaponModel.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Common.h">
@@ -1666,6 +1669,9 @@
       <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
     <ClInclude Include="Common\Weapons\StructHeader.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Weapons\WeaponModel.h">
       <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
   </ItemGroup>

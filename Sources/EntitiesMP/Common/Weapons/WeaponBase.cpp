@@ -3,6 +3,7 @@
 
 // Config parser
 #include "EntitiesMP/Common/ConfigFunc.h"
+#include "EntitiesMP/Common/ExtraFunc.h"
 
 // Set icon
 void SWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
@@ -38,7 +39,7 @@ void SWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
 #define AP(_Ammo) (_Ammo < _awaWeaponAmmo.Count() ? &_awaWeaponAmmo[_Ammo] : NULL)
 
 // Add new ammo to the list
-void AddAmmo(SWeaponAmmo &wa) {
+static void AddAmmo(SWeaponAmmo &wa) {
   int iAmmo = _awaWeaponAmmo.Add(wa);
 
   // set ID of the added ammo
@@ -50,7 +51,7 @@ void AddAmmo(SWeaponAmmo &wa) {
 };
 
 // Add new weapon to the list
-void AddWeapon(SWeaponStruct &wp) {
+static void AddWeapon(SWeaponStruct &wp) {
   int iWeapon = _awsPlayerWeapons.Add(wp);
 
   // set ID of the added weapon
@@ -62,7 +63,7 @@ void AddWeapon(SWeaponStruct &wp) {
 };
 
 // Parse ammo config
-BOOL ParseAmmoConfig(SWeaponAmmo &wa, CTString strConfig) {
+static BOOL ParseAmmoConfig(SWeaponAmmo &wa, CTString strSet, CTString strConfig) {
   // parse the config
   CConfigBlock cb;
   if (ParseConfig(strConfig, cb) != DJSON_OK) {
@@ -71,7 +72,7 @@ BOOL ParseAmmoConfig(SWeaponAmmo &wa, CTString strConfig) {
   
   // included config
   if (GetConfigString(cb, "Include", strConfig)) {
-    ParseAmmoConfig(wa, strConfig);
+    ParseAmmoConfig(wa, strSet, strConfig);
   }
 
   // ammo properties
@@ -98,7 +99,7 @@ BOOL ParseAmmoConfig(SWeaponAmmo &wa, CTString strConfig) {
 };
 
 // Parse weapon config
-BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
+static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strConfig) {
   // parse the config
   CConfigBlock cb;
   if (ParseConfig(strConfig, cb) != DJSON_OK) {
@@ -107,7 +108,7 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
 
   // included config
   if (GetConfigString(cb, "Include", strConfig)) {
-    ParseWeaponConfig(ws, strConfig);
+    ParseWeaponConfig(ws, strSet, strSet + strConfig);
   }
 
   CConfigValue val;
@@ -175,6 +176,43 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
     ws.fMana = val.GetNumber();
   }
 
+  // models
+  #define WEAPON_MODELS 3
+  CTString strModelConfig;
+
+  // weapon models
+  SWeaponModel *apModels = &ws.wmModel1;
+
+  // model types in the config
+  CTString strType[WEAPON_MODELS] = {
+    "Model1",
+    "Model2",
+    "Model3",
+  };
+
+  for (INDEX iModel = 0; iModel < WEAPON_MODELS; iModel++) {
+    // get model config path
+    if (!GetConfigString(cb, strType[iModel].str_String, strModelConfig)) {
+      // no key or path string, doesn't matter
+      continue;
+    }
+
+    // weapon set path
+    strModelConfig = strSet + strModelConfig;
+
+    // [Cecil] TEMP: Skip if no config
+    if (!FileExists(strModelConfig)) {
+      continue;
+    }
+
+    // set model from the config
+    if (apModels[iModel].SetModel(strModelConfig) == WM_MODELERROR) {
+      // couldn't set the model
+      FatalError("Couldn't set model \"%s\" for the weapon in \"%s\"!", strType[iModel], strConfig);
+      return FALSE;
+    }
+  }
+
   return TRUE;
 };
 
@@ -182,16 +220,18 @@ BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strConfig) {
 extern void LoadWorldWeapons(CWorld *pwo) {
   // load default sets
   CDynamicStackArray<CTFileName> aList;
+  HookConfigFunctions();
 
   // go through ammo configs
-  MakeDirList(aList, CTFILENAME("Scripts\\AmmoSets\\Default\\"), "*.json", 0);
+  CTString strAmmoSet = "Configs\\AmmoSets\\Default\\";
+  MakeDirList(aList, CTFileName(strAmmoSet), "*.json", 0);
 
   for (INDEX iAmmo = 0; iAmmo < aList.Count(); iAmmo++) {
     CTString strFile = aList[iAmmo].str_String;
 
     // parse the config
     SWeaponAmmo waAmmo;
-    ParseAmmoConfig(waAmmo, strFile);
+    ParseAmmoConfig(waAmmo, strAmmoSet, strFile);
 
     // add the ammo
     AddAmmo(waAmmo);
@@ -201,15 +241,15 @@ extern void LoadWorldWeapons(CWorld *pwo) {
   AddWeapon(SWeaponStruct(NULL, NULL, "", ""));
   
   // go through weapon configs
-  MakeDirList(aList, CTFILENAME("Scripts\\WeaponSets\\Default\\"), "*.json", 0);
-  HookConfigFunctions();
+  CTString strWeaponSet = "Configs\\WeaponSets\\Default\\";
+  MakeDirList(aList, CTFileName(strWeaponSet), "*.json", 0);
 
   for (INDEX iWeapon = 0; iWeapon < aList.Count(); iWeapon++) {
     CTString strFile = aList[iWeapon].str_String;
 
     // parse the config
     SWeaponStruct wsStruct;
-    ParseWeaponConfig(wsStruct, strFile);
+    ParseWeaponConfig(wsStruct, strWeaponSet, strFile);
 
     // add the weapon
     AddWeapon(wsStruct);

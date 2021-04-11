@@ -1,6 +1,9 @@
 {
   "Name" : "SBC Cannon",
-  "Icon" : "TexturesMP\Interface\WCannon.tex",
+  "Icon" : "TexturesMP/Interface/WCannon.tex",
+  
+  "Model1" : "Models1/14_Cannon.json",
+  "Model3" : "Models3/14_Cannon.json",
   
   "Ammo" : 8,
   "AltAmmo": -1,

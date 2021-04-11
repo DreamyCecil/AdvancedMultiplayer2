@@ -1,0 +1,12 @@
+{
+  "Model"   : "Models/Weapons/Cannon/Cannon.mdl",
+  "Texture" : "Models/Weapons/Hand.tex",
+  
+  "Attachment 0" : {
+    "Model"   : "Models/Weapons/Cannon/Body.mdl",
+    "Texture" : "Models/Weapons/Cannon/Body.tex",
+    
+    "Reflection" : "Models/ReflectionTextures/LightMetal01.tex",
+    "Specular"   : "Models/SpecularTextures/Medium.tex",
+  },
+}

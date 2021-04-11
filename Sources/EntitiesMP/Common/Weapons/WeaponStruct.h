@@ -2,10 +2,15 @@
 
 #include "WeaponBase.h"
 #include "WeaponPos.h"
+#include "WeaponModel.h"
 
 // Weapon properties
 struct SWeaponStruct : public SWeaponBase {
   SWeaponPos wpsPos; // weapon position
+
+  SWeaponModel wmModel1; // first person model
+  SWeaponModel wmModel2; // first person model (other hand)
+  SWeaponModel wmModel3; // third person model
 
   SWeaponAmmo *pwaAmmo; // ammo
   SWeaponAmmo *pwaAlt; // alt ammo
@@ -23,7 +28,7 @@ struct SWeaponStruct : public SWeaponBase {
   SWeaponStruct(void);
   SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup);
 
-  // Write and read
+  // Write and read weapon properties
   void Write(CTStream *strm);
   void Read(CTStream *strm);
 };

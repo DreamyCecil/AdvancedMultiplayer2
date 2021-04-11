@@ -14,10 +14,10 @@ SWeaponStruct::SWeaponStruct(void) :
 
 SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
   SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pwaAmmo(NULL), pwaAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0),
+  pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f) {};
 
-// Write and read weapon properties
+// Write weapon properties
 void SWeaponStruct::Write(CTStream *strm) {
   *strm << strIcon;
   *strm << wpsPos.plPos;
@@ -39,6 +39,7 @@ void SWeaponStruct::Write(CTStream *strm) {
   }
 };
 
+// Read weapon properties
 void SWeaponStruct::Read(CTStream *strm) {
   *strm >> strIcon;
   *strm >> wpsPos.plPos;

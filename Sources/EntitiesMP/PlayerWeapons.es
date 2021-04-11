@@ -243,17 +243,17 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
   CDLLEntityClass *pdec = &CPlayerWeapons_DLLClass;
 
   // precache general stuff always
-  pdec->PrecacheTexture(TEX_REFL_BWRIPLES01      );
-  pdec->PrecacheTexture(TEX_REFL_BWRIPLES02      );
-  pdec->PrecacheTexture(TEX_REFL_LIGHTMETAL01    );
+  pdec->PrecacheTexture(TEX_REFL_BWRIPLES01);
+  pdec->PrecacheTexture(TEX_REFL_BWRIPLES02);
+  pdec->PrecacheTexture(TEX_REFL_LIGHTMETAL01);
   pdec->PrecacheTexture(TEX_REFL_LIGHTBLUEMETAL01);
-  pdec->PrecacheTexture(TEX_REFL_DARKMETAL       );
-  pdec->PrecacheTexture(TEX_REFL_PURPLE01        );
-  pdec->PrecacheTexture(TEX_SPEC_WEAK            );
-  pdec->PrecacheTexture(TEX_SPEC_MEDIUM          );
-  pdec->PrecacheTexture(TEX_SPEC_STRONG          );
-  pdec->PrecacheTexture(TEXTURE_HAND             );
-  pdec->PrecacheTexture(TEXTURE_FLARE01          );
+  pdec->PrecacheTexture(TEX_REFL_DARKMETAL);
+  pdec->PrecacheTexture(TEX_REFL_PURPLE01);
+  pdec->PrecacheTexture(TEX_SPEC_WEAK);
+  pdec->PrecacheTexture(TEX_SPEC_MEDIUM);
+  pdec->PrecacheTexture(TEX_SPEC_STRONG);
+  pdec->PrecacheTexture(TEXTURE_HAND);
+  pdec->PrecacheTexture(TEXTURE_FLARE01);
   pdec->PrecacheModel(MODEL_FLARE01);
   pdec->PrecacheClass(CLASS_BULLET);
   pdec->PrecacheSound(SOUND_SILENCE);
