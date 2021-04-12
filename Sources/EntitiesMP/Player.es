@@ -41,6 +41,9 @@
 #include "EntitiesMP/CreditsHolder.h"
 #include "EntitiesMP/HudPicHolder.h"
 
+// [Cecil] Extra dependencies
+#include "EntitiesMP/PlayerInventory.h"
+
 // [Cecil] Extra functions
 #include "EntitiesMP/Common/ExtraFunc.h"
 
@@ -1165,8 +1168,10 @@ properties:
  17 CEntityPointer m_penAnimator,      // player animator
  18 CEntityPointer m_penView,          // player view
  19 CEntityPointer m_pen3rdPersonView, // player 3rd person view
- 20 INDEX m_iViewState = PVT_PLAYEREYES,     // view state
- 21 INDEX m_iLastViewState = PVT_PLAYEREYES, // last view state
+ 20 CEntityPointer m_penInventory, // [Cecil] Player's inventory
+
+ 24 INDEX m_iViewState = PVT_PLAYEREYES,     // view state
+ 25 INDEX m_iLastViewState = PVT_PLAYEREYES, // last view state
 
  26 CAnimObject m_aoLightAnimation, // light animation object
  27 FLOAT m_fDamageAmmount = 0.0f,  // how much was last wound
@@ -1277,17 +1282,6 @@ properties:
  155 ANGLE3D m_aLocalViewRotation = FLOAT3D(0.0f, 0.0f, 0.0f),
  156 FLOAT3D m_vLocalTranslation = FLOAT3D(0.0f, 0.0f, 0.0f),
 
- // powerups (DO NOT CHANGE ORDER!) - needed by HUD.cpp
- 160 FLOAT m_tmInvisibility    = 0.0f,
- 161 FLOAT m_tmInvulnerability = 0.0f,
- 162 FLOAT m_tmSeriousDamage   = 0.0f,
- 163 FLOAT m_tmSeriousSpeed    = 0.0f,
-
- 166 FLOAT m_tmInvisibilityMax    = 30.0f,
- 167 FLOAT m_tmInvulnerabilityMax = 30.0f,
- 168 FLOAT m_tmSeriousDamageMax   = 40.0f,
- 169 FLOAT m_tmSeriousSpeedMax    = 20.0f,
-
  180 FLOAT m_tmChainShakeEnd = 0.0f, // used to determine when to stop shaking due to chainsaw damage
  181 FLOAT m_fChainShakeStrength = 1.0f, // strength of shaking
  182 FLOAT m_fChainShakeFreqMod = 1.0f,  // shaking frequency modifier
@@ -1360,7 +1354,8 @@ components:
   6 class   CLASS_SERIOUSBOMB     "Classes\\SeriousBomb.ecl",
 
  // [Cecil] Extra classes
-  7 class CLASS_START "Classes\\PlayerMarker.ecl",
+  7 class CLASS_START     "Classes\\PlayerMarker.ecl",
+  8 class CLASS_INVENTORY "Classes\\PlayerInventory.ecl",
 
  // gender specific sounds - make sure that offset is exactly 100 
  50 sound SOUND_WATER_ENTER  "Sounds\\Player\\WaterEnter.wav",
@@ -1653,7 +1648,7 @@ functions:
 
     for (INDEX iType = PUIT_INVULNER; iType <= PUIT_SPEED; iType++) {
       // current powerup time
-      FLOAT fPowerup = (&m_tmInvisibility)[iType] - _pTimer->CurrentTick();
+      FLOAT fPowerup = GetInventory()->GetPowerupRemaining(iType);
 
       // not activated yet
       if (fPowerup <= 0.0f) {
@@ -1662,7 +1657,7 @@ functions:
       }
 
       // time percentage
-      FLOAT fTimeDiff = (fPowerup / (&m_tmInvisibilityMax)[iType]);
+      FLOAT fTimeDiff = (fPowerup / GetInventory()->GetPowerupMaxTime(iType));
 
       // less time than others
       if (fLeastTime < 0.0f || fTimeDiff < fLeastTime) {
@@ -1846,6 +1841,15 @@ functions:
 
   class CPlayerAnimator *GetPlayerAnimator(void) {
     return (CPlayerAnimator*)&*m_penAnimator;
+  };
+
+  // [Cecil] Get inventory entity
+  class CPlayerInventory *GetInventory(void) {
+    return (CPlayerInventory*)&*m_penInventory;
+  };
+
+  class CPlayerInventory *GetInventory(void) const {
+    return (CPlayerInventory*)&*m_penInventory;
   };
 
   CPlayerSettings *GetSettings(void) {
@@ -2060,6 +2064,9 @@ functions:
     m_penAnimator->AddToPrediction();
     m_penView->AddToPrediction();
     m_pen3rdPersonView->AddToPrediction();
+
+    // [Cecil] Player's inventory
+    m_penInventory->AddToPrediction();
   };
 
   // Get in-game time for statistics
@@ -2634,25 +2641,32 @@ functions:
     colAlpha = (colAlpha & 0xFFFFFF00) + (COLOR(fFading * 0xFF) & 0xFF);
     m_moRender.mo_colBlendColor = colAlpha;
 
+    // [Cecil] Invisibility
+    const BOOL bInvisible = GetInventory()->IsPowerupActive(PUIT_INVISIB);
+    const FLOAT fInvis = GetInventory()->GetPowerupRemaining(PUIT_INVISIB);
+
     // if not connected
     if (m_ulFlags & PLF_NOTCONNECTED) {
       // pulse slowly
       fFading *= 0.25f + 0.25f*Sin(tmNow/2.0f * 360);
 
     // if invisible
-    } else if (m_tmInvisibility > tmNow) {
+    } else if (bInvisible) {
       FLOAT fIntensity = 0.0f;
 
-      if (m_tmInvisibility-tmNow < 3.0f) {
-        fIntensity = 0.5f - 0.5f*cos((m_tmInvisibility-tmNow) * (6.0f * 3.1415927f / 3.0f));
+      if (fInvis < 3.0f) {
+        fIntensity = 0.5f - 0.5f*cos(fInvis * (6.0f * 3.1415927f / 3.0f));
       }
 
       if (_ulPlayerRenderingMask == (1 << GetMyPlayerIndex())) {
-        colAlpha = (colAlpha & 0xFFFFFF00) | (INDEX)(INVISIBILITY_ALPHA_LOCAL + (FLOAT)(254-INVISIBILITY_ALPHA_LOCAL)*fIntensity);
+        colAlpha = (colAlpha & 0xFFFFFF00) | (INDEX)(INVISIBILITY_ALPHA_LOCAL + (FLOAT)(254 - INVISIBILITY_ALPHA_LOCAL) * fIntensity);
 
       } else if (TRUE) {
-        if (m_tmInvisibility-tmNow < 1.28f) {
-          colAlpha = (colAlpha & 0xFFFFFF00) | (INDEX)(INVISIBILITY_ALPHA_REMOTE + (FLOAT)(254-INVISIBILITY_ALPHA_REMOTE)*fIntensity);
+        if (fInvis < 1.28f) {
+          // [Cecil] Invisibility factor
+          UBYTE ubInvis = (GetInventory()->GetPowerupFactor(PUIT_INVISIB) * 255);
+
+          colAlpha = (colAlpha & 0xFFFFFF00) | (INDEX)(ubInvis + (FLOAT)(254 - ubInvis) * fIntensity);
 
         } else if (TRUE) {
           colAlpha = (colAlpha & 0xFFFFFF00) | INVISIBILITY_ALPHA_REMOTE;
@@ -3617,9 +3631,9 @@ functions:
       return;
     }
 
+    // [Cecil] Invulnerability time
     // if invulnerable, nothing can harm you except telefrag or abyss
-    const TIME tmDelta = m_tmInvulnerability - _pTimer->CurrentTick();
-    if (tmDelta > 0 && dmtType != DMT_ABYSS && dmtType != DMT_TELEPORT) {
+    if (GetInventory()->IsPowerupActive(PUIT_INVULNER) && dmtType != DMT_ABYSS && dmtType != DMT_TELEPORT) {
       return;
     }
 
@@ -4017,12 +4031,14 @@ functions:
         return TRUE;
       }
 
-      const FLOAT tmNow = _pTimer->CurrentTick();
-      switch (((EPowerUp&)ee).puitType) {
+      // [Cecil] Powerup type
+      INDEX iPowerup = ((EPowerUp&)ee).puitType;
+
+      switch (iPowerup) {
         case PUIT_INVISIB:
           // [Cecil] Power Up removal and time multiplier
           if (GetSP()->sp_iItemRemoval & IRF_INVIS) {
-            m_tmInvisibility = tmNow + m_tmInvisibilityMax * GetSP()->sp_fPowerupTimeMul;
+            GetInventory()->ActivatePowerup(iPowerup);
             ItemPicked(TRANS("^cABE3FFInvisibility"), 0);
           }
           return TRUE;
@@ -4030,7 +4046,7 @@ functions:
         case PUIT_INVULNER:
           // [Cecil] Power Up removal and time multiplier
           if (GetSP()->sp_iItemRemoval & IRF_INVUL) {
-            m_tmInvulnerability = tmNow + m_tmInvulnerabilityMax * GetSP()->sp_fPowerupTimeMul;
+            GetInventory()->ActivatePowerup(iPowerup);
             ItemPicked(TRANS("^c00B440Invulnerability"), 0);
           }
           return TRUE;
@@ -4038,7 +4054,7 @@ functions:
         case PUIT_DAMAGE:
           // [Cecil] Power Up removal and time multiplier
           if (GetSP()->sp_iItemRemoval & IRF_DAMAGE) {
-            m_tmSeriousDamage = tmNow + m_tmSeriousDamageMax * GetSP()->sp_fPowerupTimeMul;
+            GetInventory()->ActivatePowerup(iPowerup);
             ItemPicked(TRANS("^cFF0000Serious Damage!"), 0);
           }
           return TRUE;
@@ -4046,7 +4062,7 @@ functions:
         case PUIT_SPEED:
           // [Cecil] Power Up removal and time multiplier
           if (GetSP()->sp_iItemRemoval & IRF_SPEED) {
-            m_tmSeriousSpeed = tmNow + m_tmSeriousSpeedMax * GetSP()->sp_fPowerupTimeMul;
+            GetInventory()->ActivatePowerup(iPowerup);
             ItemPicked(TRANS("^cFF9400Serious Speed"), 0);
           }
           return TRUE;
@@ -4054,7 +4070,7 @@ functions:
         case PUIT_BOMB:
           m_iSeriousBombCount++;
           ItemPicked(TRANS("^cFF0000Serious Bomb!"), 0);
-          //ItemPicked(TRANS("^cFF0000S^cFFFF00e^cFF0000r^cFFFF00i^cFF0000o^cFFFF00u^cFF0000s ^cFF0000B^cFFFF00o^cFF0000m^cFFFF00b!"), 0);
+
           // send computer message
           if (GetSP()->sp_bCooperative) {
             EComputerMessage eMsg;
@@ -4714,20 +4730,20 @@ functions:
       vTranslation(3) *= GetSP()->sp_fSpeedMultiplier;
     }
 
+    // [Cecil] Speed time and multiplier
     // enable faster moving (but not higher jumping!) if having SerousSpeed powerup
-    const TIME tmDelta = m_tmSeriousSpeed - _pTimer->CurrentTick();
-    if( tmDelta>0 && m_fAutoSpeed==0.0f) { 
-      vTranslation(1) *= 2.0f;
-      vTranslation(3) *= 2.0f;
+    if (GetInventory()->IsPowerupActive(PUIT_SPEED) && m_fAutoSpeed == 0.0f) {
+      const FLOAT fMul = GetInventory()->GetPowerupFactor(PUIT_SPEED);
+      vTranslation(1) *= fMul;
+      vTranslation(3) *= fMul;
     }
     
     en_fAcceleration = plr_fAcceleration;
     en_fDeceleration = plr_fDeceleration;
-    if( !GetSP()->sp_bCooperative)
-    {
+
+    if (!GetSP()->sp_bCooperative) {
       vTranslation(1) *= 1.35f;
       vTranslation(3) *= 1.35f;
-    //en_fDeceleration *= 0.8f;
     }
 
     CContentType &ctUp = GetWorld()->wo_actContentTypes[en_iUpContent];
@@ -5413,9 +5429,8 @@ functions:
       SetCollisionFlags(GetCollisionFlags() | ((ECBI_BRUSH|ECBI_MODEL)<<ECB_TEST));
     }
 
-    // invisible mode
-    const TIME tmDelta = m_tmInvisibility - _pTimer->CurrentTick();
-    if (cht_bInvisible || tmDelta>0) {
+    // [Cecil] Invisibility active
+    if (cht_bInvisible || GetInventory()->IsPowerupActive(PUIT_INVISIB)) {
       SetFlags(GetFlags() | ENF_INVISIBLE);
     } else {
       SetFlags(GetFlags() & ~ENF_INVISIBLE);
@@ -5775,8 +5790,7 @@ functions:
     return amdMarkers[iMarker].md_ppm;
   }
 
-  void InitializePlayer()
-  {
+  void InitializePlayer() {
     // set viewpoint position inside the entity
     en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
     en_plViewpoint.pl_PositionVector = FLOAT3D(0.0f, plr_fViewHeightStand, 0.0f);
@@ -5788,10 +5802,9 @@ functions:
     m_pstState = PST_STAND;
     m_fDamageAmmount = 0.0f;
     m_tmWoundedTime = 0.0f;
-    m_tmInvisibility = 0.0f;
-    m_tmInvulnerability = 0.0f;
-    m_tmSeriousDamage = 0.0f;
-    m_tmSeriousSpeed = 0.0f;
+
+    // [Cecil] Reset powerup timers
+    GetInventory()->ResetPowerups();
 
     // [Cecil] Stop water ambience sound
     m_soLocalAmbientLoop.Stop();
@@ -6220,8 +6233,7 @@ functions:
   };
 
   // render particles
-  void RenderParticles(void)
-  {
+  void RenderParticles(void) {
     FLOAT tmNow = _pTimer->GetLerpedCurrentTick();
     
     // render empty shells
@@ -6234,18 +6246,12 @@ functions:
     {
       // if is not first person
       RenderChainsawParticles(TRUE);
+
       // glowing powerups
       if (IsAlive(this)){
-        if (m_tmSeriousDamage>tmNow && m_tmInvulnerability>tmNow) {
-          Particles_ModelGlow(this, Max(m_tmSeriousDamage,m_tmInvulnerability),PT_STAR08, 0.15f, 2, 0.03f, 0xff00ff00);
-        } else if (m_tmInvulnerability>tmNow) {
-          Particles_ModelGlow(this, m_tmInvulnerability, PT_STAR05, 0.15f, 2, 0.03f, 0x3333ff00);
-        } else if (m_tmSeriousDamage>tmNow) {
-          Particles_ModelGlow(this, m_tmSeriousDamage, PT_STAR08, 0.15f, 2, 0.03f, 0xff777700);
-        }
-        if (m_tmSeriousSpeed>tmNow) {
-          Particles_RunAfterBurner(this, m_tmSeriousSpeed, 0.3f, 0);
-        }
+        // [Cecil] Powerup particles
+        GetInventory()->PowerupParticles(this, GetModelForRendering(), GetLerpedPlacement(), FLOAT2D(0.15f, 0.03f));
+
         if (!GetSP()->sp_bCooperative) {
           CPlayerWeapons *wpn = GetPlayerWeapons();
           if (wpn->m_tmLastSniperFire == _pTimer->CurrentTick())
@@ -7541,6 +7547,12 @@ procedures:
     eInitAnimator.penPlayer = this;
     m_penAnimator->Initialize(eInitAnimator);
 
+    // [Cecil] Create inventory
+    m_penInventory = CreateEntity(GetPlacement(), CLASS_INVENTORY);
+    EInventoryInit eInitInventory;
+    eInitInventory.penPlayer = this;
+    m_penInventory->Initialize(eInitInventory);
+
     // set sound default parameters
     m_soMouth.Set3DParameters(50.0f, 10.0f, 1.0f, 1.0f);
     m_soFootL.Set3DParameters(20.0f, 2.0f, 1.0f, 1.0f);
@@ -7775,15 +7787,19 @@ procedures:
     m_penWeapons->Destroy();
     m_penAnimator->Destroy();
 
-    if (m_penView!=NULL) {
+    // [Cecil] Destroy inventory
+    m_penInventory->Destroy();
+
+    if (m_penView != NULL) {
       m_penView->Destroy();
     }
 
-    if (m_pen3rdPersonView!=NULL) {
+    if (m_pen3rdPersonView != NULL) {
       m_pen3rdPersonView->Destroy();
     }
 
     Destroy();
+
     return;
   };
 };

@@ -631,6 +631,9 @@
     <ClCompile Include="Common\Weapons\WeaponModel.cpp">
       <Filter>Source Files\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerInventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Common.h">
@@ -1674,6 +1677,12 @@
     <ClInclude Include="Common\Weapons\WeaponModel.h">
       <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
+    <ClInclude Include="PlayerInventory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerInventory_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">
@@ -2557,6 +2566,9 @@
     </CustomBuild>
     <CustomBuild Include="PoisonCloud.es">
       <Filter>Class Files\Weapons</Filter>
+    </CustomBuild>
+    <CustomBuild Include="PlayerInventory.es">
+      <Filter>Class Files\Players</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

@@ -244,7 +244,9 @@ void CClassStockPatch::FreeUnused(void) {
       INDEX iTableIndex = aiTable[iFree];
 
       _aClassNames.Delete(iTableIndex);
+      // [Cecil] NOTE: Crashes here sometimes on "Stop Game"
       _aClasses.Delete(iTableIndex);
+
       delete pClass;
     }
 

@@ -10,6 +10,9 @@
 #include <EntitiesMP/EnemyBase.h>
 #include <EntitiesMP/EnemyCounter.h>
 
+// [Cecil] Extra dependencies
+#include "EntitiesMP/PlayerInventory.h"
+
 // [Cecil] Extra functions
 #include "EntitiesMP/Common/ExtraFunc.h"
 
@@ -986,20 +989,22 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // draw powerup(s) if needed
   PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.66f, 0.33f, FALSE);
-  TIME *ptmPowerups = (TIME*)&_penPlayer->m_tmInvisibility;
-  TIME *ptmPowerupsMax = (TIME*)&_penPlayer->m_tmInvisibilityMax;
   fRow = pixBottomBound-fOneUnitS-fAdvUnitS;
   fCol = pixRightBound -fHalfUnitS;
 
+  // [Cecil] Inventory entity
+  CPlayerInventory *penInventory = _penPlayer->GetInventory();
+
   for (i = 0; i < MAX_POWERUPS; i++) {
     // skip if not active
-    const TIME tmDelta = ptmPowerups[i] - _tmNow;
+    const TIME tmDelta = penInventory->GetPowerupRemaining(i);
+
     if (tmDelta <= 0.0f) {
       continue;
     }
 
     // [Cecil] Power Up Time Multiplier
-    fNormValue = tmDelta / (ptmPowerupsMax[i] * GetSP()->sp_fPowerupTimeMul);
+    fNormValue = tmDelta / (penInventory->GetPowerupMaxTime(i) * GetSP()->sp_fPowerupTimeMul);
 
     // draw icon and a little bar
     HUD_DrawBorder( fCol,         fRow, fOneUnitS, fOneUnitS, colBorder);

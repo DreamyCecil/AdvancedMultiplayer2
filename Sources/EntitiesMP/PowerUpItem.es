@@ -21,8 +21,7 @@ event EPowerUp {
   enum PowerUpItemType puitType,
 };
 
-class CPowerUpItem : CItem 
-{
+class CPowerUpItem : CItem {
 name      "PowerUp Item";
 thumbnail "Thumbnails\\PowerUpItem.tbn";
 

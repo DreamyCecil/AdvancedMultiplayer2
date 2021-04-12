@@ -183,9 +183,13 @@ static void FindClosestMarker(
   {FOREACHSRCOFDST(penThis->en_rdSectors, CBrushSector, bsc_rsEntities, pbsc)
     // for each navigation marker in that sector
     {FOREACHDSTOFSRC(pbsc->bsc_rsEntities, CEntity, en_rdSectors, pen)
-      if (!IsOfClass(pen, "NavigationMarker")) {
+      // [Cecil] Possibly caused a crash if used 'pen' straight up
+      CEntity *penInSector = pen;
+
+      if (!IsOfClass(penInSector, "NavigationMarker")) {
         continue;
       }
+
       CNavigationMarker &nm = (CNavigationMarker&)*pen;
 
       // get distance from source

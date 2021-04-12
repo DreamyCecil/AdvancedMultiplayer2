@@ -69,8 +69,9 @@ void ResetWeaponPosition(void) {
   amp_fWeaponFOV = 1.0f;
 };
 
-// [Cecil] Tesla lightning
+// [Cecil] Extra dependencies
 #include "EntitiesMP/TeslaLightning.h"
+#include "EntitiesMP/PlayerInventory.h"
 
 // [Cecil] Extra functions
 #include "EntitiesMP/Common/ExtraFunc.h"
@@ -1227,13 +1228,19 @@ functions:
   };
 
   CPlayer *GetPlayer(void) {
-    ASSERT(m_penPlayer!=NULL);
+    ASSERT(m_penPlayer != NULL);
     return (CPlayer *)&*m_penPlayer;
   };
 
   CPlayerAnimator *GetAnimator(void) {
-    ASSERT(m_penPlayer!=NULL);
-    return ((CPlayerAnimator*)&*((CPlayer&)*m_penPlayer).m_penAnimator);
+    ASSERT(m_penPlayer != NULL);
+    return GetPlayer()->GetPlayerAnimator();
+  };
+
+  // [Cecil] Get player's inventory
+  CPlayerInventory *GetInventory(void) {
+    ASSERT(m_penPlayer != NULL);
+    return GetPlayer()->GetInventory();
   };
 
   CModelObject *GetChainSawTeeth(void) {
@@ -1335,15 +1342,17 @@ functions:
     const FLOAT tmNow = _pTimer->GetLerpedCurrentTick();
 
     UBYTE ubBlend = INVISIBILITY_ALPHA_LOCAL;
-    FLOAT tmInvisibility = ((CPlayer *)&*m_penPlayer)->m_tmInvisibility;
-    FLOAT tmSeriousDamage = ((CPlayer *)&*m_penPlayer)->m_tmSeriousDamage;
-    FLOAT tmInvulnerability = ((CPlayer *)&*m_penPlayer)->m_tmInvulnerability;
 
-    if (tmInvisibility > tmNow) {
+    // [Cecil] Invisibility
+    const BOOL bInvisible = GetInventory()->IsPowerupActive(PUIT_INVISIB);
+    const FLOAT fInvis = GetInventory()->GetPowerupRemaining(PUIT_INVISIB);
+
+    if (bInvisible) {
       FLOAT fIntensity = 0.0f;
-      if (tmInvisibility - tmNow < 3.0f) {
-        fIntensity = 0.5f-0.5f*cos((tmInvisibility-tmNow)*(6.0f*3.1415927f/3.0f));
-        ubBlend = (INDEX)(INVISIBILITY_ALPHA_LOCAL+(FLOAT)(254-INVISIBILITY_ALPHA_LOCAL)*fIntensity);      
+
+      if (fInvis < 3.0f) {
+        fIntensity = 0.5f - 0.5f*cos(fInvis * (6.0f * 3.1415927f / 3.0f));
+        ubBlend = (INDEX)(INVISIBILITY_ALPHA_LOCAL + (FLOAT)(254 - INVISIBILITY_ALPHA_LOCAL) * fIntensity);      
       }      
     }
 
@@ -1385,8 +1394,9 @@ functions:
       rmMain.rm_colAmbient = colAmbient;
       rmMain.rm_vLightDirection = vViewerLightDirection;
       rmMain.rm_ulFlags |= RMF_WEAPON; // TEMP: for Truform
-      if (tmInvisibility>tmNow) {
-        rmMain.rm_colBlend = (rmMain.rm_colBlend&0xffffff00)|ubBlend;
+
+      if (bInvisible) {
+        rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xffffff00) | ubBlend;
       }
       
       m_moWeaponSecond.SetupModelRendering(rmMain);
@@ -1394,22 +1404,12 @@ functions:
 
       // [Cecil] Power Up particles
       if (amp_bPowerUpParticles) {
-        if (tmSeriousDamage > tmNow && tmInvulnerability > tmNow) {
-          Particle_PrepareSystem(pdp, apr);
-          Particle_PrepareEntity( 1, 0, 0, NULL);
-          Particles_ModelGlow2(&m_moWeaponSecond, plWeaponMirror, Max(tmSeriousDamage, tmInvulnerability), PT_STAR08, 0.025f, 2, 0.01f, 0xff00ff00);
-          Particle_EndSystem();
-        } else if (tmInvulnerability > tmNow) {
-          Particle_PrepareSystem(pdp, apr);
-          Particle_PrepareEntity( 1, 0, 0, NULL);
-          Particles_ModelGlow2(&m_moWeaponSecond, plWeaponMirror, tmInvulnerability, PT_STAR05, 0.025f, 2, 0.01f, 0x3333ff00);
-          Particle_EndSystem();
-        } else if (tmSeriousDamage > tmNow) {
-          Particle_PrepareSystem(pdp, apr);
-          Particle_PrepareEntity( 1, 0, 0, NULL);
-          Particles_ModelGlow2(&m_moWeaponSecond, plWeaponMirror, tmSeriousDamage, PT_STAR08, 0.025f, 2, 0.01f, 0xff777700);
-          Particle_EndSystem();
-        }
+        Particle_PrepareSystem(pdp, apr);
+        Particle_PrepareEntity(1, 0, 0, NULL);
+
+        GetInventory()->PowerupParticles(NULL, &m_moWeaponSecond, plWeaponMirror, FLOAT2D(0.025f, 0.01f));
+
+        Particle_EndSystem();
       }
 
       EndModelRenderingView();
@@ -1442,8 +1442,9 @@ functions:
     rmMain.rm_colAmbient = colAmbient;
     rmMain.rm_vLightDirection = vViewerLightDirection;
     rmMain.rm_ulFlags |= RMF_WEAPON; // TEMP: for Truform
-    if (tmInvisibility>tmNow) {
-      rmMain.rm_colBlend = (rmMain.rm_colBlend&0xffffff00)|ubBlend;
+
+    if (bInvisible) {
+      rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xffffff00) | ubBlend;
     }      
     
     m_moWeapon.SetupModelRendering(rmMain);
@@ -1451,22 +1452,12 @@ functions:
     
     // [Cecil] Power Up particles
     if (amp_bPowerUpParticles) {
-      if (tmSeriousDamage > tmNow && tmInvulnerability > tmNow) {
-        Particle_PrepareSystem(pdp, apr);
-        Particle_PrepareEntity( 1, 0, 0, NULL);
-        Particles_ModelGlow2(&m_moWeapon, plWeapon, Max(tmSeriousDamage, tmInvulnerability), PT_STAR08, 0.025f, 2, 0.01f, 0xff00ff00);
-        Particle_EndSystem();
-      } else if (tmInvulnerability > tmNow) {
-        Particle_PrepareSystem(pdp, apr);
-        Particle_PrepareEntity( 1, 0, 0, NULL);
-        Particles_ModelGlow2(&m_moWeapon, plWeapon, tmInvulnerability, PT_STAR05, 0.025f, 2, 0.01f, 0x3333ff00);
-        Particle_EndSystem();
-      } else if (tmSeriousDamage > tmNow) {
-        Particle_PrepareSystem(pdp, apr);
-        Particle_PrepareEntity( 1, 0, 0, NULL);
-        Particles_ModelGlow2(&m_moWeapon, plWeapon, tmSeriousDamage, PT_STAR08, 0.025f, 2, 0.01f, 0xff777700);
-        Particle_EndSystem();
-      }
+      Particle_PrepareSystem(pdp, apr);
+      Particle_PrepareEntity(1, 0, 0, NULL);
+
+      GetInventory()->PowerupParticles(NULL, &m_moWeapon, plWeapon, FLOAT2D(0.025f, 0.01f));
+
+      Particle_EndSystem();
     }
 
     EndModelRenderingView();

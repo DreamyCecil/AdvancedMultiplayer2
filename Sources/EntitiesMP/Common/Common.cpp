@@ -12,6 +12,9 @@
 #include "ModelsMP/Player/SeriousSam/Head.h"
 extern INDEX ent_bReportBrokenChains;
 
+// [Cecil] Extra dependencies
+#include "EntitiesMP/PlayerInventory.h"
+
 // [Cecil] Global controller
 #include "EntitiesMP/GlobalController.h"
 extern CEntity *_penGlobalController;
@@ -1365,12 +1368,18 @@ FLOAT GetGameDamageMultiplier(void)
 
 
 // get entity's serious damage multiplier
-FLOAT GetSeriousDamageMultiplier( CEntity *pen)
-{
-  if( !IsOfClass(pen,"Player")) return 1.0f;
-  const TIME tmNow = _pTimer->CurrentTick();
-  const TIME tmDamage = ((CPlayer*)pen)->m_tmSeriousDamage;
-  if( tmDamage>tmNow) return 4.0f;
+FLOAT GetSeriousDamageMultiplier(CEntity *pen) {
+  if (!IsOfClass(pen,"Player")) {
+    return 1.0f;
+  }
+
+  // [Cecil]
+  CPlayerInventory *penInventory = ((CPlayer*)pen)->GetInventory();
+
+  if (penInventory->IsPowerupActive(PUIT_DAMAGE)) {
+    return penInventory->GetPowerupFactor(PUIT_DAMAGE);
+  }
+
   return 1.0f;
 }
 

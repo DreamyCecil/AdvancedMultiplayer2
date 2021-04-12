@@ -216,6 +216,7 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClCompile Include="Common\Weapons\WeaponStruct.cpp" />
     <ClCompile Include="DummyEnemy.cpp" />
     <ClCompile Include="GlobalController.cpp" />
+    <ClCompile Include="PlayerInventory.cpp" />
     <ClCompile Include="PoisonCloud.cpp" />
     <ClCompile Include="StdH\StdH.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -465,6 +466,8 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="DummyEnemy_tables.h" />
     <ClInclude Include="GlobalController.h" />
     <ClInclude Include="GlobalController_tables.h" />
+    <ClInclude Include="PlayerInventory.h" />
+    <ClInclude Include="PlayerInventory_tables.h" />
     <ClInclude Include="PoisonCloud.h" />
     <ClInclude Include="PoisonCloud_tables.h" />
     <ClInclude Include="StdH\StdH.h" />
@@ -2764,6 +2767,13 @@ ecc EntitiesMP/%(Filename).es </Command>
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataList.inl" />
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataMap.inl" />
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.inl" />
+    <CustomBuild Include="PlayerInventory.es">
+      <FileType>Document</FileType>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EntitiesMP/%(Filename).es</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).cpp;%(Outputs)</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd $(SolutionDir)
+ecc EntitiesMP/%(Filename).es </Command>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
