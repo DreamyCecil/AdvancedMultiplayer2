@@ -285,18 +285,18 @@ procedures:
           if( m_penFallFXPapa!=NULL && !m_bTouchedGround)
           {
             // loop all children of FX papa
-            FOREACHINLIST( CEntity, en_lnInParent, m_penFallFXPapa->en_lhChildren, iten)
-            {
+            FOREACHINLIST( CEntity, en_lnInParent, m_penFallFXPapa->en_lhChildren, iten) {
+              // [Cecil] For safety
+              CEntity *pen = iten;
+
               // start it
-              CEntity *penNew = GetWorld()->CopyEntityInWorld( *iten, GetPlacement());
+              CEntity *penNew = GetWorld()->CopyEntityInWorld(*pen, GetPlacement());
               penNew->SetParent(NULL);
-              if( IsOfClass(&*penNew, "SoundHolder"))
-              {
-                penNew->SendEvent( EStart());
-              }
-              else
-              {
-                penNew->SendEvent( ETrigger());
+
+              if (IsOfClass(penNew, "SoundHolder")) {
+                penNew->SendEvent(EStart());
+              } else {
+                penNew->SendEvent(ETrigger());
               }
             }
           }

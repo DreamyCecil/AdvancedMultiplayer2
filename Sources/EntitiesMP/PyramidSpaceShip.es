@@ -695,24 +695,25 @@ procedures:
     }
 
     // all children lights named pulsating should pulsate
-    FOREACHINLIST( CEntity, en_lnInParent, en_lhChildren, iten)
-    {
-      if( IsOfClass(iten, "Light"))
-      {
-        if( iten->GetName() == "Pulsating")
-        {
-          CLight *penLight = (CLight *) &*iten;
+    FOREACHINLIST( CEntity, en_lnInParent, en_lhChildren, iten) {
+      // [Cecil] For safety
+      CEntity *pen = iten;
+
+      if (IsOfClass(pen, "Light")) {
+        if (pen->GetName() == "Pulsating") {
+          CLight *penLight = (CLight *)pen;
+
           EChangeAnim eChange;
-          eChange.iLightAnim=3;
-          eChange.bLightLoop=TRUE;
+          eChange.iLightAnim = 3;
+          eChange.bLightLoop = TRUE;
           penLight->SendEvent(eChange);
-        }
-        else if( iten->GetName() == "Motors")
-        {
-          CLight *penLight = (CLight *) &*iten;
+
+        } else if (pen->GetName() == "Motors") {
+          CLight *penLight = (CLight *)pen;
+
           EChangeAnim eChange;
-          eChange.iLightAnim=4;
-          eChange.bLightLoop=TRUE;
+          eChange.iLightAnim = 4;
+          eChange.bLightLoop = TRUE;
           penLight->SendEvent(eChange);
         }
       }

@@ -139,8 +139,21 @@ procedures:
 
     InitAsVoid();
     SetFlags(GetFlags() | ENF_CROSSESLEVELS);
-    SetPhysicsFlags(EPF_MODEL_IMMATERIAL|EPF_MOVABLE);
+    SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
+
+    wait() {
+      on (EBegin) : {
+        resume;
+      }
+
+      on (EEnd) : {
+        stop;
+      }
+    }
+    
+    // cease to exist
+    Destroy();
 
     return;
   };

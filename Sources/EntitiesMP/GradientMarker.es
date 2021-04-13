@@ -46,14 +46,16 @@ functions:
     return TRUE;
   }
 
-  void UncacheShadowsForGradient(void)
-  {
+  void UncacheShadowsForGradient(void) {
     // for all entities in world
     FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
+      // [Cecil] For safety
+      CEntity *pen = iten;
+
       // if it is world base entity
-      if( IsOfClass(&*iten, "WorldBase")) {
+      if (IsOfClass(pen, "WorldBase")) {
         // uncache shadows for gradient
-        ((CWorldBase *)&*iten)->UncacheShadowsForGradient(this);
+        ((CWorldBase *)pen)->UncacheShadowsForGradient(this);
       }
     }
   }

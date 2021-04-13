@@ -130,13 +130,10 @@ procedures:
       }
 
       on (EPreLevelChange) : {
-        // reset some properties
-        //Reset();
         resume;
       }
 
       on (EPostLevelChange) : {
-        //CPrintF("Hello to %s!\n", GetWorld()->GetName());
         resume;
       }
 

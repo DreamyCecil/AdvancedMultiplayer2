@@ -16,8 +16,10 @@
 #include <EntitiesMP/Common/GameInterface.h>
 #include <EntitiesMP/Player.h>
 
+// [Cecil] Custom weapons and ammo
+#include "EntitiesMP/Common/Weapons/WeaponBase.h"
+
 // [Cecil] Function patching
-#include "EntitiesMP/Common/Patches/StockFuncPatcher.h"
-#include "EntitiesMP/Common/Patches/StockPatch.h"
+#include "EntitiesMP/Common/Patches/PatchFunctions.h"
 
 #undef DECL_DLL

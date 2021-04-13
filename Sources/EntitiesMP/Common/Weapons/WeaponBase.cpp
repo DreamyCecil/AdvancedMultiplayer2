@@ -216,8 +216,16 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
   return TRUE;
 };
 
+// Check if weapons have been loaded
+static BOOL _bWeaponsLoaded = FALSE;
+
 // Load weapons and ammo for this world
 extern void LoadWorldWeapons(CWorld *pwo) {
+  // already loaded
+  if (_bWeaponsLoaded) {
+    return;
+  }
+
   // load default sets
   CDynamicStackArray<CTFileName> aList;
   HookConfigFunctions();
@@ -254,10 +262,13 @@ extern void LoadWorldWeapons(CWorld *pwo) {
     // add the weapon
     AddWeapon(wsStruct);
   }
+  
+  // weapons have been loaded
+  _bWeaponsLoaded = TRUE;
 };
 
 // Weapons and ammo cleanup
-extern void ClearWorldWeapons(void) {
+void ClearWorldWeapons(void) {
   _awaWeaponAmmo.Clear();
   _awsPlayerWeapons.Clear();
 
@@ -275,4 +286,7 @@ extern void ClearWorldWeapons(void) {
     _aWeaponIcons[iIcon] = NULL;
   }
   _aWeaponIcons.Clear();
+
+  // mark as unloaded
+  _bWeaponsLoaded = FALSE;
 };

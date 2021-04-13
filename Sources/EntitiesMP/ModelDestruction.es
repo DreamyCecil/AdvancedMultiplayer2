@@ -195,16 +195,19 @@ functions:
     case DDT_CHILDREN_CUSTOM:
     {
       Debris_Begin(EIBT_WOOD, DPT_NONE, BET_NONE, 1.0f, FLOAT3D(10.0f, 10.0f, 10.0f), FLOAT3D(0.0f, 0.0f, 0.0f), 5.0f, 2.0f);
+
       // launch all children of model holder type
-      FOREACHINLIST( CEntity, en_lnInParent, en_lhChildren, iten)
-      {
-        if( IsOfClass(&*iten, "ModelHolder2"))
-        {
-          CModelHolder2 &mhTemplate=(CModelHolder2 &)*iten;
-          if( mhTemplate.GetModelObject()==NULL || penmhDestroyed->GetModelObject()==NULL)
-          {
+      FOREACHINLIST( CEntity, en_lnInParent, en_lhChildren, iten) {
+        // [Cecil] For safety
+        CEntity *pen = iten;
+
+        if (IsOfClass(pen, "ModelHolder2")) {
+          CModelHolder2 &mhTemplate = (CModelHolder2 &)*pen;
+
+          if (mhTemplate.GetModelObject() == NULL || penmhDestroyed->GetModelObject() == NULL) {
             continue;
           }
+
           CModelObject &moNew=*mhTemplate.GetModelObject();
           CModelObject &moOld=*penmhDestroyed->GetModelObject();
           CPlacement3D plRel=mhTemplate.GetPlacement();
@@ -236,11 +239,13 @@ functions:
             penmhDestroyed, this, &mhTemplate, vStretchTemplate, mhTemplate.m_fStretchAll, plLaunch,
             vLaunchDir, angRotSpeed, m_bDebrisImmaterialASAP, fDustSize, penmhDestroyed->m_colBurning);
         }
-        if( IsOfClass(&*iten, "SoundHolder"))
-        {
-          CSoundHolder &ensh=(CSoundHolder &)*iten;
+
+        if (IsOfClass(pen, "SoundHolder")) {
+          CSoundHolder &ensh=(CSoundHolder &)*pen;
+
           // copy it at the placement of destroyed model
-          CEntity *penNewSH = GetWorld()->CopyEntityInWorld( ensh, penmhDestroyed->GetPlacement());
+          CEntity *penNewSH = GetWorld()->CopyEntityInWorld(ensh, penmhDestroyed->GetPlacement());
+
           penNewSH->SetParent(NULL);
           penNewSH->SendEvent(EStart());
         }

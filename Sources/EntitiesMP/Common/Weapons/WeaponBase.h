@@ -32,3 +32,6 @@ struct SWeaponBase {
   // Set the icon
   void AddIcon(CTString strSetIcon, CWeaponIcons &aIcons);
 };
+
+// Weapons and ammo cleanup
+DECL_DLL void ClearWorldWeapons(void);

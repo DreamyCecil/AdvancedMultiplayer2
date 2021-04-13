@@ -6,9 +6,11 @@
 // for error checking:
 #include "EntitiesMP/SoundHolder.h"
 
+// [Cecil] Class patching
+#include "EntitiesMP/Common/Patches/PatchFunctions.h"
+
 // [Cecil] Custom weapons and ammo
 extern void LoadWorldWeapons(CWorld *pwo);
-extern void ClearWorldWeapons(void);
 %}
 
 uses "EntitiesMP\FogMarker";
@@ -138,10 +140,14 @@ static void DoLevelSafetyChecks()
   
   CPrintF("STEP 1 - Checking model holders...\n");
   // for model holder in the world;
-  {FOREACHINDYNAMICCONTAINER(pwo->wo_cenEntities, CEntity, iten) {  
-    if (IsOfClass(iten, "ModelHolder2")) {
-      CModelHolder2 *mh = (CModelHolder2*)&*iten;
+  {FOREACHINDYNAMICCONTAINER(pwo->wo_cenEntities, CEntity, iten) {
+    // [Cecil] For safety
+    CEntity *pen = iten;
+
+    if (IsOfClass(pen, "ModelHolder2")) {
+      CModelHolder2 *mh = (CModelHolder2*)pen;
       FLOAT3D vPos = mh->GetPlacement().pl_PositionVector;
+
       if (mh->m_penDestruction == NULL) {
         CPrintF("  model holder '%s' at (%2.2f, %2.2f, %2.2f) has no destruction\n", mh->m_strName, vPos(1), vPos(2), vPos(3));
       }
@@ -149,11 +155,16 @@ static void DoLevelSafetyChecks()
   }}
 
   CPrintF("STEP 2 - Checking sound holders...\n");
+
   // for each sound holder in the world
   {FOREACHINDYNAMICCONTAINER(pwo->wo_cenEntities, CEntity, iten) {
-    if (IsOfClass(iten, "SoundHolder")) {
-      CSoundHolder *sh = (CSoundHolder *)&*iten;
+    // [Cecil] For safety
+    CEntity *pen = iten;
+
+    if (IsOfClass(pen, "SoundHolder")) {
+      CSoundHolder *sh = (CSoundHolder *)pen;
       FLOAT3D vPos = sh->GetPlacement().pl_PositionVector;
+
       if (sh->m_fnSound == CTFILENAME("Sounds\\Default.wav")) {
         CPrintF("  sound holder '%s' at (%2.2f, %2.2f, %2.2f) has default sound!\n", sh->m_strName, vPos(1), vPos(2), vPos(3));
       }
@@ -688,11 +699,13 @@ void CWorldBase_OnWorldInit(CWorld *pwo) {
 
   // [Cecil] Load weapons and ammo
   LoadWorldWeapons(pwo);
+
+  // [Cecil] Load patch config for classes
+  LoadClassPatchConfig(pwo->wo_fnmFileName.FileName().str_String);
 };
 
-// [Cecil] Weapons and ammo cleanup
+// [Cecil] Individual world cleanup
 void CWorldBase_OnWorldEnd(CWorld *pwo) {
-  ClearWorldWeapons();
 };
 
 void CWorldBase_OnWorldRender(CWorld *pwo) {

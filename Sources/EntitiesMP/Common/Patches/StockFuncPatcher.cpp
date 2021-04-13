@@ -1,4 +1,5 @@
 #include "StdH.h"
+
 #include "StockFuncPatcher.h"
 #include "StockPatch.h"
 

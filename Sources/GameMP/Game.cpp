@@ -1081,11 +1081,11 @@ void CGame::InitInternal(void) {
 
   CON_DiscardLastLineTimes();
 
-  // provide URL to the engine
-  _strModURL = "http://www.croteam.com/mods/TheSecondEncounter";
+  // provide URL to the mod
+  _strModURL = "https://github.com/DreamyCecil/AdvancedMultiplayer2";
 
-  // [Cecil] Patch the ECL parsing function
-  CStockPatcher::SetPatch();
+  // [Cecil] Set custom patches
+  SetCustomPatches();
 };
 
 // internal cleanup
@@ -1131,9 +1131,9 @@ void CGame::EndInternal(void) {
   } catch (char *strError) {
     WarningMessage("Cannot load game settings:\n%s\nUsing defaults!", strError);
   }
-
-  // [Cecil] Unpatch the function
-  CStockPatcher::UnsetPatch();
+  
+  // [Cecil] Unset custom patches
+  UnsetCustomPatches();
 };
 
 BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, CSessionProperties &sp) {
@@ -1160,9 +1160,6 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, C
   _actTriangles.Clear();
   gm_bProfileDemo = FALSE;
 
-  // [Cecil] Load patch config for classes
-  LoadClassPatchConfig(fnWorld.FileName().str_String);
-
   // start the new session
   try {
     if (dem_bPlay) {
@@ -1185,8 +1182,8 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, C
       CWorld *pwo = &_pNetwork->ga_World;
       CPlacement3D plGlobal = CPlacement3D(FLOAT3D(0.0f, 0.0f, 0.0f), ANGLE3D(0.0f, 0.0f, 0.0f));
 
-      CEntity *pen = pwo->CreateEntity_t(plGlobal, CTFILENAME("Classes\\GlobalController.ecl"));
-      pen->Initialize();
+      CEntity *penGlobal = pwo->CreateEntity_t(plGlobal, CTFILENAME("Classes\\GlobalController.ecl"));
+      penGlobal->Initialize();
     }
 
   } catch (char *strError) {
@@ -1458,6 +1455,9 @@ void CGame::StopGame(void) {
     gm_lpLocalPlayers[iPlayer].lp_bActive = FALSE;
     gm_lpLocalPlayers[iPlayer].lp_pplsPlayerSource = NULL;
   }
+
+  // [Cecil] Custom weapons and ammo cleanup
+  ClearWorldWeapons();
 };
 
 BOOL CGame::StartProviderFromName(void) {

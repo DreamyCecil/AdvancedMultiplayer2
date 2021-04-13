@@ -147,16 +147,20 @@ functions:
       }
     }
 
-    if (pen->GetPhysicsFlags()&EPF_MOVABLE) {
+    if (pen->GetPhysicsFlags() & EPF_MOVABLE) {
       // if any other spinner affects the target, skip this spinner
       BOOL bNoSpinner = TRUE;
-      {FOREACHINLIST( CEntity, en_lnInParent, pen->en_lhChildren, iten) {
-        if (IsOfClass(iten, "Spinner"))
-        {
+
+      {FOREACHINLIST(CEntity, en_lnInParent, pen->en_lhChildren, iten) {
+        // [Cecil] For safety
+        CEntity *pen = iten;
+
+        if (IsOfClass(pen, "Spinner")) {
           bNoSpinner = FALSE;
           return;      
         }
       }}
+
       if (bNoSpinner) {    
         ESpinnerInit esi;
         CEntityPointer penSpinner;

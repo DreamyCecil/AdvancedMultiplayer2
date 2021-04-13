@@ -13,6 +13,9 @@
 
 //#define CPATCHER_SE1_DEGUG_OUT
 
+// [Cecil] SE1 Debug output function
+#define CPATCHER_OUTPUT InfoMessage //CPrintF
+
 HANDLE CPatch::s_hHeap = 0;
 bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 {
@@ -28,7 +31,7 @@ bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 		if(*reinterpret_cast<char*>(addr) == (char)0xE9) //jmp XX XX XX XX
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("jmp XX XX XX XX \n");
+			CPATCHER_OUTPUT("jmp XX XX XX XX \n");
 			#endif
 			instruction_len = 5;
 			m_old_jmp = 5 + addr + *reinterpret_cast<long*>(addr + 1);
@@ -37,7 +40,7 @@ bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 			!memcmp(reinterpret_cast<char*>(addr), "\xB8\x1E", 2))
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("2 \n");
+			CPATCHER_OUTPUT("2 \n");
 			#endif
 			instruction_len = 5;
 			instruction_found = true;
@@ -45,7 +48,7 @@ bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 		} else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x55", 2)) // MOV EDX, [EBP + arg_0]
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("mov edx, [ebp+arg0]\n");
+			CPATCHER_OUTPUT("mov edx, [ebp+arg0]\n");
 			#endif
 			instruction_len = 3;
 			instruction_found = true;
@@ -55,63 +58,63 @@ bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 				 *reinterpret_cast<char*>(addr) == (char)0x6A)               //push XX
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("3 \n");
+			CPATCHER_OUTPUT("3 \n");
 			#endif
 			instruction_len = 2;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x46", 2))    
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("MOV ECX, [EBP + arg_0] \n");
+			CPATCHER_OUTPUT("MOV ECX, [EBP + arg_0] \n");
 			#endif
 			instruction_len = 3;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x4D", 2))    // MOV ECX, [EBP + arg_0]
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("MOV ECX, [EBP + arg_0] \n");
+			CPATCHER_OUTPUT("MOV ECX, [EBP + arg_0] \n");
 			#endif
 			instruction_len = 3;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8B\x75", 2))
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("mov esi, [ebp+arg_0] \n");
+			CPATCHER_OUTPUT("mov esi, [ebp+arg_0] \n");
 			#endif
 			instruction_len = 3;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x8D\x45", 2))    // lea     eax, [ebp+...]
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("lea     eax, [ebp+...] \n");
+			CPATCHER_OUTPUT("lea     eax, [ebp+...] \n");
 			#endif
 			instruction_len = 3;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x64\xA1", 2))    // MOV EAX, large FS
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("MOV EAX, large FS \n");
+			CPATCHER_OUTPUT("MOV EAX, large FS \n");
 			#endif
 			instruction_len = 6;
 			instruction_found = true;
 		}else if((*reinterpret_cast<char*>(addr) >= (char)0x50) && (*reinterpret_cast<char*>(addr) < (char)0x58)) // PUSH
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("push xxx\n");
+			CPATCHER_OUTPUT("push xxx\n");
 			#endif
 			instruction_len = 1;
 			instruction_found = true;
 		}else if(!memcmp(reinterpret_cast<char*>(addr), "\x83\xEC", 2)) // sub esp, byte + N 
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("sub esp, byte + N \n");
+			CPATCHER_OUTPUT("sub esp, byte + N \n");
 			#endif
 			instruction_len = 3;
 			instruction_found = true;
 		}else if(*reinterpret_cast<char*>(addr) == (char)0x89) // MOV
 		{
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("mov\n");
+			CPATCHER_OUTPUT("mov\n");
 			#endif
 			instruction_len = 3;
 			instruction_found = true;
@@ -124,12 +127,15 @@ bool CPatch::okToRewriteTragetInstructionSet(long addr, int& rw_len)
 		{
 			rw_len = read_len;
 			#ifdef CPATCHER_SE1_DEGUG_OUT
-			CPrintF("Finished: read_len >= 5 \n\n");
+			CPATCHER_OUTPUT("Finished: read_len >= 5 \n\n");
 			#endif
 			return true;
 		}
 	}while(instruction_found);
-	//CPrintF("Not found instruction! \n\n");
+	
+	#ifdef CPATCHER_SE1_DEGUG_OUT
+	CPATCHER_OUTPUT("Not found instruction! \n\n");
+	#endif
 	
 	return false;
 }

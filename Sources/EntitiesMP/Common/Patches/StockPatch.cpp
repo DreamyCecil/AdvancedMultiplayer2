@@ -1,160 +1,60 @@
 #include "StdH.h"
+
 #include "StockPatch.h"
-#include "EntitiesMP/Common/ConfigFunc.h"
+#include "PatchFunctions.h"
 
 // Patch config
-static DJSON_Block _cbConfig;
-static INDEX _ctConfigEntries = 0;
+extern DJSON_Block _cbConfig;
+extern INDEX _ctConfigEntries;
 
-// Load the config
-void LoadClassPatchConfig(CTString strWorld) {
-  _cbConfig.Clear();
-  _ctConfigEntries = 0;
-
-  HookConfigFunctions();
-
-  // get level config
-  CTString strConfigFile;
-  strConfigFile.PrintF("LevelPatches\\Classes\\%s.json", strWorld);
-
-  // no config
-  if (!FileExists(strConfigFile)) {
+// Patch the entity class link file
+static void PatchClassLink_t(CTString &strClass) {
+  // no replacements
+  if (_ctConfigEntries <= 0) {
     return;
   }
 
-  // can't parse the config
-  if (ParseConfig(strConfigFile, _cbConfig) != DJSON_OK) {
-    FatalError("Cannot parse class patch \"%s\"", strConfigFile);
-    return;
-  }
+  // open the class file
+  CTFileStream strm;
+  strm.Open_t(strClass);
 
-  _ctConfigEntries = _cbConfig.Count();
-};
+  // read library name
+  CTFileName fnDLL;
+  fnDLL.ReadFromText_t(strm, "Package: ");
 
-// READER FUNCTIONS
-
-// Load DLL
-HINSTANCE LoadDLL_t(const char *strFileName) {
-  HINSTANCE hiDLL = ::LoadLibraryA(strFileName);
-
-  // if the DLL can not be loaded
-  if (hiDLL == NULL) {
-    // get the error code
-    DWORD dwMessageId = GetLastError();
-
-    // format the windows error message
-    LPVOID lpMsgBuf;
-    DWORD dwSuccess = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwMessageId,
-                                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
-
-    CTString strWinError;
-
-    // if formatting succeeds
-    if (dwSuccess != 0) {
-      // copy the result
-      strWinError = (char*)lpMsgBuf;
-      // free the windows message buffer
-      LocalFree(lpMsgBuf);
-
-    } else {
-      // set our message about the failure
-      CTString strError;
-      strError.PrintF(TRANS("Cannot format error message!\n"
-                            "Original error code: %d,\n"
-                            "Formatting error code: %d.\n"), dwMessageId, GetLastError());
-      strWinError = strError;
-    }
-
-    // report error
-    ThrowF_t(TRANS("Cannot load DLL file '%s':\n%s"), strFileName, strWinError);
-  }
-
-  return hiDLL;
-};
-
-// ECL parsing function
-void CEntityClassPatch::Read_t(CTStream *istr) {
-  // read the dll filename and class name from the stream
-  CTFileName fnmDLL;
-  fnmDLL.ReadFromText_t(*istr, "Package: ");
-
+  // class name
   CTString strClassName;
-  strClassName.ReadFromText_t(*istr, "Class: ");
+  strClassName.ReadFromText_t(strm, "Class: ");
 
-  // [Cecil] Go through the replacement config
-  if (_ctConfigEntries > 0) {
-    CTString strLibraryName = fnmDLL.FileName().str_String;
+  strm.Close();
 
-    for (INDEX iClass = 0; iClass < _ctConfigEntries; iClass++) {
-      string strReplace = _cbConfig.GetKey(iClass);
-      CConfigValue valNewClass = _cbConfig.GetValue(iClass);
+  // go through the replacement config
+  CTString strLibraryName = fnDLL.FileName().str_String;
 
-      if (valNewClass.cv_eType != CVT_STRING) {
-        FatalError("Replacement for \"%s\" is not a string!", strReplace.c_str());
-      }
+  for (INDEX iClass = 0; iClass < _ctConfigEntries; iClass++) {
+    string strReplace = _cbConfig.GetKey(iClass);
+    CConfigValue valNewClass = _cbConfig.GetValue(iClass);
 
-      // wrong class
-      if (strClassName != strReplace.c_str()) {
-        continue;
-      }
-
-      string strNewClass = valNewClass.cv_strValue;
-
-      // ignore the same classes
-      if (strClassName == strNewClass.c_str() && strLibraryName == "Entities") {
-        continue;
-      }
-
-      // replace the library
-      fnmDLL = fnmDLL.FileDir() + CTFILENAME("Entities") + fnmDLL.FileExt();
-
-      // replace the class
-      strClassName = strNewClass.c_str();
+    if (valNewClass.cv_eType != CVT_STRING) {
+      FatalError("Replacement for \"%s\" is not a string!", strReplace.c_str());
     }
+
+    // wrong class
+    if (strClassName != strReplace.c_str()) {
+      continue;
+    }
+
+    string strNewClass = valNewClass.cv_strValue;
+
+    // ignore the same classes
+    if (strClassName == strNewClass.c_str() && strLibraryName == "Entities") {
+      continue;
+    }
+
+    // replace the class file
+    strClass = strNewClass.c_str();
   }
-
-  // create name of dll
-  #ifndef NDEBUG
-    fnmDLL = _fnmApplicationExe.FileDir() + fnmDLL.FileName() + _strModExt+"D" + fnmDLL.FileExt();
-  #else
-    fnmDLL = _fnmApplicationExe.FileDir() + fnmDLL.FileName() + _strModExt + fnmDLL.FileExt();
-  #endif
-
-  // load the DLL
-  CTFileName fnmExpanded;
-  ExpandFilePath(EFP_READ, fnmDLL, fnmExpanded);
-
-  ec_hiClassDLL = LoadDLL_t(fnmExpanded);
-  ec_fnmClassDLL = fnmDLL;
-
-  // get the pointer to the DLL class structure
-  ec_pdecDLLClass = (CDLLEntityClass*)GetProcAddress(ec_hiClassDLL, strClassName+"_DLLClass");
-
-  // if class structure is not found
-  if (ec_pdecDLLClass == NULL) {
-    // free the library
-    BOOL bSuccess = FreeLibrary(ec_hiClassDLL);
-    ASSERT(bSuccess);
-
-    ec_hiClassDLL = NULL;
-    ec_fnmClassDLL.Clear();
-
-    // report error
-    ThrowF_t(TRANS("Class '%s' not found in entity class package file '%s'"), strClassName, fnmDLL);
-  }
-
-  // obtain all components needed by the DLL
-  CTmpPrecachingNow tpn;
-  ObtainComponents_t();
-
-  // attach the DLL
-  ec_pdecDLLClass->dec_OnInitClass();
-
-  // check that the class properties have been properly declared
-  CheckClassProperties();
 };
-
-// STOCK FUNCTIONS
 
 // Class table
 static CDList<string> _aClassNames;
@@ -162,7 +62,17 @@ static CDList<CEntityClass *> _aClasses;
 
 // Obtain an object from stock - loads if not loaded
 CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
-  string strFile = fnmFileName.str_String;
+  // try to patch the class link file
+  CTString fnECL = fnmFileName.str_String;
+
+  try {
+    PatchClassLink_t(fnECL);
+
+  } catch (char *) {
+    throw;
+  }
+
+  string strFile = fnECL.str_String;
 
   // find stocked object with same name
   INDEX iClass = _aClassNames.FindIndex(strFile);
@@ -176,8 +86,8 @@ CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
   }
 
   // create patched class
-  CEntityClassPatch *ptNew = new CEntityClassPatch;
-  ptNew->ser_FileName = fnmFileName;
+  CEntityClass *ptNew = new CEntityClass;
+  ptNew->ser_FileName = fnECL;
 
   // add to the lists and get its index
   iClass = _aClassNames.Add(strFile);
@@ -185,7 +95,7 @@ CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
 
   try {
     // load it
-    ptNew->Load_t(fnmFileName);
+    ptNew->Load_t(fnECL);
 
   } catch (char *) {
     // delete the class
