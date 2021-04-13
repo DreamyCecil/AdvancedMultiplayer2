@@ -5,6 +5,8 @@
 
 // [Cecil] For custom sounds
 #include <Engine/Sound/SoundData.h>
+
+#include "EntitiesMP/Common/ExtraFunc.h"
 %}
 
 %{
@@ -43,12 +45,6 @@ properties:
  41 CTFileName m_fnCustomModel   "Custom Model" = CTString(""),
  42 CTFileName m_fnCustomTexture "Custom Texture" = CTString(""),
 
-{
-  CAutoPrecacheModel m_apmCustom;
-  CAutoPrecacheTexture m_aptCustom;
-  CAutoPrecacheSound m_apsCustom;
-}
-
 components:
   1 model   MODEL_ITEM      "Models\\Items\\ItemHolder\\ItemHolder.mdl",
 
@@ -57,9 +53,9 @@ functions:
 
   // [Cecil] Precache custom resources
   void Precache(void) {
-    m_apmCustom.Precache(m_fnCustomModel);
-    m_aptCustom.Precache(m_fnCustomTexture);
-    m_apsCustom.Precache(m_fnPickupSound);
+    PrecacheResource(ECT_MODEL, m_fnCustomModel);
+    PrecacheResource(ECT_TEXTURE, m_fnCustomTexture);
+    PrecacheResource(ECT_SOUND, m_fnPickupSound);
   };
 
   /* Adjust model mip factor if needed. */

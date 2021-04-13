@@ -27,17 +27,17 @@ void CStockPatcher::SetPatch(void) {
 
   // obtain function
   if (m_pPatch[0] == NULL) {
-    m_pPatch[0] = new CPatch(pObtain, &CClassStockPatch::Obtain_t, false, false);
+    m_pPatch[0] = new CPatch(pObtain, &CClassStockPatch::Obtain_t, false, true);
   }
 
   // release function
   if (m_pPatch[1] == NULL) {
-    m_pPatch[1] = new CPatch(pRelease, &CClassStockPatch::Release, false, false);
+    m_pPatch[1] = new CPatch(pRelease, &CClassStockPatch::Release, false, true);
   }
 
   // free function
   if (m_pPatch[2] == NULL) {
-    m_pPatch[2] = new CPatch(pFree, &CClassStockPatch::FreeUnused, false, false);
+    m_pPatch[2] = new CPatch(pFree, &CClassStockPatch::FreeUnused, false, true);
   }
   
   // set patches
@@ -53,7 +53,7 @@ void CStockPatcher::SetPatch(void) {
 // Remove function patches
 void CStockPatcher::UnsetPatch(void) {
   // go through all patches
-  for (int i = 0; i < 3; i++) {
+  /*for (int i = 0; i < 3; i++) {
     if (m_pPatch[i] == NULL) {
       continue;
     }
@@ -63,5 +63,5 @@ void CStockPatcher::UnsetPatch(void) {
 
     delete m_pPatch[i];
     m_pPatch[i] = NULL;
-  }
+  }*/
 };

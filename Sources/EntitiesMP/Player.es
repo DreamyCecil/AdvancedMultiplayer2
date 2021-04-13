@@ -3088,36 +3088,37 @@ functions:
 
     // [Cecil] Print combo amount
     if (hud_bShowAll && GetSP()->sp_fComboTime > 0.0f && m_iCombo > 1) {
+      FLOAT fComboScale = fScale * 0.9f;
+
       pdp->SetFont(&_fdComboFont);
-      pdp->SetTextScaling(fScale);
+      pdp->SetTextScaling(fComboScale);
       pdp->SetTextAspect(1.0f);
       
       CTString strCombo = CTString(0, "COMBO: ^cffd700X%d", m_iCombo);
 
-      FLOAT2D vComboSize = FLOAT2D(pdp->GetTextWidth(strCombo) + 8.0f*fScale, (_fdComboFont.GetHeight()-4.0f) * fScale);
+      FLOAT2D vComboSize = FLOAT2D(pdp->GetTextWidth(strCombo) + 8.0f*fComboScale, (_fdComboFont.GetHeight()-4.0f) * fComboScale);
       FLOAT fComboDiff = (m_fComboTime - _pTimer->GetLerpedCurrentTick());
       FLOAT fComboFactor = (fComboDiff / GetSP()->sp_fComboTime);
 
-      pdp->Fill(pixDPWidth*0.5f - vComboSize(1)/2.0f,                pixDPHeight*0.2f - vComboSize(2)/2.0f - 3.0f*fScale, vComboSize(1), vComboSize(2), 0x0000007F);
-      pdp->Fill(pixDPWidth*0.5f - vComboSize(1)/2.0f * fComboFactor, pixDPHeight*0.2f - vComboSize(2)/2.0f - 3.0f*fScale, vComboSize(1) * fComboFactor, vComboSize(2), 0xEE9C00FF);
+      pdp->Fill(pixDPWidth*0.5f - vComboSize(1)/2.0f,                pixDPHeight*0.2f - vComboSize(2)/2.0f - 3.0f*fComboScale, vComboSize(1), vComboSize(2), 0x0000007F);
+      pdp->Fill(pixDPWidth*0.5f - vComboSize(1)/2.0f * fComboFactor, pixDPHeight*0.2f - vComboSize(2)/2.0f - 3.0f*fComboScale, vComboSize(1) * fComboFactor, vComboSize(2), 0xEE9C00FF);
 
       pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f, 0xFFFFFFFF);
 
       pdp->SetFont(_pfdDisplayFont);
-      pdp->SetTextScaling(fScale);
-      pdp->SetTextScaling(fScale*0.8f);
+      pdp->SetTextScaling(fComboScale);
 
       // character height
-      FLOAT fHeight = _pfdDisplayFont->GetHeight() * fScale*0.8f;
+      FLOAT fHeight = _pfdDisplayFont->GetHeight() * fComboScale;
       
       if (amp_iComboText > 0) {
         strCombo = CTString(0, "Payout: ^cee9c00%d", GetComboPayout());
-        pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*1.5f, 0xCCCCCCFF);
-      }
 
-      if (amp_iComboText > 1 && GetSP()->sp_fTokenPayout > 0.0f) {
-        strCombo = CTString(0, "Tokens: ^cee9c00%d", Floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout));
-        pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*2.5f, 0xCCCCCCFF);
+        if (amp_iComboText > 1 && GetSP()->sp_fTokenPayout > 0.0f) {
+          strCombo += CTString(0, "  ^rTokens: ^cee9c00%d", Floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout));
+        }
+
+        pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*1.5f, 0xCCCCCCFF);
       }
     }
   };

@@ -20,3 +20,6 @@ DECL_DLL void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttach
 BOOL LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel);
 // [Cecil] Set model from a JSON config
 BOOL SetModelFromJSON(CModelObject *pmo, DJSON_Block &mapModel);
+
+// [Cecil] Precache some resource
+void PrecacheResource(EntityComponentType eType, const CTFileName &fnFile);

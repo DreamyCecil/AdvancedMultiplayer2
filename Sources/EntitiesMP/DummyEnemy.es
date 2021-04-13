@@ -8,6 +8,8 @@
 
 // [Cecil] Patch parser
 #include "EntitiesMP/Common/ConfigFunc.h"
+
+#include "EntitiesMP/Common/ExtraFunc.h"
 %}
 
 uses "EntitiesMP/EnemyBase";
@@ -58,10 +60,6 @@ properties:
  51 FLOAT m_fWoundDamage  "Dummy Wound Damage" = 60.0f,
  52 BOOL m_bWoundAnim     "Dummy Wound Animation" = TRUE,
 
-{
-  CAutoPrecacheSound m_apsSound;
-}
-  
 components:
   1 class   CLASS_BASIC_EFFECT    "Classes\\BasicEffect.ecl",
   2 class   CLASS_PROJECTILE      "Classes\\Projectile.ecl",
@@ -103,12 +101,12 @@ functions:
     PrecacheSound(SOUND_WOUND);
     PrecacheSound(SOUND_DEATH);
     
-    m_apsSound.Precache(m_fnFireSound);
-    m_apsSound.Precache(m_fnHitSound);
+    PrecacheResource(ECT_SOUND, m_fnFireSound);
+    PrecacheResource(ECT_SOUND, m_fnHitSound);
 
-    m_apsSound.Precache(m_fnSight);
-    m_apsSound.Precache(m_fnWound);
-    m_apsSound.Precache(m_fnDeath);
+    PrecacheResource(ECT_SOUND, m_fnSight);
+    PrecacheResource(ECT_SOUND, m_fnWound);
+    PrecacheResource(ECT_SOUND, m_fnDeath);
   };
   
   // [Cecil] Get body model

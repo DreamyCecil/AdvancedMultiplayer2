@@ -2,6 +2,12 @@
 #include "ExtraFunc.h"
 #include "ConfigFunc.h"
 
+#include "Engine/Entities/Precaching.h"
+#include "Engine/Templates/Stock_CEntityClass.h"
+#include "Engine/Templates/Stock_CModelData.h"
+#include "Engine/Templates/Stock_CSoundData.h"
+#include "Engine/Templates/Stock_CTextureData.h"
+
 #include "EntitiesMP/DoorController.h"
 #include "EntitiesMP/KeyItem.h"
 #include "EntitiesMP/PlayerMarker.h"
@@ -395,4 +401,61 @@ BOOL SetModelFromJSON(CModelObject *pmo, DJSON_Block &mapModel) {
   }
 
   return FALSE;
+};
+
+// [Cecil] Precache some resource
+void PrecacheResource(EntityComponentType eType, const CTFileName &fnFile) {
+  // no resource
+  if (!FileExists(fnFile)) {
+    return;
+  }
+
+  CSerial *pser = NULL;
+  INDEX ctUsed = 0;
+
+  CTmpPrecachingNow tpn;
+
+  // check the component type
+  switch (eType) {
+    // if texture
+    case ECT_TEXTURE:
+      // obtain texture data
+      pser = _pTextureStock->Obtain_t(fnFile);
+      ctUsed = pser->GetUsedCount();
+      break;
+
+    // if model
+    case ECT_MODEL:
+      // obtain model data
+      pser = _pModelStock->Obtain_t(fnFile);
+      ctUsed = pser->GetUsedCount();
+      break;
+
+    // if sound
+    case ECT_SOUND:
+      // obtain sound data
+      pser = _pSoundStock->Obtain_t(fnFile);
+      ctUsed = pser->GetUsedCount();
+      break;
+
+    // if class
+    case ECT_CLASS:
+      // obtain entity class
+      pser = _pEntityClassStock->Obtain_t(fnFile);
+      ctUsed = pser->GetUsedCount();
+      break;
+
+    // something else
+    default: ThrowF_t(TRANS("Component '%s' is of unknown type!"), fnFile.str_String);
+  }
+
+  // if not already loaded and should not be precaching now
+  if (ctUsed <= 1 && !_precache_bNowPrecaching) {
+    // report warning
+    CPrintF(TRANS("Not precached: (0x%08X)'%s'\n"), 0, fnFile.str_String);
+  }
+
+  if (pser != NULL) {
+    pser->AddToCRCTable();
+  }
 };
