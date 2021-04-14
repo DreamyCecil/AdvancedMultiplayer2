@@ -1,7 +1,7 @@
 {
-  "Model"   : "Models/Weapons/Laser/Barrel.mdl",
-  "Texture" : "Models/Weapons/Laser/Barrel.tex",
+  "Model"   : "Models\Weapons\Laser\Barrel.mdl",
+  "Texture" : "Models\Weapons\Laser\Barrel.tex",
   
-  "Reflection" : "Models/ReflectionTextures/LightMetal01.tex",
-  "Specular"   : "Models/SpecularTextures/Medium.tex",
+  "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+  "Specular"   : "Models\SpecularTextures\Medium.tex",
 }

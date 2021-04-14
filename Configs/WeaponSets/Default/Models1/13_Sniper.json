@@ -1,15 +1,15 @@
 {
-  "Model"   : "ModelsMP/Weapons/Sniper/Sniper.mdl",
-  "Texture" : "Models/Weapons/Hand.tex",
+  "Model"   : "ModelsMP\Weapons\Sniper\Sniper.mdl",
+  "Texture" : "Models\Weapons\Hand.tex",
   
   "Attachment 0" : {
-    "Model"   : "ModelsMP/Weapons/Sniper/Body.mdl",
-    "Texture" : "ModelsMP/Weapons/Sniper/Body.tex",
+    "Model"   : "ModelsMP\Weapons\Sniper\Body.mdl",
+    "Texture" : "ModelsMP\Weapons\Sniper\Body.tex",
     
-    "Reflection" : "Models/ReflectionTextures/LightMetal01.tex",
-    "Specular"   : "Models/SpecularTextures/Medium.tex",
+    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+    "Specular"   : "Models\SpecularTextures\Medium.tex",
     
     // Flare attachment
-    "Include" : "Configs/WeaponFlare1.json",
+    "Include" : "Configs\WeaponFlare1.json",
   },
 }

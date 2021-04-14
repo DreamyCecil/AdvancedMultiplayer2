@@ -1,9 +1,9 @@
 {
   "Name" : "MKIII Grenade Launcher",
-  "Icon" : "TexturesMP/Interface/WGrenadeLauncher.tex",
+  "Icon" : "TexturesMP\Interface\WGrenadeLauncher.tex",
   
-  "Model1" : "Models1/09_GrenadeLauncher.json",
-  "Model3" : "Models3/09_GrenadeLauncher.json",
+  "Model1" : "Models1\09_GrenadeLauncher.json",
+  "Model3" : "Models3\09_GrenadeLauncher.json",
   
   "Ammo" : 4,
   "AltAmmo": -1,

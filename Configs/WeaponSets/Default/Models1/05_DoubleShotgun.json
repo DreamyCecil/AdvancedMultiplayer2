@@ -1,36 +1,36 @@
 {
-  "Model"   : "Models/Weapons/DoubleShotgun/DoubleShotgun.mdl",
-  "Texture" : "Models/Weapons/Hand.tex",
+  "Model"   : "Models\Weapons\DoubleShotgun\DoubleShotgun.mdl",
+  "Texture" : "Models\Weapons\Hand.tex",
   
   "Attachment 1" : {
-    "Model"   : "Models/Weapons/DoubleShotgun/Dshotgunbarrels.mdl",
-    "Texture" : "Models/Weapons/DoubleShotgun/Barrels.tex",
+    "Model"   : "Models\Weapons\DoubleShotgun\Dshotgunbarrels.mdl",
+    "Texture" : "Models\Weapons\DoubleShotgun\Barrels.tex",
     
-    "Reflection" : "Models/ReflectionTextures/BWRiples01.tex",
-    "Specular"   : "Models/SpecularTextures/Medium.tex",
+    "Reflection" : "Models\ReflectionTextures\BWRiples01.tex",
+    "Specular"   : "Models\SpecularTextures\Medium.tex",
     
     // Flare attachment
-    "Include" : "Configs/WeaponFlare1.json",
+    "Include" : "Configs\WeaponFlare1.json",
   },
   
   "Attachment 0" : {
-    "Model"   : "Models/Weapons/DoubleShotgun/Dshotgunhandle.mdl",
-    "Texture" : "Models/Weapons/DoubleShotgun/Handle.tex",
+    "Model"   : "Models\Weapons\DoubleShotgun\Dshotgunhandle.mdl",
+    "Texture" : "Models\Weapons\DoubleShotgun\Handle.tex",
     
-    "Reflection" : "Models/ReflectionTextures/LightBlueMetal01.tex",
-    "Specular"   : "Models/SpecularTextures/Medium.tex",
+    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+    "Specular"   : "Models\SpecularTextures\Medium.tex",
   },
   
   "Attachment 2" : {
-    "Model"   : "Models/Weapons/DoubleShotgun/Switch.mdl",
-    "Texture" : "Models/Weapons/DoubleShotgun/Switch.tex",
+    "Model"   : "Models\Weapons\DoubleShotgun\Switch.mdl",
+    "Texture" : "Models\Weapons\DoubleShotgun\Switch.tex",
     
-    "Reflection" : "Models/ReflectionTextures/LightBlueMetal01.tex",
-    "Specular"   : "Models/SpecularTextures/Medium.tex",
+    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+    "Specular"   : "Models\SpecularTextures\Medium.tex",
   },
   
   "Attachment 3" : {
-    "Model"   : "Models/Weapons/DoubleShotgun/Ammo.mdl",
-    "Texture" : "Models/Weapons/DoubleShotgun/Ammo.tex",
+    "Model"   : "Models\Weapons\DoubleShotgun\Ammo.mdl",
+    "Texture" : "Models\Weapons\DoubleShotgun\Ammo.tex",
   },
 }

@@ -1,4 +1,4 @@
 {
-  "Model"   : "Models/Weapons/DoubleShotgun/HandWithAmmo.mdl",
-  "Texture" : "Models/Weapons/Hand.tex",
+  "Model"   : "Models\Weapons\DoubleShotgun\HandWithAmmo.mdl",
+  "Texture" : "Models\Weapons\Hand.tex",
 }
