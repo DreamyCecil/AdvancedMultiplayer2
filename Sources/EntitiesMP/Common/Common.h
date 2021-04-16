@@ -55,6 +55,9 @@ static const INDEX _aiTakeAmmoBits[8] = {
 #define AV_NAPALM        INDEX(200)
 #define AV_SNIPERBULLETS INDEX(200)
 
+// [Cecil] Mana for ammo adjustment (moved from PlayerWeapons)
+#define MANA_AMMO (0.1f)
+
 // used for invisibility powerup
 #define INVISIBILITY_ALPHA_LOCAL  0x55
 #define INVISIBILITY_ALPHA_REMOTE 0x11

@@ -322,7 +322,8 @@ static void KillAllEnemies(CEntity *penKiller) {
 #define PLACT_FIREBOMB        (1L<<13)
 #define PLACT_ALTFIRE         (1L<<14) // [Cecil] Alt fire button
 #define PLACT_TOKENS          (1L<<15) // [Cecil] Token spending button
-#define PLACT_SELECT_WEAPON_SHIFT (16)
+#define PLACT_SELECT_MODIFIER (1L<<16) // [Cecil] Weapon selection modifier
+#define PLACT_SELECT_WEAPON_SHIFT (17)
 #define PLACT_SELECT_WEAPON_MASK  (0x1FL<<PLACT_SELECT_WEAPON_SHIFT)
                                      
 #define MAX_WEAPONS 30
@@ -380,6 +381,7 @@ struct PlayerControls {
   // [Cecil] New buttons
   BOOL bAltFire;
   BOOL bTokens;
+  BOOL bSelectModifier;
 };
 
 static struct PlayerControls pctlCurrent;
@@ -700,7 +702,8 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
                         | (pctlCurrent.bSniperZoomOut ? PLACT_SNIPER_ZOOMOUT : 0)
                         // [Cecil] New buttons
                         | (pctlCurrent.bAltFire ? PLACT_ALTFIRE : 0)
-                        | (pctlCurrent.bTokens  ? PLACT_TOKENS : 0);
+                        | (pctlCurrent.bTokens  ? PLACT_TOKENS : 0)
+                        | (pctlCurrent.bSelectModifier ? PLACT_SELECT_MODIFIER : 0);
 
   // if 'use or comp' has been pressed
   if (pctlCurrent.bUseOrComputer && !pctlCurrent.bUseOrComputerLast) {
@@ -897,6 +900,7 @@ void CPlayer_OnInitClass(void) {
   // [Cecil] New buttons
   _pShell->DeclareSymbol("user INDEX ctl_bAltFire;", &pctlCurrent.bAltFire);
   _pShell->DeclareSymbol("user INDEX ctl_bTokens;",  &pctlCurrent.bTokens);
+  _pShell->DeclareSymbol("user INDEX ctl_bWeaponSelectionModifier;",  &pctlCurrent.bSelectModifier);
   _pShell->DeclareSymbol("user INDEX ctl_bVoiceCommands;", &ctl_bVoiceCommands);
 
   _pShell->DeclareSymbol("user FLOAT plr_fSwimSoundDelay;", &plr_fSwimSoundDelay);
@@ -1206,11 +1210,6 @@ properties:
  56 CEntityPointer m_penSpray,
 
  // sounds
- 60 CSoundObject m_soWeapon0,
- 61 CSoundObject m_soWeapon1,
- 62 CSoundObject m_soWeapon2,
- 63 CSoundObject m_soWeapon3,
- 64 CSoundObject m_soWeaponAmbient,
  65 CSoundObject m_soPowerUpBeep,
 
  70 CSoundObject m_soMouth,     // breating, yelling etc.
@@ -1345,11 +1344,11 @@ properties:
 }
 
 components:
-  2 class   CLASS_PLAYER_ANIMATOR "Classes\\PlayerAnimator.ecl",
-  3 class   CLASS_PLAYER_VIEW     "Classes\\PlayerView.ecl",
-  4 class   CLASS_BASIC_EFFECT    "Classes\\BasicEffect.ecl",
-  5 class   CLASS_BLOOD_SPRAY     "Classes\\BloodSpray.ecl", 
-  6 class   CLASS_SERIOUSBOMB     "Classes\\SeriousBomb.ecl",
+  2 class CLASS_PLAYER_ANIMATOR "Classes\\PlayerAnimator.ecl",
+  3 class CLASS_PLAYER_VIEW     "Classes\\PlayerView.ecl",
+  4 class CLASS_BASIC_EFFECT    "Classes\\BasicEffect.ecl",
+  5 class CLASS_BLOOD_SPRAY     "Classes\\BloodSpray.ecl", 
+  6 class CLASS_SERIOUSBOMB     "Classes\\SeriousBomb.ecl",
 
  // [Cecil] Extra classes
   7 class CLASS_START     "Classes\\PlayerMarker.ecl",
@@ -5217,10 +5216,14 @@ functions:
     // if selecting a new weapon select it
     if ((ulNewButtons & PLACT_SELECT_WEAPON_MASK) != 0) {
       ESelectWeapon eSelect;
-      eSelect.iWeapon = (ulNewButtons&PLACT_SELECT_WEAPON_MASK)>>PLACT_SELECT_WEAPON_SHIFT;
+      eSelect.iWeapon = (ulNewButtons & PLACT_SELECT_WEAPON_MASK) >> PLACT_SELECT_WEAPON_SHIFT;
 
       GetWeapon(0)->SendEvent(eSelect);
-      GetWeapon(1)->SendEvent(eSelect);
+    }
+
+    // [Cecil] Pull out extra weapon
+    if (ulNewButtons & PLACT_SELECT_MODIFIER) {
+      GetInventory()->WeaponSelectionModifier();
     }
 
     // next weapon zooms out when in sniping mode
@@ -5232,7 +5235,6 @@ functions:
         eSelect.iWeapon = -1;
         
         GetWeapon(0)->SendEvent(eSelect);
-        GetWeapon(1)->SendEvent(eSelect);
       }
     }
     
@@ -5245,7 +5247,6 @@ functions:
         eSelect.iWeapon = -2;
 
         GetWeapon(0)->SendEvent(eSelect);
-        GetWeapon(1)->SendEvent(eSelect);
       }
     }
 
@@ -5254,7 +5255,6 @@ functions:
       eSelect.iWeapon = -3;
 
       GetWeapon(0)->SendEvent(eSelect);
-      GetWeapon(1)->SendEvent(eSelect);
     }
 
     // if fire is pressed
@@ -6103,13 +6103,10 @@ functions:
 
       // set weapons
       if (!GetSP()->sp_bCooperative) {
-        GetWeapon(0)->InitializeWeapons(CpmStart.m_iGiveWeapons, 0, 0, CpmStart.m_fMaxAmmoRatio);
-        GetWeapon(1)->InitializeWeapons(CpmStart.m_iGiveWeapons, 0, 0, CpmStart.m_fMaxAmmoRatio);
+        GetInventory()->InitWeapons(CpmStart.m_iGiveWeapons, 0, 0, CpmStart.m_fMaxAmmoRatio);
 
       } else {
-        GetWeapon(0)->InitializeWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
-          GetSP()->sp_bInfiniteAmmo ? 0 : CpmStart.m_iTakeAmmo, CpmStart.m_fMaxAmmoRatio);
-        GetWeapon(1)->InitializeWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
+        GetInventory()->InitWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
           GetSP()->sp_bInfiniteAmmo ? 0 : CpmStart.m_iTakeAmmo, CpmStart.m_fMaxAmmoRatio);
       }
 
@@ -6148,8 +6145,10 @@ functions:
 
       m_iMana = GetSP()->sp_iInitialMana;
       m_fArmor = 0.0f;
+
       // set weapons
-      GetWeapon(0)->InitializeWeapons(0, 0, 0, 0);
+      GetInventory()->InitWeapons(0, 0, 0, 0);
+
       // start position
       Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0.0f, 0.0f, 0.0f)));
     }
@@ -6381,7 +6380,7 @@ procedures:
     m_ulFlags&=~PLF_ISZOOMING;
 
     // turn off possible chainsaw engine sound
-    PlaySound(m_soWeaponAmbient, SOUND_SILENCE, SOF_3D);
+    GetInventory()->MuteWeaponAmbient();
 
     // update per-level stats
     UpdateLevelStats();
@@ -6440,7 +6439,7 @@ procedures:
     
     // stop weapon sounds
     PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
-    PlaySound(m_soWeaponAmbient, SOUND_SILENCE, SOF_3D);
+    GetInventory()->MuteWeaponAmbient();
 
     // stop rotating minigun
     penWeapon->m_aMiniGunLast = penWeapon->m_aMiniGun;
@@ -7182,7 +7181,7 @@ procedures:
     m_iAutoOrgWeapon = GetWeapon(0)->m_iCurrentWeapon;  
     GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
     GetWeapon(0)->m_iWantedWeapon = WEAPON_NONE;
-    m_soWeaponAmbient.Stop();
+    GetInventory()->MuteWeaponAmbient();
 
     // sync apperances
     GetPlayerAnimator()->SyncWeapon();

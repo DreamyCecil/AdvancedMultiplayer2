@@ -188,6 +188,13 @@ Button
  Released: ctl_bWeaponFlip = 0;
  
 Button
+ Name: TTRS Weapon Selection Modifier ^cff0000NEW!
+ Key1: Left Alt
+ Key2: None
+ Pressed:  ctl_bWeaponSelectionModifier = 1;
+ Released: ctl_bWeaponSelectionModifier = 0;
+ 
+Button
  Name: TTRS Knife
  Key1: 1
  Key2: None

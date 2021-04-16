@@ -4,6 +4,9 @@
 #include "EntitiesMP/Player.h"
 #include "EntitiesMP/PlayerWeapons.h"
 
+// [Cecil] Extra functions
+#include "EntitiesMP/Common/ExtraFunc.h"
+
 #define PLAYER_POWERUPS 4
 
 // Max powerup times
@@ -171,6 +174,99 @@ functions:
 
   // Weapon functions
 
+  // Initialize weapons
+  void InitWeapons(const INDEX &iGiveWeapons, const INDEX &iTakeWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
+    GetWeapon(0)->InitializeWeapons(iGiveWeapons, iTakeWeapons, iTakeAmmo, fAmmoRatio);
+    GetWeapon(1)->InitializeWeapons(iGiveWeapons, iTakeWeapons, iTakeAmmo, fAmmoRatio);
+
+    // precache new weapons
+    GetWeapon(0)->Precache();
+  };
+
+  // Prepare weapons (moved from InitializeWeapons)
+  void PrepareWeapons(const ULONG &ulNewWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
+    // starting ammo
+    const BOOL bStartAmmo = (GetSP()->sp_iAMPOptions & AMP_STARTAMMO);
+
+    // for each new weapon
+    for (INDEX iWeapon = WEAPON_KNIFE; iWeapon < WEAPON_LAST; iWeapon++) {
+      if (WeaponExists(ulNewWeapons, iWeapon)) {
+        // add default amount of ammo
+        AddDefaultAmmoForWeapon(iWeapon, (bStartAmmo ? 1.0f : fAmmoRatio));
+      }
+    }
+
+    // don't take starting ammo
+    if (!bStartAmmo) {
+      // take away first 8 ammo types
+      for (INDEX iTake = 1; iTake <= 8; iTake++) {
+        INDEX iAmmoBit = (1 << _aiTakeAmmoBits[iTake-1]);
+
+        if (iTakeAmmo & iAmmoBit) {
+          m_aAmmo[iTake].iAmount = 0;
+        }
+      }
+    }
+    
+    // reload weapons
+    for (INDEX iReload = 0; iReload < m_aWeapons.Count(); iReload++) {
+      m_aWeapons[iReload].Reload();
+    }
+  };
+
+  // Pull out extra weapon
+  void WeaponSelectionModifier(void) {
+    ESelectWeapon eSelect;
+
+    // pick the same weapon
+    if (GetWeapon(1)->GetCurrent() == WEAPON_NONE) {
+      eSelect.iWeapon = GetWeapon(0)->GetCurrent();
+      eSelect.bAbsolute = TRUE;
+      
+    // put away the weapon
+    } else {
+      eSelect.iWeapon = WEAPON_NONE;
+      eSelect.bAbsolute = TRUE;
+    }
+
+    GetWeapon(1)->SendEvent(eSelect);
+  };
+
+  // Add default amount of ammo when receiving a weapon
+  void AddDefaultAmmoForWeapon(const INDEX &iWeapon, FLOAT fMaxAmmoRatio) {
+    // add all ammo if infinite
+    if (GetSP()->sp_bInfiniteAmmo) {
+      fMaxAmmoRatio = 1.0f;
+    }
+    
+    // get weapon
+    SPlayerWeapon &pw = m_aWeapons[iWeapon];
+    SWeaponStruct &ws = *pw.pwsWeapon;
+
+    // define ammo amounts
+    FLOAT fPickupAmmo = Max(FLOAT(ws.iPickup), pw.MaxAmmo() * fMaxAmmoRatio);
+    INDEX iPickupAlt = ws.iPickupAlt;
+
+    // ammo references
+    SPlayerAmmo *ppaAmmo = pw.ppaAmmo;
+    SPlayerAmmo *ppaAlt = pw.ppaAlt;
+
+    // add ammo
+    if (ppaAmmo != NULL) {
+      ppaAmmo->iAmount += fPickupAmmo;
+      AddManaToPlayer(fPickupAmmo * ws.fMana * MANA_AMMO);
+    }
+
+    // add alt ammo
+    if (ppaAlt != NULL) {
+      ppaAlt->iAmount += iPickupAlt;
+      AddManaToPlayer(iPickupAlt * ws.fMana * MANA_AMMO);
+    }
+
+    // make sure we don't have more ammo than maximum
+    ClampAllAmmo();
+  };
+
   // Clear weapons
   void ClearWeapons(void) {
     // don't clear secret weapons in coop
@@ -209,6 +305,31 @@ functions:
     GetWeapon(0)->Precache();
   };
 
+  // Mute weapon ambient sounds
+  void MuteWeaponAmbient(void) {
+    GetWeapon(0)->m_soWeaponAmbient.Stop();
+    GetWeapon(1)->m_soWeaponAmbient.Stop();
+  };
+
+  // Check the alt fire
+  BOOL AltFireExists(const INDEX &iWeapon) {
+    // no alt fire
+    if (GetSP()->AltMode() == 0) {
+      return FALSE;
+    }
+
+    switch (iWeapon) {
+      // doesn't have alt fire
+      case WEAPON_KNIFE: case WEAPON_CHAINSAW:
+      case WEAPON_COLT: case WEAPON_DOUBLECOLT:
+        return FALSE;
+    }
+
+    // check for the flag
+    INDEX iFlag = 1 << (iWeapon-1);
+    return (GetSP()->sp_iAltFire & iFlag);
+  };
+
   // Clamp amounts of all ammunition to maximum values
   void ClampAllAmmo(void) {
     for (INDEX i = 0; i < m_aAmmo.Count(); i++) {
@@ -217,6 +338,12 @@ functions:
       // limit ammo
       iAmmo = ClampUp(iAmmo, m_aAmmo[i].Max());
     }
+  };
+
+  // Add some mana to the player
+  void AddManaToPlayer(const INDEX &iMana) {
+    GetPlayer()->m_iMana += iMana;
+    GetPlayer()->m_fPickedMana += iMana;
   };
 
   // Get current ammo
@@ -339,9 +466,9 @@ procedures:
 
     m_penWeapons1 = CreateEntity(GetPlacement(), CLASS_WEAPONS);
     m_penWeapons1->Initialize(eInitWeapons);
-
+    
+    eInitWeapons.bExtra = TRUE;
     m_penWeapons2 = CreateEntity(GetPlacement(), CLASS_WEAPONS);
-    eInitWeapons.iMirror = 1;
     m_penWeapons2->Initialize(eInitWeapons);
 
     wait() {

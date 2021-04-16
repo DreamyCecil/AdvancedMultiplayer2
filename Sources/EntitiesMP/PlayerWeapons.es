@@ -115,12 +115,13 @@ uses "EntitiesMP/CannonBall";
 // input parameter for weapons
 event EWeaponsInit {
   CEntityPointer penOwner, // who owns it
-  INDEX iMirror, // [Cecil] Mirror state
+  BOOL bExtra, // [Cecil] Extra weapon
 };
 
 // select weapon
 event ESelectWeapon {
-  INDEX iWeapon, // weapon to select
+  INDEX iWeapon, // weapon slot to select
+  BOOL bAbsolute, // [Cecil] Absolute weapon index
 };
 
 // boring weapon animations
@@ -189,10 +190,6 @@ enum WeaponType {
 #define LIGHT_ANIM_TOMMYGUN 3
 #define LIGHT_ANIM_COLT_SHOTGUN 4
 #define LIGHT_ANIM_NONE 5
-
-
-// mana for ammo adjustment (multiplier)
-#define MANA_AMMO (0.1f)
 
 static INDEX wpn_iCurrent;
 extern FLOAT hud_tmWeaponsOnScreen;
@@ -501,6 +498,13 @@ properties:
  35 FLOAT3D m_vBulletSource = FLOAT3D(0.0f, 0.0f, 0.0f), // bullet launch position remembered here
  36 FLOAT3D m_vBulletTarget = FLOAT3D(0.0f, 0.0f, 0.0f), // bullet hit (if hit) position remembered here
 
+ // [Cecil] Moved from Player
+ 40 CSoundObject m_soWeapon0,
+ 41 CSoundObject m_soWeapon1,
+ 42 CSoundObject m_soWeapon2,
+ 43 CSoundObject m_soWeapon3,
+ 44 CSoundObject m_soWeaponAmbient,
+
 // weapons specific
 // minigun
 220 FLOAT m_aMiniGun = 0.0f,
@@ -559,7 +563,9 @@ properties:
 
   // [Cecil] Weapon mirroring
   INDEX m_bLastWeaponMirrored;
-  INDEX m_iMirrorState;
+
+  // [Cecil] This is an extra weapon
+  INDEX m_bExtraWeapon;
 }
 
 components:
@@ -750,7 +756,7 @@ functions:
   void CPlayerWeapons(void) {
     // weapon mirroring
     m_bLastWeaponMirrored = FALSE;
-    m_iMirrorState = 0;
+    m_bExtraWeapon = FALSE;
   };
 
   // [Cecil] Destroy ghostbuster ray
@@ -831,25 +837,6 @@ functions:
     }
   };
 
-  // [Cecil] Check the alt fire
-  BOOL AltFireExists(const INDEX &iWeapon) {
-    // no alt fire
-    if (GetSP()->AltMode() == 0) {
-      return FALSE;
-    }
-
-    switch (iWeapon) {
-      // doesn't have alt fire
-      case WEAPON_KNIFE: case WEAPON_CHAINSAW:
-      case WEAPON_COLT: case WEAPON_DOUBLECOLT:
-        return FALSE;
-    }
-
-    // check for the flag
-    INDEX iFlag = 1 << (iWeapon-1);
-    return (GetSP()->sp_iAltFire & iFlag);
-  };
-
   // [Cecil] Stretch rocket model
   void StretchRocket(FLOAT3D vSize) {
     CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(ROCKETLAUNCHER_ATTACHMENT_ROCKET1)->amo_moModelObject);
@@ -887,6 +874,16 @@ functions:
   // [Cecil] Get predicted weapons
   CPlayerWeapons *PredTail(void) {
     return (CPlayerWeapons*)GetPredictionTail();
+  };
+
+  // [Cecil] Get current weapon
+  WeaponType &GetCurrent(void) {
+    return m_iCurrentWeapon;
+  };
+
+  // [Cecil] Get wanted weapon
+  WeaponType &GetWanted(void) {
+    return m_iWantedWeapon;
   };
 
   // [Cecil] Enough of current ammo
@@ -954,9 +951,10 @@ functions:
 
   // [Cecil] Get mirroring state
   BOOL MirrorState(void) {
-    if (m_iMirrorState > 0) {
+    if (m_bExtraWeapon) {
       return !amp_bWeaponMirrored;
     }
+
     return amp_bWeaponMirrored;
   };
 
@@ -965,7 +963,7 @@ functions:
     SWeaponPos wps = GetInventory()->m_aWeapons[iWeapon].GetPosition();
 
     // weapon position shift
-    if (iWeapon == WEAPON_MINIGUN && AltFireExists(WEAPON_MINIGUN)) {
+    if (iWeapon == WEAPON_MINIGUN && GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
       wps.Pos1(1) += 0.1f;
     }
 
@@ -1284,7 +1282,7 @@ functions:
     }
 
     // [Cecil] Dual minigun
-    BOOL bMinigun = (iWeaponData == WEAPON_MINIGUN && AltFireExists(WEAPON_MINIGUN));
+    BOOL bMinigun = (iWeaponData == WEAPON_MINIGUN && GetInventory()->AltFireExists(WEAPON_MINIGUN));
       
     // DRAW WEAPON MODEL
     //  Double colt - second colt in mirror
@@ -1845,7 +1843,7 @@ functions:
       }
 
     // [Cecil] Dual minigun
-    } else if (m_iCurrentWeapon == WEAPON_MINIGUN && AltFireExists(WEAPON_MINIGUN)) {
+    } else if (m_iCurrentWeapon == WEAPON_MINIGUN && GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
       // add flare
       if (pen->m_iSecondFlare == FLARE_ADD) {
         pen->m_iSecondFlare = FLARE_REMOVE;
@@ -1993,7 +1991,7 @@ functions:
 
       case WEAPON_MINIGUN: {
         // [Cecil] Dual minigun
-        if (AltFireExists(WEAPON_MINIGUN)) {
+        if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
           SetComponents(this, m_moWeaponSecond, MODEL_MINIGUN, TEXTURE_HAND, 0, 0, 0);
           AddAttachmentToModel(this, m_moWeaponSecond, MINIGUN_ATTACHMENT_BARRELS, MODEL_MG_BARRELS, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
           AddAttachmentToModel(this, m_moWeaponSecond, MINIGUN_ATTACHMENT_BODY, MODEL_MG_BODY, TEXTURE_MG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
@@ -2017,7 +2015,7 @@ functions:
         AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROTATINGPART, MODEL_RL_ROTATINGPART, TEXTURE_RL_ROTATINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
 
         // [Cecil] Chainsaw launcher
-        if (m_bChainLauncher && AltFireExists(WEAPON_ROCKETLAUNCHER)) {
+        if (m_bChainLauncher && GetInventory()->AltFireExists(WEAPON_ROCKETLAUNCHER)) {
           for (INDEX iSaw = 0; iSaw < 3; iSaw++) {
             AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROCKET1 + iSaw, MODEL_CS_BLADE, TEXTURE_CS_BLADE, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
 
@@ -2095,7 +2093,7 @@ functions:
     amo->amo_plRelative.pl_OrientationAngle(3) = aAngle * fMirror;
 
     // [Cecil] Dual minigun
-    if (AltFireExists(WEAPON_MINIGUN)) {
+    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
       amo = m_moWeaponSecond.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
       amo->amo_plRelative.pl_OrientationAngle(3) = -aAngle * fMirror;
     }
@@ -2248,14 +2246,12 @@ functions:
 
   // setup 3D sound parameters
   void Setup3DSoundParameters(void) {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-
     // initialize sound 3D parameters
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
-    pl.m_soWeapon1.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
-    pl.m_soWeapon2.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
-    pl.m_soWeapon3.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
-    pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 0.0f, 1.0f);
+    m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
+    m_soWeapon1.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
+    m_soWeapon2.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
+    m_soWeapon3.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);
+    m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 0.0f, 1.0f);
   };
 
   // cut in front of you with knife
@@ -2800,9 +2796,10 @@ functions:
     m_fWeaponDrawPowerOld = m_fWeaponDrawPower = m_tmDrawStartTime = 0;
   };
 
-  // initialize weapons
-  void InitializeWeapons(INDEX iGiveWeapons, INDEX iTakeWeapons, INDEX iTakeAmmo, FLOAT fMaxAmmoRatio) {
+  // Initialize weapons
+  void InitializeWeapons(const INDEX &iGiveWeapons, const INDEX &iTakeWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
     ResetWeaponMovingOffset();
+
     // remember old weapons
     ULONG ulOldWeapons = m_iAvailableWeapons;
 
@@ -2829,37 +2826,10 @@ functions:
     // find which weapons are new
     ULONG ulNewWeapons = m_iAvailableWeapons & ~ulOldWeapons;
 
-    // [Cecil] Starting ammo
-    const BOOL bStartAmmo = (GetSP()->sp_iAMPOptions & AMP_STARTAMMO);
-
-    // for each new weapon
-    for (INDEX iWeapon = WEAPON_KNIFE; iWeapon < WEAPON_LAST; iWeapon++) {
-      if (WeaponExists(ulNewWeapons, iWeapon)) {
-        // [Cecil] Give all ammo
-        // add default amount of ammo
-        AddDefaultAmmoForWeapon(iWeapon, (bStartAmmo ? 1.0f : fMaxAmmoRatio));
-      }
+    // [Cecil] Prepare weapons
+    if (!m_bExtraWeapon) {
+      GetInventory()->PrepareWeapons(ulNewWeapons, iTakeAmmo, fAmmoRatio);
     }
-
-    // [Cecil] Don't take starting ammo
-    if (!bStartAmmo) {
-      // [Cecil] Take away first 8 ammo types
-      for (INDEX iTake = 1; iTake <= 8; iTake++) {
-        INDEX iAmmoBit = (1 << _aiTakeAmmoBits[iTake-1]);
-
-        if (iTakeAmmo & iAmmoBit) {
-          GetInventory()->m_aAmmo[iTake].iAmount = 0;
-        }
-      }
-    }
-    
-    // [Cecil] Reload weapons
-    for (INDEX iReload = 0; iReload < GetInventory()->m_aWeapons.Count(); iReload++) {
-      GetInventory()->m_aWeapons[iReload].Reload();
-    }
-
-    // precache eventual new weapons
-    Precache();
 
     // clear temp variables for some weapons
     m_aMiniGun = 0;
@@ -2880,6 +2850,7 @@ functions:
 
     // remove weapon attachment
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).RemoveWeapon();
+
     // add weapon attachment
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).SetWeapon();
   };
@@ -2890,45 +2861,10 @@ functions:
     }
   };
 
-  // add a given amount of mana to the player
-  void AddManaToPlayer(INDEX iMana) {
-    ((CPlayer&)*m_penPlayer).m_iMana += iMana;
-    ((CPlayer&)*m_penPlayer).m_fPickedMana += iMana;
-  };
-
-  // add default ammount of ammunition when receiving a weapon
-  void AddDefaultAmmoForWeapon(INDEX iWeapon, FLOAT fMaxAmmoRatio) {
-    // [Cecil] Add all ammo if infinite
-    if (GetSP()->sp_bInfiniteAmmo) {
-      fMaxAmmoRatio = 1.0f;
-    }
-    
-    // [Cecil] Get weapon
-    SPlayerWeapon &pw = GetInventory()->m_aWeapons[iWeapon];
-    SWeaponStruct &ws = *pw.pwsWeapon;
-
-    // [Cecil] Define ammo amounts
-    FLOAT fPickupAmmo = Max(FLOAT(ws.iPickup), pw.MaxAmmo() * fMaxAmmoRatio);
-    INDEX iPickupAlt = ws.iPickupAlt;
-
-    // [Cecil] Ammo references
-    SPlayerAmmo *ppaAmmo = pw.ppaAmmo;
-    SPlayerAmmo *ppaAlt = pw.ppaAlt;
-
-    // [Cecil] Add ammo
-    if (ppaAmmo != NULL) {
-      ppaAmmo->iAmount += fPickupAmmo;
-      AddManaToPlayer(fPickupAmmo * ws.fMana * MANA_AMMO);
-    }
-
-    // [Cecil] Add alt ammo
-    if (ppaAlt != NULL) {
-      ppaAlt->iAmount += iPickupAlt;
-      AddManaToPlayer(iPickupAlt * ws.fMana * MANA_AMMO);
-    }
-
-    // make sure we don't have more ammo than maximum
-    GetInventory()->ClampAllAmmo();
+  // Add some mana to the player
+  void AddManaToPlayer(const INDEX &iMana) {
+    GetPlayer()->m_iMana += iMana;
+    GetPlayer()->m_fPickedMana += iMana;
   };
 
   // drop current weapon (in deathmatch)
@@ -3114,7 +3050,7 @@ functions:
     }
 
     // add the ammunition
-    AddDefaultAmmoForWeapon(iReceiveType, 0);
+    GetInventory()->AddDefaultAmmoForWeapon(iReceiveType, 0);
 
     // if this weapon should be auto selected
     BOOL bAutoSelect = FALSE;
@@ -3322,6 +3258,7 @@ functions:
       case WEAPON_LASER: return 7;
       case WEAPON_IRONCANNON: return 8;
     }
+
     return 0;
   };
 
@@ -3343,11 +3280,18 @@ functions:
       case WEAPON_LASER: return WEAPON_LASER;
       case WEAPON_IRONCANNON: return WEAPON_IRONCANNON;
     }
+
     return WEAPON_NONE;
   };
 
   // select new weapon if possible
   BOOL WeaponSelectOk(WeaponType wtToTry) {
+    // [Cecil] Always select nothing
+    if (wtToTry == WEAPON_NONE) {
+      ForceWeaponChange(WEAPON_NONE);
+      return TRUE;
+    }
+
     // if player has weapon and has enough ammo
     if (WeaponExists(m_iAvailableWeapons, wtToTry) && HasAmmo(wtToTry)) {
       // if different weapon
@@ -3365,7 +3309,13 @@ functions:
   };
 
   // select new weapon when no more ammo
-  void SelectNewWeapon() {
+  void SelectNewWeapon(void) {
+    // [Cecil] Nothing for the extra weapon
+    if (m_bExtraWeapon) {
+      WeaponSelectOk(WEAPON_NONE);
+      return;
+    }
+
     // [Cecil] Added WEAPON_NONE
     switch (m_iCurrentWeapon) {
       case WEAPON_NONE: 
@@ -3430,7 +3380,8 @@ functions:
 
   // does weapon have ammo
   BOOL HasAmmo(WeaponType EwtWeapon) {
-    return GetInventory()->PredTail()->m_aWeapons[EwtWeapon].HasAmmo(AltFireExists(EwtWeapon));
+    // [Cecil] TODO: Fix this abomination
+    return GetInventory()->PredTail()->m_aWeapons[EwtWeapon].HasAmmo(GetInventory()->AltFireExists(EwtWeapon));
   };
 
   // [Cecil] Forced animation flag
@@ -3477,7 +3428,7 @@ functions:
         m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, ulFlags);
 
         // [Cecil] Dual minigun
-        if (AltFireExists(WEAPON_MINIGUN)) {
+        if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
           m_moWeaponSecond.PlayAnim(MINIGUN_ANIM_WAIT1, ulFlags);
         }
         break;
@@ -3597,7 +3548,7 @@ functions:
     }
 
     // [Cecil] Dual minigun
-    if (AltFireExists(WEAPON_MINIGUN)) {
+    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
       m_moWeaponSecond.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
     }
 
@@ -3704,6 +3655,7 @@ functions:
     }
     
     WeaponType EwtTemp;
+
     // mark that weapon change is required
     m_tmWeaponChangeRequired = _pTimer->CurrentTick();
 
@@ -3750,12 +3702,21 @@ functions:
       }
     }
 
-    // [Cecil] Check if weapon exists
-    // wanted weapon exist and has ammo
-    BOOL bChange = (WeaponExists(m_iAvailableWeapons, EwtTemp) && HasAmmo(EwtTemp));
+    // [Cecil] Change weapon
+    ForceWeaponChange(EwtTemp);
+  };
+
+  // [Cecil] Force weapon change
+  void ForceWeaponChange(WeaponType eWeapon) {
+    BOOL bChange = TRUE;
+    
+    // check if some weapon exists and has ammo
+    if (eWeapon != WEAPON_NONE) {
+      bChange = (WeaponExists(m_iAvailableWeapons, eWeapon) && HasAmmo(eWeapon));
+    }
 
     if (bChange) {
-      m_iWantedWeapon = EwtTemp;
+      m_iWantedWeapon = eWeapon;
       m_bChangeWeapon = TRUE;
     }
   };
@@ -3864,10 +3825,10 @@ procedures:
       wpn_iCurrent = m_iCurrentWeapon;
       autocall BringUp() EEnd;
       // start engine sound if chainsaw
-      if (m_iCurrentWeapon==WEAPON_CHAINSAW) {
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_CS_IDLE, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP|SOF_SMOOTHCHANGE);                
+      if (m_iCurrentWeapon == WEAPON_CHAINSAW) {
+        m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(m_soWeaponAmbient, SOUND_CS_IDLE, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP|SOF_SMOOTHCHANGE);   
+                     
         if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawIdle");}
       }
     }
@@ -3923,11 +3884,11 @@ procedures:
         break;
 
       case WEAPON_CHAINSAW: {
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        PlaySound(pl.m_soWeaponAmbient, SOUND_CS_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);                
+        PlaySound(m_soWeaponAmbient, SOUND_CS_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+
         if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("ChainsawIdle");}
         m_iAnim = CHAINSAW_ANIM_DEACTIVATE;
-        break; }
+      } break;
 
       case WEAPON_LASER:
         m_iAnim = LASER_ANIM_DEACTIVATE;
@@ -3965,7 +3926,7 @@ procedures:
     }
 
     // [Cecil] Dual minigun
-    if (AltFireExists(WEAPON_MINIGUN)) {
+    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
       m_moWeaponSecond.PlayAnim(m_iAnim, 0);
     }
 
@@ -4037,9 +3998,9 @@ procedures:
 
       case WEAPON_CHAINSAW: {
         m_iAnim = CHAINSAW_ANIM_ACTIVATE;
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_CS_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);        
+
+        m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(m_soWeaponAmbient, SOUND_CS_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);        
         break; }
 
       case WEAPON_LASER:
@@ -4087,7 +4048,7 @@ procedures:
     }
 
     // [Cecil] Dual minigun
-    if (AltFireExists(WEAPON_MINIGUN)) {
+    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
       m_moWeaponSecond.PlayAnim(m_iAnim, 0);
     }
 
@@ -4102,8 +4063,7 @@ procedures:
 
   // Fire weapon
   Fire() {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
+    PlaySound(m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
 
     // force ending of weapon change
     m_tmWeaponChangeRequired = 0;
@@ -4201,8 +4161,7 @@ procedures:
 
   // [Cecil] Alt fire
   AltFire() {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
+    PlaySound(m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
 
     // force ending of weapon change
     m_tmWeaponChangeRequired = 0;
@@ -4290,8 +4249,6 @@ procedures:
   SwingKnife() {
     // animator swing
     GetAnimator()->FireAnimation(BODY_ANIM_KNIFE_ATTACK, 0);
-    // sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
 
     // [Cecil] Simplified by removing repeating code
     switch (IRnd() % 2) {
@@ -4307,7 +4264,7 @@ procedures:
     }
     
     m_moWeapon.PlayAnim(m_iAnim, 0);
-    PlaySound(pl.m_soWeapon0, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon0, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
 
     if (CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetInventory()->GetDamage(WEAPON_KNIFE))) {
@@ -4345,8 +4302,7 @@ procedures:
     PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
     // sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon0, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon0, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
     // random colt fire
     INDEX iAnim;
@@ -4376,8 +4332,7 @@ procedures:
     }
 
     // sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon1, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon1, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
 
     m_moWeapon.PlayAnim(COLT_ANIM_RELOAD, 0);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_reload");}
@@ -4405,9 +4360,9 @@ procedures:
     DecMag(WEAPON_DOUBLECOLT, FALSE);
     SetFlare(0, FLARE_ADD);
     PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
+
     // sound
-    CPlayer &plSnd = (CPlayer&)*m_penPlayer;
-    PlaySound(plSnd.m_soWeapon0, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon0, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
     // random colt fire
     switch (IRnd() % 3) {
@@ -4434,8 +4389,7 @@ procedures:
     m_bMirrorFire = FALSE;
 
     // sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon1, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon1, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
     m_moWeaponSecond.PlayAnim(m_iAnim, 0);
     // [Cecil] Multiply speed
@@ -4456,18 +4410,18 @@ procedures:
     }
 
     m_moWeapon.PlayAnim(COLT_ANIM_RELOAD, 0);
+
     // sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon2, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon2, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
 
     // [Cecil] Multiply speed
     // wait half of reload time
     autowait(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD)/2 * FireSpeedMul());
 
     m_moWeaponSecond.PlayAnim(COLT_ANIM_RELOAD, 0);
+
     // sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon3, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon3, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_reload");}
 
     // [Cecil] Multiply speed
@@ -4497,8 +4451,7 @@ procedures:
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST, 0);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      PlaySound(pl.m_soWeapon0, SOUND_SINGLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      PlaySound(m_soWeapon0, SOUND_SINGLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
       // [Cecil] Pipe effect
       SpawnPipeEffect(_vSingleShotgunShellPos, _vSingleShotgunPipe, FLOAT3D(0.3f, 0.0f, 0.0f), FLOAT3D(0, 0.0f, -12.5f), ESL_SHOTGUN_SMOKE, MirrorState());
@@ -4545,8 +4498,7 @@ procedures:
       DecAmmo(TRUE);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      PlaySound(pl.m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
 
       // release spring
@@ -4599,9 +4551,8 @@ procedures:
       m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);      // fire
-      PlaySound(pl.m_soWeapon0, SOUND_DOUBLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
+      PlaySound(m_soWeapon0, SOUND_DOUBLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
       // [Cecil] Pipe effects
       SpawnPipeEffect(FLOAT3D(-0.11f, 0.1f, -0.3f), _vDoubleShotgunPipe, FLOAT3D(-0.1f, 0.0f, 0.01f), FLOAT3D(-1, 0.0f, -12.5f), ESL_SHOTGUN_SMOKE, MirrorState());
@@ -4611,8 +4562,7 @@ procedures:
       autowait((GetSP()->sp_bCooperative ? 0.25f : 0.15f) * FireSpeedMul());
 
       if (ENOUGH_AMMO) {
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        PlaySound(pl.m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
+        PlaySound(m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
       }
 
       // [Cecil] Multiply speed
@@ -4653,9 +4603,8 @@ procedures:
       m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);      // fire
-      PlaySound(pl.m_soWeapon0, SOUND_DOUBLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
+      PlaySound(m_soWeapon0, SOUND_DOUBLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
       // [Cecil] Pipe effects
       SpawnPipeEffect(FLOAT3D(-0.11f, 0.1f, -0.3f), _vDoubleShotgunPipe, FLOAT3D(-0.1f, 0.0f, 0.01f), FLOAT3D(-1, 0.0f, -12.5f), ESL_SHOTGUN_SMOKE, MirrorState());
@@ -4665,8 +4614,7 @@ procedures:
       autowait((GetSP()->sp_bCooperative ? 0.25f : 0.15f) * FireSpeedMul());
 
       if (ENOUGH_AMMO) {
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        PlaySound(pl.m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
+        PlaySound(m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
       }
 
       // [Cecil] Multiply speed
@@ -4689,11 +4637,10 @@ procedures:
   TommyGunStart() {
     m_iBulletsOnFireStart = GetInventory()->CurrentAmmo(m_iCurrentWeapon);
 
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
+    PlaySound(m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
 
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f); // fire
-    PlaySound(pl.m_soWeapon0, SOUND_TOMMYGUN_FIRE, SOF_LOOP|SOF_3D|SOF_VOLUMETRIC);
+    m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f); // fire
+    PlaySound(m_soWeapon0, SOUND_TOMMYGUN_FIRE, SOF_LOOP|SOF_3D|SOF_VOLUMETRIC);
 
     PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
     GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING);
@@ -4736,7 +4683,7 @@ procedures:
       }
     }
 
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);      // mute fire
+    m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f); // mute fire
     PlayLightAnim(LIGHT_ANIM_NONE, 0);
     GetAnimator()->FireAnimationOff();
     jump Idle();
@@ -4802,9 +4749,8 @@ procedures:
       SetFlare(0, FLARE_ADD);
       m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
       
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
-      PlaySound(pl.m_soWeapon0, SOUND_TOMMYGUN_BURST, SOF_3D|SOF_VOLUMETRIC);
+      m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
+      PlaySound(m_soWeapon0, SOUND_TOMMYGUN_BURST, SOF_3D|SOF_VOLUMETRIC);
 
       GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
@@ -4856,13 +4802,13 @@ procedures:
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
       if (GetSP()->sp_bCooperative) {
-        pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
+        m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
       } else if (TRUE) {
-        pl.m_soWeapon0.Set3DParameters(250.0f, 75.0f, 1.5f, 1.0f);
+        m_soWeapon0.Set3DParameters(250.0f, 75.0f, 1.5f, 1.0f);
       }
-      PlaySound(pl.m_soWeapon0, SOUND_SNIPER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+
+      PlaySound(m_soWeapon0, SOUND_SNIPER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("SniperFire");}
       
       // animation
@@ -4909,13 +4855,13 @@ procedures:
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
       if (GetSP()->sp_bCooperative) {
-        pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
+        m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
       } else if (TRUE) {
-        pl.m_soWeapon0.Set3DParameters(250.0f, 75.0f, 1.5f, 1.0f);
+        m_soWeapon0.Set3DParameters(250.0f, 75.0f, 1.5f, 1.0f);
       }
-      PlaySound(pl.m_soWeapon0, SOUND_ACCURATE_SNIPER, SOF_3D|SOF_VOLUMETRIC);
+
+      PlaySound(m_soWeapon0, SOUND_ACCURATE_SNIPER, SOF_3D|SOF_VOLUMETRIC);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("SniperFire");}
       
       // animation
@@ -4949,7 +4895,7 @@ procedures:
     m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
 
     // [Cecil] Dual minigun
-    if (AltFireExists(WEAPON_MINIGUN)) {
+    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
       m_moWeaponSecond.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
     }
 
@@ -4958,17 +4904,17 @@ procedures:
 
     // clear last lerped bullet position
     m_iLastBulletPosition = FLOAT3D(32000.0f, 32000.0f, 32000.0f);
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
 
-    PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC);      // stop possible sounds
+    PlaySound(m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
+
     // initialize sound 3D parameters
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 2.0f, 1.0f);      // fire
-    pl.m_soWeapon1.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);      // spinup/spindown/spin
-    pl.m_soWeapon2.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f);      // turn on/off click
+    m_soWeapon0.Set3DParameters(50.0f, 5.0f, 2.0f, 1.0f); // fire
+    m_soWeapon1.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f); // spinup/spindown/spin
+    m_soWeapon2.Set3DParameters(50.0f, 5.0f, 1.0f, 1.0f); // turn on/off click
   
     // spin start sounds
-    PlaySound(pl.m_soWeapon2, SOUND_MINIGUN_CLICK, SOF_3D|SOF_VOLUMETRIC);
-    PlaySound(pl.m_soWeapon1, SOUND_MINIGUN_SPINUP, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon2, SOUND_MINIGUN_CLICK, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon1, SOUND_MINIGUN_SPINUP, SOF_3D|SOF_VOLUMETRIC);
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotateup");}
 
@@ -4996,14 +4942,13 @@ procedures:
 
   MiniGunFire() {
     // spinning sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon1, SOUND_MINIGUN_ROTATE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+    PlaySound(m_soWeapon1, SOUND_MINIGUN_ROTATE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotate");}
 
     // if firing
     if (HoldingFire() && ENOUGH_AMMO) {
       // play fire sound
-      PlaySound(pl.m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
+      PlaySound(m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
       PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRESHORT, AOF_LOOPING);
     }
@@ -5014,9 +4959,9 @@ procedures:
     while (HoldingFire()) {
       // check for ammo pickup during empty spinning
       if (!m_bHasAmmo && ENOUGH_AMMO) {
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        PlaySound(pl.m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
+        PlaySound(m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
         if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_fire");}
+
         PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
         GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRESHORT, AOF_LOOPING);
         m_bHasAmmo = TRUE;
@@ -5026,7 +4971,8 @@ procedures:
       if (ENOUGH_AMMO) {
         // [Cecil] Multiply damage
         // fire a bullet
-        FireMachineBullet(FirePos(WEAPON_MINIGUN), 750.0f, (AltFireExists(WEAPON_MINIGUN) ? GetInventory()->GetDamageAlt(WEAPON_MINIGUN) : GetInventory()->GetDamage(WEAPON_MINIGUN)) * FireSpeed(),
+        FireMachineBullet(FirePos(WEAPON_MINIGUN), 750.0f, (GetInventory()->AltFireExists(WEAPON_MINIGUN) ?
+                          GetInventory()->GetDamageAlt(WEAPON_MINIGUN) : GetInventory()->GetDamage(WEAPON_MINIGUN)) * FireSpeed(),
                           (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
         DoRecoil();
         SpawnRangeSound(60.0f);
@@ -5040,7 +4986,7 @@ procedures:
         DropBulletShell(vPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET, MirrorState());
         SpawnBubbleEffect(_vMinigunShellPos, FLOAT3D(0.3f, 0.0f, 0.0f), MirrorState());
 
-        if (AltFireExists(WEAPON_MINIGUN)) {
+        if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
           DropBulletShell(vPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET, !MirrorState());
           SpawnBubbleEffect(_vMinigunShellPos, FLOAT3D(0.3f, 0.0f, 0.0f), !MirrorState());
         }
@@ -5051,19 +4997,21 @@ procedures:
           MinigunSmoke(MirrorState());
 
           // [Cecil] Dual minigun smoke
-          if (AltFireExists(WEAPON_MINIGUN)) {
+          if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
             MinigunSmoke(!MirrorState());
           }
         }
 
         // stop fire sound
         m_bHasAmmo = FALSE;
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        PlaySound(pl.m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC);      // stop possible sounds
+        PlaySound(m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
+
         PlayLightAnim(LIGHT_ANIM_NONE, AOF_LOOPING);
         GetAnimator()->FireAnimationOff();
       }
+
       autowait(MINIGUN_TICKTIME);
+
       // spin
       m_aMiniGunLast = m_aMiniGun;
       m_aMiniGun+=m_aMiniGunSpeed*MINIGUN_TICKTIME;
@@ -5073,26 +5021,25 @@ procedures:
       MinigunSmoke(MirrorState());
 
       // [Cecil] Dual minigun smoke
-      if (AltFireExists(WEAPON_MINIGUN)) {
+      if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
         MinigunSmoke(!MirrorState());
       }
     }
 
     GetAnimator()->FireAnimationOff();
+
     // stop fire sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);      // mute fire
+    m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f); // mute fire
     PlayLightAnim(LIGHT_ANIM_NONE, AOF_LOOPING);
+
     // start spin down
     jump MiniGunSpinDown();
   };
 
   MiniGunSpinDown() {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-
     // spin down sounds
-    PlaySound(pl.m_soWeapon3, SOUND_MINIGUN_CLICK, SOF_3D|SOF_VOLUMETRIC);
-    PlaySound(pl.m_soWeapon1, SOUND_MINIGUN_SPINDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+    PlaySound(m_soWeapon3, SOUND_MINIGUN_CLICK, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon1, SOUND_MINIGUN_SPINDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("Minigun_rotate");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotatedown");}
@@ -5167,13 +5114,12 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Rocketlauncher_fire");}
 
       DecAmmo(FALSE);
-      // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
 
-      if (pl.m_soWeapon0.IsPlaying()) {
-        PlaySound(pl.m_soWeapon1, SOUND_ROCKETLAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      // sound
+      if (m_soWeapon0.IsPlaying()) {
+        PlaySound(m_soWeapon1, SOUND_ROCKETLAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       } else {
-        PlaySound(pl.m_soWeapon0, SOUND_ROCKETLAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+        PlaySound(m_soWeapon0, SOUND_ROCKETLAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       }
 
       autowait(0.05f);
@@ -5202,8 +5148,7 @@ procedures:
   SwitchLauncherMode() {
     m_bChainLauncher = !m_bChainLauncher;
 
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
 
     // print current type
     CTString strType(0, "Type: %s", (m_bChainLauncher ? TRANS("Chainsaw Launcher") : TRANS("Rocket Launcher")));
@@ -5253,8 +5198,7 @@ procedures:
       DecAmmo(FALSE);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      PlaySound(pl.m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
 
       // release spring
@@ -5324,8 +5268,7 @@ procedures:
       DecAmmo(FALSE);
 
       // sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      PlaySound(pl.m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
 
       // release spring
@@ -5370,13 +5313,12 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIRESTART) * FireSpeedMul());
 
     // play fire sound
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 2.0f, 0.31f);
-    pl.m_soWeapon2.Set3DParameters(50.0f, 5.0f, 2.0f, 0.3f);
+    m_soWeapon0.Set3DParameters(50.0f, 5.0f, 2.0f, 0.31f);
+    m_soWeapon2.Set3DParameters(50.0f, 5.0f, 2.0f, 0.3f);
 
-    PlaySound(pl.m_soWeapon0, SOUND_FL_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon0, SOUND_FL_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerFire");}
-    PlaySound(pl.m_soWeapon2, SOUND_FL_START, SOF_3D|SOF_VOLUMETRIC);
+    PlaySound(m_soWeapon2, SOUND_FL_START, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerStart");}
 
     FireFlame(GetInventory()->GetDamage(WEAPON_FLAMER));
@@ -5409,8 +5351,7 @@ procedures:
   FlamerStop() {
     m_tmFlamerStop = _pTimer->CurrentTick();
 
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon0, SOUND_FL_STOP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+    PlaySound(m_soWeapon0, SOUND_FL_STOP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("FlamethrowerFire");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerStop");}
@@ -5467,13 +5408,13 @@ procedures:
       }
 
       // fire sound
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
-      pl.m_soWeaponAmbient.Set3DParameters(50.0f, 5.0f, 2.0f, 1.0f);
-      pl.m_soWeapon2.Set3DParameters(100.0f, 10.0f, 2.0f, 0.95f + FRnd()*0.1f);
+      m_soWeaponAmbient.Set3DParameters(50.0f, 5.0f, 2.0f, 1.0f);
+      m_soWeapon2.Set3DParameters(100.0f, 10.0f, 2.0f, 0.95f + FRnd()*0.1f);
 
-      PlaySound(pl.m_soWeaponAmbient, SOUND_TESLA_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      PlaySound(m_soWeaponAmbient, SOUND_TESLA_FIRE, SOF_3D|SOF_VOLUMETRIC);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerFire");}
-      PlaySound(pl.m_soWeapon2, SOUND_TESLA_START1 + IRnd() % 3, SOF_3D|SOF_VOLUMETRIC);
+
+      PlaySound(m_soWeapon2, SOUND_TESLA_START1 + IRnd() % 3, SOF_3D|SOF_VOLUMETRIC);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("FlamethrowerStart");}
 
       // take ammo
@@ -5496,11 +5437,9 @@ procedures:
   
   // ***************** FIRE CHAINSAW *****************
   ChainsawFire() {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    
     // set the firing sound level
-    pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
-    PlaySound(pl.m_soWeapon0, SOUND_CS_BEGINFIRE, SOF_3D|SOF_VOLUMETRIC);
+    m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
+    PlaySound(m_soWeapon0, SOUND_CS_BEGINFIRE, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawBeginFire");}
   
     // bring the chainsaw down to cutting height (fire position)
@@ -5515,12 +5454,10 @@ procedures:
       pmoTeeth->PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING|AOF_NORESTART);
     }
 
-    // firing
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
     // mute the chainsaw engine sound
-    pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 0.5f, 1.0f);        
+    m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 0.5f, 1.0f);        
     
-    PlaySound(pl.m_soWeapon0, SOUND_CS_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+    PlaySound(m_soWeapon0, SOUND_CS_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("ChainsawIdle");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawFire");}
 
@@ -5538,15 +5475,14 @@ procedures:
     }
     
     // bring it back to idle position
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    PlaySound(pl.m_soWeapon0, SOUND_CS_ENDFIRE, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+    PlaySound(m_soWeapon0, SOUND_CS_ENDFIRE, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("ChainsawFire");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawEnd");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawIdle");}
 
     // restore volume to engine sound
-    pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+    m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
     
     m_moWeapon.PlayAnim(CHAINSAW_ANIM_FIRE2WAIT, 0);
     autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_FIRE2WAIT));
@@ -5587,32 +5523,31 @@ procedures:
 
       // sound
       SpawnRangeSound(20.0f);
-      CPlayer &pl = (CPlayer&)*m_penPlayer;
 
       // activate barrel anim
       switch (m_iLaserBarrel) {
         case 0: { // barrel lu
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_LEFTUP)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(pl.m_soWeapon0, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+          PlaySound(m_soWeapon0, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
           break; }
 
         case 3: { // barrel rd
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_RIGHTDOWN)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(pl.m_soWeapon1, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+          PlaySound(m_soWeapon1, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
           break; }
 
         case 1: { // barrel ld
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_LEFTDOWN)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(pl.m_soWeapon2, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+          PlaySound(m_soWeapon2, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
           break; }
 
         case 2: { // barrel ru
           CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_RIGHTUP)->amo_moModelObject);
           pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(pl.m_soWeapon3, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+          PlaySound(m_soWeapon3, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
           break; }
       }
 
@@ -5640,7 +5575,7 @@ procedures:
       m_penGhostBusterRay->Initialize(egbr);
 
       m_moWeapon.PlayAnim(LASER_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
-      PlaySound(GetPlayer()->m_soWeapon0, SOUND_DEATHRAY, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);
+      PlaySound(m_soWeapon0, SOUND_DEATHRAY, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);
 
       // extra tick for the ray rendering
       autowait(0.05f);
@@ -5661,7 +5596,7 @@ procedures:
 
       // stop the death ray
       DestroyRay();
-      GetPlayer()->m_soWeapon0.Stop();
+      m_soWeapon0.Stop();
     }
 
     // select new weapon
@@ -5679,14 +5614,13 @@ procedures:
     TM_START = _pTimer->CurrentTick();
     F_OFFSET_CHG = 0.0f;
     m_fWeaponDrawPower = 0.0f;
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
 
     if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
-      pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
-      PlaySound(pl.m_soWeapon0, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
+      m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
+      PlaySound(m_soWeapon0, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
     } else {
-      pl.m_soWeapon1.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
-      PlaySound(pl.m_soWeapon1, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
+      m_soWeapon1.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
+      PlaySound(m_soWeapon1, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
     }
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon_prepare");}
@@ -5703,14 +5637,13 @@ procedures:
     }
 
     m_tmDrawStartTime = 0.0f;
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
 
     if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
       // turn off the sound
-      pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
+      m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
     } else {
       // turn off the sound
-      pl.m_soWeapon1.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
+      m_soWeapon1.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
     }
     
     // fire one ball
@@ -5730,11 +5663,11 @@ procedures:
 
       // adjust volume of cannon firing acording to launch power
       if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
-        pl.m_soWeapon2.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
-        PlaySound(pl.m_soWeapon2, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
+        m_soWeapon2.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
+        PlaySound(m_soWeapon2, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       } else {
-        pl.m_soWeapon3.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
-        PlaySound(pl.m_soWeapon3, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
+        m_soWeapon3.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
+        PlaySound(m_soWeapon3, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       }
 
       m_moWeapon.PlayAnim(CANNON_ANIM_FIRE, 0);
@@ -5778,14 +5711,13 @@ procedures:
     TM_START = _pTimer->CurrentTick();
     F_OFFSET_CHG = 0.0f;
     m_fWeaponDrawPower = 0.0f;
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
 
     if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
-      pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 0.67f);
-      PlaySound(pl.m_soWeapon0, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
+      m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 0.67f);
+      PlaySound(m_soWeapon0, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
     } else {
-      pl.m_soWeapon1.Set3DParameters(50.0f, 5.0f, 3.0f, 0.67f);
-      PlaySound(pl.m_soWeapon1, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
+      m_soWeapon1.Set3DParameters(50.0f, 5.0f, 3.0f, 0.67f);
+      PlaySound(m_soWeapon1, SOUND_CANNON_PREPARE, SOF_3D|SOF_VOLUMETRIC);
     }
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon_prepare");}
@@ -5802,14 +5734,13 @@ procedures:
     }
 
     m_tmDrawStartTime = 0.0f;
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
 
     if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
       // turn off the sound
-      pl.m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
+      m_soWeapon0.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
     } else {
       // turn off the sound
-      pl.m_soWeapon1.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
+      m_soWeapon1.Set3DParameters(50.0f, 5.0f, 0.0f, 1.0f);
     }
     
     // fire one ball
@@ -5829,11 +5760,11 @@ procedures:
 
       // adjust volume of cannon firing acording to launch power
       if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
-        pl.m_soWeapon2.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
-        PlaySound(pl.m_soWeapon2, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
+        m_soWeapon2.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
+        PlaySound(m_soWeapon2, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       } else {
-        pl.m_soWeapon3.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
-        PlaySound(pl.m_soWeapon3, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
+        m_soWeapon3.Set3DParameters(fRange, fFalloff, 2.0f+iPower*0.05f, 1.0f);
+        PlaySound(m_soWeapon3, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       }
 
       m_moWeapon.PlayAnim(CANNON_ANIM_FIRE, 0);
@@ -5930,7 +5861,7 @@ procedures:
         // fire pressed start firing
         if (m_bFireWeapon) {
           // [Cecil] Replace with alt fire
-          if (GetSP()->AltMode() == 2 && AltFireExists(m_iCurrentWeapon)) {
+          if (GetSP()->AltMode() == 2 && GetInventory()->AltFireExists(m_iCurrentWeapon)) {
             jump AltFire();
           }
 
@@ -5951,7 +5882,14 @@ procedures:
       // select weapon
       on (ESelectWeapon eSelect) : {
         // try to change weapon
-        SelectWeaponChange(eSelect.iWeapon);
+        if (eSelect.bAbsolute) {
+          m_tmWeaponChangeRequired = _pTimer->CurrentTick();
+          ForceWeaponChange((WeaponType)eSelect.iWeapon);
+
+        } else {
+          SelectWeaponChange(eSelect.iWeapon);
+        }
+
         if (m_bChangeWeapon) {
           jump ChangeWeapon();
         }
@@ -5961,7 +5899,7 @@ procedures:
       // fire pressed
       on (EFireWeapon) : {
         // [Cecil] Alt fire
-        if (GetSP()->AltMode() == 2 && AltFireExists(m_iCurrentWeapon)) {
+        if (GetSP()->AltMode() == 2 && GetInventory()->AltFireExists(m_iCurrentWeapon)) {
           jump AltFire();
         }
 
@@ -5970,7 +5908,7 @@ procedures:
 
       // [Cecil] Alt fire
       on (EAltFire) : {
-        if (AltFireExists(m_iCurrentWeapon)) {
+        if (GetInventory()->AltFireExists(m_iCurrentWeapon)) {
           jump AltFire();
         }
         resume;
@@ -5998,11 +5936,10 @@ procedures:
 
     // kill all possible sounds, animations, etc
     ResetWeaponMovingOffset();
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    pl.m_soWeapon0.Stop();
-    pl.m_soWeapon1.Stop();
-    pl.m_soWeapon2.Stop();
-    pl.m_soWeapon3.Stop();
+    m_soWeapon0.Stop();
+    m_soWeapon1.Stop();
+    m_soWeapon2.Stop();
+    m_soWeapon3.Stop();
     PlayLightAnim(LIGHT_ANIM_NONE, 0);
 
     wait() {
@@ -6015,8 +5952,10 @@ procedures:
 
   Main(EWeaponsInit eInit) {
     // remember the initial parameters
-    ASSERT(eInit.penOwner!=NULL);
+    ASSERT(eInit.penOwner != NULL);
+
     m_penPlayer = eInit.penOwner;
+    m_bExtraWeapon = eInit.bExtra;
 
     // declare yourself as a void
     InitAsVoid();
@@ -6025,19 +5964,34 @@ procedures:
     SetCollisionFlags(ECF_IMMATERIAL);
 
     // [Cecil] Remember last mirrored state
-    m_iMirrorState = eInit.iMirror;
     m_bLastWeaponMirrored = MirrorState();
+
+    // [Cecil] Set player as the owner of sound objects
+    m_soWeapon0.SetOwner(m_penPlayer);
+    m_soWeapon1.SetOwner(m_penPlayer);
+    m_soWeapon2.SetOwner(m_penPlayer);
+    m_soWeapon3.SetOwner(m_penPlayer);
+    m_soWeaponAmbient.SetOwner(m_penPlayer);
 
     // set weapon model for current weapon
     SetCurrentWeaponModel();
 
     wait() {
-      on (EBegin) : { call Idle(); }
+      on (EBegin) : {
+        call Idle();
+      }
+
       on (ESelectWeapon eSelect) : {
         // try to change weapon
-        SelectWeaponChange(eSelect.iWeapon);
+        if (eSelect.bAbsolute) {
+          m_tmWeaponChangeRequired = _pTimer->CurrentTick();
+          ForceWeaponChange((WeaponType)eSelect.iWeapon);
+
+        } else {
+          SelectWeaponChange(eSelect.iWeapon);
+        }
         resume;
-      };
+      }
 
       // before level change
       on (EPreLevelChange) : { 
@@ -6059,7 +6013,7 @@ procedures:
 
       // [Cecil] Alt fire
       on (EAltFire) : {
-        if (AltFireExists(m_iCurrentWeapon)) {
+        if (GetInventory()->AltFireExists(m_iCurrentWeapon)) {
           m_bAltFire = TRUE;
         }
         resume;

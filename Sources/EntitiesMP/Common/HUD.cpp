@@ -799,8 +799,15 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // prepare and draw ammo and weapon info
   CTextureObject *ptoWantedWeapon = NULL;
-  INDEX iCurrentWeapon = _penWeapons[0]->m_iCurrentWeapon;
-  INDEX iWantedWeapon  = _penWeapons[0]->m_iWantedWeapon;
+
+  // [Cecil] Player's weapons
+  INDEX aiCurrentWeapon[2] = {
+    _penWeapons[0]->GetCurrent(), _penWeapons[1]->GetCurrent(),
+  };
+
+  INDEX aiWantedWeapon[2] = {
+    _penWeapons[0]->GetWanted(), _penWeapons[1]->GetWanted(),
+  };
 
   CWeaponArsenal &aWeapons = _penInventory->PredTail()->m_aWeapons;
   CAmmunition &aAmmo = _penInventory->PredTail()->m_aAmmo;
@@ -829,46 +836,75 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // determine corresponding ammo and weapon texture component
-  ptoWantedWeapon = aWeapons[iWantedWeapon].pwsWeapon->ptoIcon;
+  ptoWantedWeapon = aWeapons[aiWantedWeapon[0]].pwsWeapon->ptoIcon;
 
   // [Cecil] New system
-  SPlayerWeapon &pwCurrent = aWeapons[iCurrentWeapon];
-  SWeaponAmmo *pwaAmmo = pwCurrent.GetAmmo();
-  SWeaponAmmo *pwaAltAmmo = pwCurrent.GetAlt();
+  SPlayerWeapon &pwCurrent1 = aWeapons[aiCurrentWeapon[0]];
+  SPlayerWeapon &pwCurrent2 = aWeapons[aiCurrentWeapon[1]];
+
+  SWeaponAmmo *pwaAmmo1 = pwCurrent1.GetAmmo();
+  SWeaponAmmo *pwaAmmo2 = pwCurrent2.GetAmmo();
+
+  SWeaponAmmo *pwaAltAmmo1 = pwCurrent1.GetAlt();
+  SWeaponAmmo *pwaAltAmmo2 = pwCurrent2.GetAlt();
+
+  BOOL bShowAltAmmo = (pwaAmmo1 != pwaAltAmmo1);
   
   CTextureObject *ptoAmmo = NULL;
   FLOAT fAmmo = 0.0f;
   FLOAT fMaxAmmo = 1.0f;
-  BOOL bMag = FALSE;
+  BOOL abMag[2] = { FALSE, FALSE };
 
   CTextureObject *ptoAltAmmo = NULL;
   FLOAT fAltAmmo = 0.0f;
   FLOAT fAltMaxAmmo = 1.0f;
 
   // [Cecil] Ammo available
-  if (pwaAmmo != NULL) {
-    ptoAmmo = pwaAmmo->ptoIcon;
+  if (pwaAmmo1 != NULL) {
+    ptoAmmo = pwaAmmo1->ptoIcon;
 
     // display magazine
-    INDEX iMaxMag = pwCurrent.pwsWeapon->iMaxMag;
+    INDEX iMaxMag = pwCurrent1.pwsWeapon->iMaxMag;
 
     if (iMaxMag > 0) {
-      fAmmo = pwCurrent.iMag;
+      fAmmo = pwCurrent1.iMag;
       fMaxAmmo = iMaxMag;
-      bMag = TRUE;
+      abMag[0] = TRUE;
 
     // display ammo
     } else {
-      fAmmo = pwCurrent.CurrentAmmo();
-      fMaxAmmo = pwaAmmo->iMaxAmount;
+      fAmmo = pwCurrent1.CurrentAmmo();
+      fMaxAmmo = pwaAmmo1->iMaxAmount;
     }
   }
 
+  // [Cecil] Extra weapon ammo
+  if (_penWeapons[1]->GetCurrent() != WEAPON_NONE && pwaAmmo2 != NULL) {
+    ptoAltAmmo = pwaAmmo2->ptoIcon;
+
+    // display magazine
+    INDEX iMaxMag = pwCurrent2.pwsWeapon->iMaxMag;
+
+    if (iMaxMag > 0) {
+      fAltAmmo = pwCurrent2.iMag;
+      fAltMaxAmmo = iMaxMag;
+      abMag[1] = TRUE;
+
+      bShowAltAmmo = TRUE;
+
+    // display ammo
+    } else {
+      fAltAmmo = pwCurrent2.CurrentAmmo();
+      fAltMaxAmmo = pwaAmmo2->iMaxAmount;
+
+      bShowAltAmmo = (pwaAmmo1 != pwaAmmo2);
+    }
+  
   // [Cecil] Alt ammo available
-  if (_penWeapons[0]->AltFireExists(iCurrentWeapon) && pwaAltAmmo != NULL) {
-    ptoAltAmmo = pwaAltAmmo->ptoIcon;
-    fAltAmmo = pwCurrent.CurrentAlt();
-    fAltMaxAmmo = pwaAltAmmo->iMaxAmount;
+  } else if (_penInventory->AltFireExists(aiCurrentWeapon[0]) && pwaAltAmmo1 != NULL) {
+    ptoAltAmmo = pwaAltAmmo1->ptoIcon;
+    fAltAmmo = pwCurrent1.CurrentAlt();
+    fAltMaxAmmo = pwaAltAmmo1->iMaxAmount;
   }
 
   // [Cecil] Adjust size based on max ammo
@@ -876,7 +912,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   fWidth = Max(FLOAT(Floor(log10(fMaxAmmoAltNormal)+1.0f)), 3.0f);
 
   // [Cecil] Draw ammo or magazine count
-  if ((!GetSP()->sp_bInfiniteAmmo || bMag) && ptoAmmo != NULL) {
+  if ((!GetSP()->sp_bInfiniteAmmo || abMag[0]) && ptoAmmo != NULL) {
     // determine ammo quantities
     fNormValue = fAmmo / fMaxAmmo;
     strValue.PrintF("%d", (SLONG)ceil(fAmmo));
@@ -894,8 +930,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     HUD_DrawText(fCol, fRow, strValue, NONE, fNormValue);
   }
 
-  // [Cecil] Draw alt ammo if it's not the same
-  if (!GetSP()->sp_bInfiniteAmmo && ptoAltAmmo != NULL && pwaAmmo != pwaAltAmmo) {
+  // [Cecil] Draw alt ammo
+  if ((!GetSP()->sp_bInfiniteAmmo || abMag[1]) && ptoAltAmmo != NULL && bShowAltAmmo) {
     // determine ammo quantities
     fNormValue = fAltAmmo / fAltMaxAmmo;
     strValue.PrintF("%d", (SLONG)ceil(fAltAmmo));
@@ -1073,15 +1109,25 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       colIcon = 0xccddff00;
 
       // [Cecil] Highlight wanted weapon
-      if (iWantedWeapon == iWeapon) {
-        colIcon = 0xffcc0000;
-        colBorder = 0xffcc0000;
+      if (aiWantedWeapon[0] == iWeapon && aiWantedWeapon[1] == iWeapon) {
+        colIcon = 0xFFCCFF00;
+        colBorder = 0xFFCCFF00;
+        
+      // [Cecil] Extra weapon
+      } else if (aiWantedWeapon[1] == iWeapon) {
+        colIcon = 0x00CCFF00;
+        colBorder = 0x00CCFF00;
+        
+      // [Cecil] Main weapon
+      } else if (aiWantedWeapon[0] == iWeapon) {
+        colIcon = 0xFFCC0000;
+        colBorder = 0xFFCC0000;
       }
 
       CTextureObject *ptoDrawIcon = pw.pwsWeapon->ptoIcon;
 
       // no ammo
-      if (!pw.HasAmmo(_penWeapons[0]->AltFireExists(iWeapon))) {
+      if (!pw.HasAmmo(_penInventory->AltFireExists(iWeapon))) {
         HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, 0x22334400);
         HUD_DrawIcon(fCol, fRow, *ptoDrawIcon, 0x22334400, 1.0f, FALSE, 1.0f);
 
