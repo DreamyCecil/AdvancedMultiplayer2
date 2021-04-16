@@ -8,7 +8,8 @@ struct SPlayerWeapon {
   SWeaponStruct *pwsWeapon; // weapon reference
   SPlayerAmmo *ppaAmmo; // current ammo for this weapon
   SPlayerAmmo *ppaAlt; // current alt ammo for this weapon
-  INDEX iMag; // current ammo in the magazine
+
+  INDEX aiMag[2]; // current ammo in the magazine (main and extra weapons)
 
   // Constructors
   SPlayerWeapon(void);
@@ -60,21 +61,21 @@ struct SPlayerWeapon {
   BOOL HasAmmo(BOOL bCheckAlt);
 
   // Check full mag
-  inline BOOL FullMag(void) {
-    return (iMag >= pwsWeapon->iMaxMag);
+  inline BOOL FullMag(const INDEX &iExtra) {
+    return (aiMag[iExtra] >= pwsWeapon->iMaxMag);
   };
 
   // Reload magazine
-  void Reload(BOOL bMax = FALSE);
+  void Reload(const INDEX &iExtra, BOOL bMax = FALSE);
 
   // Can reload magazine
-  inline BOOL CanReload(void) {
-    return (!FullMag() && CurrentAmmo() > iMag);
+  inline BOOL CanReload(const INDEX &iExtra) {
+    return (!FullMag(iExtra) && CurrentAmmo() > aiMag[iExtra]);
   };
 
   // Empty magazine
-  inline BOOL EmptyMag(void) {
-    return (pwsWeapon->iMaxMag > 0 && iMag <= 0);
+  inline BOOL EmptyMag(const INDEX &iExtra) {
+    return (pwsWeapon->iMaxMag > 0 && aiMag[iExtra] <= 0);
   };
 
   // Get weapon position

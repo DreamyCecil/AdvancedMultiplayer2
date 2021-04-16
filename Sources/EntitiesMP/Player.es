@@ -3965,18 +3965,18 @@ functions:
     }
 
     // *********** WEAPON ***********
-    /*else if (ee.ee_slEvent == EVENTCODE_EWeaponItem) {
-      return GetWeapon(0)->ReceiveWeapon(ee);
+    else if (ee.ee_slEvent == EVENTCODE_EWeaponItem) {
+      return GetInventory()->ReceiveWeapon(ee);
     }
 
     // *********** AMMO ***********
     else if (ee.ee_slEvent == EVENTCODE_EAmmoItem) {
-      return GetWeapon(0)->ReceiveAmmo(ee);
+      return GetInventory()->ReceiveAmmo(ee);
     }
 
     else if (ee.ee_slEvent == EVENTCODE_EAmmoPackItem) {
-      return GetWeapon(0)->ReceivePackAmmo(ee);
-    }*/
+      return GetInventory()->ReceiveAmmoPack(ee);
+    }
 
     // *********** KEYS ***********
     else if (ee.ee_slEvent == EVENTCODE_EKey) {
@@ -5211,8 +5211,6 @@ functions:
 
   // Buttons actions
   void ButtonsActions(CPlayerAction &paAction) {
-    // [Cecil] TODO: Implement double weapon selection
-
     // if selecting a new weapon select it
     if ((ulNewButtons & PLACT_SELECT_WEAPON_MASK) != 0) {
       ESelectWeapon eSelect;
@@ -5257,28 +5255,34 @@ functions:
       GetWeapon(0)->SendEvent(eSelect);
     }
 
+    // [Cecil] Extra weapon is selected
+    BOOL bExtraWeapon = (GetWeapon(1)->GetCurrent() != WEAPON_NONE);
+
     // if fire is pressed
     if (ulNewButtons & PLACT_FIRE) {
-      GetWeapon(0)->SendEvent(EFireWeapon());
-      GetWeapon(1)->SendEvent(EFireWeapon());
+      GetWeapon(bExtraWeapon)->SendEvent(EFireWeapon());
     }
 
     // if fire is released
     if (ulReleasedButtons & PLACT_FIRE) {
-      GetWeapon(0)->SendEvent(EReleaseWeapon());
-      GetWeapon(1)->SendEvent(EReleaseWeapon());
+      GetWeapon(bExtraWeapon)->SendEvent(EReleaseWeapon());
     }
 
     // [Cecil] Alt fire
     if (GetSP()->AltMode() == 1) {
       if (ulNewButtons & PLACT_ALTFIRE) {
-        GetWeapon(0)->SendEvent(EAltFire());
-        GetWeapon(1)->SendEvent(EAltFire());
+        // fire extra weapon
+        if (bExtraWeapon) {
+          GetWeapon(0)->SendEvent(EFireWeapon());
+
+        // secondary fire
+        } else {
+          GetWeapon(0)->SendEvent(EAltFire());
+        }
       }
 
       if (ulReleasedButtons & PLACT_ALTFIRE) {
         GetWeapon(0)->SendEvent(EReleaseWeapon());
-        GetWeapon(1)->SendEvent(EReleaseWeapon());
       }
     }
 

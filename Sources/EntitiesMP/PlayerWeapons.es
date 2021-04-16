@@ -75,22 +75,6 @@ void ResetWeaponPosition(void) {
 // [Cecil] Extra functions
 #include "EntitiesMP/Common/ExtraFunc.h"
 
-// [Cecil] Ammo types to default ammo set
-static const _aiAmmoSetTypes[] = {
-  -1, // invalid
-   1, // AIT_SHELLS
-   2, // AIT_BULLETS
-   3, // AIT_ROCKETS
-   4, // AIT_GRENADES
-   7, // AIT_ELECTRICITY
-  -1, // AIT_NUKEBALL (invalid)
-   8, // AIT_IRONBALLS
-  -1, // AIT_SERIOUSPACK (invalid)
-  -1, // AIT_BACKPACK (invalid)
-   5, // AIT_NAPALM
-   6, // AIT_SNIPERBULLETS
-};
-
 // [Cecil] Current player weapon
 #define CUR_WEAPON GetInventory()->m_aWeapons[m_iCurrentWeapon]
 
@@ -888,10 +872,26 @@ functions:
 
   // [Cecil] Enough of current ammo
   BOOL EnoughAmmo(INDEX iType) {
-    SPlayerAmmo *ppaAmmo = PredTail()->CUR_WEAPON.ppaAmmo;
-    INDEX iAmmo = (ppaAmmo == NULL ? 0 : ppaAmmo->iAmount);
+    INDEX iAmmo = 0;
+    SPlayerWeapon &pw = PredTail()->CUR_WEAPON;
 
-    INDEX iDec = PredTail()->CUR_WEAPON.GetDecAmmo(iType) - 1;
+    // mag amount
+    if (iType == SWeaponStruct::DWA_MAG) {
+      iAmmo = pw.aiMag[m_bExtraWeapon];
+
+    } else {
+      // ammo amount
+      SPlayerAmmo *ppaAmmo = pw.ppaAmmo;
+      
+      // alt ammo amount
+      if (iType == SWeaponStruct::DWA_ALT) {
+        ppaAmmo = pw.ppaAlt;
+      }
+
+      iAmmo = (ppaAmmo == NULL ? 0 : ppaAmmo->iAmount);
+    }
+
+    INDEX iDec = pw.GetDecAmmo(iType) - 1;
 
     return (iAmmo > Max(iDec, (INDEX)0));
   };
@@ -940,7 +940,7 @@ functions:
       return;
     }
 
-    pw.iMag -= iDec;
+    pw.aiMag[m_bExtraWeapon] -= iDec;
   };
 
   // [Cecil] Get fire position
@@ -2909,328 +2909,6 @@ functions:
     pwi->GiveImpulseTranslationAbsolute(vSpeed*m);
   };
 
-  // receive weapon
-  BOOL ReceiveWeapon(const CEntityEvent &ee) {
-    ASSERT(ee.ee_slEvent == EVENTCODE_EWeaponItem);
-    
-    // [Cecil] Get weapon type
-    INDEX iReceiveType = ((EWeaponItem&)ee).iWeapon;
-
-    // [Cecil] Random weapon item
-    if (iReceiveType == WIT_RANDOM) {
-      iReceiveType = WeaponItemType(IRnd() % 13);
-
-      // replace weapons with unlimited ammo with something else
-      if ((iReceiveType == WIT_KNIFE    && m_iAvailableWeapons & IRF_KNIFE)
-       || (iReceiveType == WIT_CHAINSAW && m_iAvailableWeapons & IRF_CHAINSAW)
-       || (iReceiveType == WIT_COLT     && m_iAvailableWeapons & IRF_COLT && m_iAvailableWeapons & IRF_DCOLT)) {
-        iReceiveType = WeaponItemType(IRnd() % 10 + 3);
-      }
-
-    } else {
-      // [Cecil] Don't receive disabled weapons
-      BOOL bEnabled = (GetSP()->sp_iItemRemoval & _aiWeaponItemFlags[iReceiveType]);
-      if (!bEnabled) {
-        return TRUE;
-      }
-    }
-
-    // [Cecil] Don't give anything on pickup
-    if (GetSP()->sp_iWeaponItems == 0) {
-      return TRUE;
-    }
-
-    INDEX wit = iReceiveType;
-
-    switch (iReceiveType) {
-      // [Cecil] Knife item
-      case WIT_KNIFE:           iReceiveType = WEAPON_KNIFE; break;
-      case WIT_COLT:            iReceiveType = WEAPON_COLT; break;
-      case WIT_SINGLESHOTGUN:   iReceiveType = WEAPON_SINGLESHOTGUN; break;
-      case WIT_DOUBLESHOTGUN:   iReceiveType = WEAPON_DOUBLESHOTGUN; break;
-      case WIT_TOMMYGUN:        iReceiveType = WEAPON_TOMMYGUN; break;
-      case WIT_SNIPER:          iReceiveType = WEAPON_SNIPER; break;
-      case WIT_MINIGUN:         iReceiveType = WEAPON_MINIGUN; break;
-      case WIT_ROCKETLAUNCHER:  iReceiveType = WEAPON_ROCKETLAUNCHER; break;
-      case WIT_GRENADELAUNCHER: iReceiveType = WEAPON_GRENADELAUNCHER; break;
-      case WIT_FLAMER:          iReceiveType = WEAPON_FLAMER; break;
-      case WIT_CHAINSAW:        iReceiveType = WEAPON_CHAINSAW; break;
-      case WIT_LASER:           iReceiveType = WEAPON_LASER; break;
-      case WIT_CANNON:          iReceiveType = WEAPON_IRONCANNON; break;
-      default: ASSERTALWAYS("Uknown weapon type");
-    }
-
-    // add weapon
-    if (iReceiveType == WEAPON_COLT && (m_iAvailableWeapons & (1 << (WEAPON_COLT-1)))) {
-      iReceiveType = WEAPON_DOUBLECOLT;
-    }
-
-    ULONG ulOldWeapons = m_iAvailableWeapons;
-    m_iAvailableWeapons |= 1 << (iReceiveType-1);
-
-    // precache eventual new weapons
-    Precache();
-
-    CTFileName fnmMsg;
-    switch (wit) {
-      // [Cecil] Knife item
-      case WIT_KNIFE:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Military Knife"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\knife.txt");
-        break;
-
-      case WIT_COLT:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Shofield .45 w/ TMAR"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\colt.txt");
-        break;
-
-      case WIT_SINGLESHOTGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("12 Gauge Pump Action Shotgun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\singleshotgun.txt");
-        break;
-
-      case WIT_DOUBLESHOTGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Double Barrel Coach Gun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\doubleshotgun.txt");
-        break;
-
-      case WIT_TOMMYGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("M1-A2 Tommygun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\tommygun.txt");
-        break;
-
-      case WIT_SNIPER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("RAPTOR 16mm Sniper"), 0);
-        fnmMsg = CTFILENAME("DataMP\\Messages\\Weapons\\sniper.txt");
-        break;
-
-      case WIT_MINIGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XM214-A Minigun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\minigun.txt");
-        break;
-
-      case WIT_ROCKETLAUNCHER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XPML21 Rocket Launcher"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\rocketlauncher.txt");
-        break;
-
-      case WIT_GRENADELAUNCHER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("MKIII Grenade Launcher"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\grenadelauncher.txt");
-        break;
-
-      case WIT_FLAMER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XOP Flamethrower"), 0);
-        fnmMsg = CTFILENAME("DataMP\\Messages\\Weapons\\flamer.txt");
-        break;
-
-      case WIT_CHAINSAW:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("'Bonecracker' P-LAH Chainsaw"), 0);
-        fnmMsg = CTFILENAME("DataMP\\Messages\\Weapons\\chainsaw.txt");
-        break;
-
-      case WIT_LASER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XL2 Lasergun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\laser.txt");
-        break;
-
-      case WIT_CANNON:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("SBC Cannon"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\cannon.txt");
-        break;
-
-      default: ASSERTALWAYS("Uknown weapon type");
-    }
-
-    // send computer message
-    if (GetSP()->sp_bCooperative) {
-      EComputerMessage eMsg;
-      eMsg.fnmMessage = fnmMsg;
-      m_penPlayer->SendEvent(eMsg);
-    }
-
-    // add the ammunition
-    GetInventory()->AddDefaultAmmoForWeapon(iReceiveType, 0);
-
-    // if this weapon should be auto selected
-    BOOL bAutoSelect = FALSE;
-    INDEX iSelectionSetting = GetPlayer()->GetSettings()->ps_iWeaponAutoSelect;
-    if (iSelectionSetting==PS_WAS_ALL) {
-      bAutoSelect = TRUE;
-    } else if (iSelectionSetting==PS_WAS_ONLYNEW) {
-      if (m_iAvailableWeapons&~ulOldWeapons) {
-        bAutoSelect = TRUE;
-      }
-    } else if (iSelectionSetting==PS_WAS_BETTER) {
-      // [Cecil] No position remapping
-      if (m_iCurrentWeapon < iReceiveType) {
-        bAutoSelect = TRUE;
-      }
-    }
-    if (bAutoSelect) {
-      // select it
-      if (WeaponSelectOk((WeaponType)iReceiveType)) {
-        SendEvent(EBegin());
-      }
-    }
-
-    return TRUE;
-  };
-
-  // receive ammo
-  BOOL ReceiveAmmo(const CEntityEvent &ee) {
-    ASSERT(ee.ee_slEvent == EVENTCODE_EAmmoItem);
-
-    // if infinite ammo is on
-    if (GetSP()->sp_bInfiniteAmmo) {
-      // pick all items anyway (items that exist in this mode are only those that
-      // trigger something when picked - so they must be picked)
-      return TRUE;
-    }
-
-    EAmmoItem &Eai = (EAmmoItem&)ee;
-
-    // [Cecil] Find proper ammo type
-    INDEX iType = _aiAmmoSetTypes[Eai.EaitType];
-
-    // [Cecil] Invalid type
-    if (iType == -1) {
-      CPrintF("^cff0000Warning: Picking invalid ammo type: %d^r\n", Eai.EaitType);
-      return TRUE;
-
-    // [Cecil] Back packs
-    } else if (Eai.EaitType == AIT_BACKPACK || Eai.EaitType == AIT_SERIOUSPACK) {
-      // add ammo
-      switch (Eai.EaitType) {
-        case AIT_BACKPACK:
-          GetInventory()->m_aAmmo[1].iAmount +=  20 * GetSP()->sp_fAmmoQuantity * AmmoMul();
-          GetInventory()->m_aAmmo[2].iAmount += 200 * GetSP()->sp_fAmmoQuantity * AmmoMul();
-          GetInventory()->m_aAmmo[3].iAmount +=   5 * GetSP()->sp_fAmmoQuantity * AmmoMul();
-
-          ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Ammo pack"), 0);
-          // [Cecil] Set to 100
-          AddManaToPlayer(100.0f * MANA_AMMO);
-          break;
-
-        case AIT_SERIOUSPACK: {
-          // [Cecil] Give all ammo
-          for (INDEX i = 0; i < GetInventory()->m_aAmmo.Count(); i++) {
-            GetInventory()->m_aAmmo[i].SetMax();
-          }
-
-          ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("All Ammo"), 0);
-
-          // [Cecil] Set to 1000
-          AddManaToPlayer(1000.0f * MANA_AMMO);
-        } break;
-      }
-
-      return TRUE;
-    }
-
-    // [Cecil] Ammo amount
-    INDEX iAmmo = ceil(FLOAT(Eai.iQuantity) * AmmoMul());
-
-    // [Cecil] Ammo reference
-    SPlayerAmmo &paAmmo = GetInventory()->m_aAmmo[iType];
-
-    // [Cecil] Enough ammo
-    if (paAmmo.iAmount >= paAmmo.Max()) {
-      paAmmo.SetMax();
-      return FALSE;
-    }
-    
-    // [Cecil] Add ammo
-    paAmmo.iAmount += iAmmo;
-
-    CTString &strPick = paAmmo.pwaAmmoStruct->strPickup;
-    ((CPlayer&)*m_penPlayer).ItemPicked(Translate(strPick.str_String), iAmmo);
-
-    AddManaToPlayer(iAmmo * paAmmo.pwaAmmoStruct->fMana * MANA_AMMO);
-
-    // make sure we don't have more ammo than maximum
-    GetInventory()->ClampAllAmmo();
-
-    return TRUE;
-  };
-
-  // receive ammo
-  BOOL ReceivePackAmmo(const CEntityEvent &ee) {
-    // if infinite ammo is on
-    if (GetSP()->sp_bInfiniteAmmo) {
-      // pick all items anyway (items that exist in this mode are only those that
-      // trigger something when picked - so they must be picked)
-      return TRUE;
-    }
-
-    ASSERT(ee.ee_slEvent == EVENTCODE_EAmmoPackItem);
-    EAmmoPackItem &eapi = (EAmmoPackItem &)ee;
-
-    // [Cecil] Default ammo set
-    INDEX aiSet[8];
-    aiSet[0] = eapi.iShells;
-    aiSet[1] = eapi.iBullets;
-    aiSet[2] = eapi.iRockets;
-    aiSet[3] = eapi.iGrenades;
-    aiSet[4] = eapi.iNapalm;
-    aiSet[5] = eapi.iSniperBullets;
-    aiSet[6] = eapi.iElectricity;
-    aiSet[7] = eapi.iIronBalls;
-
-    // [Cecil] Check if lacking some ammo
-    BOOL bLacking = FALSE;
-    INDEX iTypes = 0;
-
-    for (INDEX iCheck = 1; iCheck <= 8; iCheck++) {
-      if (aiSet[iCheck-1] > 0) {
-        // count types
-        iTypes++;
-
-        bLacking |= !GetInventory()->m_aAmmo[iCheck].Full();
-      }
-    }
-
-    if (bLacking) {
-      // [Cecil] Add ammo
-      for (INDEX iAdd = 1; iAdd <= 8; iAdd++) {
-        GetInventory()->m_aAmmo[iAdd].iAmount += ceil(FLOAT(aiSet[iAdd-1]) * AmmoMul());
-      }
-
-      // make sure we don't have more ammo than maximum
-      GetInventory()->ClampAllAmmo();
-
-      // preapare message string
-      CTString strMessage;
-
-      // [Cecil] Print simple message
-      if (iTypes > 4) {
-        strMessage.PrintF(TRANS("Ammo pack"));
-
-      // [Cecil] Print each type
-      } else {
-        for (INDEX i = 1; i <= 8; i++) {
-          // [Cecil] No ammo
-          if (aiSet[i-1] <= 0) {
-            continue;
-          }
-
-          // [Cecil] Next type
-          if (strMessage != "") {
-            strMessage += ", ";
-          }
-
-          // [Cecil] Print the type
-          CTString &strPick = GetInventory()->m_aAmmo[i].pwaAmmoStruct->strPickup;
-          strMessage.PrintF("%s%s %d", strMessage, Translate(strPick.str_String), aiSet[i-1]);
-        }
-      }
-
-      ((CPlayer&)*m_penPlayer).ItemPicked(strMessage, 0);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
   // get weapon from selected number
   WeaponType GetStrongerWeapon(INDEX iWeapon) {
     switch(iWeapon) {
@@ -4023,8 +3701,10 @@ procedures:
     
     // [Cecil] Reload mags
     if (bNowColt && !bPrevColt) {
-      GetInventory()->m_aWeapons[WEAPON_COLT].Reload(TRUE);
-      GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(TRUE);
+      GetInventory()->m_aWeapons[WEAPON_COLT].Reload(0, TRUE);
+      GetInventory()->m_aWeapons[WEAPON_COLT].Reload(1, TRUE);
+      GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(0, TRUE);
+      GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(1, TRUE);
     }
 
     // --->>>  DOUBLE COLT -> COLT SPECIFIC  <<<---
@@ -4069,7 +3749,7 @@ procedures:
     m_tmWeaponChangeRequired = 0;
 
     // [Cecil] Reload mag if needed
-    if (CUR_WEAPON.EmptyMag()) {
+    if (CUR_WEAPON.EmptyMag(m_bExtraWeapon)) {
       jump Reload();
     }
 
@@ -4167,7 +3847,7 @@ procedures:
     m_tmWeaponChangeRequired = 0;
 
     // [Cecil] Reload mag if needed
-    if (CUR_WEAPON.EmptyMag()) {
+    if (CUR_WEAPON.EmptyMag(m_bExtraWeapon)) {
       jump Reload();
     }
 
@@ -4318,16 +3998,17 @@ procedures:
     m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
 
     // no more bullets in colt -> reload
-    if (CUR_WEAPON.iMag <= 0) {
+    if (!ENOUGH_MAG) {
       jump ReloadColt();
     }
+
     return EEnd();
   };
 
   // reload colt
   ReloadColt() {
     // [Cecil] Enough ammo
-    if (!CUR_WEAPON.CanReload()) {
+    if (!CUR_WEAPON.CanReload(m_bExtraWeapon)) {
       return EEnd();
     }
 
@@ -4340,8 +4021,11 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD) * FireSpeedMul());
 
     // [Cecil] Reload mag
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(TRUE);
+    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(0, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(1, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(0, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(1, TRUE);
+
     return EEnd();
   };
 
@@ -4396,7 +4080,7 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(m_iAnim)/2 * FireSpeedMul()); // wait half of the anim
 
     // no more bullets in colt -> reload
-    if (CUR_WEAPON.iMag <= 0) {
+    if (!ENOUGH_MAG) {
       jump ReloadDoubleColt();
     }
     return EEnd();
@@ -4405,7 +4089,7 @@ procedures:
   // reload double colt
   ReloadDoubleColt() {
     // [Cecil] Enough ammo
-    if (!CUR_WEAPON.CanReload()) {
+    if (!CUR_WEAPON.CanReload(m_bExtraWeapon)) {
       return EEnd();
     }
 
@@ -4429,8 +4113,11 @@ procedures:
     autowait((m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD) - 0.25f) * FireSpeedMul());
 
     // [Cecil] Reload mag
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(TRUE);
+    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(0, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(1, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(0, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(1, TRUE);
+
     return EEnd();
   };
 

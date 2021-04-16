@@ -848,7 +848,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   SWeaponAmmo *pwaAltAmmo1 = pwCurrent1.GetAlt();
   SWeaponAmmo *pwaAltAmmo2 = pwCurrent2.GetAlt();
 
-  BOOL bShowAltAmmo = (pwaAmmo1 != pwaAltAmmo1);
+  // 0 or 1
+  INDEX iShowAltAmmo = (pwaAmmo1 != pwaAltAmmo1);
   
   CTextureObject *ptoAmmo = NULL;
   FLOAT fAmmo = 0.0f;
@@ -867,7 +868,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     INDEX iMaxMag = pwCurrent1.pwsWeapon->iMaxMag;
 
     if (iMaxMag > 0) {
-      fAmmo = pwCurrent1.iMag;
+      fAmmo = pwCurrent1.aiMag[0];
       fMaxAmmo = iMaxMag;
       abMag[0] = TRUE;
 
@@ -878,26 +879,27 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     }
   }
 
-  // [Cecil] Extra weapon ammo
-  if (_penWeapons[1]->GetCurrent() != WEAPON_NONE && pwaAmmo2 != NULL) {
+  // [Cecil] Extra weapon ammo if it exists and not the same (unless it's a mag)
+  if (_penWeapons[1]->GetCurrent() != WEAPON_NONE && pwaAmmo2 != NULL && (pwaAmmo1 != pwaAmmo2 || abMag[0])) {
     ptoAltAmmo = pwaAmmo2->ptoIcon;
 
     // display magazine
     INDEX iMaxMag = pwCurrent2.pwsWeapon->iMaxMag;
 
     if (iMaxMag > 0) {
-      fAltAmmo = pwCurrent2.iMag;
+      fAltAmmo = pwCurrent2.aiMag[1];
       fAltMaxAmmo = iMaxMag;
       abMag[1] = TRUE;
 
-      bShowAltAmmo = TRUE;
+      iShowAltAmmo = 2;
 
     // display ammo
     } else {
       fAltAmmo = pwCurrent2.CurrentAmmo();
       fAltMaxAmmo = pwaAmmo2->iMaxAmount;
 
-      bShowAltAmmo = (pwaAmmo1 != pwaAmmo2);
+      // 0 or 2
+      iShowAltAmmo = (pwaAmmo1 != pwaAmmo2) * 2;
     }
   
   // [Cecil] Alt ammo available
@@ -931,7 +933,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // [Cecil] Draw alt ammo
-  if ((!GetSP()->sp_bInfiniteAmmo || abMag[1]) && ptoAltAmmo != NULL && bShowAltAmmo) {
+  if ((!GetSP()->sp_bInfiniteAmmo || abMag[1]) && ptoAltAmmo != NULL && iShowAltAmmo > 0) {
     // determine ammo quantities
     fNormValue = fAltAmmo / fAltMaxAmmo;
     strValue.PrintF("%d", (SLONG)ceil(fAltAmmo));
@@ -942,7 +944,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fCol = 320.0f - fAdvUnit - fChrUnit*(fWidth/2.0f) - fHalfUnit;
     
     HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
-    HUD_DrawIcon(fCol, fRow, *ptoAltAmmo, C_WHITE, fNormValue, FALSE, 1.0f);
+    HUD_DrawIcon(fCol, fRow, *ptoAltAmmo, C_WHITE, fNormValue, (iShowAltAmmo == 2), 1.0f);
 
     fCol += fAdvUnit+fChrUnit*(fWidth/2.0f) - fHalfUnit;
     HUD_DrawBorder(fCol, fRow, fChrUnit * fWidth, fOneUnit, colBorder);

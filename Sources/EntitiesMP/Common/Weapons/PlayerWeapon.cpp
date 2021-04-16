@@ -4,28 +4,39 @@
 
 // Constructors
 SPlayerWeapon::SPlayerWeapon(void) :
-  pwsWeapon(NULL), ppaAmmo(NULL), ppaAlt(NULL), iMag(0) {};
+  pwsWeapon(NULL), ppaAmmo(NULL), ppaAlt(NULL)
+{
+  aiMag[0] = 0;
+  aiMag[1] = 0;
+};
 
 SPlayerWeapon::SPlayerWeapon(SWeaponStruct *pSetWeapon, SPlayerAmmo *pSetAmmo, SPlayerAmmo *pSetAlt) :
-  pwsWeapon(pSetWeapon), ppaAmmo(pSetAmmo), ppaAlt(pSetAlt), iMag(0) {};
+  pwsWeapon(pSetWeapon), ppaAmmo(pSetAmmo), ppaAlt(pSetAlt)
+{
+  aiMag[0] = 0;
+  aiMag[1] = 0;
+};
 
 // Assignment
 SPlayerWeapon &SPlayerWeapon::operator=(const SPlayerWeapon &pwOther) {
   this->pwsWeapon = pwOther.pwsWeapon;
   this->ppaAmmo = pwOther.ppaAmmo;
   this->ppaAlt = pwOther.ppaAlt;
-  this->iMag = pwOther.iMag;
+  this->aiMag[0] = pwOther.aiMag[0];
+  this->aiMag[1] = pwOther.aiMag[1];
 
   return *this;
 };
 
 // Write and read
 void SPlayerWeapon::Write(CTStream *strm) {
-  *strm << iMag;
+  *strm << aiMag[0];
+  *strm << aiMag[1];
 };
 
 void SPlayerWeapon::Read(CTStream *strm) {
-  *strm >> iMag;
+  *strm >> aiMag[0];
+  *strm >> aiMag[1];
 };
 
 // Get ammo ID
@@ -64,13 +75,13 @@ BOOL SPlayerWeapon::HasAmmo(BOOL bCheckAlt) {
 };
 
 // Reload magazine
-void SPlayerWeapon::Reload(BOOL bMax) {
+void SPlayerWeapon::Reload(const INDEX &iExtra, BOOL bMax) {
   INDEX iAmmo = CurrentAmmo();
 
   if (bMax || iAmmo < 0) {
-    iMag = pwsWeapon->iMaxMag;
+    aiMag[iExtra] = pwsWeapon->iMaxMag;
     return;
   }
 
-  iMag = Min(iAmmo, pwsWeapon->iMaxMag);
+  aiMag[iExtra] = Min(iAmmo, pwsWeapon->iMaxMag);
 };
