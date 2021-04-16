@@ -51,6 +51,11 @@ struct SPlayerWeapon {
     return (ppaAlt == NULL  ? 1 : ppaAlt->Max());
   };
 
+  // Get decreasing ammo amounts
+  inline INDEX GetDecAmmo(const INDEX &iType) {
+    return pwsWeapon->aiDecAmmo[iType];
+  };
+
   // Check for ammo
   BOOL HasAmmo(BOOL bCheckAlt);
 

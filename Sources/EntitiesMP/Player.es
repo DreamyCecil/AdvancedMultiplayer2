@@ -1164,7 +1164,6 @@ properties:
   6 FLOAT m_fMaxHealth = 1.0f, // default health supply player can have
   7 INDEX m_ulFlags = 0,       // various flags
   
- 16 CEntityPointer m_penWeapons,       // player weapons
  17 CEntityPointer m_penAnimator,      // player animator
  18 CEntityPointer m_penView,          // player view
  19 CEntityPointer m_pen3rdPersonView, // player 3rd person view
@@ -1346,7 +1345,6 @@ properties:
 }
 
 components:
-  1 class   CLASS_PLAYER_WEAPONS  "Classes\\PlayerWeapons.ecl",
   2 class   CLASS_PLAYER_ANIMATOR "Classes\\PlayerAnimator.ecl",
   3 class   CLASS_PLAYER_VIEW     "Classes\\PlayerView.ecl",
   4 class   CLASS_BASIC_EFFECT    "Classes\\BasicEffect.ecl",
@@ -1835,21 +1833,18 @@ functions:
     ((CTextureData*)_toPlayerMarker.GetData())->Force(TEX_CONSTANT);
   };
 
-  class CPlayerWeapons *GetPlayerWeapons(void) {
-    return (CPlayerWeapons*)&*m_penWeapons;
-  };
-
   class CPlayerAnimator *GetPlayerAnimator(void) {
     return (CPlayerAnimator*)&*m_penAnimator;
   };
 
   // [Cecil] Get inventory entity
-  class CPlayerInventory *GetInventory(void) {
+  class CPlayerInventory *GetInventory(void) const {
     return (CPlayerInventory*)&*m_penInventory;
   };
 
-  class CPlayerInventory *GetInventory(void) const {
-    return (CPlayerInventory*)&*m_penInventory;
+  // [Cecil] Get some weapon
+  class CPlayerWeapons *GetWeapon(const INDEX &iExtra) const {
+    return GetInventory()->GetWeapon(iExtra);
   };
 
   CPlayerSettings *GetSettings(void) {
@@ -2060,7 +2055,6 @@ functions:
 
   // Add to prediction any entities that this entity depends on
   void AddDependentsToPrediction(void) {
-    m_penWeapons->AddToPrediction();
     m_penAnimator->AddToPrediction();
     m_penView->AddToPrediction();
     m_pen3rdPersonView->AddToPrediction();
@@ -2878,11 +2872,10 @@ functions:
     // [Cecil] Steam patch workaround
     BOOL bWidescreen = (FLOAT(pdp->GetHeight()) / FLOAT(pdp->GetWidth()) < 0.75f);
     ANGLE aFOV = (bWidescreen ? 110.0f : 90.0f);
-    CPlayerWeapons &penWeapons = (CPlayerWeapons&)*m_penWeapons;
 
     // [Cecil] Sniper zoom multiplier
-    if (penWeapons.m_iCurrentWeapon == WEAPON_SNIPER) {
-      aFOV *= Lerp(penWeapons.m_fSniperFOVlast, penWeapons.m_fSniperFOV, _pTimer->GetLerpFactor()) / 90.0f;
+    if (GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER) {
+      aFOV *= Lerp(GetWeapon(0)->m_fSniperFOVlast, GetWeapon(0)->m_fSniperFOV, _pTimer->GetLerpFactor()) / 90.0f;
     }
 
     // [Cecil] Custom FOV
@@ -3329,7 +3322,8 @@ functions:
     }
 
     // update ray hit for weapon target
-    GetPlayerWeapons()->UpdateTargetingInfo();
+    GetWeapon(0)->UpdateTargetingInfo();
+    GetWeapon(1)->UpdateTargetingInfo();
 
     if (m_pen3rdPersonView != NULL) {
       ((CPlayerView&)*m_pen3rdPersonView).PostMoving();
@@ -3915,6 +3909,8 @@ functions:
 
   // Receive item
   BOOL ReceiveItem(const CEntityEvent &ee) {
+    // [Cecil] TODO: Let PlayerInventory handle this
+
     // *********** HEALTH ***********
     if( ee.ee_slEvent == EVENTCODE_EHealth)
     {
@@ -3970,18 +3966,18 @@ functions:
     }
 
     // *********** WEAPON ***********
-    else if (ee.ee_slEvent == EVENTCODE_EWeaponItem) {
-      return ((CPlayerWeapons&)*m_penWeapons).ReceiveWeapon(ee);
+    /*else if (ee.ee_slEvent == EVENTCODE_EWeaponItem) {
+      return GetWeapon(0)->ReceiveWeapon(ee);
     }
 
     // *********** AMMO ***********
     else if (ee.ee_slEvent == EVENTCODE_EAmmoItem) {
-      return ((CPlayerWeapons&)*m_penWeapons).ReceiveAmmo(ee);
+      return GetWeapon(0)->ReceiveAmmo(ee);
     }
 
     else if (ee.ee_slEvent == EVENTCODE_EAmmoPackItem) {
-      return ((CPlayerWeapons&)*m_penWeapons).ReceivePackAmmo(ee);
-    }
+      return GetWeapon(0)->ReceivePackAmmo(ee);
+    }*/
 
     // *********** KEYS ***********
     else if (ee.ee_slEvent == EVENTCODE_EKey) {
@@ -4123,7 +4119,7 @@ functions:
   void ComputerPressed(void)
   {
     // call computer if not holding sniper
-//    if (GetPlayerWeapons()->m_iCurrentWeapon!=WEAPON_SNIPER){
+//    if (GetWeapon(0)->m_iCurrentWeapon!=WEAPON_SNIPER){
       if (cmp_ppenPlayer==NULL && _pNetwork->IsPlayerLocal(this)) {
         cmp_ppenPlayer = this;
       }
@@ -4140,7 +4136,7 @@ functions:
   void UsePressed(BOOL bOrComputer)
   {
     // cast ray from weapon
-    CPlayerWeapons *penWeapons = GetPlayerWeapons();
+    CPlayerWeapons *penWeapons = GetWeapon(0);
     CEntity *pen = penWeapons->m_penRayHit;
     BOOL bSomethingToUse = FALSE;
 
@@ -4184,7 +4180,7 @@ functions:
     }
     else if (!bSomethingToUse)
     {
-      CPlayerWeapons *penWeapon = GetPlayerWeapons();
+      CPlayerWeapons *penWeapon = GetWeapon(0);
      
       // penWeapon->m_iWantedWeapon==WEAPON_SNIPER) =>
       // make sure that weapon transition is not in progress
@@ -4279,8 +4275,8 @@ functions:
     ANGLE3D aDeltaRotation     = paAction.pa_aRotation     - m_aLastRotation;
     ANGLE3D aDeltaViewRotation = paAction.pa_aViewRotation - m_aLastViewRotation;
     
-    if (m_ulFlags&PLF_ISZOOMING) {
-      FLOAT fRotationDamping = ((CPlayerWeapons &)*m_penWeapons).m_fSniperFOV/((CPlayerWeapons &)*m_penWeapons).m_fSniperMaxFOV;
+    if (m_ulFlags & PLF_ISZOOMING) {
+      FLOAT fRotationDamping = GetWeapon(0)->m_fSniperFOV / GetWeapon(0)->m_fSniperMaxFOV;
       aDeltaRotation *= fRotationDamping;
       aDeltaViewRotation *= fRotationDamping;
     }
@@ -4343,7 +4339,7 @@ functions:
     en_plLastViewpoint = en_plViewpoint;    // remember last view point for lerping
 
     // sniper zooming
-    CPlayerWeapons *penWeapon = GetPlayerWeapons();
+    CPlayerWeapons *penWeapon = GetWeapon(0);
     if (penWeapon->m_iCurrentWeapon == WEAPON_SNIPER)
     {
       if (bUseButtonHeld && m_ulFlags&PLF_ISZOOMING)
@@ -4485,7 +4481,8 @@ functions:
       }
 
       // stop firing
-      ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+      GetWeapon(0)->SendEvent(EReleaseWeapon());
+      GetWeapon(1)->SendEvent(EReleaseWeapon());
 
       // remove from the mask
       EStopMask eStop;
@@ -4718,9 +4715,9 @@ functions:
       vTranslation *= cht_fTranslationMultiplier;
     }
 
+    // [Cecil] TODO: Call PlayerInventory and check if it's only knives selected
     // enable faster moving if holding knife in DM
-    if( ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon==WEAPON_KNIFE &&
-         !GetSP()->sp_bCooperative) {
+    if (GetWeapon(0)->m_iCurrentWeapon == WEAPON_KNIFE && !GetSP()->sp_bCooperative) {
       vTranslation *= 1.3f;
     }
 
@@ -5215,65 +5212,80 @@ functions:
 
   // Buttons actions
   void ButtonsActions(CPlayerAction &paAction) {
+    // [Cecil] TODO: Implement double weapon selection
+
     // if selecting a new weapon select it
     if ((ulNewButtons & PLACT_SELECT_WEAPON_MASK) != 0) {
       ESelectWeapon eSelect;
       eSelect.iWeapon = (ulNewButtons&PLACT_SELECT_WEAPON_MASK)>>PLACT_SELECT_WEAPON_SHIFT;
-      ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
+
+      GetWeapon(0)->SendEvent(eSelect);
+      GetWeapon(1)->SendEvent(eSelect);
     }
 
     // next weapon zooms out when in sniping mode
     if (ulNewButtons & PLACT_WEAPON_NEXT) {
-      if(((CPlayerWeapons&)*m_penWeapons).m_bSniping) {
+      if (GetWeapon(0)->m_bSniping) {
         ApplySniperZoom(0);
       } else if (TRUE) {
         ESelectWeapon eSelect;
         eSelect.iWeapon = -1;
-        ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
+        
+        GetWeapon(0)->SendEvent(eSelect);
+        GetWeapon(1)->SendEvent(eSelect);
       }
     }
     
     // previous weapon zooms in when in sniping mode
     if (ulNewButtons & PLACT_WEAPON_PREV) {
-      if(((CPlayerWeapons&)*m_penWeapons).m_bSniping) {
+      if (GetWeapon(0)->m_bSniping) {
         ApplySniperZoom(1);
       } else if (TRUE) {
         ESelectWeapon eSelect;
         eSelect.iWeapon = -2;
-        ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
+
+        GetWeapon(0)->SendEvent(eSelect);
+        GetWeapon(1)->SendEvent(eSelect);
       }
     }
 
     if (ulNewButtons & PLACT_WEAPON_FLIP) {
       ESelectWeapon eSelect;
       eSelect.iWeapon = -3;
-      ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
+
+      GetWeapon(0)->SendEvent(eSelect);
+      GetWeapon(1)->SendEvent(eSelect);
     }
 
     // if fire is pressed
     if (ulNewButtons & PLACT_FIRE) {
-      ((CPlayerWeapons&)*m_penWeapons).SendEvent(EFireWeapon());
+      GetWeapon(0)->SendEvent(EFireWeapon());
+      GetWeapon(1)->SendEvent(EFireWeapon());
     }
 
     // if fire is released
     if (ulReleasedButtons & PLACT_FIRE) {
-      ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+      GetWeapon(0)->SendEvent(EReleaseWeapon());
+      GetWeapon(1)->SendEvent(EReleaseWeapon());
     }
 
     // [Cecil] Alt fire
     if (GetSP()->AltMode() == 1) {
       if (ulNewButtons & PLACT_ALTFIRE) {
-        ((CPlayerWeapons&)*m_penWeapons).SendEvent(EAltFire());
+        GetWeapon(0)->SendEvent(EAltFire());
+        GetWeapon(1)->SendEvent(EAltFire());
       }
 
       if (ulReleasedButtons & PLACT_ALTFIRE) {
-        ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+        GetWeapon(0)->SendEvent(EReleaseWeapon());
+        GetWeapon(1)->SendEvent(EReleaseWeapon());
       }
     }
 
     // if reload is pressed
     if (ulReleasedButtons & PLACT_RELOAD) {
-      ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReloadWeapon());
+      GetWeapon(0)->SendEvent(EReloadWeapon());
+      GetWeapon(1)->SendEvent(EReloadWeapon());
     }
 
     // if fire bomb is pressed
@@ -5297,14 +5309,14 @@ functions:
 
     // if use is pressed
     if (ulNewButtons & PLACT_USE) {
-      if (((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon==WEAPON_SNIPER) {
+      if (GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER) {
         UsePressed(FALSE);
       } else {
         UsePressed(ulNewButtons & PLACT_COMPUTER);
       }
 
     // if USE is not detected due to doubleclick and player is holding sniper
-    } else if (ulNewButtons & PLACT_SNIPER_USE && ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon==WEAPON_SNIPER) {
+    } else if (ulNewButtons & PLACT_SNIPER_USE && GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER) {
       UsePressed(FALSE);
 
     // if computer is pressed
@@ -5384,14 +5396,14 @@ functions:
 
   void ApplySniperZoom(BOOL bZoomIn) {
     // do nothing if not holding sniper and if not in sniping mode
-    if (((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon != WEAPON_SNIPER ||
-      ((CPlayerWeapons&)*m_penWeapons).m_bSniping == FALSE) {
+    if (GetWeapon(0)->m_iCurrentWeapon != WEAPON_SNIPER ||
+      GetWeapon(0)->m_bSniping == FALSE) {
       return;
     }
 
     BOOL bZoomChanged;
 
-    if (((CPlayerWeapons&)*m_penWeapons).SniperZoomDiscrete(bZoomIn, bZoomChanged)) {
+    if (GetWeapon(0)->SniperZoomDiscrete(bZoomIn, bZoomChanged)) {
       if (bZoomChanged) { 
         PlaySound(m_soSniperZoom, SOUND_SNIPER_QZOOM, SOF_3D); 
       }
@@ -5440,7 +5452,7 @@ functions:
     // cheat
     if (cht_bGiveAll) {
       cht_bGiveAll = FALSE;
-      ((CPlayerWeapons&)*m_penWeapons).CheatGiveAll();
+      GetInventory()->CheatGiveAll();
     }
 
     if (cht_bKillAll) {
@@ -5450,7 +5462,7 @@ functions:
 
     if (cht_bOpen) {
       cht_bOpen = FALSE;
-      ((CPlayerWeapons&)*m_penWeapons).CheatOpen();
+      GetWeapon(0)->CheatOpen();
     }
     
     if (cht_bAllMessages) {
@@ -5493,7 +5505,7 @@ functions:
         CPlayer *pen = (CPlayer*)GetPredictionTail();
         // add local rotation
         if (m_ulFlags&PLF_ISZOOMING) {
-          FLOAT fRotationDamping = ((CPlayerWeapons &)*m_penWeapons).m_fSniperFOV/((CPlayerWeapons &)*m_penWeapons).m_fSniperMaxFOV;
+          FLOAT fRotationDamping = GetWeapon(0)->m_fSniperFOV / GetWeapon(0)->m_fSniperMaxFOV;
           plView.pl_OrientationAngle = pen->en_plViewpoint.pl_OrientationAngle + (pen->m_aLocalRotation-pen->m_aLastRotation)*fRotationDamping;
         } else {
           plView.pl_OrientationAngle = pen->en_plViewpoint.pl_OrientationAngle + (pen->m_aLocalRotation-pen->m_aLastRotation);
@@ -5616,12 +5628,12 @@ functions:
     // render weapon models if needed
     BOOL bRenderModels = _pShell->GetINDEX("gfx_bRenderModels");
     // do not render weapon if sniping
-    BOOL bSniping = ((CPlayerWeapons&)*m_penWeapons).m_bSniping;
+    BOOL bSniping = GetWeapon(0)->m_bSniping;
 
     if (hud_bShowWeapon && bRenderModels && !bSniping) {
       // render weapons only if view is from player eyes
-      ((CPlayerWeapons&)*m_penWeapons).RenderWeaponModel(prProjection, pdp, vViewerLightDirection,
-                                                         colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
+      GetWeapon(0)->RenderWeaponModel(prProjection, pdp, vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
+      GetWeapon(1)->RenderWeaponModel(prProjection, pdp, vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
     }
 
     // if is first person
@@ -5654,7 +5666,7 @@ functions:
     }
 
     if (!bSniping) {
-      ((CPlayerWeapons&)*m_penWeapons).RenderCrosshair(prProjection, pdp, plView);
+      GetWeapon(0)->RenderCrosshair(prProjection, pdp, plView);
     }
 
     // get your prediction tail
@@ -5714,13 +5726,15 @@ functions:
       }
 
       // check if snooping is needed
-      CPlayerWeapons *pen = (CPlayerWeapons*)&*penHUDPlayer->m_penWeapons;
+      CPlayerWeapons *pen = (CPlayerWeapons*)&*penHUDPlayer->GetWeapon(0);
+
       TIME tmDelta = _pTimer->CurrentTick() - pen->m_tmSnoopingStarted;
-      if( tmDelta<plr_tmSnoopingTime) {
-        ASSERT( pen->m_penTargeting!=NULL);
+      if (tmDelta < plr_tmSnoopingTime) {
+        ASSERT(pen->m_penTargeting!=NULL);
         penHUDPlayer = (CPlayer*)&*pen->m_penTargeting;
         bSnooping = TRUE;
       }
+
       DrawHUD(penHUDPlayer, pdp, bSnooping, penHUDOwner);
     }
   }
@@ -5813,7 +5827,8 @@ functions:
     // initialize animator
     ((CPlayerAnimator&)*m_penAnimator).Initialize();
     // restart weapons if needed
-    GetPlayerWeapons()->SendEvent(EStart());
+    GetWeapon(0)->SendEvent(EStart());
+    GetWeapon(1)->SendEvent(EStart());
 
     // initialise last positions for particles
     Particles_AfterBurner_Prepare(this);
@@ -6088,9 +6103,13 @@ functions:
 
       // set weapons
       if (!GetSP()->sp_bCooperative) {
-        ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(CpmStart.m_iGiveWeapons, 0, 0, CpmStart.m_fMaxAmmoRatio);
+        GetWeapon(0)->InitializeWeapons(CpmStart.m_iGiveWeapons, 0, 0, CpmStart.m_fMaxAmmoRatio);
+        GetWeapon(1)->InitializeWeapons(CpmStart.m_iGiveWeapons, 0, 0, CpmStart.m_fMaxAmmoRatio);
+
       } else {
-        ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
+        GetWeapon(0)->InitializeWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
+          GetSP()->sp_bInfiniteAmmo ? 0 : CpmStart.m_iTakeAmmo, CpmStart.m_fMaxAmmoRatio);
+        GetWeapon(1)->InitializeWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
           GetSP()->sp_bInfiniteAmmo ? 0 : CpmStart.m_iTakeAmmo, CpmStart.m_fMaxAmmoRatio);
       }
 
@@ -6130,7 +6149,7 @@ functions:
       m_iMana = GetSP()->sp_iInitialMana;
       m_fArmor = 0.0f;
       // set weapons
-      ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(0, 0, 0, 0);
+      GetWeapon(0)->InitializeWeapons(0, 0, 0, 0);
       // start position
       Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0.0f, 0.0f, 0.0f)));
     }
@@ -6254,7 +6273,7 @@ functions:
         GetInventory()->PowerupParticles(this, GetModelForRendering(), GetLerpedPlacement(), FLOAT2D(0.15f, 0.03f));
 
         if (!GetSP()->sp_bCooperative) {
-          CPlayerWeapons *wpn = GetPlayerWeapons();
+          CPlayerWeapons *wpn = GetWeapon(0);
           if (wpn->m_tmLastSniperFire == _pTimer->CurrentTick())
           {
             CAttachmentModelObject &amoBody = *GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
@@ -6356,7 +6375,7 @@ procedures:
     SetupLightSource();
 
     // make sure we discontinue zooming
-    CPlayerWeapons *penWeapon = GetPlayerWeapons();
+    CPlayerWeapons *penWeapon = GetWeapon(0);
     penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV = penWeapon->m_fSniperMaxFOV;      
     penWeapon->m_bSniping=FALSE;
     m_ulFlags&=~PLF_ISZOOMING;
@@ -6400,7 +6419,9 @@ procedures:
 
   Death(EDeath eDeath) {
     // stop firing when dead
-    ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+    GetWeapon(0)->SendEvent(EReleaseWeapon());
+    GetWeapon(1)->SendEvent(EReleaseWeapon());
+
     // stop all looping ifeel effects
     if(_pNetwork->IsPlayerLocal(this))
     {
@@ -6412,7 +6433,7 @@ procedures:
     }
     
     // make sure sniper zoom is stopped 
-    CPlayerWeapons *penWeapon = GetPlayerWeapons();
+    CPlayerWeapons *penWeapon = GetWeapon(0);
     m_ulFlags&=~PLF_ISZOOMING;
     penWeapon->m_bSniping = FALSE;
     penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV = penWeapon->m_fSniperMaxFOV;
@@ -6516,12 +6537,13 @@ procedures:
     // remove weapon from hand
     ((CPlayerAnimator&)*m_penAnimator).RemoveWeapon();
     // kill weapon animations
-    GetPlayerWeapons()->SendEvent(EStop());
+    GetWeapon(0)->SendEvent(EStop());
+    GetWeapon(1)->SendEvent(EStop());
 
     // if in deathmatch
     if (!GetSP()->sp_bCooperative) {
       // drop current weapon as item so others can pick it
-      GetPlayerWeapons()->DropWeapon();
+      GetWeapon(0)->DropWeapon();
     }
 
 
@@ -6694,7 +6716,8 @@ procedures:
     }
 
     // stop firing when end
-    ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+    GetWeapon(0)->SendEvent(EReleaseWeapon());
+    GetWeapon(1)->SendEvent(EReleaseWeapon());
 
     // mark player as dead
     SetFlags(GetFlags()&~ENF_ALIVE);
@@ -6765,9 +6788,9 @@ procedures:
     // restore last view
     m_iViewState = m_iLastViewState;
 
-    // clear ammunition
+    // [Cecil] Clear inventory ammunition
     if (!(m_ulFlags & PLF_RESPAWNINPLACE)) {
-      GetPlayerWeapons()->ClearWeapons();
+      GetInventory()->ClearWeapons();
     }
 
     // stop and kill camera
@@ -7102,9 +7125,9 @@ procedures:
     m_tmMinigunAutoFireStart = _pTimer->CurrentTick();
     // wait some time for fade in and to look from left to right with out firing
     //autowait(0.75f);
-    ((CPlayerWeapons&)*m_penWeapons).SendEvent(EFireWeapon());
+    GetWeapon(0)->SendEvent(EFireWeapon());
     autowait(2.5f);
-    ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+    GetWeapon(0)->SendEvent(EReleaseWeapon());
 
     // stop minigun shaking
     CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
@@ -7156,9 +7179,9 @@ procedures:
       BODY_ANIM_COLT_REDRAW, BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, 0);
     autowait(plan.m_fBodyAnimTime);
 
-    m_iAutoOrgWeapon = ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon;  
-    ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon = WEAPON_NONE;
-    ((CPlayerWeapons&)*m_penWeapons).m_iWantedWeapon = WEAPON_NONE;
+    m_iAutoOrgWeapon = GetWeapon(0)->m_iCurrentWeapon;  
+    GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
+    GetWeapon(0)->m_iWantedWeapon = WEAPON_NONE;
     m_soWeaponAmbient.Stop();
 
     // sync apperances
@@ -7169,11 +7192,11 @@ procedures:
     plan.RemoveWeapon();
     GetPlayerAnimator()->SyncWeapon();
 
-    ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon = (WeaponType) m_iAutoOrgWeapon;
+    GetWeapon(0)->m_iCurrentWeapon = (WeaponType) m_iAutoOrgWeapon;
     // [Cecil] Default animation instead of wait animation; DEACTIVATETOWALK -> REDRAW
     plan.BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_REDRAW,
       BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, AOF_SMOOTHCHANGE);
-    ((CPlayerWeapons&)*m_penWeapons).m_iCurrentWeapon = WEAPON_NONE;
+    GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
 
     autowait(plan.m_fBodyAnimTime);
 
@@ -7230,7 +7253,7 @@ procedures:
         // order playerweapons to select weapon
         ESelectWeapon eSelect;
         eSelect.iWeapon = 1;
-        ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
+        GetWeapon(0)->SendEvent(eSelect);
 
       } else if (GetActionMarker()->m_paaAction == PAA_LOGO_FIRE_INTROSE) {
         autocall LogoFireMinigun() EReturn;
@@ -7259,7 +7282,7 @@ procedures:
         // order playerweapons to select best weapon
         ESelectWeapon eSelect;
         eSelect.iWeapon = -4;
-        ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
+        GetWeapon(0)->SendEvent(eSelect);
 
       // if should wait
       } else if (GetActionMarker()->m_paaAction == PAA_LOOKAROUND) {
@@ -7290,11 +7313,11 @@ procedures:
         ResetCamera();
 
         // if currently not having any weapon in hand
-        if (GetPlayerWeapons()->m_iCurrentWeapon == WEAPON_NONE) {
+        if (GetWeapon(0)->m_iCurrentWeapon == WEAPON_NONE) {
           // order playerweapons to select best weapon
           ESelectWeapon eSelect;
           eSelect.iWeapon = -4;
-          ((CPlayerWeapons&)*m_penWeapons).SendEvent(eSelect);
+          GetWeapon(0)->SendEvent(eSelect);
         }
         // sync weapon, just in case
         m_ulFlags |= PLF_SYNCWEAPON;
@@ -7443,7 +7466,7 @@ procedures:
 
         CEntity *penStart = CreateEntity(plStart, CLASS_START);
         CPlayerMarker *ppmStart = (CPlayerMarker*)penStart;
-        ppmStart->m_iGiveWeapons = GetPlayerWeapons()->m_iAvailableWeapons;
+        ppmStart->m_iGiveWeapons = GetWeapon(0)->m_iAvailableWeapons;
         ppmStart->m_fMaxAmmoRatio = 0.5f;
 
         // name it after the current tick
@@ -7536,23 +7559,17 @@ procedures:
 
     ModelChangeNotify();
 
-    // spawn weapons
-    m_penWeapons = CreateEntity(GetPlacement(), CLASS_PLAYER_WEAPONS);
-    EWeaponsInit eInitWeapons;
-    eInitWeapons.penOwner = this;
-    m_penWeapons->Initialize(eInitWeapons);
+    // [Cecil] Create inventory
+    m_penInventory = CreateEntity(GetPlacement(), CLASS_INVENTORY);
+    EInventoryInit eInitInventory;
+    eInitInventory.penPlayer = this;
+    m_penInventory->Initialize(eInitInventory);
 
     // spawn animator
     m_penAnimator = CreateEntity(GetPlacement(), CLASS_PLAYER_ANIMATOR);
     EAnimatorInit eInitAnimator;
     eInitAnimator.penPlayer = this;
     m_penAnimator->Initialize(eInitAnimator);
-
-    // [Cecil] Create inventory
-    m_penInventory = CreateEntity(GetPlacement(), CLASS_INVENTORY);
-    EInventoryInit eInitInventory;
-    eInitInventory.penPlayer = this;
-    m_penInventory->Initialize(eInitInventory);
 
     // set sound default parameters
     m_soMouth.Set3DParameters(50.0f, 10.0f, 1.0f, 1.0f);
@@ -7624,7 +7641,8 @@ procedures:
         }
 
         // stop firing
-        ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+        GetWeapon(0)->SendEvent(EReleaseWeapon());
+        GetWeapon(1)->SendEvent(EReleaseWeapon());
         resume;
       }
 
@@ -7727,7 +7745,7 @@ procedures:
 
       on (EWeaponChanged) : {
         // make sure we discontinue zooming (even if not changing from sniper)
-        ((CPlayerWeapons&)*m_penWeapons).m_bSniping=FALSE;
+        GetWeapon(0)->m_bSniping=FALSE;
         m_ulFlags&=~PLF_ISZOOMING;
         PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);        
         if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
@@ -7784,12 +7802,11 @@ procedures:
     // spawn teleport effect
     SpawnTeleport();
 
-    // cease to exist
-    m_penWeapons->Destroy();
-    m_penAnimator->Destroy();
-
     // [Cecil] Destroy inventory
-    m_penInventory->Destroy();
+    m_penInventory->SendEvent(EEnd());
+
+    // cease to exist
+    m_penAnimator->Destroy();
 
     if (m_penView != NULL) {
       m_penView->Destroy();

@@ -70,7 +70,11 @@ enum BarOrientations {
 
 // drawing variables
 static const CPlayer *_penPlayer;
-static CPlayerWeapons *_penWeapons;
+
+// [Cecil] Player's inventory
+static CPlayerInventory *_penInventory;
+static CPlayerWeapons *_penWeapons[2];
+
 static CDrawPort *_pDP;
 static PIX   _pixDPWidth, _pixDPHeight;
 static FLOAT _fScalingX; // [Cecil] Renamed from _fResolutionScaling
@@ -375,18 +379,26 @@ static void HUD_DrawBorder( FLOAT fCenterX, FLOAT fCenterY, FLOAT fSizeX, FLOAT 
 
 // [Cecil] Icon scale
 // draw icon texture (if color = NONE, use colortransitions structure)
-static void HUD_DrawIcon( FLOAT fCenterX, FLOAT fCenterY, CTextureObject &toIcon,
-                          COLOR colDefault, FLOAT fNormValue, BOOL bBlink, FLOAT fScale)
+static void HUD_DrawIcon(FLOAT fCenterX, FLOAT fCenterY, CTextureObject &toIcon,
+                         COLOR colDefault, FLOAT fNormValue, BOOL bBlink, FLOAT fScale)
 {
   // determine color
   COLOR col = colDefault;
-  if( col==NONE) col = GetCurrentColor( fNormValue);
+
+  if (col == NONE) {
+    col = GetCurrentColor(fNormValue);
+  }
+
   // determine blinking state
-  if( bBlink && fNormValue<=(_cttHUD.ctt_fLowMedium/2)) {
+  if (bBlink && fNormValue <= _cttHUD.ctt_fLowMedium / 2) {
     // activate blinking only if value is <= half the low edge
     INDEX iCurrentTime = (INDEX)(_tmNow*4);
-    if( iCurrentTime&1) col = C_vdGRAY;
+
+    if (iCurrentTime & 1) {
+      col = C_vdGRAY;
+    }
   }
+
   // determine location
   const FLOAT fCenterI = fCenterX*_pixDPWidth  / 640.0f;
   const FLOAT fCenterJ = fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment);
@@ -519,9 +531,9 @@ static void HUD_DrawSniperMask( void )
 
   colMask = LerpColor(SE_COL_BLUE_LIGHT, C_WHITE, 0.25f);
 
-  FLOAT fDistance = _penWeapons->m_fRayHitDistance;
-  FLOAT aFOV = Lerp(_penWeapons->m_fSniperFOVlast, _penWeapons->m_fSniperFOV,
-                    _pTimer->GetLerpFactor());
+  FLOAT fDistance = _penWeapons[0]->m_fRayHitDistance;
+  FLOAT aFOV = Lerp(_penWeapons[0]->m_fSniperFOVlast, _penWeapons[0]->m_fSniperFOV, _pTimer->GetLerpFactor());
+
   CTString strTmp;
   
   // wheel
@@ -536,7 +548,7 @@ static void HUD_DrawSniperMask( void )
   FLOAT fTM = _pTimer->GetLerpedCurrentTick();
   
   COLOR colLED;
-  if (_penWeapons->m_tmLastSniperFire+1.25f<fTM) { // blinking
+  if (_penWeapons[0]->m_tmLastSniperFire+1.25f<fTM) { // blinking
     colLED = 0x44FF22BB;
   } else {
     colLED = 0xFF4422DD;
@@ -661,8 +673,15 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   // cache local variables
   hud_fOpacity = Clamp(hud_fOpacity, 0.1f, 1.0f);
   hud_fScaling = Clamp(hud_fScaling, 0.5f, 1.2f);
+  
+  // [Cecil] Player
   _penPlayer  = penPlayerCurrent;
-  _penWeapons = (CPlayerWeapons*)&*_penPlayer->m_penWeapons;
+
+  // [Cecil] Player's inventory
+  _penInventory = (CPlayerInventory*)&*_penPlayer->m_penInventory;
+  _penWeapons[0] = _penInventory->GetWeapon(0);
+  _penWeapons[1] = _penInventory->GetWeapon(1);
+
   _pDP        = pdpCurrent;
   _pixDPWidth   = _pDP->GetWidth();
   _pixDPHeight  = _pDP->GetHeight();
@@ -692,8 +711,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // draw sniper mask (original mask even if snooping)
-  if (((CPlayerWeapons*)&*penPlayerOwner->m_penWeapons)->m_iCurrentWeapon==WEAPON_SNIPER
-    &&((CPlayerWeapons*)&*penPlayerOwner->m_penWeapons)->m_bSniping) {
+  if (penPlayerOwner->GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER
+   && penPlayerOwner->GetWeapon(0)->m_bSniping) {
     HUD_DrawSniperMask();
   }
    
@@ -780,11 +799,11 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // prepare and draw ammo and weapon info
   CTextureObject *ptoWantedWeapon = NULL;
-  INDEX iCurrentWeapon = _penWeapons->m_iCurrentWeapon;
-  INDEX iWantedWeapon  = _penWeapons->m_iWantedWeapon;
+  INDEX iCurrentWeapon = _penWeapons[0]->m_iCurrentWeapon;
+  INDEX iWantedWeapon  = _penWeapons[0]->m_iWantedWeapon;
 
-  CWeaponArsenal &aWeapons = _penWeapons->PredTail()->m_aWeapons;
-  CAmmunition &aAmmo = _penWeapons->PredTail()->m_aAmmo;
+  CWeaponArsenal &aWeapons = _penInventory->PredTail()->m_aWeapons;
+  CAmmunition &aAmmo = _penInventory->PredTail()->m_aAmmo;
 
   // [Cecil] Reset weapons on ammunition
   for (INDEX iResetAmmo = 0; iResetAmmo < aAmmo.Count(); iResetAmmo++) {
@@ -793,7 +812,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // [Cecil] Check if any weapons for certain ammo type
   for (INDEX iCheckWeapon = WEAPON_KNIFE; iCheckWeapon < WEAPON_LAST; iCheckWeapon++) {
-    if (!WeaponExists(_penWeapons->m_iAvailableWeapons, iCheckWeapon)) {
+    if (!WeaponExists(_penWeapons[0]->m_iAvailableWeapons, iCheckWeapon)) {
       continue;
     }
 
@@ -846,7 +865,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // [Cecil] Alt ammo available
-  if (_penWeapons->AltFireExists(iCurrentWeapon) && pwaAltAmmo != NULL) {
+  if (_penWeapons[0]->AltFireExists(iCurrentWeapon) && pwaAltAmmo != NULL) {
     ptoAltAmmo = pwaAltAmmo->ptoIcon;
     fAltAmmo = pwCurrent.CurrentAlt();
     fAltMaxAmmo = pwaAltAmmo->iMaxAmount;
@@ -875,8 +894,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     HUD_DrawText(fCol, fRow, strValue, NONE, fNormValue);
   }
 
-  // [Cecil] Draw alt ammo
-  if (!GetSP()->sp_bInfiniteAmmo && ptoAltAmmo != NULL) {
+  // [Cecil] Draw alt ammo if it's not the same
+  if (!GetSP()->sp_bInfiniteAmmo && ptoAltAmmo != NULL && pwaAmmo != pwaAltAmmo) {
     // determine ammo quantities
     fNormValue = fAltAmmo / fAltMaxAmmo;
     strValue.PrintF("%d", (SLONG)ceil(fAltAmmo));
@@ -887,7 +906,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fCol = 320.0f - fAdvUnit - fChrUnit*(fWidth/2.0f) - fHalfUnit;
     
     HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
-    HUD_DrawIcon(fCol, fRow, *ptoAltAmmo, C_WHITE, fNormValue, TRUE, 1.0f);
+    HUD_DrawIcon(fCol, fRow, *ptoAltAmmo, C_WHITE, fNormValue, FALSE, 1.0f);
 
     fCol += fAdvUnit+fChrUnit*(fWidth/2.0f) - fHalfUnit;
     HUD_DrawBorder(fCol, fRow, fChrUnit * fWidth, fOneUnit, colBorder);
@@ -992,19 +1011,16 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   fRow = pixBottomBound-fOneUnitS-fAdvUnitS;
   fCol = pixRightBound -fHalfUnitS;
 
-  // [Cecil] Inventory entity
-  CPlayerInventory *penInventory = _penPlayer->GetInventory();
-
   for (i = 0; i < MAX_POWERUPS; i++) {
     // skip if not active
-    const TIME tmDelta = penInventory->GetPowerupRemaining(i);
+    const TIME tmDelta = _penInventory->GetPowerupRemaining(i);
 
     if (tmDelta <= 0.0f) {
       continue;
     }
 
     // [Cecil] Power Up Time Multiplier
-    fNormValue = tmDelta / (penInventory->GetPowerupMaxTime(i) * GetSP()->sp_fPowerupTimeMul);
+    fNormValue = tmDelta / (_penInventory->GetPowerupMaxTime(i) * GetSP()->sp_fPowerupTimeMul);
 
     // draw icon and a little bar
     HUD_DrawBorder( fCol,         fRow, fOneUnitS, fOneUnitS, colBorder);
@@ -1029,13 +1045,13 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   _fCustomScaling = hud_fScaling;
   hud_tmWeaponsOnScreen = Clamp( hud_tmWeaponsOnScreen, 0.0f, 10.0f);   
 
-  if (_tmNow - _penWeapons->m_tmWeaponChangeRequired < hud_tmWeaponsOnScreen) {
+  if (_tmNow - _penWeapons[0]->m_tmWeaponChangeRequired < hud_tmWeaponsOnScreen) {
     // determine number of weapons that player has
     INDEX ctWeapons = 0;
     
     // [Cecil] Count existing weapons
     for (INDEX iCount = WEAPON_NONE+1; iCount < WEAPON_LAST; iCount++) {
-      if (WeaponExists(_penWeapons->m_iAvailableWeapons, iCount)) {
+      if (WeaponExists(_penWeapons[0]->m_iAvailableWeapons, iCount)) {
         ctWeapons++;
       }
     }
@@ -1048,7 +1064,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       SPlayerWeapon &pw = aWeapons[iWeapon];
 
       // [Cecil] Skip unexistent weapons
-      if (!WeaponExists(_penWeapons->m_iAvailableWeapons, iWeapon)) {
+      if (!WeaponExists(_penWeapons[0]->m_iAvailableWeapons, iWeapon)) {
         continue;
       }
 
@@ -1065,7 +1081,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       CTextureObject *ptoDrawIcon = pw.pwsWeapon->ptoIcon;
 
       // no ammo
-      if (!pw.HasAmmo(_penWeapons->AltFireExists(iWeapon))) {
+      if (!pw.HasAmmo(_penWeapons[0]->AltFireExists(iWeapon))) {
         HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, 0x22334400);
         HUD_DrawIcon(fCol, fRow, *ptoDrawIcon, 0x22334400, 1.0f, FALSE, 1.0f);
 

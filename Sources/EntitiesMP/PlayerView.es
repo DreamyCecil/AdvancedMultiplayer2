@@ -152,7 +152,8 @@ functions:
     m_fDistance = fDistance;
     vBase += vFront*fDistance;
 
-    CPlayerWeapons *ppw = ((CPlayer&) *m_penOwner).GetPlayerWeapons();
+    CPlayerWeapons *ppw = ((CPlayer&) *m_penOwner).GetWeapon(0);
+
     if (bFollowCrossHair) {
       FLOAT3D vTarget = vBase-ppw->m_vRayHit;
       FLOAT fLen = vTarget.Length();
@@ -272,7 +273,7 @@ procedures:
       on (EStart) : {  
         SetCameraPosition();
         en_plLastPlacement = GetPlacement();  // remember old placement for lerping
-        m_vTargetLast = ((CPlayer&) *m_penOwner).GetPlayerWeapons()->m_vRayHit;
+        m_vTargetLast = ((CPlayer&) *m_penOwner).GetWeapon(0)->m_vRayHit;
         resume;
       };
       on (EEnd) : { stop; }

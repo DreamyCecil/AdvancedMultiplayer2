@@ -9,7 +9,9 @@
   "DamageAlt" : 10.0,
   
   "Ammo" : 2,
-  "AltAmmo": -1,
+  "AltAmmo": 2,
+  
+  "DecAlt" : 5,
   
   "Pos1" : [0.121, -0.213, -0.285],
   "Rot1" : [4.0, 3.0, 0.0],

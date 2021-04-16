@@ -6,7 +6,9 @@
   "Model3" : "Models3\11_Flamer.json",
   
   "Ammo" : 5,
-  "AltAmmo": -1,
+  "AltAmmo": 5,
+  
+  "DecAlt" : 10,
   
   "Pos1" : [0.204, -0.306, -0.57],
   "Rot1" : [4.6, 2.8, 0.0],

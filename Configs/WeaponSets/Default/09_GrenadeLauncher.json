@@ -6,7 +6,7 @@
   "Model3" : "Models3\09_GrenadeLauncher.json",
   
   "Ammo" : 4,
-  "AltAmmo": -1,
+  "AltAmmo": 4,
   
   "Pos1" : [0.14, -0.41, -0.335],
   "Rot1" : [2.0, 6.0, 0.0],

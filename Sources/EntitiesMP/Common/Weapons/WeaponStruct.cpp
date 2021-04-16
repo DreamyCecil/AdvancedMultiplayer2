@@ -10,12 +10,22 @@ extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 SWeaponStruct::SWeaponStruct(void) :
   SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(NULL), pwaAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0),
-  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f) {};
+  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
+{
+  aiDecAmmo[DWA_AMMO] = 1;
+  aiDecAmmo[DWA_ALT]  = 1;
+  aiDecAmmo[DWA_MAG]  = 1;
+};
 
 SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
   SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), iMaxMag(0), iPickup(0), iPickupAlt(0),
-  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f) {};
+  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
+{
+  aiDecAmmo[DWA_AMMO] = 1;
+  aiDecAmmo[DWA_ALT]  = 1;
+  aiDecAmmo[DWA_MAG]  = 1;
+};
 
 // Write weapon properties
 void SWeaponStruct::Write(CTStream *strm) {

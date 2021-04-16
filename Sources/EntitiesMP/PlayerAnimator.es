@@ -433,7 +433,7 @@ functions:
 
   void Precache(void)
   {
-    INDEX iAvailableWeapons = ((CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons)).m_iAvailableWeapons;
+    INDEX iAvailableWeapons = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iAvailableWeapons;
     CPlayerAnimator_Precache(iAvailableWeapons);
   }
   
@@ -542,7 +542,7 @@ functions:
 
   // set weapon
   void SetWeapon(void) {
-    INDEX iWeapon = ((CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons)).m_iCurrentWeapon;
+    INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
     m_iWeaponLast = iWeapon;
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
@@ -1086,7 +1086,7 @@ functions:
     // boring weapon animation
     if (_pTimer->CurrentTick()-m_fLastActionTime > 10.0f) {
       m_fLastActionTime = _pTimer->CurrentTick();
-      ((CPlayerWeapons&)*pl.m_penWeapons).SendEvent(EBoringWeapon());
+      pl.GetWeapon(0)->SendEvent(EBoringWeapon());
     }
 
     // moving view change
@@ -1177,7 +1177,7 @@ functions:
   // fire/attack
   void FireAnimation(INDEX iAnim, ULONG ulFlags) {
     if (m_bSwim) {
-      INDEX iWeapon = ((CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons)).m_iCurrentWeapon;
+      INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
       switch (iWeapon) {
         case WEAPON_NONE:
           break;
@@ -1209,7 +1209,7 @@ functions:
 
   // body animation template
   void BodyAnimationTemplate(INDEX iNone, INDEX iColt, INDEX iShotgun, INDEX iMinigun, ULONG ulFlags) {
-    INDEX iWeapon = ((CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons)).m_iCurrentWeapon;
+    INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
     switch (iWeapon) {
       case WEAPON_NONE:
         SetBodyAnimation(iNone, ulFlags);
@@ -1338,7 +1338,7 @@ functions:
     // [Cecil] Default animation instead of wait animation
     BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
       BODY_ANIM_COLT_DRAW, BODY_ANIM_SHOTGUN_DRAW, BODY_ANIM_MINIGUN_DRAW, 0);
-    INDEX iWeapon = ((CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons)).m_iCurrentWeapon;
+    INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
     if (iWeapon!=WEAPON_NONE) {
       m_bChangeWeapon = TRUE;
       SpawnReminder(this, m_fBodyAnimTime, (INDEX) AA_PULLWEAPON);
@@ -1390,8 +1390,9 @@ functions:
     ControlFlareAttachment();
 
     // Minigun Specific
-    CPlayerWeapons &plw = (CPlayerWeapons&)*(((CPlayer&)*m_penPlayer).m_penWeapons);
-    if (plw.m_iCurrentWeapon==WEAPON_MINIGUN) {
+    CPlayerWeapons &plw = *((CPlayer&)*m_penPlayer).GetWeapon(0);
+
+    if (plw.m_iCurrentWeapon == WEAPON_MINIGUN) {
       ANGLE aAngle = Lerp(plw.m_aMiniGunLast, plw.m_aMiniGun, _pTimer->GetLerpFactor());
       // rotate minigun barrels
       CPlayer &pl = (CPlayer&)*m_penPlayer;
@@ -1438,7 +1439,8 @@ functions:
     // get your prediction tail
     CPlayerAnimator *pen = (CPlayerAnimator *)GetPredictionTail();
 
-    INDEX iWeapon = ((CPlayerWeapons&)*(((CPlayer&)*pen->m_penPlayer).m_penWeapons)).m_iCurrentWeapon;
+    INDEX iWeapon = ((CPlayer&)*pen->m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
+
     // second colt only
     if (iWeapon==WEAPON_DOUBLECOLT) {
       // add flare

@@ -124,13 +124,14 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
     ws.wpsPos.fFOV = val.GetNumber();
   }
 
-  // get ammo
+  // ammo
   int iAmmo = -1;
   int iAlt = -1;
   int iMag = 0;
   int iPickupAmmo = -1;
   int iPickupAlt = -1;
-
+  
+  // ammo types
   if (cb.GetValue("Ammo", iAmmo)) {
     ws.pwaAmmo = (iAmmo != -1 ? AP(iAmmo) : NULL);
   }
@@ -149,6 +150,19 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
 
   if (cb.GetValue("PickupAlt", iPickupAlt)) {
     ws.iPickupAlt = ceil(iPickupAlt * AmmoMul());
+  }
+
+  // decreasing ammo
+  if (cb.GetValue("DecAmmo", iAmmo)) {
+    ws.aiDecAmmo[SWeaponStruct::DWA_AMMO] = iAmmo;
+  }
+
+  if (cb.GetValue("DecAlt", iAlt)) {
+    ws.aiDecAmmo[SWeaponStruct::DWA_ALT] = iAlt;
+  }
+
+  if (cb.GetValue("DecMag", iMag)) {
+    ws.aiDecAmmo[SWeaponStruct::DWA_MAG] = iMag;
   }
 
   // damage

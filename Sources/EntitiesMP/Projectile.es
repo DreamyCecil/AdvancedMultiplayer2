@@ -25,9 +25,6 @@
 
 #define DEVIL_LASER_SPEED 100.0f
 #define DEVIL_ROCKET_SPEED 60.0f
-
-// [Cecil] Mirrored weapon
-extern INDEX amp_bWeaponMirrored;
 %}
 
 uses "EntitiesMP/BasicEffects";

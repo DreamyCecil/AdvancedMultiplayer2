@@ -6,7 +6,7 @@
   "Model3" : "Models3\14_Cannon.json",
   
   "Ammo" : 8,
-  "AltAmmo": -1,
+  "AltAmmo": 8,
   
   "Pos1" : [0.17, -0.3, -0.625],
   "Rot1" : [2.5, 6.0, 0.0],

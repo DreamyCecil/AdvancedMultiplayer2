@@ -16,6 +16,14 @@ struct SWeaponStruct : public SWeaponBase {
   SWeaponAmmo *pwaAlt; // alt ammo
   INDEX iMaxMag; // magazine size
 
+  enum EDecWeaponAmmo {
+    DWA_AMMO = 0, // main ammo
+    DWA_ALT  = 1, // alt ammo
+    DWA_MAG  = 2, // magazine ammo
+  };
+
+  INDEX aiDecAmmo[3]; // amount of ammo to decrease in some category
+
   INDEX iPickup; // ammo in a weapon pickup
   INDEX iPickupAlt; // alt ammo in a weapon pickup
 
