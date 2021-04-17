@@ -238,6 +238,10 @@ functions:
 
   // Pull out extra weapon
   void WeaponSelectionModifier(void) {
+    // stop both weapons
+    GetWeapon(0)->SendEvent(EReleaseWeapon());
+    GetWeapon(1)->SendEvent(EReleaseWeapon());
+
     ESelectWeapon eSelect;
 
     // pick the same weapon
