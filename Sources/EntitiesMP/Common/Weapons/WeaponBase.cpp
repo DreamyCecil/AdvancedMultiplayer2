@@ -114,10 +114,13 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
   CConfigValue val;
 
   // get weapon positions
-  GetConfigVector(cb, "Pos1", ws.wpsPos.Pos1());
-  GetConfigVector(cb, "Rot1", ws.wpsPos.Rot1());
-  GetConfigVector(cb, "Pos3", ws.wpsPos.Pos3());
-  GetConfigVector(cb, "Rot3", ws.wpsPos.Rot3());
+  GetConfigPlacement(cb, "Pos1", ws.wpsPos.plPos);
+  GetConfigPlacement(cb, "Pos3", ws.wpsPos.plThird);
+
+  // copy first person position in case the dual weapon position doesn't exist
+  ws.wpsPos.plPos2 = ws.wpsPos.plPos;
+  GetConfigPlacement(cb, "Pos2", ws.wpsPos.plPos2);
+
   GetConfigVector(cb, "PosFire", ws.wpsPos.vFire);
 
   if (cb.GetValue("FOV", val)) {

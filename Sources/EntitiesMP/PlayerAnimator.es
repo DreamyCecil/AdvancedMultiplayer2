@@ -431,30 +431,32 @@ functions:
     CRationalEntity::Read_t(istr);
   }
 
-  void Precache(void)
-  {
-    INDEX iAvailableWeapons = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iAvailableWeapons;
+  void Precache(void) {
+    INDEX iAvailableWeapons = GetPlayer()->GetWeapon(0)->m_iAvailableWeapons;
     CPlayerAnimator_Precache(iAvailableWeapons);
   }
   
-  CPlayer *GetPlayer(void)
-  {
+  CPlayer *GetPlayer(void) {
     return ((CPlayer*)&*m_penPlayer);
   }
-  CModelObject *GetBody(void)
-  {
+
+  CModelObject *GetBody(void) {
     CAttachmentModelObject *pamoBody = GetPlayer()->GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
-    if (pamoBody==NULL) {
+
+    if (pamoBody == NULL) {
       return NULL;
     }
+
     return &pamoBody->amo_moModelObject;
   }
-  CModelObject *GetBodyRen(void)
-  {
+
+  CModelObject *GetBodyRen(void) {
     CAttachmentModelObject *pamoBody = GetPlayer()->m_moRender.GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
-    if (pamoBody==NULL) {
+
+    if (pamoBody == NULL) {
       return NULL;
     }
+
     return &pamoBody->amo_moModelObject;
   }
 
@@ -542,10 +544,12 @@ functions:
 
   // set weapon
   void SetWeapon(void) {
-    INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
+    INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
     m_iWeaponLast = iWeapon;
+
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
+
     switch (iWeapon) {
     // *********** KNIFE ***********
       case WEAPON_KNIFE:
@@ -1084,9 +1088,17 @@ functions:
     }
 
     // boring weapon animation
-    if (_pTimer->CurrentTick()-m_fLastActionTime > 10.0f) {
+    if (_pTimer->CurrentTick() - m_fLastActionTime > 10.0f) {
       m_fLastActionTime = _pTimer->CurrentTick();
-      pl.GetWeapon(0)->SendEvent(EBoringWeapon());
+
+      // [Cecil] Vary between both weapons
+      INDEX iBoringWeapon = 0;
+
+      if (pl.GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+        iBoringWeapon = IRnd() % 2;
+      }
+
+      pl.GetWeapon(iBoringWeapon)->SendEvent(EBoringWeapon());
     }
 
     // moving view change
@@ -1177,57 +1189,70 @@ functions:
   // fire/attack
   void FireAnimation(INDEX iAnim, ULONG ulFlags) {
     if (m_bSwim) {
-      INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
+      INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
+
       switch (iWeapon) {
         case WEAPON_NONE:
           break;
+
         case WEAPON_KNIFE: case WEAPON_COLT: case WEAPON_DOUBLECOLT: //case WEAPON_PIPEBOMB:
           iAnim += BODY_ANIM_COLT_SWIM_STAND-BODY_ANIM_COLT_STAND;
           break;
+
         case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN: case WEAPON_TOMMYGUN:
         case WEAPON_SNIPER: case WEAPON_LASER: case WEAPON_FLAMER: //case WEAPON_GHOSTBUSTER:
           iAnim += BODY_ANIM_SHOTGUN_SWIM_STAND-BODY_ANIM_SHOTGUN_STAND;
           break;
+
         case WEAPON_MINIGUN: case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
         case WEAPON_IRONCANNON: case WEAPON_CHAINSAW: // case WEAPON_NUKECANNON:
           iAnim += BODY_ANIM_MINIGUN_SWIM_STAND-BODY_ANIM_MINIGUN_STAND;
           break;
       }
     }
+
     m_bAttacking = FALSE;
     m_bChangeWeapon = FALSE;
     SetBodyAnimation(iAnim, ulFlags);
-    if (!(ulFlags&AOF_LOOPING)) {
+
+    if (!(ulFlags & AOF_LOOPING)) {
       SpawnReminder(this, m_fBodyAnimTime, (INDEX) AA_ATTACK);
       m_tmAttackingDue = _pTimer->CurrentTick()+m_fBodyAnimTime;
     }
+
     m_bAttacking = TRUE;
   };
+
   void FireAnimationOff(void) {
     m_bAttacking = FALSE;
   };
 
   // body animation template
   void BodyAnimationTemplate(INDEX iNone, INDEX iColt, INDEX iShotgun, INDEX iMinigun, ULONG ulFlags) {
-    INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
+    INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
+
     switch (iWeapon) {
       case WEAPON_NONE:
         SetBodyAnimation(iNone, ulFlags);
         break;
+
       case WEAPON_KNIFE: case WEAPON_COLT: case WEAPON_DOUBLECOLT: // case WEAPON_PIPEBOMB:
         if (m_bSwim) { iColt += BODY_ANIM_COLT_SWIM_STAND-BODY_ANIM_COLT_STAND; }
         SetBodyAnimation(iColt, ulFlags);
         break;
+
       case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN: case WEAPON_TOMMYGUN:
       case WEAPON_SNIPER: case WEAPON_LASER: case WEAPON_FLAMER: //case WEAPON_GHOSTBUSTER:
         if (m_bSwim) { iShotgun += BODY_ANIM_SHOTGUN_SWIM_STAND-BODY_ANIM_SHOTGUN_STAND; }
         SetBodyAnimation(iShotgun, ulFlags);
         break;
+
       case WEAPON_MINIGUN: case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
       case WEAPON_IRONCANNON: case WEAPON_CHAINSAW: // case WEAPON_NUKECANNON:
         if (m_bSwim) { iMinigun+=BODY_ANIM_MINIGUN_SWIM_STAND-BODY_ANIM_MINIGUN_STAND; }
         SetBodyAnimation(iMinigun, ulFlags);
         break;
+
       default: ASSERTALWAYS("Player Animator - Unknown weapon");
     }
   };
@@ -1338,11 +1363,14 @@ functions:
     // [Cecil] Default animation instead of wait animation
     BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
       BODY_ANIM_COLT_DRAW, BODY_ANIM_SHOTGUN_DRAW, BODY_ANIM_MINIGUN_DRAW, 0);
-    INDEX iWeapon = ((CPlayer&)*m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
-    if (iWeapon!=WEAPON_NONE) {
+
+    INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
+
+    if (iWeapon != WEAPON_NONE) {
       m_bChangeWeapon = TRUE;
       SpawnReminder(this, m_fBodyAnimTime, (INDEX) AA_PULLWEAPON);
     }
+
     // sync apperances
     SyncWeapon();
   };
@@ -1390,10 +1418,11 @@ functions:
     ControlFlareAttachment();
 
     // Minigun Specific
-    CPlayerWeapons &plw = *((CPlayer&)*m_penPlayer).GetWeapon(0);
+    CPlayerWeapons &plw = *GetPlayer()->GetWeapon(0);
 
-    if (plw.m_iCurrentWeapon == WEAPON_MINIGUN) {
+    if (plw.GetCurrent() == WEAPON_MINIGUN) {
       ANGLE aAngle = Lerp(plw.m_aMiniGunLast, plw.m_aMiniGun, _pTimer->GetLerpFactor());
+
       // rotate minigun barrels
       CPlayer &pl = (CPlayer&)*m_penPlayer;
       CAttachmentModelObject *pamo = pl.GetModelObject()->GetAttachmentModelList(
@@ -1429,17 +1458,11 @@ functions:
   };
 
   // flare attachment
-  void ControlFlareAttachment(void) 
-  {
-/*    if(!IsPredictionHead()) {
-      return;
-    }
-    */
-
+  void ControlFlareAttachment(void) {
     // get your prediction tail
     CPlayerAnimator *pen = (CPlayerAnimator *)GetPredictionTail();
 
-    INDEX iWeapon = ((CPlayer&)*pen->m_penPlayer).GetWeapon(0)->m_iCurrentWeapon;
+    INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
 
     // second colt only
     if (iWeapon==WEAPON_DOUBLECOLT) {

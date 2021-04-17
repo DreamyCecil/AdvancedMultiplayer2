@@ -53,8 +53,8 @@ extern INDEX hud_bShowWeapon;
 
 // [Cecil] AMP 2 customization
 static INDEX amp_bPowerUpParticles = TRUE;
-static FLOAT amp_afWeaponPos[3] = {1.0f, 1.0f, 1.0f};
-static FLOAT amp_afWeaponRot[3] = {1.0f, 1.0f, 1.0f};
+static FLOAT amp_afWeaponPos[3] = { 1.0f, 1.0f, 1.0f };
+static FLOAT amp_afWeaponRot[3] = { 1.0f, 1.0f, 1.0f };
 static FLOAT amp_fWeaponFOV = 1.0f;
 
 extern INDEX amp_bWeaponMirrored = FALSE;
@@ -84,7 +84,8 @@ void ResetWeaponPosition(void) {
 #define ENOUGH_MAG  EnoughAmmo(SWeaponStruct::DWA_MAG)
 
 // [Cecil] Position shift for dual weapons
-//static FLOAT _fDualWeaponShift = 0.0f;
+extern FLOAT _fDualWeaponShift;
+extern FLOAT _fLastDualWeaponShift;
 %}
 
 uses "EntitiesMP/Player";
@@ -962,34 +963,11 @@ functions:
   SWeaponPos RenderPos(INDEX iWeapon) {
     SWeaponPos wps = GetInventory()->m_aWeapons[iWeapon].GetPosition();
 
-    // weapon position shift for dual weapons
-    /*INDEX iShift = 0;
-    FLOAT tmLerped = _pTimer->GetLerpedCurrentTick();
+    // weapon position shifting for dual weapons
+    FLOAT fLerp = Lerp(_fLastDualWeaponShift, _fDualWeaponShift, _pTimer->GetLerpFactor());
 
-    switch (GetInventory()->GetWeapon(0)->GetCurrent()) {
-      case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
-      case WEAPON_MINIGUN: case WEAPON_LASER: case WEAPON_IRONCANNON: {
-        iShift++;
-      } break;
-    }
-
-    switch (GetInventory()->GetWeapon(1)->GetCurrent()) {
-      case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
-      case WEAPON_MINIGUN: case WEAPON_LASER: case WEAPON_IRONCANNON: {
-        iShift++;
-      } break;
-    }
-
-    // big dual weapons
-    if (iShift >= 2) {
-      FLOAT fTime = ClampUp((tmLerped - _fDualWeaponShift) * 2.0f, 1.0f);
-      FLOAT fShift = SinFast(fTime * 90.0f);
-
-      wps.Pos1(1) += ClampUp(fShift, 1.0f) * 0.1f;
-
-    } else {
-      _fDualWeaponShift = tmLerped;
-    }*/
+    wps.Pos1() = Lerp(wps.Pos1(), wps.plPos2.pl_PositionVector, fLerp);
+    wps.Rot1() = Lerp(wps.Rot1(), wps.plPos2.pl_OrientationAngle, fLerp);
 
     // mirror the position
     if (MirrorState()) {
@@ -3680,10 +3658,8 @@ procedures:
     
     // [Cecil] Reload mags
     if (bNowColt && !bPrevColt) {
-      GetInventory()->m_aWeapons[WEAPON_COLT].Reload(0, TRUE);
-      GetInventory()->m_aWeapons[WEAPON_COLT].Reload(1, TRUE);
-      GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(0, TRUE);
-      GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(1, TRUE);
+      GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
+      GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(m_bExtraWeapon, TRUE);
     }
 
     // --->>>  DOUBLE COLT -> COLT SPECIFIC  <<<---

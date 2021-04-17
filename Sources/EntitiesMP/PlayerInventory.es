@@ -23,6 +23,10 @@ static const _aiAmmoSetTypes[] = {
    6, // AIT_SNIPERBULLETS
 };
 
+// Position shift for dual weapons
+extern FLOAT _fDualWeaponShift = 0.0f;
+extern FLOAT _fLastDualWeaponShift = 0.0f;
+
 #define PLAYER_POWERUPS 4
 
 // Max powerup times
@@ -75,6 +79,9 @@ properties:
   // Player's personal arsenal
   CWeaponArsenal m_aWeapons;
   CAmmunition m_aAmmo;
+
+  // Weapon position shift ratio
+  FLOAT m_fDualWeaponShift;
 }
 
 components:
@@ -122,6 +129,8 @@ functions:
       str.PrintF("%s%d: ammo: %d, alt %d\n", str, pw.pwsWeapon->ulID, (pw.GetAmmoID() != NULL ? *pw.GetAmmoID() : -1), (pw.GetAltID() != NULL ? *pw.GetAltID() : -1));
     }
     FatalError(str);*/
+
+    m_fDualWeaponShift = 0.0f;
   };
 
   // Write weapons and ammo
@@ -193,6 +202,20 @@ functions:
   // Same weapons selected
   BOOL SameWeapons(void) {
     return GetWeapon(0)->GetCurrent() == GetWeapon(1)->GetCurrent();
+  };
+
+  // Shift weapon position for dual weapons
+  void DualWeaponShift(void) {
+    FLOAT fSpeed = 2.0f * _pTimer->TickQuantum;
+
+    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE && GetWeapon(1)->GetWanted() != WEAPON_NONE) {
+      m_fDualWeaponShift = ClampUp(m_fDualWeaponShift + fSpeed, 1.0f);
+    } else {
+      m_fDualWeaponShift = ClampDn(m_fDualWeaponShift - fSpeed, 0.0f);
+    }
+    
+    _fLastDualWeaponShift = _fDualWeaponShift;
+    _fDualWeaponShift = (-CosFast(m_fDualWeaponShift * 180.0f) + 1.0f) * 0.5f;
   };
 
   // Initialize weapons

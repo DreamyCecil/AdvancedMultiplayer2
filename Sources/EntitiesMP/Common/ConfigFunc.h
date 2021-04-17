@@ -19,6 +19,8 @@ DECL_DLL BOOL GetConfigPath(CConfigBlock &cb, DJSON_String strKey, CTFileName &f
 
 // [Cecil] Get 3D vector value
 DECL_DLL BOOL GetConfigVector(CConfigBlock &cb, DJSON_String strKey, FLOAT3D &vValue);
+// [Cecil] Get 3D placement value
+DECL_DLL BOOL GetConfigPlacement(CConfigBlock &cb, DJSON_String strKey, CPlacement3D &plValue);
 
 // [Cecil] Load model from a path
 DECL_DLL BOOL SetConfigModel(CConfigBlock &cb, DJSON_String strKey, CModelObject &mo);

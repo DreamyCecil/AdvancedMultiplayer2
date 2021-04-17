@@ -70,7 +70,28 @@ BOOL GetConfigVector(CConfigBlock &cb, DJSON_String strKey, FLOAT3D &vValue) {
   if (cb.GetValue(strKey, aVector)) {
     // copy values
     for (INDEX i = 0; i < Min(aVector.Count(), 3); i++) {
-      vValue(i+1) = aVector[i].GetNumber();
+      vValue(i + 1) = aVector[i].GetNumber();
+    }
+
+    return TRUE;
+  }
+  return FALSE;
+};
+
+// [Cecil] Get 3D placement value
+DECL_DLL BOOL GetConfigPlacement(CConfigBlock &cb, DJSON_String strKey, CPlacement3D &plValue) {
+  DJSON_Array aPlace;
+
+  if (cb.GetValue(strKey, aPlace)) {
+    // copy values
+    INDEX i;
+
+    for (i = 0; i < Min(aPlace.Count(), 3); i++) {
+      plValue.pl_PositionVector((i % 3) + 1) = aPlace[i].GetNumber();
+    }
+
+    for (i = 3; i < Min(aPlace.Count(), 6); i++) {
+      plValue.pl_OrientationAngle((i % 3) + 1) = aPlace[i].GetNumber();
     }
 
     return TRUE;

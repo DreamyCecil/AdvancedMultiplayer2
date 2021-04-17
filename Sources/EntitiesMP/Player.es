@@ -3315,6 +3315,9 @@ functions:
     if (m_pen3rdPersonView != NULL) {
       ((CPlayerView&)*m_pen3rdPersonView).DoMoving();
     }
+
+    // [Cecil] Dual weapon position shifting
+    GetInventory()->DualWeaponShift();
   };
 
   // Postmoving for soft player up-down movement

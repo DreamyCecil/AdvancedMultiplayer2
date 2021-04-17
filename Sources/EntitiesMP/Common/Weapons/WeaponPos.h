@@ -3,13 +3,15 @@
 // Weapon position
 struct SWeaponPos {
   CPlacement3D plPos; // first person position
+  CPlacement3D plPos2; // first person position for dual weapons
   CPlacement3D plThird; // third person position
+
   FLOAT3D vFire; // attack offset
   FLOAT fFOV; // first person FOV
 
   // Constructor
-  SWeaponPos(CPlacement3D plSetFirst, CPlacement3D plSetThird, FLOAT3D vSetFire, FLOAT fSetFOV) :
-    plPos(plSetFirst), plThird(plSetThird), vFire(vSetFire), fFOV(fSetFOV) {};
+  SWeaponPos(CPlacement3D plSetFirst, CPlacement3D plSetDual, CPlacement3D plSetThird, FLOAT3D vSetFire, FLOAT fSetFOV) :
+    plPos(plSetFirst), plPos2(plSetDual), plThird(plSetThird), vFire(vSetFire), fFOV(fSetFOV) {};
 
   // Get position
   inline FLOAT3D &Pos1(void) { return plPos.pl_PositionVector; };

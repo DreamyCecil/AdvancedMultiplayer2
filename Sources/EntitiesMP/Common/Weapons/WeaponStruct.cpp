@@ -8,7 +8,7 @@ extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 
 // Constructors
 SWeaponStruct::SWeaponStruct(void) :
-  SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
+  SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(NULL), pwaAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
@@ -18,7 +18,7 @@ SWeaponStruct::SWeaponStruct(void) :
 };
 
 SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
-  SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
+  SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
@@ -31,6 +31,7 @@ SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTStri
 void SWeaponStruct::Write(CTStream *strm) {
   *strm << strIcon;
   *strm << wpsPos.plPos;
+  *strm << wpsPos.plPos2;
   *strm << wpsPos.plThird;
   *strm << wpsPos.vFire;
   *strm << strPickup;
@@ -53,6 +54,7 @@ void SWeaponStruct::Write(CTStream *strm) {
 void SWeaponStruct::Read(CTStream *strm) {
   *strm >> strIcon;
   *strm >> wpsPos.plPos;
+  *strm >> wpsPos.plPos2;
   *strm >> wpsPos.plThird;
   *strm >> wpsPos.vFire;
   *strm >> strPickup;
