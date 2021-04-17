@@ -1112,8 +1112,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
       // [Cecil] Highlight wanted weapon
       if (aiWantedWeapon[0] == iWeapon && aiWantedWeapon[1] == iWeapon) {
-        colIcon = 0xFFCCFF00;
-        colBorder = 0xFFCCFF00;
+        colIcon = 0xCCFFCC00;
+        colBorder = 0xCCFFCC00;
         
       // [Cecil] Extra weapon
       } else if (aiWantedWeapon[1] == iWeapon) {

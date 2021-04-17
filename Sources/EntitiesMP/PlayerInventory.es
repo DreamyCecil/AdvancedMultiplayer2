@@ -190,6 +190,11 @@ functions:
 
   // Weapon functions
 
+  // Same weapons selected
+  BOOL SameWeapons(void) {
+    return GetWeapon(0)->GetCurrent() == GetWeapon(1)->GetCurrent();
+  };
+
   // Initialize weapons
   void InitWeapons(const INDEX &iGiveWeapons, const INDEX &iTakeWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
     GetWeapon(0)->InitializeWeapons(iGiveWeapons, iTakeWeapons, iTakeAmmo, fAmmoRatio);
@@ -709,19 +714,25 @@ functions:
     return (bAlt ? ppaAlt : ppaAmmo);
   };*/
 
-  // Get weapon damage
-  FLOAT GetDamage(INDEX iWeapon) {
+  // Get main weapon damage
+  FLOAT GetDamage(const INDEX &iWeapon) {
     SWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
     BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageDM <= 0.0f);
     
     return (bCoop ? ws.fDamage : ws.fDamageDM);
   };
-
-  FLOAT GetDamageAlt(INDEX iWeapon) {
+  
+  // Get alt weapon damage
+  FLOAT GetDamageAlt(const INDEX &iWeapon) {
     SWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
     BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageAltDM <= 0.0f);
     
     return (bCoop ? ws.fDamageAlt : ws.fDamageAltDM);
+  };
+
+  // Get any weapon damage
+  FLOAT GetWeaponDamage(const INDEX &iWeapon, const BOOL &bAlt) {
+    return (bAlt ? GetDamageAlt(iWeapon) : GetDamage(iWeapon));
   };
 
   // Powerup functions

@@ -82,6 +82,9 @@ void ResetWeaponPosition(void) {
 #define ENOUGH_AMMO EnoughAmmo(SWeaponStruct::DWA_AMMO)
 #define ENOUGH_ALT  EnoughAmmo(SWeaponStruct::DWA_ALT)
 #define ENOUGH_MAG  EnoughAmmo(SWeaponStruct::DWA_MAG)
+
+// [Cecil] Position shift for dual weapons
+//static FLOAT _fDualWeaponShift = 0.0f;
 %}
 
 uses "EntitiesMP/Player";
@@ -962,10 +965,34 @@ functions:
   SWeaponPos RenderPos(INDEX iWeapon) {
     SWeaponPos wps = GetInventory()->m_aWeapons[iWeapon].GetPosition();
 
-    // weapon position shift
-    if (iWeapon == WEAPON_MINIGUN && GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-      wps.Pos1(1) += 0.1f;
+    // weapon position shift for dual weapons
+    /*INDEX iShift = 0;
+    FLOAT tmLerped = _pTimer->GetLerpedCurrentTick();
+
+    switch (GetInventory()->GetWeapon(0)->GetCurrent()) {
+      case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
+      case WEAPON_MINIGUN: case WEAPON_LASER: case WEAPON_IRONCANNON: {
+        iShift++;
+      } break;
     }
+
+    switch (GetInventory()->GetWeapon(1)->GetCurrent()) {
+      case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
+      case WEAPON_MINIGUN: case WEAPON_LASER: case WEAPON_IRONCANNON: {
+        iShift++;
+      } break;
+    }
+
+    // big dual weapons
+    if (iShift >= 2) {
+      FLOAT fTime = ClampUp((tmLerped - _fDualWeaponShift) * 2.0f, 1.0f);
+      FLOAT fShift = SinFast(fTime * 90.0f);
+
+      wps.Pos1(1) += ClampUp(fShift, 1.0f) * 0.1f;
+
+    } else {
+      _fDualWeaponShift = tmLerped;
+    }*/
 
     // mirror the position
     if (MirrorState()) {
@@ -1200,8 +1227,20 @@ functions:
   void RenderWeaponModel(CPerspectiveProjection3D &prProjection, CDrawPort *pdp,
                          FLOAT3D vViewerLightDirection, COLOR colViewerLight, COLOR colViewerAmbient,
                          BOOL bRender, INDEX iEye) {
+    // [Cecil] Current weapon
+    const INDEX iWeapon = m_iCurrentWeapon;
+
+    // [Cecil] Weapon position
+    SWeaponPos wps = RenderPos(iWeapon);
+
+    // [Cecil] Mirror the weapon
+    if (m_bLastWeaponMirrored != MirrorState()) {
+      ApplyMirroring(TRUE);
+      m_bLastWeaponMirrored = MirrorState();
+    }
+
     // [Cecil] No weapon
-    if (m_iCurrentWeapon == WEAPON_NONE) {
+    if (iWeapon == WEAPON_NONE) {
       return;
     }
 
@@ -1214,23 +1253,11 @@ functions:
       return;
     }
 
-    // nuke and iron cannons have the same view settings
-    INDEX iWeaponData = m_iCurrentWeapon;
-
     // store FOV for Crosshair
     const FLOAT fFOV = ((CPerspectiveProjection3D &)prProjection).FOVL();
     CPlacement3D plView;
     plView = ((CPlayer&)*m_penPlayer).en_plViewpoint;
     plView.RelativeToAbsolute(m_penPlayer->GetPlacement());
-
-    // [Cecil] Weapon position
-    SWeaponPos wps = RenderPos(iWeaponData);
-
-    // [Cecil] Mirror the weapon
-    if (m_bLastWeaponMirrored != MirrorState()) {
-      ApplyMirroring(TRUE);
-      m_bLastWeaponMirrored = MirrorState();
-    }
 
     // added: chainsaw shaking
     CPlacement3D plWeapon;
@@ -1280,14 +1307,11 @@ functions:
         ubBlend = (INDEX)(INVISIBILITY_ALPHA_LOCAL + (FLOAT)(254 - INVISIBILITY_ALPHA_LOCAL) * fIntensity);      
       }      
     }
-
-    // [Cecil] Dual minigun
-    BOOL bMinigun = (iWeaponData == WEAPON_MINIGUN && GetInventory()->AltFireExists(WEAPON_MINIGUN));
       
     // DRAW WEAPON MODEL
     //  Double colt - second colt in mirror
     //  Double shotgun - hand with ammo
-    if (iWeaponData == WEAPON_DOUBLECOLT || iWeaponData == WEAPON_DOUBLESHOTGUN || bMinigun) {
+    if (iWeapon == WEAPON_DOUBLECOLT || iWeapon == WEAPON_DOUBLESHOTGUN) {
       // prepare render model structure and projection
       CRenderModel rmMain;
       CPerspectiveProjection3D prMirror = prProjection;
@@ -1298,7 +1322,7 @@ functions:
 
       CPlacement3D plWeaponMirror = wps.plPos;
 
-      if (iWeaponData == WEAPON_DOUBLECOLT || bMinigun) {
+      if (iWeapon == WEAPON_DOUBLECOLT) {
         plWeaponMirror.pl_PositionVector(1) = -plWeaponMirror.pl_PositionVector(1);
         plWeaponMirror.pl_OrientationAngle(1) = -plWeaponMirror.pl_OrientationAngle(1);
         plWeaponMirror.pl_OrientationAngle(3) = -plWeaponMirror.pl_OrientationAngle(3);
@@ -1341,7 +1365,7 @@ functions:
     }
 
     // minigun specific (update rotation)
-    if (iWeaponData == WEAPON_MINIGUN) {
+    if (iWeapon == WEAPON_MINIGUN) {
       RotateMinigun();
     }
 
@@ -1841,18 +1865,6 @@ functions:
       } else if (pen->m_iSecondFlare == FLARE_REMOVE) {
         HideFlare(m_moWeaponSecond, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE);
       }
-
-    // [Cecil] Dual minigun
-    } else if (m_iCurrentWeapon == WEAPON_MINIGUN && GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-      // add flare
-      if (pen->m_iSecondFlare == FLARE_ADD) {
-        pen->m_iSecondFlare = FLARE_REMOVE;
-        ShowFlare(m_moWeaponSecond, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, 1.25f);
-
-      // remove flare
-      } else if (pen->m_iSecondFlare == FLARE_REMOVE) {
-        HideFlare(m_moWeaponSecond, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
-      }
     }
 
     // add flare
@@ -1990,21 +2002,11 @@ functions:
       } break;
 
       case WEAPON_MINIGUN: {
-        // [Cecil] Dual minigun
-        if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-          SetComponents(this, m_moWeaponSecond, MODEL_MINIGUN, TEXTURE_HAND, 0, 0, 0);
-          AddAttachmentToModel(this, m_moWeaponSecond, MINIGUN_ATTACHMENT_BARRELS, MODEL_MG_BARRELS, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-          AddAttachmentToModel(this, m_moWeaponSecond, MINIGUN_ATTACHMENT_BODY, MODEL_MG_BODY, TEXTURE_MG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-          AddAttachmentToModel(this, m_moWeaponSecond, MINIGUN_ATTACHMENT_ENGINE, MODEL_MG_ENGINE, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-          CModelObject &mo = m_moWeaponSecond.GetAttachmentModel(MINIGUN_ATTACHMENT_BODY)->amo_moModelObject;
-          AddAttachmentToModel(this, mo, BODY_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-          m_moWeaponSecond.StretchModel(FLOAT3D(-1.0f, 1.0f, 1.0f));
-        }
-       
         SetComponents(this, m_moWeapon, MODEL_MINIGUN, TEXTURE_HAND, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, MINIGUN_ATTACHMENT_BARRELS, MODEL_MG_BARRELS, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, MINIGUN_ATTACHMENT_BODY, MODEL_MG_BODY, TEXTURE_MG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddAttachmentToModel(this, m_moWeapon, MINIGUN_ATTACHMENT_ENGINE, MODEL_MG_ENGINE, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
+
         CModelObject &mo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BODY)->amo_moModelObject;
         AddAttachmentToModel(this, mo, BODY_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
       } break;
@@ -2091,12 +2093,6 @@ functions:
     // rotate minigun barrels
     CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
     amo->amo_plRelative.pl_OrientationAngle(3) = aAngle * fMirror;
-
-    // [Cecil] Dual minigun
-    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-      amo = m_moWeaponSecond.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
-      amo->amo_plRelative.pl_OrientationAngle(3) = -aAngle * fMirror;
-    }
   };
 
   // calc weapon position for 3rd person view
@@ -3104,11 +3100,6 @@ functions:
 
       case WEAPON_MINIGUN:
         m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, ulFlags);
-
-        // [Cecil] Dual minigun
-        if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-          m_moWeaponSecond.PlayAnim(MINIGUN_ANIM_WAIT1, ulFlags);
-        }
         break;
 
       case WEAPON_ROCKETLAUNCHER:
@@ -3223,11 +3214,6 @@ functions:
       case 0: iAnim = MINIGUN_ANIM_WAIT2; break;
       case 1: iAnim = MINIGUN_ANIM_WAIT3; break;
       case 2: iAnim = MINIGUN_ANIM_WAIT4; break;
-    }
-
-    // [Cecil] Dual minigun
-    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-      m_moWeaponSecond.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
     }
 
     m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
@@ -3603,11 +3589,6 @@ procedures:
       return EEnd();
     }
 
-    // [Cecil] Dual minigun
-    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-      m_moWeaponSecond.PlayAnim(m_iAnim, 0);
-    }
-
     m_moWeapon.PlayAnim(m_iAnim, 0);
     autowait(m_moWeapon.GetAnimLength(m_iAnim));
     return EEnd();
@@ -3658,9 +3639,10 @@ procedures:
       case WEAPON_MINIGUN: {
         CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
         m_aMiniGunLast = m_aMiniGun = amo->amo_plRelative.pl_OrientationAngle(3);
+
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
-        break; }
+      } break;
 
       case WEAPON_ROCKETLAUNCHER:
         m_iAnim = ROCKETLAUNCHER_ANIM_ACTIVATE;
@@ -3725,11 +3707,6 @@ procedures:
       // mark that weapon change has ended
       m_tmWeaponChangeRequired -= hud_tmWeaponsOnScreen/2;
       return EEnd();
-    }
-
-    // [Cecil] Dual minigun
-    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-      m_moWeaponSecond.PlayAnim(m_iAnim, 0);
     }
 
     m_moWeapon.PlayAnim(m_iAnim, 0);
@@ -4581,11 +4558,6 @@ procedures:
     // steady anim
     m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
 
-    // [Cecil] Dual minigun
-    if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-      m_moWeaponSecond.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
-    }
-
     // no boring animation
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).m_fLastActionTime = _pTimer->CurrentTick();
 
@@ -4656,11 +4628,11 @@ procedures:
 
       // if has ammo
       if (ENOUGH_AMMO) {
-        // [Cecil] Multiply damage
+        // [Cecil] Multiply damage if holding dual miniguns
+        FLOAT fDamage = GetInventory()->GetWeaponDamage(WEAPON_MINIGUN, GetInventory()->SameWeapons()) * FireSpeed();
+
         // fire a bullet
-        FireMachineBullet(FirePos(WEAPON_MINIGUN), 750.0f, (GetInventory()->AltFireExists(WEAPON_MINIGUN) ?
-                          GetInventory()->GetDamageAlt(WEAPON_MINIGUN) : GetInventory()->GetDamage(WEAPON_MINIGUN)) * FireSpeed(),
-                          (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
+        FireMachineBullet(FirePos(WEAPON_MINIGUN), 750.0f, fDamage, (GetSP()->sp_bCooperative ? 0.01f : 0.03f), (GetSP()->sp_bCooperative ? 0.5f : 0.0f));
         DoRecoil();
         SpawnRangeSound(60.0f);
         DecAmmo(FALSE);
@@ -4673,20 +4645,10 @@ procedures:
         DropBulletShell(vPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET, MirrorState());
         SpawnBubbleEffect(_vMinigunShellPos, FLOAT3D(0.3f, 0.0f, 0.0f), MirrorState());
 
-        if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-          DropBulletShell(vPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET, !MirrorState());
-          SpawnBubbleEffect(_vMinigunShellPos, FLOAT3D(0.3f, 0.0f, 0.0f), !MirrorState());
-        }
-
       // if no ammo
       } else {
         if (m_bHasAmmo) {
           MinigunSmoke(MirrorState());
-
-          // [Cecil] Dual minigun smoke
-          if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-            MinigunSmoke(!MirrorState());
-          }
         }
 
         // stop fire sound
@@ -4706,11 +4668,6 @@ procedures:
 
     if (m_bHasAmmo) {
       MinigunSmoke(MirrorState());
-
-      // [Cecil] Dual minigun smoke
-      if (GetInventory()->AltFireExists(WEAPON_MINIGUN)) {
-        MinigunSmoke(!MirrorState());
-      }
     }
 
     GetAnimator()->FireAnimationOff();
@@ -4793,7 +4750,7 @@ procedures:
       m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_FIRE, 0);
 
       // [Cecil] Custom damage
-      FLOAT fDamage = (m_bChainLauncher ? GetInventory()->GetDamageAlt(WEAPON_ROCKETLAUNCHER) : GetInventory()->GetDamage(WEAPON_ROCKETLAUNCHER));
+      FLOAT fDamage = GetInventory()->GetWeaponDamage(WEAPON_ROCKETLAUNCHER, m_bChainLauncher);
       FireRocket(fDamage);
       DoRecoil();
       SpawnRangeSound(20.0f);
