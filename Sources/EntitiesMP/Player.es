@@ -83,6 +83,10 @@ static struct SVoiceCommandsKey {
 extern INDEX ctl_bVoiceCommands = FALSE; // show voice commands menu
 extern INDEX _iVoiceCommand = 0; // current voice command
 
+// [Cecil] Mirrored shooting for dual weapons
+static INDEX amp_bMirrorDualFire = TRUE;
+extern INDEX amp_bWeaponMirrored;
+
 // [Cecil] Global controller
 #include "EntitiesMP/GlobalController.h"
 extern CEntity *_penGlobalController;
@@ -686,10 +690,25 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
       paAction.pa_ulButtons |= PLACT_WEAPON_PREV;
     }
   }
+
+  // [Cecil] Fire controls
+  BOOL bFireControls[2] = {
+    pctlCurrent.bFire,
+    pctlCurrent.bAltFire,
+  };
+
+  // [Cecil] Initialized and has mirrored weapons
+  if (amp_bMirrorDualFire && amp_bWeaponMirrored && penThis->m_bPlayerInit) {
+    // mirror fire controls if using dual weapons
+    if (penThis->GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+      bFireControls[0] = pctlCurrent.bAltFire;
+      bFireControls[1] = pctlCurrent.bFire;
+    }
+  }
   
   // set button pressed flags
   paAction.pa_ulButtons |= (pctlCurrent.bWeaponFlip   ? PLACT_WEAPON_FLIP : 0)
-                        | (pctlCurrent.bFire          ? PLACT_FIRE : 0)
+                        | (bFireControls[0]           ? PLACT_FIRE : 0)
                         | (pctlCurrent.bReload        ? PLACT_RELOAD : 0)
                         | (pctlCurrent.bUse           ? PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE : 0)
                         | (pctlCurrent.bComputer      ? PLACT_COMPUTER : 0)
@@ -701,8 +720,8 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
                         | (pctlCurrent.bSniperZoomIn  ? PLACT_SNIPER_ZOOMIN : 0)
                         | (pctlCurrent.bSniperZoomOut ? PLACT_SNIPER_ZOOMOUT : 0)
                         // [Cecil] New buttons
-                        | (pctlCurrent.bAltFire ? PLACT_ALTFIRE : 0)
-                        | (pctlCurrent.bTokens  ? PLACT_TOKENS : 0)
+                        | (bFireControls[1]            ? PLACT_ALTFIRE : 0)
+                        | (pctlCurrent.bTokens         ? PLACT_TOKENS : 0)
                         | (pctlCurrent.bSelectModifier ? PLACT_SELECT_MODIFIER : 0);
 
   // if 'use or comp' has been pressed
@@ -940,6 +959,7 @@ void CPlayer_OnInitClass(void) {
   _pShell->DeclareSymbol("persistent user INDEX amp_iComboText;", &amp_iComboText);
   _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerTags;", &amp_iPlayerTags);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fPlayerBrightness;", &amp_fPlayerBrightness);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bMirrorDualFire;", &amp_bMirrorDualFire);
 
   // cheats
   _pShell->DeclareSymbol("user INDEX cht_bGod;",       &cht_bGod);
@@ -1341,6 +1361,9 @@ properties:
   // [Cecil] Extra buttons
   ULONG m_ulButtons1;
   ULONG m_ulButtons2;
+
+  // [Cecil] Player has been initialized
+  BOOL m_bPlayerInit;
 }
 
 components:
@@ -1826,6 +1849,9 @@ functions:
     // [Cecil] Reset extra buttons
     m_ulButtons1 = 0;
     m_ulButtons2 = 0;
+    
+    // [Cecil] Not initialized
+    m_bPlayerInit = FALSE;
 
     // [Cecil] Load player marker texture
     _toPlayerMarker.SetData_t(CTFILENAME("Textures\\Interface\\PlayerMarker.tex"));
@@ -6778,9 +6804,12 @@ procedures:
     // add statistics message
     ReceiveComputerMessage(CTFILENAME("Data\\Messages\\Statistics\\Statistics.txt"), CMF_READ);
 
-    if (GetSettings()->ps_ulFlags&PSF_PREFER3RDPERSON) {
+    if (GetSettings()->ps_ulFlags & PSF_PREFER3RDPERSON) {
       ChangePlayerView();
     }
+
+    // [Cecil] Mark as initialized
+    m_bPlayerInit = TRUE;
 
     return;
   };
