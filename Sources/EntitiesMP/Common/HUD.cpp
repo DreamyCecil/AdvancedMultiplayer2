@@ -751,7 +751,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // [Cecil] Adjust size based on max health or armor
   FLOAT fMaxHealthArmor = Max(fMaxHealth, fMaxArmor);
-  FLOAT fWidth = Max(FLOAT(Floor(log10(fMaxHealthArmor)+1.0f)), 3.0f);
+  FLOAT fWidth = Max(FLOAT(floor(log10(fMaxHealthArmor)+1.0f)), 3.0f);
 
   fRow = pixBottomBound-fHalfUnit;
   fCol = pixLeftBound+fHalfUnit;
@@ -911,42 +911,50 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // [Cecil] Adjust size based on max ammo
   FLOAT fMaxAmmoAltNormal = Max(fMaxAmmo, fAltMaxAmmo);
-  fWidth = Max(FLOAT(Floor(log10(fMaxAmmoAltNormal)+1.0f)), 3.0f);
+  fWidth = Max(FLOAT(floor(log10(fMaxAmmoAltNormal)+1.0f)), 3.0f);
 
   // [Cecil] Draw ammo or magazine count
-  if ((!GetSP()->sp_bInfiniteAmmo || abMag[0]) && ptoAmmo != NULL) {
+  BOOL bDrawAmmo = (!GetSP()->sp_bInfiniteAmmo || abMag[0]) && ptoAmmo != NULL;
+
+  if (bDrawAmmo) {
     // determine ammo quantities
     fNormValue = fAmmo / fMaxAmmo;
     strValue.PrintF("%d", (SLONG)ceil(fAmmo));
     PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.30f, 0.15f, FALSE);
 
     // draw ammo, value and weapon
-    fRow = pixBottomBound-fHalfUnit;
-    fCol = 320.0f - fAdvUnit - fChrUnit*(fWidth/2.0f) - fHalfUnit;
+    fRow = pixBottomBound - fHalfUnit;
+    fCol = 320.0f - fAdvUnit - fChrUnit * (fWidth/2.0f) - fHalfUnit;
     
     HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
     HUD_DrawIcon(fCol, fRow, *ptoAmmo, C_WHITE, fNormValue, TRUE, 1.0f);
 
-    fCol += fAdvUnit+fChrUnit*(fWidth/2.0f) - fHalfUnit;
+    fCol += fAdvUnit + fChrUnit * (fWidth/2.0f) - fHalfUnit;
     HUD_DrawBorder(fCol, fRow, fChrUnit * fWidth, fOneUnit, colBorder);
     HUD_DrawText(fCol, fRow, strValue, NONE, fNormValue);
+
+  } else {
+    // determine width only by the alt ammo
+    fWidth = Max(FLOAT(floor(log10(fAltMaxAmmo)+1.0f)), 3.0f);
   }
 
   // [Cecil] Draw alt ammo
-  if ((!GetSP()->sp_bInfiniteAmmo || abMag[1]) && ptoAltAmmo != NULL && iShowAltAmmo > 0) {
+  BOOL bDrawAltAmmo = (!GetSP()->sp_bInfiniteAmmo || abMag[1]) && ptoAltAmmo != NULL && iShowAltAmmo > 0;
+
+  if (bDrawAltAmmo) {
     // determine ammo quantities
     fNormValue = fAltAmmo / fAltMaxAmmo;
     strValue.PrintF("%d", (SLONG)ceil(fAltAmmo));
     PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.30f, 0.15f, FALSE);
 
-    // draw ammo, value and weapon
-    fRow = pixBottomBound-fHalfUnit - fNextUnit;
-    fCol = 320.0f - fAdvUnit - fChrUnit*(fWidth/2.0f) - fHalfUnit;
+    // draw ammo, value and weapon (above main ammo if it's present)
+    fRow = pixBottomBound - fHalfUnit - (fNextUnit * bDrawAmmo);
+    fCol = 320.0f - fAdvUnit - fChrUnit * (fWidth/2.0f) - fHalfUnit;
     
     HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
     HUD_DrawIcon(fCol, fRow, *ptoAltAmmo, C_WHITE, fNormValue, (iShowAltAmmo == 2), 1.0f);
 
-    fCol += fAdvUnit+fChrUnit*(fWidth/2.0f) - fHalfUnit;
+    fCol += fAdvUnit + fChrUnit * (fWidth/2.0f) - fHalfUnit;
     HUD_DrawBorder(fCol, fRow, fChrUnit * fWidth, fOneUnit, colBorder);
     HUD_DrawText(fCol, fRow, strValue, NONE, fNormValue);
   }

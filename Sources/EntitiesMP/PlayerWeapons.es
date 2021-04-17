@@ -540,6 +540,7 @@ properties:
 300 BOOL m_bAltFire = FALSE, // using alt fire
 301 BOOL m_bChainLauncher = FALSE, // chainsaw launcher mode
 302 INDEX m_iAmmoLeft = 1, // how much ammo is left
+303 BOOL m_bExtraWeapon = FALSE, // this is an extra weapon
 
 310 CEntityPointer m_penTesla,
 
@@ -550,9 +551,6 @@ properties:
 
   // [Cecil] Weapon mirroring
   INDEX m_bLastWeaponMirrored;
-
-  // [Cecil] This is an extra weapon
-  INDEX m_bExtraWeapon;
 }
 
 components:
@@ -743,7 +741,6 @@ functions:
   void CPlayerWeapons(void) {
     // weapon mirroring
     m_bLastWeaponMirrored = FALSE;
-    m_bExtraWeapon = FALSE;
   };
 
   // [Cecil] Destroy ghostbuster ray
@@ -3998,10 +3995,8 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD) * FireSpeedMul());
 
     // [Cecil] Reload mag
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(0, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(1, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(0, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(1, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(m_bExtraWeapon, TRUE);
 
     return EEnd();
   };
@@ -4090,10 +4085,8 @@ procedures:
     autowait((m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD) - 0.25f) * FireSpeedMul());
 
     // [Cecil] Reload mag
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(0, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(1, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(0, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(1, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
+    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(m_bExtraWeapon, TRUE);
 
     return EEnd();
   };

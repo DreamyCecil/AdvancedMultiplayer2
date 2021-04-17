@@ -23,7 +23,7 @@ void SWeaponAmmo::Read(CTStream *strm) {
 void SWeaponAmmo::SetAmmo(INDEX iSet) {
   // ammo multiplier
   FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f) * AmmoMul();
-  INDEX iTopAmmo = Floor(1000.0f * AmmoMul());
+  INDEX iTopAmmo = floor(1000.0f * AmmoMul());
 
   // set max ammo
   iMaxAmount = ClampUp(INDEX(ceil(iSet * fModifier)), iTopAmmo);

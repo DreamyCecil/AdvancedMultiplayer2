@@ -3107,7 +3107,7 @@ functions:
         strCombo = CTString(0, "Payout: ^cee9c00%d", GetComboPayout());
 
         if (amp_iComboText > 1 && GetSP()->sp_fTokenPayout > 0.0f) {
-          strCombo += CTString(0, "  ^rTokens: ^cee9c00%d", Floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout));
+          strCombo += CTString(0, "  ^rTokens: ^cee9c00%u", ULONG(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout));
         }
 
         pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*1.5f, 0xCCCCCCFF);
@@ -4455,7 +4455,7 @@ functions:
           SendEvent(eScore);
         
           if (GetSP()->sp_fTokenPayout > 0.0f) {
-            INDEX iAddTokens = Floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout);
+            INDEX iAddTokens = floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout);
         
             if (iAddTokens > 0) {
               m_iTokens += iAddTokens;
