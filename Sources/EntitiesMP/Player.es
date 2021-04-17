@@ -5295,16 +5295,33 @@ functions:
     }
 
     // [Cecil] Alt fire
-    if (GetSP()->AltMode() == 1) {
-      if (ulNewButtons & PLACT_ALTFIRE) {
-        // fire extra weapon
-        if (bExtraWeapon) {
-          GetWeapon(0)->SendEvent(EFireWeapon());
+    BOOL bExtraFire = FALSE;
 
-        // secondary fire
-        } else {
+    if (GetSP()->AltMode() == 1) {
+      // secondary fire on main weapon
+      if (!bExtraWeapon) {
+        if (ulNewButtons & PLACT_ALTFIRE) {
           GetWeapon(0)->SendEvent(EAltFire());
         }
+
+        if (ulReleasedButtons & PLACT_ALTFIRE) {
+          GetWeapon(0)->SendEvent(EReleaseWeapon());
+        }
+
+      // primary fire on main weapon
+      } else {
+        bExtraFire = TRUE;
+      }
+
+    // secondary fire on main weapon
+    } else if (GetSP()->AltMode() == 2) {
+      bExtraFire = TRUE;
+    }
+    
+    // [Cecil] Fire main weapon on alt fire button
+    if (bExtraWeapon && bExtraFire) {
+      if (ulNewButtons & PLACT_ALTFIRE) {
+        GetWeapon(0)->SendEvent(EFireWeapon());
       }
 
       if (ulReleasedButtons & PLACT_ALTFIRE) {
