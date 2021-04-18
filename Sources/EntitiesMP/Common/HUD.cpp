@@ -532,7 +532,7 @@ static void HUD_DrawSniperMask( void )
   colMask = LerpColor(SE_COL_BLUE_LIGHT, C_WHITE, 0.25f);
 
   FLOAT fDistance = _penWeapons[0]->m_fRayHitDistance;
-  FLOAT aFOV = Lerp(_penWeapons[0]->m_fSniperFOVlast, _penWeapons[0]->m_fSniperFOV, _pTimer->GetLerpFactor());
+  FLOAT aFOV = Lerp(_penPlayer->m_fLastSniperFOV, _penPlayer->m_fSniperFOV, _pTimer->GetLerpFactor());
 
   CTString strTmp;
   
@@ -548,7 +548,9 @@ static void HUD_DrawSniperMask( void )
   FLOAT fTM = _pTimer->GetLerpedCurrentTick();
   
   COLOR colLED;
-  if (_penWeapons[0]->m_tmLastSniperFire+1.25f<fTM) { // blinking
+
+  // blinking
+  if (_penPlayer->m_tmLastSniperFire+1.25f < fTM) {
     colLED = 0x44FF22BB;
   } else {
     colLED = 0xFF4422DD;
@@ -711,8 +713,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   }
 
   // draw sniper mask (original mask even if snooping)
-  if (penPlayerOwner->GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER
-   && penPlayerOwner->GetWeapon(0)->m_bSniping) {
+  if (penPlayerOwner->m_bSniping) {
     HUD_DrawSniperMask();
   }
    

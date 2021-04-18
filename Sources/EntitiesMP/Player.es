@@ -57,6 +57,13 @@ extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
 #define GENDER_FEMALE 1
 #define GENDEROFFSET  100 // offset for gender-specific sound components
 
+// [Cecil] Sniper discrete zoom values (moved from PlayerWeapons)
+static const INDEX _iSniperDiscreteZoomLevels = 4;
+static const FLOAT _afSniperZoom[] = {
+  90.0f, 1.0f, 53.1f, 2.0f, 28.0f, 4.0f, 14.2f, 6.0f, 
+  //7.2f, 8.0f, 3.56f, 10.0f ,1.8f, 12.0f,
+};
+
 // [Cecil] Combo font
 static CFontData _fdComboFont;
 
@@ -1187,11 +1194,21 @@ properties:
   5 INDEX m_ulKeys = 0,        // mask for all picked-up keys
   6 FLOAT m_fMaxHealth = 1.0f, // default health supply player can have
   7 INDEX m_ulFlags = 0,       // various flags
+
+ // [Cecil] Sniping properties (moved from PlayerWeapons)
+ 10 BOOL m_bSniping = FALSE,
+ 11 FLOAT m_fSniperMaxFOV = 90.0f,
+ 12 FLOAT m_fSniperMinFOV = 14.2f,
+ 13 FLOAT m_fSnipingZoomSpeed = 2.0f,
+ 14 FLOAT m_fMinimumZoomFOV = 53.1f,
+ 15 FLOAT m_tmLastSniperFire = 0.0f,
+ 16 FLOAT m_fSniperFOV     = 90.0f, // sniper FOV
+ 17 FLOAT m_fLastSniperFOV = 90.0f, // sniper FOV for lerping
   
- 17 CEntityPointer m_penAnimator,      // player animator
- 18 CEntityPointer m_penView,          // player view
- 19 CEntityPointer m_pen3rdPersonView, // player 3rd person view
- 20 CEntityPointer m_penInventory, // [Cecil] Player's inventory
+ 20 CEntityPointer m_penAnimator,      // player animator
+ 21 CEntityPointer m_penView,          // player view
+ 22 CEntityPointer m_pen3rdPersonView, // player 3rd person view
+ 23 CEntityPointer m_penInventory, // [Cecil] Player's inventory
 
  24 INDEX m_iViewState = PVT_PLAYEREYES,     // view state
  25 INDEX m_iLastViewState = PVT_PLAYEREYES, // last view state
@@ -2899,9 +2916,7 @@ functions:
     ANGLE aFOV = (bWidescreen ? 110.0f : 90.0f);
 
     // [Cecil] Sniper zoom multiplier
-    if (GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER) {
-      aFOV *= Lerp(GetWeapon(0)->m_fSniperFOVlast, GetWeapon(0)->m_fSniperFOV, _pTimer->GetLerpFactor()) / 90.0f;
-    }
+    aFOV *= Lerp(m_fLastSniperFOV, m_fSniperFOV, _pTimer->GetLerpFactor()) / 90.0f;
 
     // [Cecil] Custom FOV
     if (GetSP()->sp_bCooperative) {
@@ -4205,26 +4220,27 @@ functions:
     if (!bSomethingToUse && bOrComputer) {
       // call computer
       ComputerPressed();
-    }
-    else if (!bSomethingToUse)
-    {
+
+    } else if (!bSomethingToUse) {
       CPlayerWeapons *penWeapon = GetWeapon(0);
      
-      // penWeapon->m_iWantedWeapon==WEAPON_SNIPER) =>
       // make sure that weapon transition is not in progress
-      if (penWeapon->m_iCurrentWeapon==WEAPON_SNIPER && 
-          penWeapon->m_iWantedWeapon==WEAPON_SNIPER) {
-        if (m_ulFlags&PLF_ISZOOMING) {
-          m_ulFlags&=~PLF_ISZOOMING;
-          penWeapon->m_bSniping = FALSE;
-          penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV = penWeapon->m_fSniperMaxFOV;      
+      if (penWeapon->GetCurrent() == WEAPON_SNIPER && penWeapon->GetWanted() == WEAPON_SNIPER) {
+        if (m_ulFlags & PLF_ISZOOMING) {
+          m_ulFlags &= ~PLF_ISZOOMING;
+
+          m_bSniping = FALSE;
+          m_fLastSniperFOV = m_fSniperFOV = m_fSniperMaxFOV;
+
           PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
           if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
-        }
-        else {
-          penWeapon->m_bSniping = TRUE;
-          m_ulFlags|=PLF_ISZOOMING;
-          penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV = penWeapon->m_fMinimumZoomFOV;
+
+        } else {
+          m_ulFlags |= PLF_ISZOOMING;
+
+          m_bSniping = TRUE;
+          m_fLastSniperFOV = m_fSniperFOV = m_fMinimumZoomFOV;
+
           PlaySound(m_soSniperZoom, SOUND_SNIPER_ZOOM, SOF_3D|SOF_LOOP);
           if(_pNetwork->IsPlayerLocal(this)) {IFeel_PlayEffect("SniperZoom");}
         }
@@ -4304,7 +4320,7 @@ functions:
     ANGLE3D aDeltaViewRotation = paAction.pa_aViewRotation - m_aLastViewRotation;
     
     if (m_ulFlags & PLF_ISZOOMING) {
-      FLOAT fRotationDamping = GetWeapon(0)->m_fSniperFOV / GetWeapon(0)->m_fSniperMaxFOV;
+      FLOAT fRotationDamping = m_fSniperFOV / m_fSniperMaxFOV;
       aDeltaRotation *= fRotationDamping;
       aDeltaViewRotation *= fRotationDamping;
     }
@@ -4368,22 +4384,23 @@ functions:
 
     // sniper zooming
     CPlayerWeapons *penWeapon = GetWeapon(0);
-    if (penWeapon->m_iCurrentWeapon == WEAPON_SNIPER)
-    {
-      if (bUseButtonHeld && m_ulFlags&PLF_ISZOOMING)
-      {
-        penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV;
-        penWeapon->m_fSniperFOV -= penWeapon->m_fSnipingZoomSpeed;
-        if (penWeapon->m_fSniperFOV < penWeapon->m_fSniperMinFOV) 
-        {
-          penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV = penWeapon->m_fSniperMinFOV;
+
+    if (penWeapon->m_iCurrentWeapon == WEAPON_SNIPER) {
+      if (bUseButtonHeld && m_ulFlags & PLF_ISZOOMING) {
+        m_fLastSniperFOV = m_fSniperFOV;
+        m_fSniperFOV -= m_fSnipingZoomSpeed;
+
+        if (m_fSniperFOV < m_fSniperMinFOV) {
+          m_fLastSniperFOV = m_fSniperFOV = m_fSniperMinFOV;
+
           PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
           if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
         }
       }
-      if (ulReleasedButtons&PLACT_USE_HELD)
-      {
-         penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV;
+
+      if (ulReleasedButtons & PLACT_USE_HELD) {
+         m_fLastSniperFOV = m_fSniperFOV;
+
          PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
          if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
       }
@@ -5255,9 +5272,10 @@ functions:
 
     // next weapon zooms out when in sniping mode
     if (ulNewButtons & PLACT_WEAPON_NEXT) {
-      if (GetWeapon(0)->m_bSniping) {
+      if (m_bSniping) {
         ApplySniperZoom(0);
-      } else if (TRUE) {
+
+      } else {
         ESelectWeapon eSelect;
         eSelect.iWeapon = -1;
         
@@ -5267,9 +5285,10 @@ functions:
     
     // previous weapon zooms in when in sniping mode
     if (ulNewButtons & PLACT_WEAPON_PREV) {
-      if (GetWeapon(0)->m_bSniping) {
+      if (m_bSniping) {
         ApplySniperZoom(1);
-      } else if (TRUE) {
+
+      } else {
         ESelectWeapon eSelect;
         eSelect.iWeapon = -2;
 
@@ -5444,16 +5463,48 @@ functions:
     }
   };
 
+  // [Cecil] Apply sniper zoom (moved from PlayerWeapons)
+  BOOL SniperZoomDiscrete(INDEX iDirection, BOOL &bZoomChanged) {
+    bZoomChanged = FALSE;
+
+    // zoom in one zoom level
+    if (iDirection > 0) {
+      for (INDEX i = 0; i < _iSniperDiscreteZoomLevels; i++) {
+        if (_afSniperZoom[2 * i] < m_fSniperFOV) {
+          m_fSniperFOV = _afSniperZoom[2 * i];
+          m_fLastSniperFOV = m_fSniperFOV;
+
+          bZoomChanged = TRUE;
+          break;
+        }
+      }
+
+    // zoom out one zoom level
+    } else {
+      for (INDEX i = _iSniperDiscreteZoomLevels; i > 0; i--) {
+        if (_afSniperZoom[2 * i] > m_fSniperFOV) {
+          m_fSniperFOV = _afSniperZoom[2 * i];
+          m_fLastSniperFOV = m_fSniperFOV;
+
+          bZoomChanged = TRUE;
+          break;
+        }
+      }
+    }
+
+    m_bSniping = (m_fSniperFOV < 90.0f);
+    return m_bSniping;
+  };
+
   void ApplySniperZoom(BOOL bZoomIn) {
     // do nothing if not holding sniper and if not in sniping mode
-    if (GetWeapon(0)->m_iCurrentWeapon != WEAPON_SNIPER ||
-      GetWeapon(0)->m_bSniping == FALSE) {
+    if (GetWeapon(0)->GetCurrent() != WEAPON_SNIPER || m_bSniping == FALSE) {
       return;
     }
 
     BOOL bZoomChanged;
 
-    if (GetWeapon(0)->SniperZoomDiscrete(bZoomIn, bZoomChanged)) {
+    if (SniperZoomDiscrete(bZoomIn, bZoomChanged)) {
       if (bZoomChanged) { 
         PlaySound(m_soSniperZoom, SOUND_SNIPER_QZOOM, SOF_3D); 
       }
@@ -5461,6 +5512,7 @@ functions:
 
     } else {
       m_ulFlags &= ~PLF_ISZOOMING;
+
       PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
       if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
     }
@@ -5553,10 +5605,12 @@ functions:
       if (bSharpTurning) {
         // get your prediction tail
         CPlayer *pen = (CPlayer*)GetPredictionTail();
+
         // add local rotation
-        if (m_ulFlags&PLF_ISZOOMING) {
-          FLOAT fRotationDamping = GetWeapon(0)->m_fSniperFOV / GetWeapon(0)->m_fSniperMaxFOV;
-          plView.pl_OrientationAngle = pen->en_plViewpoint.pl_OrientationAngle + (pen->m_aLocalRotation-pen->m_aLastRotation)*fRotationDamping;
+        if (m_ulFlags & PLF_ISZOOMING) {
+          FLOAT fRotationDamping = m_fSniperFOV / m_fSniperMaxFOV;
+          plView.pl_OrientationAngle = pen->en_plViewpoint.pl_OrientationAngle + (pen->m_aLocalRotation-pen->m_aLastRotation) * fRotationDamping;
+
         } else {
           plView.pl_OrientationAngle = pen->en_plViewpoint.pl_OrientationAngle + (pen->m_aLocalRotation-pen->m_aLastRotation);
         }
@@ -5677,10 +5731,9 @@ functions:
 
     // render weapon models if needed
     BOOL bRenderModels = _pShell->GetINDEX("gfx_bRenderModels");
-    // do not render weapon if sniping
-    BOOL bSniping = GetWeapon(0)->m_bSniping;
 
-    if (hud_bShowWeapon && bRenderModels && !bSniping) {
+    // do not render weapon if sniping
+    if (hud_bShowWeapon && bRenderModels && !m_bSniping) {
       // render weapons only if view is from player eyes
       GetWeapon(0)->RenderWeaponModel(prProjection, pdp, vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
       GetWeapon(1)->RenderWeaponModel(prProjection, pdp, vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
@@ -5715,7 +5768,7 @@ functions:
       plView = ((CPlayerView&)*m_pen3rdPersonView).GetPlacement();
     }
 
-    if (!bSniping) {
+    if (!m_bSniping) {
       GetWeapon(0)->RenderCrosshair(prProjection, pdp, plView);
     }
 
@@ -6323,12 +6376,13 @@ functions:
 
         if (!GetSP()->sp_bCooperative) {
           CPlayerWeapons *wpn = GetWeapon(0);
-          if (wpn->m_tmLastSniperFire == _pTimer->CurrentTick())
-          {
+
+          if (m_tmLastSniperFire == _pTimer->CurrentTick()) {
             CAttachmentModelObject &amoBody = *GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
             FLOATmatrix3D m;
             MakeRotationMatrix(m, amoBody.amo_plRelative.pl_OrientationAngle);
-            FLOAT3D vSource = wpn->m_vBulletSource + FLOAT3D(0.0f, 0.1f, -0.4f)*GetRotationMatrix()*m;
+
+            FLOAT3D vSource = wpn->m_vBulletSource + FLOAT3D(0.0f, 0.1f, -0.4f) * GetRotationMatrix() * m;
             Particles_SniperResidue(this, vSource , wpn->m_vBulletTarget);
           }
         }
@@ -6417,17 +6471,19 @@ procedures:
 
     // find music holder on new world
     FindMusicHolder();
+
     // store group name
     m_strGroup = _SwcWorldChange.strGroup;
     TeleportPlayer((WorldLinkType)_SwcWorldChange.iType);
+
     // setup light source
     SetupLightSource();
 
     // make sure we discontinue zooming
-    CPlayerWeapons *penWeapon = GetWeapon(0);
-    penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV = penWeapon->m_fSniperMaxFOV;      
-    penWeapon->m_bSniping=FALSE;
-    m_ulFlags&=~PLF_ISZOOMING;
+    m_fLastSniperFOV = m_fSniperFOV = m_fSniperMaxFOV;      
+    m_bSniping = FALSE;
+
+    m_ulFlags &= ~PLF_ISZOOMING;
 
     // turn off possible chainsaw engine sound
     GetInventory()->MuteWeaponAmbient();
@@ -6482,16 +6538,16 @@ procedures:
     }
     
     // make sure sniper zoom is stopped 
-    CPlayerWeapons *penWeapon = GetWeapon(0);
-    m_ulFlags&=~PLF_ISZOOMING;
-    penWeapon->m_bSniping = FALSE;
-    penWeapon->m_fSniperFOVlast = penWeapon->m_fSniperFOV = penWeapon->m_fSniperMaxFOV;
+    m_ulFlags &= ~PLF_ISZOOMING;
+    m_bSniping = FALSE;
+    m_fLastSniperFOV = m_fSniperFOV = m_fSniperMaxFOV;
     
     // stop weapon sounds
     PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);
     GetInventory()->MuteWeaponAmbient();
 
     // stop rotating minigun
+    CPlayerWeapons *penWeapon = GetWeapon(0);
     penWeapon->m_aMiniGunLast = penWeapon->m_aMiniGun;
 
     // [Cecil] Destroy death ray
@@ -7797,10 +7853,13 @@ procedures:
 
       on (EWeaponChanged) : {
         // make sure we discontinue zooming (even if not changing from sniper)
-        GetWeapon(0)->m_bSniping=FALSE;
-        m_ulFlags&=~PLF_ISZOOMING;
+        m_fSniperFOV = m_fLastSniperFOV = m_fSniperMaxFOV;
+        m_bSniping = FALSE;
+        m_ulFlags &= ~PLF_ISZOOMING;
+
         PlaySound(m_soSniperZoom, SOUND_SILENCE, SOF_3D);        
         if(_pNetwork->IsPlayerLocal(this)) {IFeel_StopEffect("SniperZoom");}
+
         resume;
       }
 

@@ -195,15 +195,6 @@ static FLOAT afDoubleShotgunPellets[] =
   -0.4f,-0.15f, -0.1f,-0.15f, +0.1f,-0.15f, +0.4f,-0.15f
 };
 
-// sniper discrete zoom values - 4 (1x,2x,4x,6x)
-// synchronize this with sniper properties (properties 233-237)
-static INDEX iSniperDiscreteZoomLevels = 4;
-static FLOAT afSniperZoom[] =
-{
-      90.0f,1.0f, 53.1f, 2.0f, 28.0f,4.0f, 14.2f,6.0f, 
-       //7.2f,8.0f, 3.56f,10.0f ,1.8f,12.0f
-};
-
 // crosshair console variables
 static INDEX hud_bCrosshairFixed    = FALSE;
 static INDEX hud_bCrosshairColoring = TRUE;
@@ -464,9 +455,6 @@ properties:
  15 INDEX m_iAnim         = 0,          // temporary anim variable
  16 FLOAT m_fAnimWaitTime = 0.0f,       // animation wait time
  17 FLOAT m_tmRangeSoundSpawned = 0.0f, // for not spawning range sounds too often
- 23 BOOL  m_bSniperZoom = FALSE,        // zoom sniper
- 24 FLOAT m_fSniperFOV      = 90.0f,    // sniper FOV
- 28 FLOAT m_fSniperFOVlast  = 90.0f,    // sniper FOV for lerping
 
  18 CTString m_strLastTarget   = "",      // string for last target
  19 FLOAT m_tmTargetingStarted = -99.0f,  // when targeting started
@@ -502,14 +490,6 @@ properties:
 // lerped bullets fire
 230 FLOAT3D m_iLastBulletPosition = FLOAT3D(32000.0f, 32000.0f, 32000.0f),
 231 INDEX m_iBulletsOnFireStart = 0,
-
-// sniper
-233 FLOAT m_fSniperMaxFOV = 90.0f,
-234 FLOAT m_fSniperMinFOV = 14.2f,
-235 FLOAT m_fSnipingZoomSpeed = 2.0f,
-236 BOOL  m_bSniping = FALSE,
-237 FLOAT m_fMinimumZoomFOV  = 53.1f,
-238 FLOAT m_tmLastSniperFire = 0.0f,
 
 // pipebomb
 //235 CEntityPointer m_penPipebomb,
@@ -2076,9 +2056,11 @@ functions:
     SWeaponPos wps = CUR_WEAPON.GetPosition();
 
     plPos.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
+
     // weapon handle
     if (!m_bMirrorFire) {
       plPos.pl_PositionVector = wps.Pos1();
+
     } else {
       wps.Pos1(1) *= -1.0f;
       plPos.pl_PositionVector = wps.Pos1();
@@ -2108,13 +2090,13 @@ functions:
     SWeaponPos wps = CUR_WEAPON.GetPosition();
 
     plPos.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
-    // weapon handle
-    if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = wps.Pos1();
 
-      if (m_bSniping) {
-        plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
-      }
+    // weapon handle
+    if (GetPlayer()->m_bSniping) {
+      plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
+
+    } else if (!m_bMirrorFire) {
+      plPos.pl_PositionVector = wps.Pos1();
 
     } else {
       wps.Pos1(1) *= -1.0f;
@@ -2146,13 +2128,13 @@ functions:
     SWeaponPos wps = RenderPos(m_iCurrentWeapon); //CUR_WEAPON.GetPosition();
 
     plPos.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
-    // weapon handle
-    if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = wps.Pos1();
 
-      if (m_bSniping) {
-        plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
-      }
+    // weapon handle
+    if (GetPlayer()->m_bSniping) {
+      plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
+
+    } else if (!m_bMirrorFire) {
+      plPos.pl_PositionVector = wps.Pos1();
 
     } else {
       wps.Pos1(1) *= -1.0f;
@@ -2184,12 +2166,11 @@ functions:
     plPos.pl_OrientationAngle = ANGLE3D((FRnd()-0.5f)*fImprecissionAngle, (FRnd()-0.5f)*fImprecissionAngle, 0);
 
     // weapon handle
-    if (!m_bMirrorFire) {
-      plPos.pl_PositionVector = wps.Pos1();
+    if (GetPlayer()->m_bSniping) {
+      plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
 
-      if (m_bSniping) {
-        plPos.pl_PositionVector = FLOAT3D(0.0f, 0.0f, 0.0f);
-      }
+    } else if (!m_bMirrorFire) {
+      plPos.pl_PositionVector = wps.Pos1();
 
     } else {
       wps.Pos1(1) *= -1.0f;
@@ -3408,61 +3389,29 @@ functions:
     }
   };
 
-  BOOL SniperZoomDiscrete(INDEX iDirection, BOOL &bZoomChanged) {
-    bZoomChanged = FALSE;
-
-    // zoom in one zoom level
-    if (iDirection > 0) {
-      for (INDEX i = 0; i < iSniperDiscreteZoomLevels; i++) {
-        if (afSniperZoom[2*i] < m_fSniperFOV) {
-          m_fSniperFOV = afSniperZoom[2*i];
-          m_fSniperFOVlast = m_fSniperFOV;
-          bZoomChanged = TRUE;
-          break;
-        }
-      }
-
-    // zoom out one zoom level
-    } else {
-      for (INDEX i = iSniperDiscreteZoomLevels; i > 0; i--) {
-        if (afSniperZoom[2*i] > m_fSniperFOV) {
-          m_fSniperFOV = afSniperZoom[2*i];
-          m_fSniperFOVlast = m_fSniperFOV; 
-          bZoomChanged = TRUE;
-          break;
-        }
-      }
-    }
-
-    if (m_fSniperFOV < 90.0f) { 
-      m_bSniping = TRUE;
-    } else {
-      m_bSniping = FALSE;
-    }
-
-    return m_bSniping;
-  };
-
 procedures:
   ChangeWeapon() {
     // if really changing weapon, make sure sniping is off and notify owner of the change
-    if (m_iCurrentWeapon!=m_iWantedWeapon) {
-      m_fSniperFOV = m_fSniperFOVlast = m_fSniperMaxFOV;
-      m_bSniping = FALSE;
+    if (m_iCurrentWeapon != m_iWantedWeapon) {
       m_penPlayer->SendEvent(EWeaponChanged());
     }
+
     // weapon is changed
     m_bChangeWeapon = FALSE;
+
     // if this is not current weapon change it
     if (m_iCurrentWeapon != m_iWantedWeapon) {
       // store current weapon
       m_iPreviousWeapon = m_iCurrentWeapon;
       autocall PutDown() EEnd;
+
       // set new weapon
       m_iCurrentWeapon = m_iWantedWeapon;
+
       // remember current weapon for console usage
       wpn_iCurrent = m_iCurrentWeapon;
       autocall BringUp() EEnd;
+
       // start engine sound if chainsaw
       if (m_iCurrentWeapon == WEAPON_CHAINSAW) {
         m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
@@ -4419,17 +4368,17 @@ procedures:
   FireSniper() {
     if (ENOUGH_AMMO) {
       // fire one bullet
-      if (m_bSniping) {
+      if (GetPlayer()->m_bSniping) {
         FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, GetInventory()->GetDamage(WEAPON_SNIPER), 0.0f);
       } else {
         FireSniperBullet(FirePos(WEAPON_SNIPER), 1000.0f, GetInventory()->GetDamage(WEAPON_SNIPER) / 4.0f, 5.0f);
       }
-      m_tmLastSniperFire = _pTimer->CurrentTick();
+      GetPlayer()->m_tmLastSniperFire = _pTimer->CurrentTick();
 
       SpawnRangeSound(50.0f);
       DecAmmo(FALSE);
 
-      if (!m_bSniping) {
+      if (!GetPlayer()->m_bSniping) {
         SetFlare(0, FLARE_ADD);
       }
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
@@ -4472,17 +4421,17 @@ procedures:
   FireAccurateSniper() {
     if (ENOUGH_AMMO) {
       // fire one bullet
-      if (m_bSniping) {
+      if (GetPlayer()->m_bSniping) {
         FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1500.0f, GetInventory()->GetDamageAlt(WEAPON_SNIPER), 0.0f);
       } else {
         FireSniperBullet(FLOAT3D(0.0f, 0.0f, 0.0f), 1000.0f, GetInventory()->GetDamageAlt(WEAPON_SNIPER) / 3.0f, 0.0f);
       }
-      m_tmLastSniperFire = _pTimer->CurrentTick();
+      GetPlayer()->m_tmLastSniperFire = _pTimer->CurrentTick();
 
       SpawnRangeSound(50.0f);
       DecAmmo(FALSE);
 
-      if (!m_bSniping) {
+      if (!GetPlayer()->m_bSniping) {
         SetFlare(0, FLARE_ADD);
       }
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
