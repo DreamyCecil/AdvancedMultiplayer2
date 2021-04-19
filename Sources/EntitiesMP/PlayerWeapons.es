@@ -88,7 +88,7 @@ extern FLOAT _fDualWeaponShift;
 extern FLOAT _fLastDualWeaponShift;
 
 // [Cecil] Weapon fire offset X
-#define FIRE_OFFSET_X /*FirePos(m_iCurrentWeapon)(1) * (m_bExtraWeapon ? -1.0f : 1.0f)*/ CUR_WEAPON.GetPosition().Pos1(1) * (m_bExtraWeapon ? 1.0f : -1.0f)
+#define FIRE_OFFSET_X FirePos(m_iCurrentWeapon)(1) * (m_bExtraWeapon ? -1.0f : 1.0f)
 
 // [Cecil] Weapon position calculation types
 #define WPC_NORMAL    0 // first person view (default)
@@ -2528,7 +2528,7 @@ functions:
   // fire grenade
   void FireGrenade(INDEX iPower, BOOL bPoison, FLOAT fDamage) {
     // [Cecil] Grenade position
-    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, FirePos(m_iCurrentWeapon)(2), /*-0.15f*/ 0.0f);
+    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, FirePos(m_iCurrentWeapon)(2), 0.0f);
 
     // grenade start position
     CPlacement3D plGrenade;
@@ -2549,7 +2549,7 @@ functions:
   // [Cecil] Added custom damage
   void FireRocket(FLOAT fDamage) {
     // [Cecil] Rocket position
-    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, FirePos(m_iCurrentWeapon)(2), /*-0.15f*/ 0.0f);
+    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, FirePos(m_iCurrentWeapon)(2), 0.0f);
 
     // rocket start position
     CPlacement3D plRocket;
@@ -2574,7 +2574,7 @@ functions:
   // flamer source
   void GetFlamerSourcePlacement(CPlacement3D &plSource, CPlacement3D &plInFrontOfPipe) {
     // [Cecil] Flamer position
-    FLOAT3D vFire = RenderPos(WEAPON_FLAMER).vFire + FLOAT3D(0.0f, 0.0f, -0.15f);
+    FLOAT3D vFire = RenderPos(WEAPON_FLAMER).vFire /*+ FirePos(WEAPON_FLAMER)*/ + FLOAT3D(0.0f, 0.0f, -0.15f);
     CalcWeaponPosition(vFire, plSource, 0, WPC_LERPED);
 
     plInFrontOfPipe = plSource;
@@ -2588,11 +2588,11 @@ functions:
   // fire flame
   void FireFlame(FLOAT fDamage) {
     // [Cecil] Fire position
-    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, FirePos(m_iCurrentWeapon)(2), /*-0.15f*/ 0.0f);
+    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, FirePos(m_iCurrentWeapon)(2), 0.0f);
 
     // flame start position
     CPlacement3D plFlame;
-    CalcWeaponPosition(vFire, plFlame, 0, WPC_NORMAL|WPC_RESETZ|WPC_DUAL);
+    CalcWeaponPosition(vFire, plFlame, 0, WPC_NORMAL|WPC_RESETX|WPC_RESETZ|WPC_DUAL);
 
     // create flame
     CEntityPointer penFlame = CreateEntity(plFlame, CLASS_PROJECTILE);
@@ -2627,18 +2627,16 @@ functions:
     CPlacement3D plLaserRay;
     FLOAT fFX = vLaser(1); // get laser center position
     FLOAT fFY = vLaser(2);
-    FLOAT fLUX = 0.0f;
-    FLOAT fRUX = 0.6f;
-    FLOAT fLUY = 0.0f;
-    FLOAT fRUY = 0.0f;
-    FLOAT fLDX = -0.1f;
-    FLOAT fRDX = 0.7f;
-    FLOAT fLDY = -0.3f;
-    FLOAT fRDY = -0.3f;
+
+    FLOAT fUpX = 0.25f;
+    FLOAT fUpY = 0.15f;
+
+    FLOAT fDnX = 0.3f;
+    FLOAT fDnY = 0.15f;
 
     if (GetPlayer()->m_pstState == PST_CROUCH) {
-      fLDY = -0.1f;
-      fRDY = -0.1f;
+      fUpY = -0.25f;
+      fDnY = -0.25f;
     }
 
     // [Cecil] Relative laser ray position
@@ -2646,16 +2644,16 @@ functions:
 
     switch (m_iLaserBarrel) {
       // barrel lu (*o-oo)
-      case 0: vFire = FLOAT3D(fFX+fLUX, fFY+fLUY, 0.0f); break;
+      case 0: vFire = FLOAT3D(fFX-fUpX, fFY-fUpY, 0.0f); break;
 
       // barrel ld (oo-*o)
-      case 1: vFire = FLOAT3D(fFX+fLDX, fFY+fLDY, 0.0f); break;
+      case 1: vFire = FLOAT3D(fFX-fDnX, fFY+fDnY, 0.0f); break;
 
       // barrel ru (o*-oo)
-      case 2: vFire = FLOAT3D(fFX+fRUX, fFY+fRUY, 0.0f); break;
+      case 2: vFire = FLOAT3D(fFX+fUpX, fFY-fUpY, 0.0f); break;
 
       // barrel rd (oo-o*)
-      case 3: vFire = FLOAT3D(fFX+fRDX, fFY+fRDY, 0.0f); break;
+      case 3: vFire = FLOAT3D(fFX+fDnX, fFY+fDnY, 0.0f); break;
     }
 
     // [Cecil] Calculate laser ray position
@@ -2672,25 +2670,25 @@ functions:
     penLaser->Initialize(eLaunch);
   };
 
-  // [Cecil] Laser position (for rendering)
-  void GetGhostBusterSourcePlacement(CPlacement3D &plSource) {
-    // [Cecil] Laser position
-    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, 0.0f, 0.0f);
-    CalcWeaponPosition(vFire, plSource, 0, WPC_NORMAL|WPC_RESETZ|WPC_DUAL);
+  // [Cecil] Death ray position
+  void GetDeathRayPlacement(CPlacement3D &plSource) {
+    // centered position
+    FLOAT3D vFire = FLOAT3D(0.0f, 0.0f, 0.0f);
+    CalcWeaponPosition(vFire, plSource, 0, WPC_NORMAL|WPC_RESETX|WPC_RESETZ|WPC_DUAL);
   };
 
-  // [Cecil] Tesla gun position (for rendering)
+  // [Cecil] Tesla gun position
   void GetTeslaPlacement(CPlacement3D &plSource) {
     // tesla position
-    FLOAT3D vFire = FLOAT3D(FIRE_OFFSET_X, FirePos(m_iCurrentWeapon)(2) - 0.2f, -1.5f);
-    CalcWeaponPosition(vFire, plSource, 0, WPC_NORMAL|WPC_DUAL);
+    FLOAT3D vFire = FLOAT3D(0.0f, FirePos(m_iCurrentWeapon)(2) - 0.2f, -1.5f);
+    CalcWeaponPosition(vFire, plSource, 0, WPC_NORMAL|WPC_RESETX|WPC_DUAL);
   };
 
   // [Cecil] Added ray power and custom damage
   void FireGhostBusterRay(FLOAT fPower, FLOAT fDamage) {
     // ray start position
     CPlacement3D plRay;
-    GetGhostBusterSourcePlacement(plRay);
+    GetDeathRayPlacement(plRay);
 
     // fire ray
     ((CGhostBusterRay&)*m_penGhostBusterRay).Fire(plRay, fPower, fDamage);

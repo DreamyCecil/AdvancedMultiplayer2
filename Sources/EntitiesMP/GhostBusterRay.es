@@ -116,11 +116,12 @@ functions:
 
     // from current owner position move away
     CPlacement3D plSource;
-    penWeapons.GetGhostBusterSourcePlacement(plSource);
+    penWeapons.GetDeathRayPlacement(plSource);
 
     FLOAT3D vDirection, vDesired;
     AnglesToDirectionVector(plSource.pl_OrientationAngle, vDirection);
-    vDesired = vDirection*HIT_DISTANCE;
+
+    vDesired = vDirection * HIT_DISTANCE;
     vDesired = plSource.pl_PositionVector + vDesired;
 
     // cast a ray to find if any brush is hit
