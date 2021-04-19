@@ -463,6 +463,7 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="Common\Weapons\WeaponAmmo.h" />
     <ClInclude Include="Common\Weapons\WeaponBase.h" />
     <ClInclude Include="Common\Weapons\WeaponModel.h" />
+    <ClInclude Include="Common\Weapons\WeaponPos.h" />
     <ClInclude Include="Common\Weapons\WeaponStruct.h" />
     <ClInclude Include="DummyEnemy.h" />
     <ClInclude Include="DummyEnemy_tables.h" />

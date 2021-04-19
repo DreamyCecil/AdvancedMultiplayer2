@@ -1682,6 +1682,9 @@
     <ClInclude Include="Common\Patches\PatchFunctions.h">
       <Filter>Header Files\Custom Patches headers</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Weapons\WeaponPos.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">

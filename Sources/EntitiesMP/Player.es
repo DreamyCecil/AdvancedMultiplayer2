@@ -4727,10 +4727,12 @@ functions:
   };
 
   void GetLerpedWeaponPosition(FLOAT3D vRel, CPlacement3D &pl) {
-    pl = CPlacement3D(vRel, ANGLE3D(0.0f, 0.0f, 0.0f));
-    CPlacement3D plView;
     _bDiscard3rdView = GetViewEntity() != this;
+
+    CPlacement3D plView;
     GetLerpedAbsoluteViewPlacement(plView);
+
+    pl = CPlacement3D(vRel, ANGLE3D(0.0f, 0.0f, 0.0f));
     pl.RelativeToAbsolute(plView);
   };
 

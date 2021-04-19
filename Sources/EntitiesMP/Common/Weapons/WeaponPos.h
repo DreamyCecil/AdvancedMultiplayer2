@@ -15,17 +15,21 @@ struct SWeaponPos {
 
   // Get position
   inline FLOAT3D &Pos1(void) { return plPos.pl_PositionVector; };
+  inline FLOAT3D &Pos2(void) { return plPos2.pl_PositionVector; };
   inline FLOAT3D &Pos3(void) { return plThird.pl_PositionVector; };
   
   // Get specific position
   inline FLOAT &Pos1(const INDEX &iPos) { return plPos.pl_PositionVector(iPos); };
+  inline FLOAT &Pos2(const INDEX &iPos) { return plPos2.pl_PositionVector(iPos); };
   inline FLOAT &Pos3(const INDEX &iPos) { return plThird.pl_PositionVector(iPos); };
 
   // Get rotation
   inline ANGLE3D &Rot1(void) { return plPos.pl_OrientationAngle; };
+  inline ANGLE3D &Rot2(void) { return plPos2.pl_OrientationAngle; };
   inline ANGLE3D &Rot3(void) { return plThird.pl_OrientationAngle; };
   
   // Get specific rotation
   inline FLOAT &Rot1(const INDEX &iPos) { return plPos.pl_OrientationAngle(iPos); };
+  inline FLOAT &Rot2(const INDEX &iPos) { return plPos2.pl_OrientationAngle(iPos); };
   inline FLOAT &Rot3(const INDEX &iPos) { return plThird.pl_OrientationAngle(iPos); };
 };
