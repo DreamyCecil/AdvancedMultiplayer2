@@ -1,2 +1,3 @@
 @echo off
-..\..\..\Bin\SeriousSam.exe +game AMP2
+start ..\..\..\Bin\SeriousSam.exe +game AMP2
+exit

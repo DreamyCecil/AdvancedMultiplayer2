@@ -630,6 +630,9 @@
     <ClCompile Include="Common\Patches\PatchFunctions.cpp">
       <Filter>Source Files\Custom Patches</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerControls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Common.h">
@@ -1685,6 +1688,12 @@
     <ClInclude Include="Common\Weapons\WeaponPos.h">
       <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
+    <ClInclude Include="PlayerControls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerControls_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">
@@ -2123,6 +2132,9 @@
       <Filter>Class Files\Weapons</Filter>
     </CustomBuild>
     <CustomBuild Include="PlayerInventory.es">
+      <Filter>Class Files\Players</Filter>
+    </CustomBuild>
+    <CustomBuild Include="PlayerControls.es">
       <Filter>Class Files\Players</Filter>
     </CustomBuild>
   </ItemGroup>

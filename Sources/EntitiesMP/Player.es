@@ -78,22 +78,6 @@ static CTextureObject _toPlayerMarker;
 static INDEX amp_iPlayerTags = 2; // 0 - no tag, 1 - only marker, 2 - with name, 3 - with distance
 static FLOAT amp_fPlayerBrightness = 0.1f; // player model brightness
 
-// [Cecil] Voice commands menu
-static struct SVoiceCommandsKey {
-  BOOL bPressed; // pressed the key
-  BOOL bHolding; // holding the key
-  BOOL bReleased; // released the key
-
-  SVoiceCommandsKey(void) : bPressed(FALSE), bHolding(FALSE), bReleased(FALSE) {};
-} _vcMenu;
-
-extern INDEX ctl_bVoiceCommands = FALSE; // show voice commands menu
-extern INDEX _iVoiceCommand = 0; // current voice command
-
-// [Cecil] Mirrored shooting for dual weapons
-static INDEX amp_bMirrorDualFire = TRUE;
-extern INDEX amp_bWeaponMirrored;
-
 // [Cecil] Global controller
 #include "EntitiesMP/GlobalController.h"
 extern CEntity *_penGlobalController;
@@ -316,86 +300,8 @@ static void KillAllEnemies(CEntity *penKiller) {
 #define PLF_ISZOOMING           (1UL<<10) // marks that player is zoomed in with the sniper
 #define PLF_RESPAWNINPLACE      (1UL<<11) // don't move to marker when respawning (for current death only)
 
-// Defines representing flags used to fill player buttoned actions
-#define PLACT_FIRE            (1L<<0)
-#define PLACT_RELOAD          (1L<<1)
-#define PLACT_WEAPON_NEXT     (1L<<2)
-#define PLACT_WEAPON_PREV     (1L<<3)
-#define PLACT_WEAPON_FLIP     (1L<<4)
-#define PLACT_USE             (1L<<5)
-#define PLACT_COMPUTER        (1L<<6)
-#define PLACT_3RD_PERSON_VIEW (1L<<7)
-#define PLACT_CENTER_VIEW     (1L<<8)
-#define PLACT_USE_HELD        (1L<<9)
-#define PLACT_SNIPER_ZOOMIN   (1L<<10)
-#define PLACT_SNIPER_ZOOMOUT  (1L<<11)
-#define PLACT_SNIPER_USE      (1L<<12)
-#define PLACT_FIREBOMB        (1L<<13)
-#define PLACT_ALTFIRE         (1L<<14) // [Cecil] Alt fire button
-#define PLACT_TOKENS          (1L<<15) // [Cecil] Token spending button
-#define PLACT_SELECT_MODIFIER (1L<<16) // [Cecil] Weapon selection modifier
-#define PLACT_SELECT_WEAPON_SHIFT (17)
-#define PLACT_SELECT_WEAPON_MASK  (0x1FL<<PLACT_SELECT_WEAPON_SHIFT)
-                                     
-#define MAX_WEAPONS 30
-
 // How long the pickup message stays on screen
 #define PICKEDREPORT_TIME 2.0f
-
-// Individual player controls
-struct PlayerControls {
-  FLOAT3D aRotation;
-  FLOAT3D aViewRotation;
-  FLOAT3D vTranslation;
-
-  BOOL bMoveForward;
-  BOOL bMoveBackward;
-  BOOL bMoveLeft;
-  BOOL bMoveRight;
-  BOOL bMoveUp;
-  BOOL bMoveDown;
-
-  BOOL bTurnLeft;
-  BOOL bTurnRight;
-  BOOL bTurnUp;
-  BOOL bTurnDown;
-  BOOL bTurnBankingLeft;
-  BOOL bTurnBankingRight;
-  BOOL bCenterView;
-
-  BOOL bLookLeft;
-  BOOL bLookRight;
-  BOOL bLookUp;
-  BOOL bLookDown;
-  BOOL bLookBankingLeft;
-  BOOL bLookBankingRight;
-
-  BOOL bSelectWeapon[MAX_WEAPONS+1];
-  BOOL bWeaponNext;
-  BOOL bWeaponPrev;
-  BOOL bWeaponFlip;
-  
-  BOOL bWalk;
-  BOOL bStrafe;
-  BOOL bFire;
-  BOOL bReload;
-  BOOL bUse;
-  BOOL bComputer;
-  BOOL bUseOrComputer;
-  BOOL bUseOrComputerLast; // for internal use
-  BOOL b3rdPersonView;
-
-  BOOL bSniperZoomIn;
-  BOOL bSniperZoomOut;
-  BOOL bFireBomb;
-
-  // [Cecil] New buttons
-  BOOL bAltFire;
-  BOOL bTokens;
-  BOOL bSelectModifier;
-};
-
-static struct PlayerControls pctlCurrent;
 
 // Cheats
 static INDEX cht_iGoToMarker = -1;
@@ -444,10 +350,11 @@ INDEX cht_bDumpPlayerShading = FALSE;
 static FLOAT plr_fAcceleration  = 100.0f;
 static FLOAT plr_fDeceleration  = 60.0f;
 
-static FLOAT plr_fSpeedForward  = 10.0f;
-static FLOAT plr_fSpeedBackward = 10.0f;
-static FLOAT plr_fSpeedSide     = 10.0f;
-static FLOAT plr_fSpeedUp       = 11.0f;
+// [Cecil] Made extern
+extern FLOAT plr_fSpeedForward  = 10.0f;
+extern FLOAT plr_fSpeedBackward = 10.0f;
+extern FLOAT plr_fSpeedSide     = 10.0f;
+extern FLOAT plr_fSpeedUp       = 11.0f;
 
 static FLOAT plr_fViewHeightStand  = 1.9f;
 static FLOAT plr_fViewHeightCrouch = 0.7f;
@@ -487,17 +394,6 @@ static FLOAT plr_fDiveSoundDelay = 1.6f;
 static FLOAT plr_fWalkSoundDelay = 0.5f;
 static FLOAT plr_fRunSoundDelay  = 0.3f;
 
-static FLOAT ctl_tmComputerDoubleClick = 0.5f; // double click delay for calling computer
-static FLOAT _tmLastUseOrCompPressed = -10.0f; // for computer double click
-
-// Speeds for button rotation
-static FLOAT ctl_fButtonRotationSpeedH = 300.0f;
-static FLOAT ctl_fButtonRotationSpeedP = 150.0f;
-static FLOAT ctl_fButtonRotationSpeedB = 150.0f;
-
-// Modifier for axis strafing
-static FLOAT ctl_fAxisStrafingModifier = 1.0f;
-
 // Player that wants to call the computer
 DECL_DLL extern class CPlayer *cmp_ppenPlayer = NULL;
 // For rendering computer on secondary display in dualhead
@@ -509,253 +405,6 @@ DECL_DLL extern BOOL cmp_bInitialStart = FALSE;
 
 // For player HUD and statistics
 DECL_DLL extern INDEX plr_iHiScore = 0;
-
-// Define address and size of player controls structure
-DECL_DLL extern void *ctl_pvPlayerControls = &pctlCurrent;
-DECL_DLL extern const SLONG ctl_slPlayerControlsSize = sizeof(pctlCurrent);
-
-// Compose action packet from current controls
-DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction &paAction, BOOL bPreScan) {
-  // allow double axis controls
-  paAction.pa_aRotation += paAction.pa_aViewRotation;
-
-  CPlayerSettings *pps = (CPlayerSettings *)pc.pc_aubAppearance;
-
-  // if strafing
-  if (pctlCurrent.bStrafe) {
-    // move rotation left/right into translation left/right
-    paAction.pa_vTranslation(1) = -paAction.pa_aRotation(1)*ctl_fAxisStrafingModifier;
-    paAction.pa_aRotation(1) = 0;
-  }
-
-  // if centering view
-  if (pctlCurrent.bCenterView) {
-    // don't allow moving view up/down
-    paAction.pa_aRotation(2) = 0.0f;
-  }
-
-  // multiply axis actions with speed
-  paAction.pa_vTranslation(1) *= plr_fSpeedSide;
-  paAction.pa_vTranslation(2) *= plr_fSpeedUp;
-
-  if (paAction.pa_vTranslation(3) < 0.0f) {
-    paAction.pa_vTranslation(3) *= plr_fSpeedForward;
-  } else {
-    paAction.pa_vTranslation(3) *= plr_fSpeedBackward;
-  }
-
-  // find local player
-  CPlayer *penThis = NULL;
-  INDEX ctPlayers = CEntity::GetMaxPlayers();
-
-  for (INDEX iPlayer = 0; iPlayer < ctPlayers; iPlayer++) {
-    CPlayer *pen = (CPlayer*)CEntity::GetPlayerEntity(iPlayer);
-
-    if (pen != NULL && pen->en_pcCharacter == pc) {
-      penThis = pen;
-      break;
-    }
-  }
-
-  // not found
-  if (penThis == NULL) {
-    return;
-  }
-
-  // accumulate local rotation
-  penThis->m_aLocalRotation += paAction.pa_aRotation;
-  penThis->m_aLocalViewRotation += paAction.pa_aViewRotation;
-  penThis->m_vLocalTranslation += paAction.pa_vTranslation;
-
-  // no button checking if prescanning
-  if (bPreScan) {
-    return;
-  }
-
-  // add movement actions
-  if (pctlCurrent.bMoveForward) {
-    paAction.pa_vTranslation(3) -= plr_fSpeedForward;
-  }
-
-  if (pctlCurrent.bMoveBackward) {
-    paAction.pa_vTranslation(3) += plr_fSpeedBackward;
-  }
-
-  if (pctlCurrent.bMoveLeft || (pctlCurrent.bStrafe && pctlCurrent.bTurnLeft)) {
-    paAction.pa_vTranslation(1) -= plr_fSpeedSide;
-  }
-
-  if (pctlCurrent.bMoveRight || (pctlCurrent.bStrafe && pctlCurrent.bTurnRight)) {
-    paAction.pa_vTranslation(1) += plr_fSpeedSide;
-  }
-
-  if (pctlCurrent.bMoveUp) {
-    paAction.pa_vTranslation(2) += plr_fSpeedUp;
-  }
-
-  if (pctlCurrent.bMoveDown) {
-    paAction.pa_vTranslation(2) -= plr_fSpeedUp;
-  }
-
-  // add rotation actions
-  const FLOAT fQuantum = _pTimer->TickQuantum;
-  if (pctlCurrent.bTurnLeft  && !pctlCurrent.bStrafe)  {
-    penThis->m_aLocalRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
-  }
-
-  if (pctlCurrent.bTurnRight && !pctlCurrent.bStrafe)  {
-    penThis->m_aLocalRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
-  }
-
-  if (pctlCurrent.bTurnUp)  {
-    penThis->m_aLocalRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
-  }
-
-  if (pctlCurrent.bTurnDown)  {
-    penThis->m_aLocalRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
-  }
-
-  // add look actions
-  if (pctlCurrent.bLookLeft)  {
-    penThis->m_aLocalViewRotation(1) += ctl_fButtonRotationSpeedH*fQuantum;
-  }
-
-  if (pctlCurrent.bLookRight)  {
-    penThis->m_aLocalViewRotation(1) -= ctl_fButtonRotationSpeedH*fQuantum;
-  }
-
-  if (pctlCurrent.bLookUp)  {
-    penThis->m_aLocalViewRotation(2) += ctl_fButtonRotationSpeedP*fQuantum;
-  }
-
-  if (pctlCurrent.bLookDown)  {
-    penThis->m_aLocalViewRotation(2) -= ctl_fButtonRotationSpeedP*fQuantum;
-  }
-
-  // use current accumulated rotation
-  paAction.pa_aRotation = penThis->m_aLocalRotation;
-  paAction.pa_aViewRotation = penThis->m_aLocalViewRotation;
-
-  // slower speed while walking
-  if (pctlCurrent.bWalk) {
-    paAction.pa_vTranslation(1) /= 2.0f;
-    paAction.pa_vTranslation(3) /= 2.0f;
-  }
-
-  // [Cecil] Reserve banking rotation for more buttons
-  paAction.pa_aRotation(3) = 0.0f;
-  paAction.pa_aViewRotation(3) = 0.0f;
-  
-  // [Cecil] Make button masks
-  ULONG &ulButtons1 = *reinterpret_cast<ULONG*>(&paAction.pa_aRotation(3));
-  ULONG &ulButtons2 = *reinterpret_cast<ULONG*>(&paAction.pa_aViewRotation(3));
-
-  // [Cecil] Voice commands menu button
-  _vcMenu.bPressed  = (ctl_bVoiceCommands && !_vcMenu.bHolding);
-  _vcMenu.bReleased = (!ctl_bVoiceCommands && _vcMenu.bHolding);
-  _vcMenu.bHolding = ctl_bVoiceCommands;
-
-  // [Cecil] Reset the voice command
-  if (_vcMenu.bPressed) {
-    _iVoiceCommand = 0;
-  }
-
-  // [Cecil] Add selected voice command
-  if (_vcMenu.bReleased && _iVoiceCommand > 0) {
-    ulButtons1 += _iVoiceCommand;
-  }
-  
-  // reset all button actions
-  paAction.pa_ulButtons = 0;
-
-  // set weapon selection bits
-  for (INDEX i = 1; i < MAX_WEAPONS; i++) {
-    if (pctlCurrent.bSelectWeapon[i]) {
-      paAction.pa_ulButtons = (i << PLACT_SELECT_WEAPON_SHIFT);
-      break;
-    }
-  }
-
-  // [Cecil] Change voice command if opened the menu
-  if (_vcMenu.bHolding) {
-    if (pctlCurrent.bWeaponNext) {
-      _iVoiceCommand = (_iVoiceCommand+1) % 5;
-    }
-
-    if (pctlCurrent.bWeaponPrev) {
-      _iVoiceCommand--;
-      if (_iVoiceCommand < 0) {
-        _iVoiceCommand = 4;
-      }
-    }
-
-  } else {
-    if (pctlCurrent.bWeaponNext) {
-      paAction.pa_ulButtons |= PLACT_WEAPON_NEXT;
-    }
-    if (pctlCurrent.bWeaponPrev) {
-      paAction.pa_ulButtons |= PLACT_WEAPON_PREV;
-    }
-  }
-
-  // [Cecil] Fire controls
-  BOOL bFireControls[2] = {
-    pctlCurrent.bFire,
-    pctlCurrent.bAltFire,
-  };
-
-  // [Cecil] Initialized and has mirrored weapons
-  if (amp_bMirrorDualFire && amp_bWeaponMirrored && penThis->m_bPlayerInit) {
-    // mirror fire controls if using dual weapons
-    if (penThis->GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
-      bFireControls[0] = pctlCurrent.bAltFire;
-      bFireControls[1] = pctlCurrent.bFire;
-    }
-  }
-  
-  // set button pressed flags
-  paAction.pa_ulButtons |= (pctlCurrent.bWeaponFlip   ? PLACT_WEAPON_FLIP : 0)
-                        | (bFireControls[0]           ? PLACT_FIRE : 0)
-                        | (pctlCurrent.bReload        ? PLACT_RELOAD : 0)
-                        | (pctlCurrent.bUse           ? PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE : 0)
-                        | (pctlCurrent.bComputer      ? PLACT_COMPUTER : 0)
-                        | (pctlCurrent.b3rdPersonView ? PLACT_3RD_PERSON_VIEW : 0)
-                        | (pctlCurrent.bCenterView    ? PLACT_CENTER_VIEW : 0)
-                        | (pctlCurrent.bFireBomb      ? PLACT_FIREBOMB : 0)
-                        // use button
-                        | (pctlCurrent.bUseOrComputer ? PLACT_USE_HELD|PLACT_SNIPER_USE : 0)
-                        | (pctlCurrent.bSniperZoomIn  ? PLACT_SNIPER_ZOOMIN : 0)
-                        | (pctlCurrent.bSniperZoomOut ? PLACT_SNIPER_ZOOMOUT : 0)
-                        // [Cecil] New buttons
-                        | (bFireControls[1]            ? PLACT_ALTFIRE : 0)
-                        | (pctlCurrent.bTokens         ? PLACT_TOKENS : 0)
-                        | (pctlCurrent.bSelectModifier ? PLACT_SELECT_MODIFIER : 0);
-
-  // if 'use or comp' has been pressed
-  if (pctlCurrent.bUseOrComputer && !pctlCurrent.bUseOrComputerLast) {
-    // no double-click
-    if (ctl_tmComputerDoubleClick == 0 || (pps->ps_ulFlags & PSF_COMPSINGLECLICK)) {
-      // press both
-      paAction.pa_ulButtons |= PLACT_USE|PLACT_COMPUTER;
-
-    // double-click
-    } else {
-      // computer if double click
-      if (_pTimer->GetRealTimeTick() <= _tmLastUseOrCompPressed + ctl_tmComputerDoubleClick) {
-        paAction.pa_ulButtons |= PLACT_COMPUTER;
-
-      // use if single click
-      } else {
-        paAction.pa_ulButtons |= PLACT_USE;
-      }
-    }
-
-    _tmLastUseOrCompPressed = _pTimer->GetRealTimeTick();
-  }
-
-  // remember old userorcomp pressed state
-  pctlCurrent.bUseOrComputerLast = pctlCurrent.bUseOrComputer;
-};
 
 // Precache player components
 void CPlayer_Precache(void) {
@@ -877,57 +526,13 @@ void CPlayer_Precache(void) {
 };
 
 void CPlayer_OnInitClass(void) {
-  // clear current player controls
-  memset(&pctlCurrent, 0, sizeof(pctlCurrent));
+  // [Cecil] Clear current player controls
+  extern void ClearPlayerControls(void);
+  ClearPlayerControls();
 
-  // declare player control variables
-  _pShell->DeclareSymbol("user INDEX ctl_bMoveForward;",  &pctlCurrent.bMoveForward);
-  _pShell->DeclareSymbol("user INDEX ctl_bMoveBackward;", &pctlCurrent.bMoveBackward);
-  _pShell->DeclareSymbol("user INDEX ctl_bMoveLeft;",     &pctlCurrent.bMoveLeft);
-  _pShell->DeclareSymbol("user INDEX ctl_bMoveRight;",    &pctlCurrent.bMoveRight);
-  _pShell->DeclareSymbol("user INDEX ctl_bMoveUp;",       &pctlCurrent.bMoveUp);
-  _pShell->DeclareSymbol("user INDEX ctl_bMoveDown;",     &pctlCurrent.bMoveDown);
-  _pShell->DeclareSymbol("user INDEX ctl_bTurnLeft;",         &pctlCurrent.bTurnLeft);
-  _pShell->DeclareSymbol("user INDEX ctl_bTurnRight;",        &pctlCurrent.bTurnRight);
-  _pShell->DeclareSymbol("user INDEX ctl_bTurnUp;",           &pctlCurrent.bTurnUp);
-  _pShell->DeclareSymbol("user INDEX ctl_bTurnDown;",         &pctlCurrent.bTurnDown);
-  _pShell->DeclareSymbol("user INDEX ctl_bTurnBankingLeft;",  &pctlCurrent.bTurnBankingLeft);
-  _pShell->DeclareSymbol("user INDEX ctl_bTurnBankingRight;", &pctlCurrent.bTurnBankingRight);
-  _pShell->DeclareSymbol("user INDEX ctl_bCenterView;",       &pctlCurrent.bCenterView);
-  _pShell->DeclareSymbol("user INDEX ctl_bLookLeft;",         &pctlCurrent.bLookLeft);
-  _pShell->DeclareSymbol("user INDEX ctl_bLookRight;",        &pctlCurrent.bLookRight);
-  _pShell->DeclareSymbol("user INDEX ctl_bLookUp;",           &pctlCurrent.bLookUp);
-  _pShell->DeclareSymbol("user INDEX ctl_bLookDown;",         &pctlCurrent.bLookDown);
-  _pShell->DeclareSymbol("user INDEX ctl_bLookBankingLeft;",  &pctlCurrent.bLookBankingLeft);
-  _pShell->DeclareSymbol("user INDEX ctl_bLookBankingRight;", &pctlCurrent.bLookBankingRight);
-  _pShell->DeclareSymbol("user INDEX ctl_bWalk;",           &pctlCurrent.bWalk);
-  _pShell->DeclareSymbol("user INDEX ctl_bStrafe;",         &pctlCurrent.bStrafe);
-  _pShell->DeclareSymbol("user INDEX ctl_bFire;",           &pctlCurrent.bFire);
-  _pShell->DeclareSymbol("user INDEX ctl_bReload;",         &pctlCurrent.bReload);
-  _pShell->DeclareSymbol("user INDEX ctl_bUse;",            &pctlCurrent.bUse);
-  _pShell->DeclareSymbol("user INDEX ctl_bComputer;",       &pctlCurrent.bComputer);
-  _pShell->DeclareSymbol("user INDEX ctl_bUseOrComputer;",  &pctlCurrent.bUseOrComputer);
-  _pShell->DeclareSymbol("user INDEX ctl_b3rdPersonView;",  &pctlCurrent.b3rdPersonView);
-  _pShell->DeclareSymbol("user INDEX ctl_bWeaponNext;",         &pctlCurrent.bWeaponNext);
-  _pShell->DeclareSymbol("user INDEX ctl_bWeaponPrev;",         &pctlCurrent.bWeaponPrev);
-  _pShell->DeclareSymbol("user INDEX ctl_bWeaponFlip;",         &pctlCurrent.bWeaponFlip);
-  _pShell->DeclareSymbol("user INDEX ctl_bSelectWeapon[30+1];", &pctlCurrent.bSelectWeapon);
-  _pShell->DeclareSymbol("persistent user FLOAT ctl_tmComputerDoubleClick;", &ctl_tmComputerDoubleClick);
-  _pShell->DeclareSymbol("persistent user FLOAT ctl_fButtonRotationSpeedH;", &ctl_fButtonRotationSpeedH);
-  _pShell->DeclareSymbol("persistent user FLOAT ctl_fButtonRotationSpeedP;", &ctl_fButtonRotationSpeedP);
-  _pShell->DeclareSymbol("persistent user FLOAT ctl_fButtonRotationSpeedB;", &ctl_fButtonRotationSpeedB);
-  _pShell->DeclareSymbol("persistent user FLOAT ctl_fAxisStrafingModifier;", &ctl_fAxisStrafingModifier);
-
-  // mission pack controls
-  _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomIn;",  &pctlCurrent.bSniperZoomIn);
-  _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomOut;", &pctlCurrent.bSniperZoomOut);
-  _pShell->DeclareSymbol("user INDEX ctl_bFireBomb;",      &pctlCurrent.bFireBomb);
-
-  // [Cecil] New buttons
-  _pShell->DeclareSymbol("user INDEX ctl_bAltFire;", &pctlCurrent.bAltFire);
-  _pShell->DeclareSymbol("user INDEX ctl_bTokens;",  &pctlCurrent.bTokens);
-  _pShell->DeclareSymbol("user INDEX ctl_bWeaponSelectionModifier;",  &pctlCurrent.bSelectModifier);
-  _pShell->DeclareSymbol("user INDEX ctl_bVoiceCommands;", &ctl_bVoiceCommands);
+  // [Cecil] Declare console commands for controls
+  extern void DeclareControlsCommands(void);
+  DeclareControlsCommands();
 
   _pShell->DeclareSymbol("user FLOAT plr_fSwimSoundDelay;", &plr_fSwimSoundDelay);
   _pShell->DeclareSymbol("user FLOAT plr_fDiveSoundDelay;", &plr_fDiveSoundDelay);
@@ -966,7 +571,6 @@ void CPlayer_OnInitClass(void) {
   _pShell->DeclareSymbol("persistent user INDEX amp_iComboText;", &amp_iComboText);
   _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerTags;", &amp_iPlayerTags);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fPlayerBrightness;", &amp_fPlayerBrightness);
-  _pShell->DeclareSymbol("persistent user INDEX amp_bMirrorDualFire;", &amp_bMirrorDualFire);
 
   // cheats
   _pShell->DeclareSymbol("user INDEX cht_bGod;",       &cht_bGod);
@@ -4376,8 +3980,8 @@ functions:
 
     ulButtonsNow = paAction.pa_ulButtons;
     ulButtonsBefore = m_ulLastButtons;
-    ulNewButtons = ulButtonsNow&~ulButtonsBefore;
-    ulReleasedButtons = (~ulButtonsNow)&(ulButtonsBefore);
+    ulNewButtons = ulButtonsNow & ~ulButtonsBefore;
+    ulReleasedButtons = (~ulButtonsNow) & (ulButtonsBefore);
 
     m_ulLastButtons = ulButtonsNow;         // remember last buttons
     en_plLastViewpoint = en_plViewpoint;    // remember last view point for lerping

@@ -1,6 +1,4 @@
-// common headers for flesh entity classes
-
-
+// Brush surfaces
 #define SURFACE_SAND 9
 #define SURFACE_WATER 12
 #define SURFACE_RED_SAND 13
@@ -9,6 +7,32 @@
 #define SURFACE_GRASS_NOIMPACT 20
 #define SURFACE_WOOD 18
 #define SURFACE_SNOW 21
+
+// [Cecil] Moved from Player
+// Representing flags used to fill buttoned actions
+#define PLACT_FIRE            (1L << 0)
+#define PLACT_RELOAD          (1L << 1)
+#define PLACT_WEAPON_NEXT     (1L << 2)
+#define PLACT_WEAPON_PREV     (1L << 3)
+#define PLACT_WEAPON_FLIP     (1L << 4)
+#define PLACT_USE             (1L << 5)
+#define PLACT_COMPUTER        (1L << 6)
+#define PLACT_3RD_PERSON_VIEW (1L << 7)
+#define PLACT_CENTER_VIEW     (1L << 8)
+#define PLACT_USE_HELD        (1L << 9)
+#define PLACT_SNIPER_ZOOMIN   (1L << 10)
+#define PLACT_SNIPER_ZOOMOUT  (1L << 11)
+#define PLACT_SNIPER_USE      (1L << 12)
+#define PLACT_FIREBOMB        (1L << 13)
+
+// [Cecil] New buttons
+#define PLACT_ALTFIRE         (1L << 14) // alt fire button
+#define PLACT_TOKENS          (1L << 15) // token spending button
+#define PLACT_SELECT_MODIFIER (1L << 16) // weapon selection modifier
+
+// [Cecil] Weapon selection mask (last 5 bits)
+#define PLACT_SELECT_WEAPON_SHIFT (27)
+#define PLACT_SELECT_WEAPON_MASK  (0x1FL << PLACT_SELECT_WEAPON_SHIFT)
 
 // Max ammo
 #define MAX_BULLETS       INDEX(500)
