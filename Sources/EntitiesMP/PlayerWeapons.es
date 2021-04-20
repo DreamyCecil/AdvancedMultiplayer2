@@ -3772,7 +3772,7 @@ procedures:
             case WEAPON_SINGLESHOTGUN: call FireShotgunGrenade(); break;
             case WEAPON_DOUBLESHOTGUN: call FirePunchShotgun(); break;
             case WEAPON_TOMMYGUN: call TommygunBurst(); break;
-            case WEAPON_ROCKETLAUNCHER: call SwitchLauncherMode(); break;
+            case WEAPON_ROCKETLAUNCHER: call FireChainsawLauncher(); break;
             case WEAPON_GRENADELAUNCHER: call FirePoisonGrenade(); break;
             case WEAPON_FLAMER: call FireTeslaGun(); break;
             case WEAPON_SNIPER: call FireAccurateSniper(); break;
@@ -4649,8 +4649,8 @@ procedures:
   };
 
   // ***************** FIRE ROCKETLAUNCHER *****************
-  FireRocketLauncher() {
-    // fire one grenade
+  RocketLauncherFire() {
+    // fire one rocket
     if (ENOUGH_AMMO) {
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
       m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_FIRE, 0);
@@ -4691,25 +4691,36 @@ procedures:
       ASSERTALWAYS("RocketLauncher - Auto weapon change not working.");
       m_bFireWeapon = m_bHasAmmo = FALSE;
     }
+
     return EEnd();
   };
+  
+  // [Cecil] Normal Rocket Launcher
+  FireRocketLauncher() {
+    // turn off chainsaw launcher
+    if (m_bChainLauncher) {
+      m_bChainLauncher = FALSE;
+      PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
 
-  // [Cecil] Rocket Launcher alt fire
-  SwitchLauncherMode() {
-    m_bChainLauncher = !m_bChainLauncher;
+      // reset model
+      SetCurrentWeaponModel();
+    }
 
-    PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
+    jump RocketLauncherFire();
+  };
 
-    // print current type
-    CTString strType(0, "Type: %s", (m_bChainLauncher ? TRANS("Chainsaw Launcher") : TRANS("Rocket Launcher")));
-    PrintCenterMessage(this, m_penPlayer, Translate(strType.str_String), 1.0f, MSS_NONE);
+  // [Cecil] Chainsaw Launcher
+  FireChainsawLauncher() {
+    // turn on chainsaw launcher
+    if (!m_bChainLauncher) {
+      m_bChainLauncher = TRUE;
+      PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
 
-    // reset model
-    SetCurrentWeaponModel();
-    autowait(0.05f);
+      // reset model
+      SetCurrentWeaponModel();
+    }
 
-    m_bAltFire = FALSE;
-    return EEnd();
+    jump RocketLauncherFire();
   };
 
   // ***************** FIRE GRENADELAUNCHER *****************
