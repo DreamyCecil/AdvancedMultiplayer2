@@ -1153,6 +1153,15 @@ functions:
     // next effect
     penPlayer->m_iFirstEmptySLD = (penPlayer->m_iFirstEmptySLD+1) % MAX_FLYING_SHELLS;
   };
+
+  // [Cecil] Set player as the owner of sound objects
+  void SetSoundOwner(void) {
+    m_soWeapon0.SetOwner(m_penPlayer);
+    m_soWeapon1.SetOwner(m_penPlayer);
+    m_soWeapon2.SetOwner(m_penPlayer);
+    m_soWeapon3.SetOwner(m_penPlayer);
+    m_soWeaponAmbient.SetOwner(m_penPlayer);
+  };
   
   // add to prediction any entities that this entity depends on
   void AddDependentsToPrediction(void) {
@@ -5394,6 +5403,9 @@ procedures:
         // play default anim
         PlayDefaultAnim(FALSE);
 
+        // [Cecil] Set weapon sounds owner
+        SetSoundOwner();
+
         // weapon changed
         if (m_bChangeWeapon) {
           jump ChangeWeapon();
@@ -5506,13 +5518,6 @@ procedures:
 
     // [Cecil] Remember last mirrored state
     m_bLastWeaponMirrored = MirrorState();
-
-    // [Cecil] Set player as the owner of sound objects
-    m_soWeapon0.SetOwner(m_penPlayer);
-    m_soWeapon1.SetOwner(m_penPlayer);
-    m_soWeapon2.SetOwner(m_penPlayer);
-    m_soWeapon3.SetOwner(m_penPlayer);
-    m_soWeaponAmbient.SetOwner(m_penPlayer);
 
     // set weapon model for current weapon
     SetCurrentWeaponModel();

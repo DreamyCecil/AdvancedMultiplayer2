@@ -940,6 +940,7 @@ properties:
  210 CEntityPointer m_penLastAction,
  211 BOOL m_bActionLoopBreak = FALSE,
  212 FLOAT3D m_vSpawnPoint = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 213 BOOL m_bPlayerInit = FALSE,
 
  220 FLOAT m_fVoiceCommands = -100.0f,
 
@@ -982,9 +983,6 @@ properties:
   // [Cecil] Extra buttons
   ULONG m_ulButtons1;
   ULONG m_ulButtons2;
-
-  // [Cecil] Player has been initialized
-  BOOL m_bPlayerInit;
 }
 
 components:
@@ -1470,9 +1468,6 @@ functions:
     // [Cecil] Reset extra buttons
     m_ulButtons1 = 0;
     m_ulButtons2 = 0;
-    
-    // [Cecil] Not initialized
-    m_bPlayerInit = FALSE;
 
     // [Cecil] Load player marker texture
     _toPlayerMarker.SetData_t(CTFILENAME("Textures\\Interface\\PlayerMarker.tex"));

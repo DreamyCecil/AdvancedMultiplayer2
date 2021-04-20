@@ -417,6 +417,9 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
       // depends on holding the fire button
       _ckDualFire.Update(CTL_GET_KEY(PCTL_FIRE));
 
+      // reset the alt fire key
+      abFireControlsStates[1] = FALSE;
+
       // set dual fire time
       if (_ckDualFire.bPressed) {
         _tmLastDualFire = _pTimer->GetRealTimeTick();
@@ -434,10 +437,6 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
       if (_tmLastDualFire > 0.0f && _tmLastDualFire + fDelay <= _pTimer->GetRealTimeTick()) {
         // fire another weapon
         abFireControlsStates[1] = TRUE;
-
-      } else {
-        // reset the alt fire key
-        abFireControlsStates[1] = FALSE;
       }
 
       // swap controls if negative delay
