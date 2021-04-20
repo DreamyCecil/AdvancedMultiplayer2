@@ -92,8 +92,9 @@ extern INDEX amp_bWeaponMirrored;
 // Dual fire on a single fire button
 static SControlsKey _ckDualFire;
 static INDEX amp_bDualWeaponFire = FALSE; // use dual weapon fire
+static INDEX amp_bDualFireMultiplier = TRUE; // multiply delay by the fire speed
 
-static FLOAT amp_fDualFireDelay = 0.0f; // delay between both weapons
+static FLOAT amp_fDualFireDelay = 0.3f; // delay between both weapons
 static FLOAT _tmLastDualFire = -1.0f; // last time the fire button has been pressed
 
 // Player speeds
@@ -161,6 +162,7 @@ extern void DeclareControlsCommands(void) {
   // misc mod options
   _pShell->DeclareSymbol("persistent user INDEX amp_bMirrorDualFire;", &amp_bMirrorDualFire);
   _pShell->DeclareSymbol("persistent user INDEX amp_bDualWeaponFire;", &amp_bDualWeaponFire);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDualFireMultiplier;", &amp_bDualFireMultiplier);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fDualFireDelay;", &amp_fDualFireDelay);
 
   // declare player control variables (moved from Player)
@@ -409,36 +411,43 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
     bDualWeapons = (penThis->GetWeapon(1)->GetCurrent() != WEAPON_NONE);
   }
 
-  // [Cecil] Dual fire button
-  if (amp_bDualWeaponFire && bDualWeapons) {
-    // depends on holding the fire button
-    _ckDualFire.Update(CTL_GET_KEY(PCTL_FIRE));
+  if (bDualWeapons) {
+    // dual fire button
+    if (amp_bDualWeaponFire) {
+      // depends on holding the fire button
+      _ckDualFire.Update(CTL_GET_KEY(PCTL_FIRE));
 
-    // set dual fire time
-    if (_ckDualFire.bPressed) {
-      _tmLastDualFire = _pTimer->GetRealTimeTick();
+      // set dual fire time
+      if (_ckDualFire.bPressed) {
+        _tmLastDualFire = _pTimer->GetRealTimeTick();
+      }
+
+      // reset time
+      if (_ckDualFire.bReleased) {
+        _tmLastDualFire = -1.0f;
+      }
+
+      // multiply by fire speed
+      FLOAT fDelay = Abs(amp_fDualFireDelay) * (amp_bDualFireMultiplier ? FireSpeedMul() : 1.0f);
+
+      // if reached the delayed time
+      if (_tmLastDualFire > 0.0f && _tmLastDualFire + fDelay <= _pTimer->GetRealTimeTick()) {
+        // fire another weapon
+        abFireControlsStates[1] = TRUE;
+
+      } else {
+        // reset the alt fire key
+        abFireControlsStates[1] = FALSE;
+      }
+
+      // swap controls if negative delay
+      if (amp_fDualFireDelay < 0.0f) {
+        Swap(abFireControlsStates[0], abFireControlsStates[1]);
+      }
     }
 
-    // reset time
-    if (_ckDualFire.bReleased) {
-      _tmLastDualFire = -1.0f;
-    }
-
-    // if reached the delayed time
-    if (_tmLastDualFire > 0.0f && _tmLastDualFire + amp_fDualFireDelay <= _pTimer->GetRealTimeTick()) {
-      // fire another weapon
-      abFireControlsStates[1] = TRUE;
-
-    } else {
-      // reset the alt fire key
-      abFireControlsStates[1] = FALSE;
-    }
-  }
-
-  // [Cecil] Has mirrored weapons
-  if (amp_bMirrorDualFire && amp_bWeaponMirrored) {
-    // swap fire controls if using dual weapons
-    if (bDualWeapons) {
+    // swap fire controls if mirrored weapons
+    if (amp_bMirrorDualFire && amp_bWeaponMirrored) {
       Swap(abFireControlsStates[0], abFireControlsStates[1]);
     }
   }

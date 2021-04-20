@@ -2628,10 +2628,13 @@ functions:
     FLOAT fFX = vLaser(1); // get laser center position
     FLOAT fFY = vLaser(2);
 
-    FLOAT fUpX = 0.25f;
+    // [Cecil] Choose horizontal size depending on weapon
+    const FLOAT fSide = (m_bExtraWeapon ? -1.0f : 1.0f);
+
+    FLOAT fUpX = 0.25f * fSide;
     FLOAT fUpY = 0.15f;
 
-    FLOAT fDnX = 0.3f;
+    FLOAT fDnX = 0.3f * fSide;
     FLOAT fDnY = 0.15f;
 
     if (GetPlayer()->m_pstState == PST_CROUCH) {
