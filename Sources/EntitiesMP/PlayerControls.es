@@ -62,14 +62,25 @@ enum EPlayerControls {
 // Array of controls
 static INDEX _aiPlayerControls[PCTL_LAST];
 
-// Voice commands menu
-static struct SVoiceCommandsKey {
-  BOOL bPressed; // pressed the key
-  BOOL bHolding; // holding the key
-  BOOL bReleased; // released the key
+// Controls key with different states
+struct SControlsKey {
+  INDEX bPressed; // pressed the key
+  INDEX bHolding; // holding the key
+  INDEX bReleased; // released the key
 
-  SVoiceCommandsKey(void) : bPressed(FALSE), bHolding(FALSE), bReleased(FALSE) {};
-} _vcMenu;
+  // Contructor
+  SControlsKey(void) : bPressed(FALSE), bHolding(FALSE), bReleased(FALSE) {};
+
+  // Update key states
+  void Update(const BOOL &bHoldingState) {
+    bPressed  = (bHoldingState && !bHolding);
+    bReleased = (!bHoldingState && bHolding);
+    bHolding = bHoldingState;
+  };
+};
+
+// Voice commands menu
+static SControlsKey _ckMenu;
 
 extern INDEX ctl_bVoiceCommands = FALSE; // show voice commands menu
 extern INDEX _iVoiceCommand = 0; // current voice command
@@ -77,6 +88,13 @@ extern INDEX _iVoiceCommand = 0; // current voice command
 // Mirrored shooting for dual weapons
 static INDEX amp_bMirrorDualFire = TRUE;
 extern INDEX amp_bWeaponMirrored;
+
+// Dual fire on a single fire button
+static SControlsKey _ckDualFire;
+static INDEX amp_bDualWeaponFire = FALSE; // use dual weapon fire
+
+static FLOAT amp_fDualFireDelay = 0.0f; // delay between both weapons
+static FLOAT _tmLastDualFire = -1.0f; // last time the fire button has been pressed
 
 // Player speeds
 extern FLOAT plr_fSpeedForward;
@@ -137,9 +155,13 @@ extern void DeclareControlsCommands(void) {
     }
   }
 
-  // misc mod options
+  // local controls
   _pShell->DeclareSymbol("user INDEX ctl_bVoiceCommands;", &ctl_bVoiceCommands);
+  
+  // misc mod options
   _pShell->DeclareSymbol("persistent user INDEX amp_bMirrorDualFire;", &amp_bMirrorDualFire);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDualWeaponFire;", &amp_bDualWeaponFire);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fDualFireDelay;", &amp_fDualFireDelay);
 
   // declare player control variables (moved from Player)
   _pShell->DeclareSymbol("persistent user FLOAT ctl_tmComputerDoubleClick;", &ctl_tmComputerDoubleClick);
@@ -329,17 +351,15 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   ULONG &ulButtons2 = *reinterpret_cast<ULONG*>(&paAction.pa_aViewRotation(3));
 
   // [Cecil] Voice commands menu button
-  _vcMenu.bPressed  = (ctl_bVoiceCommands && !_vcMenu.bHolding);
-  _vcMenu.bReleased = (!ctl_bVoiceCommands && _vcMenu.bHolding);
-  _vcMenu.bHolding = ctl_bVoiceCommands;
+  _ckMenu.Update(ctl_bVoiceCommands);
 
   // [Cecil] Reset the voice command
-  if (_vcMenu.bPressed) {
+  if (_ckMenu.bPressed) {
     _iVoiceCommand = 0;
   }
 
   // [Cecil] Add selected voice command
-  if (_vcMenu.bReleased && _iVoiceCommand > 0) {
+  if (_ckMenu.bReleased && _iVoiceCommand > 0) {
     ulButtons1 += _iVoiceCommand;
   }
   
@@ -355,7 +375,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   }
 
   // [Cecil] Change voice command if opened the menu
-  if (_vcMenu.bHolding) {
+  if (_ckMenu.bHolding) {
     if (CTL_GET_KEY(PCTL_WEAPONNEXT)) {
       _iVoiceCommand = (_iVoiceCommand+1) % 5;
     }
@@ -377,23 +397,55 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   }
 
   // [Cecil] Fire controls
-  BOOL bFireControls[2] = {
+  BOOL abFireControlsStates[2] = {
     CTL_GET_KEY(PCTL_FIRE),
     CTL_GET_KEY(PCTL_ALTFIRE),
   };
 
-  // [Cecil] Initialized and has mirrored weapons
-  if (amp_bMirrorDualFire && amp_bWeaponMirrored && penThis->m_bPlayerInit) {
-    // mirror fire controls if using dual weapons
-    if (penThis->GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
-      bFireControls[0] = CTL_GET_KEY(PCTL_ALTFIRE);
-      bFireControls[1] = CTL_GET_KEY(PCTL_FIRE);
+  // [Cecil] Using dual weapons
+  BOOL bDualWeapons = FALSE;
+
+  if (penThis->m_bPlayerInit) {
+    bDualWeapons = (penThis->GetWeapon(1)->GetCurrent() != WEAPON_NONE);
+  }
+
+  // [Cecil] Dual fire button
+  if (amp_bDualWeaponFire && bDualWeapons) {
+    // depends on holding the fire button
+    _ckDualFire.Update(CTL_GET_KEY(PCTL_FIRE));
+
+    // set dual fire time
+    if (_ckDualFire.bPressed) {
+      _tmLastDualFire = _pTimer->GetRealTimeTick();
+    }
+
+    // reset time
+    if (_ckDualFire.bReleased) {
+      _tmLastDualFire = -1.0f;
+    }
+
+    // if reached the delayed time
+    if (_tmLastDualFire > 0.0f && _tmLastDualFire + amp_fDualFireDelay <= _pTimer->GetRealTimeTick()) {
+      // fire another weapon
+      abFireControlsStates[1] = TRUE;
+
+    } else {
+      // reset the alt fire key
+      abFireControlsStates[1] = FALSE;
+    }
+  }
+
+  // [Cecil] Has mirrored weapons
+  if (amp_bMirrorDualFire && amp_bWeaponMirrored) {
+    // swap fire controls if using dual weapons
+    if (bDualWeapons) {
+      Swap(abFireControlsStates[0], abFireControlsStates[1]);
     }
   }
   
   // set button pressed flags
   paAction.pa_ulButtons |= (CTL_GET_KEY(PCTL_WEAPONFLIP)   ? PLACT_WEAPON_FLIP : 0)
-                        | (bFireControls[0]                ? PLACT_FIRE : 0)
+                        | (abFireControlsStates[0]         ? PLACT_FIRE : 0)
                         | (CTL_GET_KEY(PCTL_RELOAD)        ? PLACT_RELOAD : 0)
                         | (CTL_GET_KEY(PCTL_USE)           ? PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE : 0)
                         | (CTL_GET_KEY(PCTL_COMPUTER)      ? PLACT_COMPUTER : 0)
@@ -405,7 +457,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
                         | (CTL_GET_KEY(PCTL_SNIPERZOOMIN)  ? PLACT_SNIPER_ZOOMIN : 0)
                         | (CTL_GET_KEY(PCTL_SNIPERZOOMOUT) ? PLACT_SNIPER_ZOOMOUT : 0)
                         // [Cecil] New buttons
-                        | (bFireControls[1]                 ? PLACT_ALTFIRE : 0)
+                        | (abFireControlsStates[1]          ? PLACT_ALTFIRE : 0)
                         | (CTL_GET_KEY(PCTL_TOKENS)         ? PLACT_TOKENS : 0)
                         | (CTL_GET_KEY(PCTL_SELECTMODIFIER) ? PLACT_SELECT_MODIFIER : 0);
 
