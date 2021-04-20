@@ -5432,6 +5432,7 @@ procedures:
         }
         resume;
       }
+
       // select weapon
       on (ESelectWeapon eSelect) : {
         // try to change weapon

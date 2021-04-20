@@ -208,7 +208,7 @@ functions:
   void DualWeaponShift(void) {
     FLOAT fSpeed = 2.0f * _pTimer->TickQuantum;
 
-    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE && GetWeapon(1)->GetWanted() != WEAPON_NONE) {
+    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE || GetWeapon(1)->GetWanted() != WEAPON_NONE) {
       m_fDualWeaponShift = ClampUp(m_fDualWeaponShift + fSpeed, 1.0f);
     } else {
       m_fDualWeaponShift = ClampDn(m_fDualWeaponShift - fSpeed, 0.0f);
@@ -268,7 +268,7 @@ functions:
     ESelectWeapon eSelect;
 
     // pick the same weapon
-    if (GetWeapon(1)->GetCurrent() == WEAPON_NONE) {
+    if (GetWeapon(1)->GetCurrent() == WEAPON_NONE || GetWeapon(1)->GetWanted() == WEAPON_NONE) {
       eSelect.iWeapon = GetWeapon(0)->GetCurrent();
       eSelect.bAbsolute = TRUE;
       
