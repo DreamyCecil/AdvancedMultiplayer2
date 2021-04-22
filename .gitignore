@@ -80,6 +80,7 @@ Controls/01-*
 Demos/*
 !Demos/empty
 LevelPatches/*
+!LevelPatches/GlobalClasses.json
 Models/*
 Players/*
 !Players/empty
