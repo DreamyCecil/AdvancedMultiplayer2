@@ -9,6 +9,7 @@ struct SPlayerWeapon {
   SPlayerAmmo *ppaAmmo; // current ammo for this weapon
   SPlayerAmmo *ppaAlt; // current alt ammo for this weapon
 
+  INDEX iPicked; // amount of times the weapon has been picked up
   INDEX aiMag[2]; // current ammo in the magazine (main and extra weapons)
 
   // Constructors

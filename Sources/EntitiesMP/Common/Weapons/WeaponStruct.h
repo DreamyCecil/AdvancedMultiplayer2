@@ -16,6 +16,8 @@ struct SWeaponStruct : public SWeaponBase {
   SWeaponAmmo *pwaAlt; // alt ammo
   INDEX iMaxMag; // magazine size
 
+  INDEX iBit; // special bit of the weapon (for compatibility with PlayerMarker)
+
   enum EDecWeaponAmmo {
     DWA_AMMO = 0, // main ammo
     DWA_ALT  = 1, // alt ammo

@@ -1,6 +1,7 @@
 {
   "Name" : "XPML21 Rocket Launcher",
   "Icon" : "TexturesMP\Interface\WRocketLauncher.tex",
+  "Bit" : 7,
   
   "Model1" : "Models1\08_RocketLauncher.json",
   "Model3" : "Models3\08_RocketLauncher.json",

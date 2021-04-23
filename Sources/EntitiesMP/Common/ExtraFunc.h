@@ -1,3 +1,5 @@
+#pragma once
+
 // [Cecil] Weapon flags
 inline INDEX WeaponFlag(const INDEX &iWeapon) {
   return (1 << (iWeapon-1));

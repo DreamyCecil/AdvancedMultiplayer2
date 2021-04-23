@@ -44,9 +44,6 @@
 // [Cecil] Extra dependencies
 #include "EntitiesMP/PlayerInventory.h"
 
-// [Cecil] Extra functions
-#include "EntitiesMP/Common/ExtraFunc.h"
-
 extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
 
 // From GameMP
@@ -7175,7 +7172,7 @@ procedures:
 
         CEntity *penStart = CreateEntity(plStart, CLASS_START);
         CPlayerMarker *ppmStart = (CPlayerMarker*)penStart;
-        ppmStart->m_iGiveWeapons = GetWeapon(0)->m_iAvailableWeapons;
+        ppmStart->m_iGiveWeapons = GetInventory()->GetCurrentWeaponMask();
         ppmStart->m_fMaxAmmoRatio = 0.5f;
 
         // name it after the current tick

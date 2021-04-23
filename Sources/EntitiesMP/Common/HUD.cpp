@@ -13,9 +13,6 @@
 // [Cecil] Extra dependencies
 #include "EntitiesMP/PlayerInventory.h"
 
-// [Cecil] Extra functions
-#include "EntitiesMP/Common/ExtraFunc.h"
-
 #define ENTITY_DEBUG
 
 // cheats
@@ -820,7 +817,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // [Cecil] Check if any weapons for certain ammo type
   for (INDEX iCheckWeapon = WEAPON_KNIFE; iCheckWeapon < WEAPON_LAST; iCheckWeapon++) {
-    if (!WeaponExists(_penWeapons[0]->m_iAvailableWeapons, iCheckWeapon)) {
+    if (!_penInventory->HasWeapon(iCheckWeapon)) {
       continue;
     }
 
@@ -1098,7 +1095,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     
     // [Cecil] Count existing weapons
     for (INDEX iCount = WEAPON_NONE+1; iCount < WEAPON_LAST; iCount++) {
-      if (WeaponExists(_penWeapons[0]->m_iAvailableWeapons, iCount)) {
+      if (_penInventory->HasWeapon(iCount)) {
         ctWeapons++;
       }
     }
@@ -1111,7 +1108,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       SPlayerWeapon &pw = aWeapons[iWeapon];
 
       // [Cecil] Skip unexistent weapons
-      if (!WeaponExists(_penWeapons[0]->m_iAvailableWeapons, iWeapon)) {
+      if (!_penInventory->HasWeapon(iWeapon)) {
         continue;
       }
 

@@ -25,5 +25,8 @@ typedef std::string string;
 #include "../Common/EmanatingParticles.h"
 #include "../Common/GameInterface.h"
 
+// [Cecil] Extra functions
+#include "EntitiesMP/Common/ExtraFunc.h"
+
 // [Cecil] Weapon structures
 #include "EntitiesMP/Common/Weapons/StructHeader.h"

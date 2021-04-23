@@ -4,14 +4,14 @@
 
 // Constructors
 SPlayerWeapon::SPlayerWeapon(void) :
-  pwsWeapon(NULL), ppaAmmo(NULL), ppaAlt(NULL)
+  pwsWeapon(NULL), ppaAmmo(NULL), ppaAlt(NULL), iPicked(0)
 {
   aiMag[0] = 0;
   aiMag[1] = 0;
 };
 
 SPlayerWeapon::SPlayerWeapon(SWeaponStruct *pSetWeapon, SPlayerAmmo *pSetAmmo, SPlayerAmmo *pSetAlt) :
-  pwsWeapon(pSetWeapon), ppaAmmo(pSetAmmo), ppaAlt(pSetAlt)
+  pwsWeapon(pSetWeapon), ppaAmmo(pSetAmmo), ppaAlt(pSetAlt), iPicked(0)
 {
   aiMag[0] = 0;
   aiMag[1] = 0;

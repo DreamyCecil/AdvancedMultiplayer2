@@ -1,6 +1,7 @@
 {
   "Name" : "XL2 Lasergun",
   "Icon" : "TexturesMP\Interface\WLaser.tex",
+  "Bit" : 11,
   
   "Model1" : "Models1\12_Laser.json",
   "Model3" : "Models3\12_Laser.json",

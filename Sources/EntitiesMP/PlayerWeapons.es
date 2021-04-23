@@ -72,9 +72,6 @@ void ResetWeaponPosition(void) {
 #include "EntitiesMP/TeslaLightning.h"
 #include "EntitiesMP/PlayerInventory.h"
 
-// [Cecil] Extra functions
-#include "EntitiesMP/Common/ExtraFunc.h"
-
 // [Cecil] Current player weapon
 #define CUR_WEAPON GetInventory()->m_aWeapons[m_iCurrentWeapon]
 
@@ -147,7 +144,7 @@ event EAltFire {};
 
 // weapons (do not change order! - needed by HUD.cpp)
 enum WeaponType {
-  0 WEAPON_NONE               "", // don't consider this in WEAPONS_ALLAVAILABLEMASK
+  0 WEAPON_NONE               "",
   1 WEAPON_KNIFE              "",
   2 WEAPON_COLT               "",
   3 WEAPON_DOUBLECOLT         "",
@@ -163,12 +160,9 @@ enum WeaponType {
  13 WEAPON_SNIPER             "",
  14 WEAPON_IRONCANNON         "",
  15 WEAPON_LAST               "",
-}; // see 'WEAPONS_ALLAVAILABLEMASK' -> (11111111111111 == 0x3FFF)
+};
 
 %{
-// AVAILABLE WEAPON MASK
-#define WEAPONS_ALLAVAILABLEMASK 0x3FFF
-
 // MiniGun specific
 #define MINIGUN_STATIC      0
 #define MINIGUN_FIRE        1
@@ -197,7 +191,7 @@ enum WeaponType {
 #define LIGHT_ANIM_COLT_SHOTGUN 4
 #define LIGHT_ANIM_NONE 5
 
-static INDEX wpn_iCurrent;
+extern INDEX wpn_iCurrent = 0; // [Cecil] Made extern
 extern FLOAT hud_tmWeaponsOnScreen;
 
 // bullet positions
@@ -461,12 +455,12 @@ properties:
   1 CEntityPointer m_penPlayer,       // player which owns it
   2 BOOL m_bFireWeapon = FALSE,       // weapon is firing
   3 BOOL m_bHasAmmo    = FALSE,       // weapon has ammo
- // [Cecil] Knife -> None
+
+  // [Cecil] Knife -> None
   4 enum WeaponType m_iCurrentWeapon  = WEAPON_NONE,    // currently active weapon (internal)
   5 enum WeaponType m_iWantedWeapon   = WEAPON_NONE,     // wanted weapon (internal)
   6 enum WeaponType m_iPreviousWeapon = WEAPON_NONE,   // previous active weapon (internal)
- // [Cecil] 0x01 -> 0x00
- 11 INDEX m_iAvailableWeapons = 0x00,   // avaible weapons
+
  12 BOOL  m_bChangeWeapon = FALSE,      // change current weapon
  13 BOOL  m_bReloadWeapon = FALSE,      // reload weapon
  14 BOOL  m_bMirrorFire   = FALSE,      // fire with mirror model
@@ -1175,7 +1169,7 @@ functions:
   };
 
   void Precache(void) {
-    CPlayerWeapons_Precache(m_iAvailableWeapons);
+    CPlayerWeapons_Precache(GetInventory()->GetCurrentWeaponMask());
   };
 
   CPlayer *GetPlayer(void) {
@@ -2742,65 +2736,6 @@ functions:
     m_fWeaponDrawPowerOld = m_fWeaponDrawPower = m_tmDrawStartTime = 0;
   };
 
-  // Initialize weapons
-  void InitializeWeapons(const INDEX &iGiveWeapons, const INDEX &iTakeWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
-    ResetWeaponMovingOffset();
-
-    // remember old weapons
-    ULONG ulOldWeapons = m_iAvailableWeapons;
-
-    // [Cecil] Keep all weapons in coop
-    BOOL bKeep = (GetSP()->sp_bCooperative && GetSP()->sp_iAMPOptions & AMP_KEEPSECRETS);
-    if (bKeep) {
-      ulOldWeapons = 0;
-    }
-
-    // give/take weapons
-    m_iAvailableWeapons &= ~iTakeWeapons;
-
-    // [Cecil] 0x03 -> GetSP()->sp_iWeaponGiver
-    m_iAvailableWeapons |= (GetSP()->sp_iWeaponGiver | iGiveWeapons);
-
-    // [Cecil] Remove weapons whose items were disabled
-    if (GetSP()->sp_iAMPOptions & AMP_TAKEWEAPONS) {
-      INDEX iRemoved = (GetSP()->sp_iItemRemoval & WEAPONS_ALLAVAILABLEMASK);
-      m_iAvailableWeapons &= iRemoved;
-    }
-
-    m_iAvailableWeapons &= WEAPONS_ALLAVAILABLEMASK;
-
-    // find which weapons are new
-    ULONG ulNewWeapons = m_iAvailableWeapons & ~ulOldWeapons;
-
-    // [Cecil] Prepare weapons
-    if (!m_bExtraWeapon) {
-      GetInventory()->PrepareWeapons(ulNewWeapons, iTakeAmmo, fAmmoRatio);
-    }
-
-    // clear temp variables for some weapons
-    m_aMiniGun = 0;
-    m_aMiniGunLast = 0;
-    m_aMiniGunSpeed = 0;
-
-    // [Cecil] Remember last weapon
-    m_iPreviousWeapon = m_iCurrentWeapon;
-
-    // select best weapon
-    SelectNewWeapon();
-    m_iCurrentWeapon = m_iWantedWeapon;
-    wpn_iCurrent = m_iCurrentWeapon;
-    m_bChangeWeapon = FALSE;
-
-    // set weapon model for current weapon
-    SetCurrentWeaponModel();
-
-    // remove weapon attachment
-    ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).RemoveWeapon();
-
-    // add weapon attachment
-    ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).SetWeapon();
-  };
-
   void CheatOpen(void) {
     if (IsOfClass(m_penRayHit, "Moving Brush")) {
       m_penRayHit->SendEvent(ETrigger());
@@ -2917,7 +2852,7 @@ functions:
     }
 
     // if player has weapon and has enough ammo
-    if (WeaponExists(m_iAvailableWeapons, wtToTry) && HasAmmo(wtToTry)) {
+    if (GetInventory()->HasWeapon(wtToTry) && HasAmmo(wtToTry)) {
       // if different weapon
       if (wtToTry != m_iCurrentWeapon) {
         // initiate change
@@ -3253,7 +3188,7 @@ functions:
       // [Cecil] No position remapping
       WeaponType wt = (WeaponType)wti;
 
-      if (WeaponExists(m_iAvailableWeapons, wt) && HasAmmo(wt)) {
+      if (GetInventory()->HasWeapon(wt) && HasAmmo(wt)) {
         return wt;
       }
     }
@@ -3263,8 +3198,8 @@ functions:
 
   // select new weapon
   void SelectWeaponChange(INDEX iSelect) {
-    // [Cecil] No weapons
-    if (m_iAvailableWeapons == 0x00) {
+    // [Cecil] TEMP: No weapons in the mask
+    if (GetInventory()->GetCurrentWeaponMask() == 0x00) {
       return;
     }
     
@@ -3310,7 +3245,7 @@ functions:
         
         // [Cecil] Check if doesn't exist
         // if weapon don't exist or don't have ammo flip it
-        if (!WeaponExists(m_iAvailableWeapons, EwtTemp) || !HasAmmo(EwtTemp)) {
+        if (!GetInventory()->HasWeapon(EwtTemp) || !HasAmmo(EwtTemp)) {
           EwtTemp = GetAltWeapon(EwtTemp);
         }
       }
@@ -3326,7 +3261,7 @@ functions:
     
     // check if some weapon exists and has ammo
     if (eWeapon != WEAPON_NONE) {
-      bChange = (WeaponExists(m_iAvailableWeapons, eWeapon) && HasAmmo(eWeapon));
+      bChange = (GetInventory()->HasWeapon(eWeapon) && HasAmmo(eWeapon));
     }
 
     if (bChange) {

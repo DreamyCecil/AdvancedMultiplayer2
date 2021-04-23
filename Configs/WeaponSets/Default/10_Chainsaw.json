@@ -1,6 +1,7 @@
 {
   "Name" : "'Bonecracker' P-LAH Chainsaw",
   "Icon" : "TexturesMP\Interface\WChainsaw.tex",
+  "Bit" : 9,
   
   "Model1" : "Models1\10_Chainsaw.json",
   "Model3" : "Models3\10_Chainsaw.json",

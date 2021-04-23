@@ -1,6 +1,7 @@
 {
   "Name" : "XM214-A Minigun",
   "Icon" : "TexturesMP\Interface\WMinigun.tex",
+  "Bit" : 6,
   
   "Model1" : "Models1\07_Minigun.json",
   "Model2" : "Models1\07_Minigun_2.json",

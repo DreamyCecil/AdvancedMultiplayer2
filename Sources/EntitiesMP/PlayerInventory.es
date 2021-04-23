@@ -3,9 +3,13 @@
 #include "StdH.h"
 #include "EntitiesMP/Player.h"
 #include "EntitiesMP/PlayerWeapons.h"
+#include "EntitiesMP/PlayerAnimator.h"
 
-// Extra functions
-#include "EntitiesMP/Common/ExtraFunc.h"
+// Current global weapon
+extern INDEX wpn_iCurrent;
+
+// Weapon mask for compatibility
+#define WEAPONS_ALLAVAILABLEMASK 0x3FFF
 
 // Ammo types to default ammo set
 static const _aiAmmoSetTypes[] = {
@@ -199,6 +203,92 @@ functions:
 
   // Weapon functions
 
+  // Get weapon mask (PlayerMarker compatibility)
+  INDEX GetCurrentWeaponMask(void) {
+    INDEX iMask = 0;
+
+    for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
+      // haven't picked up any
+      if (m_aWeapons[i].iPicked <= 0) {
+        continue;
+      }
+
+      SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
+
+      if (pws == NULL) {
+        continue;
+      }
+
+      // bit is high enough
+      if (pws->iBit > 31) { 
+        continue;
+      }
+
+      iMask |= (1 << pws->iBit);
+    }
+
+    return iMask;
+  };
+
+  // Add weapons using a weapon mask (PlayerMarker compatibility)
+  void GiveWeaponMask(const INDEX &iGiveWeapons) {
+    for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
+      SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
+
+      if (pws == NULL) {
+        continue;
+      }
+
+      // bit is high enough
+      if (pws->iBit > 31) { 
+        continue;
+      }
+
+      // bit exists in the mask
+      if (iGiveWeapons & (1 << pws->iBit)) {
+        m_aWeapons[i].iPicked++;
+      }
+    }
+  };
+
+  // Remove weapons using a weapon mask (PlayerMarker compatibility)
+  void TakeWeaponMask(const INDEX &iTakeWeapons) {
+    for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
+      SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
+
+      if (pws == NULL) {
+        continue;
+      }
+
+      // bit is high enough
+      if (pws->iBit > 31) { 
+        continue;
+      }
+
+      // bit exists in the mask
+      if (iTakeWeapons & (1 << pws->iBit)) {
+        m_aWeapons[i].iPicked = 0;
+      }
+    }
+  };
+
+  // Check if certain weapon exists
+  BOOL HasWeapon(INDEX iWeapon) {
+    return (m_aWeapons[iWeapon].iPicked > 0);
+  };
+
+  // Check if enough weapons exist (for dual weapons)
+  BOOL HasEnoughWeapons(INDEX iWeapon) {
+    INDEX ctWeapons = 2;
+
+    // [Cecil] TODO: Implement this
+    /*if (!m_aWeapons[iWeapon].IsDual()) {
+      ctWeapons = 1;
+    }*/
+
+    return (m_aWeapons[iWeapon].iPicked >= ctWeapons);
+  };
+
   // Same weapons selected
   BOOL SameWeapons(void) {
     return GetWeapon(0)->GetCurrent() == GetWeapon(1)->GetCurrent();
@@ -220,8 +310,70 @@ functions:
 
   // Initialize weapons
   void InitWeapons(const INDEX &iGiveWeapons, const INDEX &iTakeWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
-    GetWeapon(0)->InitializeWeapons(iGiveWeapons, iTakeWeapons, iTakeAmmo, fAmmoRatio);
-    GetWeapon(1)->InitializeWeapons(iGiveWeapons, iTakeWeapons, iTakeAmmo, fAmmoRatio);
+    GetWeapon(0)->ResetWeaponMovingOffset();
+    GetWeapon(1)->ResetWeaponMovingOffset();
+
+    // remember old weapons
+    ULONG ulOldWeapons = GetCurrentWeaponMask();
+
+    // [Cecil] Keep all weapons in coop
+    BOOL bKeep = (GetSP()->sp_bCooperative && GetSP()->sp_iAMPOptions & AMP_KEEPSECRETS);
+
+    if (bKeep) {
+      ulOldWeapons = 0;
+    }
+
+    // take weapons
+    TakeWeaponMask(iTakeWeapons);
+
+    // [Cecil] 0x03 -> GetSP()->sp_iWeaponGiver
+    GiveWeaponMask(GetSP()->sp_iWeaponGiver | iGiveWeapons);
+
+    // [Cecil] Remove weapons whose items were disabled
+    if (GetSP()->sp_iAMPOptions & AMP_TAKEWEAPONS) {
+      INDEX iRemoved = (GetSP()->sp_iItemRemoval & WEAPONS_ALLAVAILABLEMASK);
+      TakeWeaponMask(~iRemoved);
+    }
+
+    TakeWeaponMask(~WEAPONS_ALLAVAILABLEMASK);
+
+    // find which weapons are new
+    ULONG ulNewWeapons = GetCurrentWeaponMask() & ~ulOldWeapons;
+
+    // [Cecil] Prepare weapons
+    PrepareWeapons(ulNewWeapons, iTakeAmmo, fAmmoRatio);
+    
+    // [Cecil] Weapon specific
+    for (int iWeapons = 0; iWeapons < 2; iWeapons++) {
+      CPlayerWeapons &plw = *GetWeapon(iWeapons);
+
+      // clear temp variables for some weapons
+      plw.m_aMiniGun = 0;
+      plw.m_aMiniGunLast = 0;
+      plw.m_aMiniGunSpeed = 0;
+
+      // remember last weapon
+      plw.m_iPreviousWeapon = plw.m_iCurrentWeapon;
+
+      // select best weapon
+      plw.SelectNewWeapon();
+
+      plw.m_iCurrentWeapon = plw.m_iWantedWeapon;
+      plw.m_bChangeWeapon = FALSE;
+
+      if (!plw.m_bExtraWeapon) {
+        wpn_iCurrent = plw.m_iCurrentWeapon;
+      }
+
+      // set weapon model for current weapon
+      plw.SetCurrentWeaponModel();
+    }
+
+    // remove weapon attachment
+    GetPlayer()->GetPlayerAnimator()->RemoveWeapon();
+
+    // add weapon attachment
+    GetPlayer()->GetPlayerAnimator()->SetWeapon();
 
     // precache new weapons
     GetWeapon(0)->Precache();
@@ -319,13 +471,7 @@ functions:
   // Clear weapons
   void ClearWeapons(void) {
     // don't clear secret weapons in coop
-    BOOL bClear = !GetSP()->sp_bCooperative || !(GetSP()->sp_iAMPOptions & AMP_KEEPSECRETS);
-
-    if (bClear) {
-      // 0x03 -> 0x00
-      GetWeapon(0)->m_iAvailableWeapons = 0x00;
-      GetWeapon(1)->m_iAvailableWeapons = 0x00;
-    }
+    BOOL bClearWeapons = !GetSP()->sp_bCooperative || !(GetSP()->sp_iAMPOptions & AMP_KEEPSECRETS);
 
     // clear ammo amounts
     INDEX iClear;
@@ -337,6 +483,11 @@ functions:
     for (iClear = 0; iClear < m_aWeapons.Count(); iClear++) {
       m_aWeapons[iClear].aiMag[0] = 0;
       m_aWeapons[iClear].aiMag[1] = 0;
+
+      // clear picked weapons
+      if (bClearWeapons) {
+        m_aWeapons[iClear].iPicked = 0;
+      }
     }
   };
 
@@ -352,9 +503,9 @@ functions:
       iReceiveType = WeaponItemType(IRnd() % 13);
 
       // replace weapons with unlimited ammo with something else
-      if ((iReceiveType == WIT_KNIFE    && GetWeapon(0)->m_iAvailableWeapons & IRF_KNIFE)
-       || (iReceiveType == WIT_CHAINSAW && GetWeapon(0)->m_iAvailableWeapons & IRF_CHAINSAW)
-       || (iReceiveType == WIT_COLT     && GetWeapon(0)->m_iAvailableWeapons & IRF_COLT && GetWeapon(0)->m_iAvailableWeapons & IRF_DCOLT)) {
+      if ((iReceiveType == WIT_KNIFE    && HasEnoughWeapons(WEAPON_KNIFE))
+       || (iReceiveType == WIT_CHAINSAW && HasEnoughWeapons(WEAPON_CHAINSAW))
+       || (iReceiveType == WIT_COLT     && HasEnoughWeapons(WEAPON_COLT))) {
         iReceiveType = WeaponItemType(IRnd() % 10 + 3);
       }
 
@@ -391,15 +542,12 @@ functions:
       case WIT_CANNON:          iReceiveType = WEAPON_IRONCANNON; break;
       default: ASSERTALWAYS("Uknown weapon type");
     }
-
+    
+    // hasn't been picked up yet
+    BOOL bNewWeapon = (m_aWeapons[iReceiveType].iPicked <= 0);
+    
     // add weapon
-    if (iReceiveType == WEAPON_COLT && (GetWeapon(0)->m_iAvailableWeapons & (1 << (WEAPON_COLT-1)))) {
-      iReceiveType = WEAPON_DOUBLECOLT;
-    }
-
-    ULONG ulOldWeapons = GetWeapon(0)->m_iAvailableWeapons;
-    GetWeapon(0)->m_iAvailableWeapons |= 1 << (iReceiveType-1);
-    GetWeapon(1)->m_iAvailableWeapons |= 1 << (iReceiveType-1);
+    m_aWeapons[iReceiveType].iPicked++;
 
     // precache eventual new weapons
     GetWeapon(0)->Precache();
@@ -494,7 +642,7 @@ functions:
       bAutoSelect = TRUE;
 
     } else if (iSelectionSetting == PS_WAS_ONLYNEW) {
-      if (GetWeapon(0)->m_iAvailableWeapons & ~ulOldWeapons) {
+      if (bNewWeapon) {
         bAutoSelect = TRUE;
       }
 
@@ -669,11 +817,13 @@ functions:
   // Cheat give all
   void CheatGiveAll(void) {
     // all weapons
-    GetWeapon(0)->m_iAvailableWeapons = 0x3FFF;
-    GetWeapon(1)->m_iAvailableWeapons = 0x3FFF;
+    INDEX i;
+    for (i = 0; i < m_aWeapons.Count(); i++) {
+      m_aWeapons[i].iPicked = 2;
+    }
 
-    // [Cecil] Give all ammo
-    for (INDEX i = 0; i < m_aAmmo.Count(); i++) {
+    // all ammo
+    for (i = 0; i < m_aAmmo.Count(); i++) {
       m_aAmmo[i].SetMax();
     }
 

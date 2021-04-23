@@ -8,8 +8,6 @@
 
 // [Cecil] Patch parser
 #include "EntitiesMP/Common/ConfigFunc.h"
-
-#include "EntitiesMP/Common/ExtraFunc.h"
 %}
 
 uses "EntitiesMP/EnemyBase";

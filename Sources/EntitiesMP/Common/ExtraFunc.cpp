@@ -81,7 +81,8 @@ extern void ConvertWorld(CEntity *penWorld) {
       continue;
     }
   
-    if (IsOfClass(pen, "Player Weapons")) {
+    // [Cecil] NOTE: Not needed because PlayerWeapons isn't present on maps
+    /*if (IsOfClass(pen, "Player Weapons")) {
       CPlayerWeapons *penWeapons = (CPlayerWeapons *)pen;
       INDEX *piWeapons = &penWeapons->m_iAvailableWeapons;
       INDEX iWeapons = *piWeapons & ~GetSP()->sp_iWeaponGiver;
@@ -96,7 +97,7 @@ extern void ConvertWorld(CEntity *penWorld) {
       *piWeapons = iNewWeapons | GetSP()->sp_iWeaponGiver;
       CPrintF(" - Converted PlayerWeapons\n");
 
-    } else if (IsOfClass(pen, "Player Marker")) {
+    } else*/ if (IsOfClass(pen, "Player Marker")) {
       CPlayerMarker *penWeapons = (CPlayerMarker *)pen;
       INDEX *piWeapons = &penWeapons->m_iGiveWeapons;
       INDEX *piTakeWeapons = &penWeapons->m_iTakeWeapons;

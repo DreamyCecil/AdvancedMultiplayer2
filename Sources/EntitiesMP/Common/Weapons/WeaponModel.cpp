@@ -2,9 +2,6 @@
 
 #include "WeaponModel.h"
 
-// Config parser
-#include "EntitiesMP/Common/ExtraFunc.h"
-
 // Constructor
 SWeaponModel::SWeaponModel(void) : strConfig(""), bModelSet(FALSE), pmoModel(NULL) {};
 

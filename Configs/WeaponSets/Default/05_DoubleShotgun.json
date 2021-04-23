@@ -1,6 +1,7 @@
 {
   "Name" : "Double Barrel Coach Gun",
   "Icon" : "TexturesMP\Interface\WDoubleShotgun.tex",
+  "Bit" : 4,
   
   "Model1" : "Models1\05_DoubleShotgun.json",
   "Model3" : "Models3\05_DoubleShotgun.json",

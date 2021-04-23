@@ -3,7 +3,6 @@
 
 // Config parser
 #include "EntitiesMP/Common/ConfigFunc.h"
-#include "EntitiesMP/Common/ExtraFunc.h"
 
 // Set icon
 void SWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
@@ -191,6 +190,12 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
 
   if (cb.GetValue("Mana", val)) {
     ws.fMana = val.GetNumber();
+  }
+
+  int iBit = -1;
+
+  if (cb.GetValue("Bit", iBit)) {
+    ws.iBit = iBit;
   }
 
   // models

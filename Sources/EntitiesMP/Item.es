@@ -5,8 +5,6 @@
 
 // [Cecil] For custom sounds
 #include <Engine/Sound/SoundData.h>
-
-#include "EntitiesMP/Common/ExtraFunc.h"
 %}
 
 %{
