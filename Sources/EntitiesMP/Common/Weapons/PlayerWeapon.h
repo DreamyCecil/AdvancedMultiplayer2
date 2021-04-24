@@ -78,6 +78,19 @@ struct SPlayerWeapon {
   inline BOOL EmptyMag(const INDEX &iExtra) {
     return (pwsWeapon->iMaxMag > 0 && aiMag[iExtra] <= 0);
   };
+  
+  // Can be dual
+  inline BOOL DualWeapon(void) {
+    // [Cecil] TODO: Make an option that allows it no matter what and return TRUE
+    return pwsWeapon->bDualWeapon;
+  };
+
+  // Can be selected as an extra weapon
+  inline BOOL ExtraWeapon(void) {
+    // [Cecil] TODO: Make an option that allows it no matter what and return TRUE
+    // can be dual and picked enough up
+    return (DualWeapon() && iPicked >= 2);
+  };
 
   // Get weapon position
   inline SWeaponPos GetPosition(void) {

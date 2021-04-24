@@ -1,7 +1,9 @@
 {
   "Name" : "Shofield .45 w/ TMAR",
   "Icon" : "TexturesMP\Interface\WColt.tex",
+  
   "Bit" : [1, 2], // Colt + Double Colt
+  "Group" : 2,
   
   "Model1" : "Models1\02_Colt.json",
   "Model3" : "Models3\02_Colt.json",

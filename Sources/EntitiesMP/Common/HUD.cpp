@@ -118,6 +118,7 @@ static CTextureObject _toSniperLed;
 // [Cecil] AMP 2 textures
 static CTextureObject _toEnemyCount;
 static CTextureObject _toComboToken;
+static CTextureObject _toExtraWeapon;
 
 // all info about color transitions
 struct ColorTransitionTable {
@@ -960,14 +961,17 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   // display all ammo infos
   INDEX i;
   FLOAT fAdv;
+
   COLOR colIcon, colBar;
   PrepareColorTransitions(colMax, colTop, colMid, C_RED, 0.5f, 0.25f, FALSE);
+
   // reduce the size of icon slightly
-  _fCustomScaling = ClampDn( _fCustomScaling*0.8f, 0.5f);
-  const FLOAT fOneUnitS  = fOneUnit  *0.8f;
-  const FLOAT fAdvUnitS  = fAdvUnit  *0.8f;
-  const FLOAT fNextUnitS = fNextUnit *0.8f;
-  const FLOAT fHalfUnitS = fHalfUnit *0.8f;
+  _fCustomScaling = ClampDn(_fCustomScaling * 0.8f, 0.5f);
+
+  const FLOAT fOneUnitS  = fOneUnit  * 0.8f;
+  const FLOAT fAdvUnitS  = fAdvUnit  * 0.8f;
+  const FLOAT fNextUnitS = fNextUnit * 0.8f;
+  const FLOAT fHalfUnitS = fHalfUnit * 0.8f;
 
   // prepare postition and ammo quantities
   fRow = pixBottomBound-fHalfUnitS;
@@ -1105,12 +1109,12 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fCol = 320.0f - (ctWeapons*fAdvUnit-fHalfUnit)/2.0f;
 
     for (INDEX iWeapon = WEAPON_NONE+1; iWeapon < WEAPON_LAST; iWeapon++) {
-      SPlayerWeapon &pw = aWeapons[iWeapon];
-
       // [Cecil] Skip unexistent weapons
       if (!_penInventory->HasWeapon(iWeapon)) {
         continue;
       }
+
+      SPlayerWeapon &pw = aWeapons[iWeapon];
 
       // display weapon icon
       COLOR colBorder = _colHUD;
@@ -1143,6 +1147,11 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
       } else {
         HUD_DrawBorder(fCol, fRow, fOneUnit, fOneUnit, colBorder);
         HUD_DrawIcon(fCol, fRow, *ptoDrawIcon, colIcon, 1.0f, FALSE, 1.0f);
+      }
+
+      // [Cecil] Mark as selectable as an extra weapon
+      if (pw.DualWeapon()) {
+        HUD_DrawIcon(fCol, fRow, _toExtraWeapon, (pw.iPicked >= 2 ? SE_COL_BLUEGREEN_LT : C_RED), 1.0f, FALSE, 1.0f);
       }
 
       // advance to next position
@@ -1583,8 +1592,12 @@ extern void InitHUD(void) {
     // [Cecil] AMP 2 textures
     _toEnemyCount.SetData_t(CTFILENAME("Textures\\Interface\\EnemyCount.tex"));
     ((CTextureData*)_toEnemyCount.GetData())->Force(TEX_CONSTANT);
+
     _toComboToken.SetData_t(CTFILENAME("Textures\\Interface\\Token.tex"));
     ((CTextureData*)_toComboToken.GetData())->Force(TEX_CONSTANT);
+
+    _toExtraWeapon.SetData_t(CTFILENAME("Textures\\Interface\\ExtraWeapon.tex"));
+    ((CTextureData*)_toExtraWeapon.GetData())->Force(TEX_CONSTANT);
 
   } catch (char *strError) {
     FatalError(strError);

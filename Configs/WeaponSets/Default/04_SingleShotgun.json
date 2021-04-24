@@ -1,7 +1,9 @@
 {
   "Name" : "12 Gauge Pump Action Shotgun",
   "Icon" : "TexturesMP\Interface\WSingleShotgun.tex",
+  
   "Bit" : 3,
+  "Group" : 3,
   
   "Model1" : "Models1\04_SingleShotgun.json",
   "Model3" : "Models3\04_SingleShotgun.json",

@@ -1,7 +1,9 @@
 {
   "Name" : "XOP Flamethrower",
   "Icon" : "TexturesMP\Interface\WFlamer.tex",
+  
   "Bit" : 10,
+  "Group" : 6,
   
   "Model1" : "Models1\11_Flamer.json",
   "Model3" : "Models3\11_Flamer.json",

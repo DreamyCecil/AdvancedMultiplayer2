@@ -215,10 +215,6 @@ functions:
 
       SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
 
-      if (pws == NULL) {
-        continue;
-      }
-
       // invalid bit
       if (pws->GetBit() < 0 || pws->GetBit() > 31) { 
         continue;
@@ -234,10 +230,6 @@ functions:
   void GiveWeaponMask(const INDEX &iGiveWeapons) {
     for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
       SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
-
-      if (pws == NULL) {
-        continue;
-      }
 
       // go through weapon bits
       for (INDEX iWeaponBit = 0; iWeaponBit < pws->aiBits.Count(); iWeaponBit++) {
@@ -260,10 +252,6 @@ functions:
   void TakeWeaponMask(const INDEX &iTakeWeapons) {
     for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
       SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
-
-      if (pws == NULL) {
-        continue;
-      }
 
       // invalid bit
       if (pws->GetBit() < 0 || pws->GetBit() > 31) { 
@@ -418,22 +406,37 @@ functions:
 
   // Pull out extra weapon
   void WeaponSelectionModifier(void) {
-    // stop both weapons
-    GetWeapon(0)->SendEvent(EReleaseWeapon());
-    GetWeapon(1)->SendEvent(EReleaseWeapon());
-
-    ESelectWeapon eSelect;
+    INDEX iCurrent = GetWeapon(0)->GetCurrent();
 
     // pick the same weapon
     if (GetWeapon(1)->GetCurrent() == WEAPON_NONE || GetWeapon(1)->GetWanted() == WEAPON_NONE) {
-      eSelect.iWeapon = GetWeapon(0)->GetCurrent();
+      SPlayerWeapon &pw = m_aWeapons[iCurrent];
+
+      // can't be dual
+      if (!pw.ExtraWeapon()) {
+        return;
+      }
+      
+      ESelectWeapon eSelect;
+      eSelect.iWeapon = iCurrent;
       eSelect.bAbsolute = TRUE;
+
+      GetWeapon(1)->SendEvent(eSelect);
       
     // put away the weapon
     } else {
-      eSelect.iWeapon = WEAPON_NONE;
-      eSelect.bAbsolute = TRUE;
+      PutAwayExtraWeapon();
     }
+  };
+
+  // Put away extra weapon
+  void PutAwayExtraWeapon(void) {
+    // stop the weapon
+    GetWeapon(1)->SendEvent(EReleaseWeapon());
+
+    ESelectWeapon eSelect;
+    eSelect.iWeapon = WEAPON_NONE;
+    eSelect.bAbsolute = TRUE;
 
     GetWeapon(1)->SendEvent(eSelect);
   };

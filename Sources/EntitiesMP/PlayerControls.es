@@ -194,9 +194,9 @@ static struct PlayerControls pctlCurrent;
 #define CTL_CONTROLS_KEY(_Key) (1 << ((_Key) % 32))
 
 // [Cecil] Set controls key into the mask
-#define CTL_SET_KEY(_Key, _Val) \
-  if (_Val) CTL_CONTROLS_MASK(_Key) |=  CTL_CONTROLS_KEY(_Key); \
-  else      CTL_CONTROLS_MASK(_Key) &= ~CTL_CONTROLS_KEY(_Key)
+#define CTL_SET_KEY(_Key, _State) \
+  if (_State) CTL_CONTROLS_MASK(_Key) |=  CTL_CONTROLS_KEY(_Key); \
+  else        CTL_CONTROLS_MASK(_Key) &= ~CTL_CONTROLS_KEY(_Key)
 
 // [Cecil] Get controls key from the mask
 #define CTL_GET_KEY(_Key) (CTL_CONTROLS_MASK(_Key) & CTL_CONTROLS_KEY(_Key))
@@ -396,6 +396,12 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
     if (CTL_GET_KEY(PCTL_WEAPONPREV)) {
       paAction.pa_ulButtons |= PLACT_WEAPON_PREV;
     }
+  }
+
+  // [Cecil] Reset fire buttons if selecting an extra weapon
+  if (CTL_GET_KEY(PCTL_SELECTMODIFIER)) {
+    CTL_SET_KEY(PCTL_FIRE, FALSE);
+    CTL_SET_KEY(PCTL_ALTFIRE, FALSE);
   }
 
   // [Cecil] Fire controls

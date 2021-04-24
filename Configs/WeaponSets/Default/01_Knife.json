@@ -1,7 +1,10 @@
 {
   "Name" : "Military Knife",
   "Icon" : "TexturesMP\Interface\WKnife.tex",
+  
   "Bit" : 0,
+  "Group" : 1,
+  "Dual" : false,
   
   "Model1" : "Models1\01_Knife.json",
   "Model3" : "Models3\01_Knife.json",

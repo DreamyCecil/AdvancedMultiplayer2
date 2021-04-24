@@ -73,7 +73,7 @@ void ResetWeaponPosition(void) {
 #include "EntitiesMP/PlayerInventory.h"
 
 // [Cecil] Current player weapon
-#define CUR_WEAPON GetInventory()->m_aWeapons[m_iCurrentWeapon]
+#define CURRENT_WEAPON GetInventory()->m_aWeapons[m_iCurrentWeapon]
 
 // [Cecil] Enough ammo
 #define ENOUGH_AMMO EnoughAmmo(SWeaponStruct::DWA_AMMO)
@@ -866,7 +866,7 @@ functions:
   // [Cecil] Enough of current ammo
   BOOL EnoughAmmo(INDEX iType) {
     INDEX iAmmo = 0;
-    SPlayerWeapon &pw = PredTail()->CUR_WEAPON;
+    SPlayerWeapon &pw = PredTail()->CURRENT_WEAPON;
 
     // mag amount
     if (iType == SWeaponStruct::DWA_MAG) {
@@ -1011,7 +1011,7 @@ functions:
 
   // [Cecil] Mirror spawned effect's position (rendering only)
   void MirrorEffect(FLOAT3D &vPos, FLOAT3D &vSpeed) {
-    SWeaponPos wps = CUR_WEAPON.GetPosition();
+    SWeaponPos wps = CURRENT_WEAPON.GetPosition();
     FLOAT3D vWeaponPos = Lerp(wps.Pos1(), wps.Pos2(), _fDualWeaponShift);
     FLOAT3D vRelPos = vWeaponPos - wps.Pos1();
 
@@ -2091,7 +2091,7 @@ functions:
   // [Cecil] Calculate weapon position of some type
   void CalcWeaponPosition(const FLOAT3D &vPos, CPlacement3D &plPos, const FLOAT &fJitter, const ULONG &ulFlags) {
     // weapon position
-    SWeaponPos wps = CUR_WEAPON.GetPosition();
+    SWeaponPos wps = CURRENT_WEAPON.GetPosition();
 
     // type
     UBYTE ubType = (ulFlags & WPC_TYPE_MASK);
@@ -3326,6 +3326,14 @@ procedures:
     if (m_iCurrentWeapon != m_iWantedWeapon) {
       // store current weapon
       m_iPreviousWeapon = m_iCurrentWeapon;
+      
+      // [Cecil] Put away extra weapon if can't be dual
+      SPlayerWeapon &pwWeapon = GetInventory()->m_aWeapons[m_iWantedWeapon];
+
+      if (!m_bExtraWeapon && !pwWeapon.DualWeapon()) {
+        GetInventory()->PutAwayExtraWeapon();
+      }
+
       autocall PutDown() EEnd;
 
       // set new weapon
@@ -3571,7 +3579,7 @@ procedures:
     m_tmWeaponChangeRequired = 0;
 
     // [Cecil] Reload mag if needed
-    if (CUR_WEAPON.EmptyMag(m_bExtraWeapon)) {
+    if (CURRENT_WEAPON.EmptyMag(m_bExtraWeapon)) {
       jump Reload();
     }
 
@@ -3669,7 +3677,7 @@ procedures:
     m_tmWeaponChangeRequired = 0;
 
     // [Cecil] Reload mag if needed
-    if (CUR_WEAPON.EmptyMag(m_bExtraWeapon)) {
+    if (CURRENT_WEAPON.EmptyMag(m_bExtraWeapon)) {
       jump Reload();
     }
 
@@ -3830,7 +3838,7 @@ procedures:
   // reload colt
   ReloadColt() {
     // [Cecil] Enough ammo
-    if (!CUR_WEAPON.CanReload(m_bExtraWeapon)) {
+    if (!CURRENT_WEAPON.CanReload(m_bExtraWeapon)) {
       return EEnd();
     }
 
@@ -3909,7 +3917,7 @@ procedures:
   // reload double colt
   ReloadDoubleColt() {
     // [Cecil] Enough ammo
-    if (!CUR_WEAPON.CanReload(m_bExtraWeapon)) {
+    if (!CURRENT_WEAPON.CanReload(m_bExtraWeapon)) {
       return EEnd();
     }
 

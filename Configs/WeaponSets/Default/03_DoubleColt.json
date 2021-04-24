@@ -4,5 +4,8 @@
   // Don't include
   "Bit" : -1,
   
+  // Already double weapon
+  "Dual" : false,
+  
   "Model2" : "Models1\03_DoubleColt.json",
 }

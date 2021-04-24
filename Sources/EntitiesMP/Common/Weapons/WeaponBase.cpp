@@ -216,6 +216,17 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
     }
   }
 
+  int iGroup = 0;
+  int iDual = 0;
+
+  if (cb.GetValue("Group", iGroup)) {
+    ws.iGroup = iGroup;
+  }
+
+  if (cb.GetValue("Dual", iDual)) {
+    ws.bDualWeapon = iDual;
+  }
+
   // models
   #define WEAPON_MODELS 3
   CTString strModelConfig;
@@ -295,8 +306,12 @@ extern void LoadWorldWeapons(CWorld *pwo) {
   for (INDEX iWeapon = 0; iWeapon < aList.Count(); iWeapon++) {
     CTString strFile = aList[iWeapon].str_String;
 
-    // parse the config
     SWeaponStruct wsStruct;
+
+    // assign group automatically in case it's not present
+    wsStruct.iGroup = (_awsPlayerWeapons.Count() % 31) + 1;
+
+    // parse the config
     ParseWeaponConfig(wsStruct, strWeaponSet, strFile);
 
     // add the weapon

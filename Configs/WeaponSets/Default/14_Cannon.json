@@ -1,7 +1,9 @@
 {
   "Name" : "SBC Cannon",
   "Icon" : "TexturesMP\Interface\WCannon.tex",
+  
   "Bit" : 13,
+  "Group" : 8,
   
   "Model1" : "Models1\14_Cannon.json",
   "Model3" : "Models3\14_Cannon.json",
