@@ -2650,16 +2650,16 @@ functions:
 
     switch (m_iLaserBarrel) {
       // barrel lu (*o-oo)
-      case 0: vFire = FLOAT3D(fFX-fUpX, fFY-fUpY, 0.0f); break;
+      case 0: vFire = FLOAT3D(fFX-fUpX, fFY+fUpY, 0.0f); break;
 
       // barrel ld (oo-*o)
-      case 1: vFire = FLOAT3D(fFX-fDnX, fFY+fDnY, 0.0f); break;
+      case 1: vFire = FLOAT3D(fFX-fDnX, fFY-fDnY, 0.0f); break;
 
       // barrel ru (o*-oo)
-      case 2: vFire = FLOAT3D(fFX+fUpX, fFY-fUpY, 0.0f); break;
+      case 2: vFire = FLOAT3D(fFX+fUpX, fFY+fUpY, 0.0f); break;
 
       // barrel rd (oo-o*)
-      case 3: vFire = FLOAT3D(fFX+fDnX, fFY+fDnY, 0.0f); break;
+      case 3: vFire = FLOAT3D(fFX+fDnX, fFY-fDnY, 0.0f); break;
     }
 
     // [Cecil] Calculate laser ray position

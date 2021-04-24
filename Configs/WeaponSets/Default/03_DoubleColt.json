@@ -1,5 +1,8 @@
 {
   "Include" : "02_Colt.json",
   
+  // Don't include
+  "Bit" : -1,
+  
   "Model2" : "Models1\03_DoubleColt.json",
 }

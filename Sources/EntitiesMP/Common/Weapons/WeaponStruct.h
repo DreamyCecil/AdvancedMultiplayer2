@@ -4,6 +4,9 @@
 #include "WeaponPos.h"
 #include "WeaponModel.h"
 
+// Special weapon bits
+typedef CDArray<INDEX> CWeaponBits;
+
 // Weapon properties
 struct SWeaponStruct : public SWeaponBase {
   SWeaponPos wpsPos; // weapon position
@@ -16,7 +19,7 @@ struct SWeaponStruct : public SWeaponBase {
   SWeaponAmmo *pwaAlt; // alt ammo
   INDEX iMaxMag; // magazine size
 
-  INDEX iBit; // special bit of the weapon (for compatibility with PlayerMarker)
+  CWeaponBits aiBits; // special bits of the weapon (for compatibility with PlayerMarker)
 
   enum EDecWeaponAmmo {
     DWA_AMMO = 0, // main ammo
@@ -37,6 +40,12 @@ struct SWeaponStruct : public SWeaponBase {
   // Constructors
   SWeaponStruct(void);
   SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup);
+
+  // Get main weapon bit
+  INDEX GetBit(void);
+
+  // Check if the bit matches available ones
+  BOOL BitMatches(const INDEX &iBit);
 
   // Write and read weapon properties
   void Write(CTStream *strm);

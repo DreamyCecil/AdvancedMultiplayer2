@@ -1,2 +1,3 @@
 @echo off
-..\..\..\Bin\SeriousEditor.exe +game AMP2
+start ..\..\..\Bin\SeriousEditor.exe +game AMP2
+exit

@@ -9,7 +9,7 @@ extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 // Constructors
 SWeaponStruct::SWeaponStruct(void) :
   SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pwaAmmo(NULL), pwaAlt(NULL), iMaxMag(0), iBit(-1), iPickup(0), iPickupAlt(0),
+  pwaAmmo(NULL), pwaAlt(NULL), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
   aiDecAmmo[DWA_AMMO] = 1;
@@ -19,12 +19,37 @@ SWeaponStruct::SWeaponStruct(void) :
 
 SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
   SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), iMaxMag(0), iBit(-1), iPickup(0), iPickupAlt(0),
+  pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
   aiDecAmmo[DWA_AMMO] = 1;
   aiDecAmmo[DWA_ALT]  = 1;
   aiDecAmmo[DWA_MAG]  = 1;
+};
+
+// Get main weapon bit
+INDEX SWeaponStruct::GetBit(void) {
+  if (aiBits.Count() <= 0) {
+    return -1;
+  }
+
+  return aiBits[0];
+};
+
+// Check if the bit matches available ones
+BOOL SWeaponStruct::BitMatches(const INDEX &iBit) {
+  if (aiBits.Count() <= 0) {
+    return FALSE;
+  }
+
+  for (int i = 0; i < aiBits.Count(); i++) {
+    // found matching bit
+    if (aiBits[i] == iBit) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 };
 
 // Write weapon properties

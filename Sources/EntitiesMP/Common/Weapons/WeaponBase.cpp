@@ -193,9 +193,27 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
   }
 
   int iBit = -1;
-
+  DJSON_Array aBits;
+  
+  // single bit
   if (cb.GetValue("Bit", iBit)) {
-    ws.iBit = iBit;
+    // no bits
+    if (iBit < 0) {
+      ws.aiBits.Clear();
+
+    } else {
+      ws.aiBits.New(1);
+      ws.aiBits[0] = iBit;
+    }
+
+  // multiple bits
+  } else if (cb.GetValue("Bit", aBits)) {
+    INDEX ctBits = aBits.Count();
+    ws.aiBits.New(ctBits);
+
+    for (INDEX iCopy = 0; iCopy < ctBits; iCopy++) {
+      ws.aiBits[iCopy] = aBits[iCopy].GetNumber();
+    }
   }
 
   // models

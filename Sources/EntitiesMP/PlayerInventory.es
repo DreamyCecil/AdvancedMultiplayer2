@@ -219,12 +219,12 @@ functions:
         continue;
       }
 
-      // bit is high enough
-      if (pws->iBit > 31) { 
+      // invalid bit
+      if (pws->GetBit() < 0 || pws->GetBit() > 31) { 
         continue;
       }
 
-      iMask |= (1 << pws->iBit);
+      iMask |= (1 << pws->GetBit());
     }
 
     return iMask;
@@ -239,14 +239,19 @@ functions:
         continue;
       }
 
-      // bit is high enough
-      if (pws->iBit > 31) { 
-        continue;
-      }
+      // go through weapon bits
+      for (INDEX iWeaponBit = 0; iWeaponBit < pws->aiBits.Count(); iWeaponBit++) {
+        INDEX iBit = pws->aiBits[iWeaponBit];
+        
+        // invalid bit
+        if (iBit < 0 || iBit > 31) { 
+          continue;
+        }
 
-      // bit exists in the mask
-      if (iGiveWeapons & (1 << pws->iBit)) {
-        m_aWeapons[i].iPicked++;
+        // bit exists in the mask
+        if (iGiveWeapons & (1 << iBit)) {
+          m_aWeapons[i].iPicked++;
+        }
       }
     }
   };
@@ -260,13 +265,13 @@ functions:
         continue;
       }
 
-      // bit is high enough
-      if (pws->iBit > 31) { 
+      // invalid bit
+      if (pws->GetBit() < 0 || pws->GetBit() > 31) { 
         continue;
       }
 
       // bit exists in the mask
-      if (iTakeWeapons & (1 << pws->iBit)) {
+      if (iTakeWeapons & (1 << pws->GetBit())) {
         m_aWeapons[i].iPicked = 0;
       }
     }
