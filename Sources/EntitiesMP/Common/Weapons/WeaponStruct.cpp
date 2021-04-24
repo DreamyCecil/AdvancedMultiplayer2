@@ -73,6 +73,17 @@ void SWeaponStruct::Write(CTStream *strm) {
   } else {
     *strm << INDEX(-1);
   }
+
+  // write weapon bits
+  INDEX ctBits = aiBits.Count();
+  *strm << ctBits;
+
+  for (INDEX iBit = 0; iBit < ctBits; iBit++) {
+    *strm << aiBits[iBit];
+  }
+
+  *strm << iGroup;
+  *strm << bDualWeapon;
 };
 
 // Read weapon properties
@@ -92,7 +103,21 @@ void SWeaponStruct::Read(CTStream *strm) {
   if (iAmmo != -1) {
     pwaAmmo = &_awaWeaponAmmo[iAmmo];
   }
+
   if (iAlt != -1) {
     pwaAlt = &_awaWeaponAmmo[iAlt];
   }
+
+  // read weapon bits
+  INDEX ctBits;
+  *strm >> ctBits;
+
+  aiBits.New(ctBits);
+
+  for (INDEX iBit = 0; iBit < ctBits; iBit++) {
+    *strm >> aiBits[iBit];
+  }
+
+  *strm >> iGroup;
+  *strm >> bDualWeapon;
 };

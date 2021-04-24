@@ -1151,7 +1151,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
       // [Cecil] Mark as selectable as an extra weapon
       if (pw.DualWeapon()) {
-        HUD_DrawIcon(fCol, fRow, _toExtraWeapon, (pw.iPicked >= 2 ? SE_COL_BLUEGREEN_LT : C_RED), 1.0f, FALSE, 1.0f);
+        HUD_DrawIcon(fCol, fRow, _toExtraWeapon, (pw.ExtraWeapon() ? SE_COL_BLUEGREEN_LT : C_RED), 1.0f, FALSE, 1.0f);
       }
 
       // advance to next position

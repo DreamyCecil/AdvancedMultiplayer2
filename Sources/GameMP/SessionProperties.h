@@ -47,6 +47,16 @@
 #define WAF_SNIPER    (1 << 12)
 #define WAF_CANNON    (1 << 13)
 
+// [Cecil] Dual weapon modes
+#define DWP_NO     0
+#define DWP_TWO    1
+#define DWP_ALWAYS 2
+
+#define DWP_TYPE_MASK 0x3
+
+// [Cecil] Dual weapon flags
+#define DWF_ALLWEAPONS (1 << 2)
+
 // [Cecil] Seasonal events
 enum ESpecialEvent {
   ESE_NONE,
@@ -138,6 +148,7 @@ class CSessionProperties {
 
     FLOAT sp_fComboTime;
     FLOAT sp_fTokenPayout;
+    INDEX sp_iDualWeapons;
     INDEX sp_iAltFire;
     INDEX sp_iPlayerCollision;
     INDEX sp_iWeaponItems;
@@ -152,6 +163,11 @@ class CSessionProperties {
     INDEX AltMode(void) const {
       // two bits for modes
       return (sp_iAltFire & 0x3);
+    };
+
+    // [Cecil] Get dual weapons mode
+    INDEX DualWeapons(void) const {
+      return (sp_iDualWeapons & DWP_TYPE_MASK);
     };
 };
 

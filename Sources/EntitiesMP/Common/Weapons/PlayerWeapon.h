@@ -81,15 +81,27 @@ struct SPlayerWeapon {
   
   // Can be dual
   inline BOOL DualWeapon(void) {
-    // [Cecil] TODO: Make an option that allows it no matter what and return TRUE
-    return pwsWeapon->bDualWeapon;
+    // no dual weapons
+    if (GetSP()->DualWeapons() == DWP_NO) {
+      return FALSE;
+    }
+
+    // all weapons or only the marked ones
+    return (GetSP()->sp_iDualWeapons & DWF_ALLWEAPONS || pwsWeapon->bDualWeapon);
   };
 
   // Can be selected as an extra weapon
   inline BOOL ExtraWeapon(void) {
-    // [Cecil] TODO: Make an option that allows it no matter what and return TRUE
+    // no dual weapons
+    if (GetSP()->DualWeapons() == DWP_NO) {
+      return FALSE;
+    }
+
+    // always or only if two
+    BOOL bBoth = (GetSP()->DualWeapons() == DWP_ALWAYS || iPicked >= 2);
+
     // can be dual and picked enough up
-    return (DualWeapon() && iPicked >= 2);
+    return (DualWeapon() && bBoth);
   };
 
   // Get weapon position

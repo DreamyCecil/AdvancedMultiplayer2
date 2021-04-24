@@ -22,6 +22,8 @@ SPlayerWeapon &SPlayerWeapon::operator=(const SPlayerWeapon &pwOther) {
   this->pwsWeapon = pwOther.pwsWeapon;
   this->ppaAmmo = pwOther.ppaAmmo;
   this->ppaAlt = pwOther.ppaAlt;
+  
+  this->iPicked = pwOther.iPicked;
   this->aiMag[0] = pwOther.aiMag[0];
   this->aiMag[1] = pwOther.aiMag[1];
 
@@ -30,11 +32,13 @@ SPlayerWeapon &SPlayerWeapon::operator=(const SPlayerWeapon &pwOther) {
 
 // Write and read
 void SPlayerWeapon::Write(CTStream *strm) {
+  *strm << iPicked;
   *strm << aiMag[0];
   *strm << aiMag[1];
 };
 
 void SPlayerWeapon::Read(CTStream *strm) {
+  *strm >> iPicked;
   *strm >> aiMag[0];
   *strm >> aiMag[1];
 };

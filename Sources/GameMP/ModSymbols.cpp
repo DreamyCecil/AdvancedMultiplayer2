@@ -25,6 +25,9 @@ static FLOAT amp_fSelfDamage = 1.0f;
 static INDEX amp_bStartAmmo = FALSE;
 static INDEX amp_bRocketDestruction = TRUE;
 
+static INDEX amp_iDualWeapons = 1;
+static INDEX amp_bAllDualWeapons = FALSE;
+
 static INDEX amp_iAltFire = 0;
 static INDEX amp_bShotgunAlt   = TRUE;
 static INDEX amp_bDShotgunAlt  = TRUE;
@@ -115,6 +118,9 @@ static void RestoreDefaultOptions(void) {
   // Gameplay Options
   amp_bStartAmmo = FALSE;
   amp_bRocketDestruction = TRUE;
+
+  amp_iDualWeapons = 1;
+  amp_bAllDualWeapons = FALSE;
 
   amp_iAltFire = 0;
   amp_bShotgunAlt   = TRUE;
@@ -207,6 +213,9 @@ extern void DeclareExtraSymbols(void) {
   // Gameplay Options
   _pShell->DeclareSymbol("persistent user INDEX amp_bStartAmmo;", &amp_bStartAmmo);
   _pShell->DeclareSymbol("persistent user INDEX amp_bRocketDestruction;", &amp_bRocketDestruction);
+
+  _pShell->DeclareSymbol("persistent user INDEX amp_iDualWeapons;", &amp_iDualWeapons);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bAllDualWeapons;", &amp_bAllDualWeapons);
 
   _pShell->DeclareSymbol("persistent user INDEX amp_iAltFire;", &amp_iAltFire);
   _pShell->DeclareSymbol("persistent user INDEX amp_bShotgunAlt;", &amp_bShotgunAlt);
@@ -381,6 +390,12 @@ extern void SetAdvancedParameters(CSessionProperties &sp) {
 
   // two bits for the alt fire mode
   sp.sp_iAltFire |= (amp_iAltFire & 0x3);
+  
+  // dual weapons
+  sp.sp_iDualWeapons = (amp_bAllDualWeapons ? DWF_ALLWEAPONS : 0);
+
+  // dual weapons type
+  sp.sp_iDualWeapons |= (amp_iDualWeapons & DWP_TYPE_MASK);
 
   // weapon giver
   sp.sp_iWeaponGiver = (amp_bKnifeEnable     ? IRF_KNIFE : 0)
