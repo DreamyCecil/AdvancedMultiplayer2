@@ -147,7 +147,6 @@ enum WeaponType {
   0 WEAPON_NONE               "",
   1 WEAPON_KNIFE              "",
   2 WEAPON_COLT               "",
-  3 WEAPON_DOUBLECOLT         "",
   4 WEAPON_SINGLESHOTGUN      "",
   5 WEAPON_DOUBLESHOTGUN      "",
   6 WEAPON_TOMMYGUN           "",
@@ -1302,9 +1301,8 @@ functions:
     }
       
     // DRAW WEAPON MODEL
-    //  Double colt - second colt in mirror
     //  Double shotgun - hand with ammo
-    if (iWeapon == WEAPON_DOUBLECOLT || iWeapon == WEAPON_DOUBLESHOTGUN) {
+    if (iWeapon == WEAPON_DOUBLESHOTGUN) {
       // prepare render model structure and projection
       CRenderModel rmMain;
       CPerspectiveProjection3D prMirror = prProjection;
@@ -1314,12 +1312,6 @@ functions:
       prMirror.DepthBufferFarL() = 0.1f;
 
       CPlacement3D plWeaponMirror = wps.plPos;
-
-      if (iWeapon == WEAPON_DOUBLECOLT) {
-        plWeaponMirror.pl_PositionVector(1) = -plWeaponMirror.pl_PositionVector(1);
-        plWeaponMirror.pl_OrientationAngle(1) = -plWeaponMirror.pl_OrientationAngle(1);
-        plWeaponMirror.pl_OrientationAngle(3) = -plWeaponMirror.pl_OrientationAngle(3);
-      }
 
       ((CPerspectiveProjection3D &)prMirror).FOVL() = AngleDeg(wps.fFOV);
       CAnyProjection3D apr;
@@ -1847,25 +1839,12 @@ functions:
     // get your prediction tail
     CPlayerWeapons *pen = (CPlayerWeapons*)GetPredictionTail();
 
-    // second colt only
-    if (m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
-      // add flare
-      if (pen->m_iSecondFlare == FLARE_ADD) {
-        pen->m_iSecondFlare = FLARE_REMOVE;
-        ShowFlare(m_moWeaponSecond, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE, 1.0f);
-
-      // remove flare
-      } else if (pen->m_iSecondFlare == FLARE_REMOVE) {
-        HideFlare(m_moWeaponSecond, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE);
-      }
-    }
-
     // add flare
     if (pen->m_iFlare == FLARE_ADD) {
       pen->m_iFlare = FLARE_REMOVE;
 
       switch (m_iCurrentWeapon) {
-        case WEAPON_DOUBLECOLT: case WEAPON_COLT:
+        case WEAPON_COLT:
           ShowFlare(m_moWeapon, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE, 0.75f);
           break;
         case WEAPON_SINGLESHOTGUN:
@@ -1888,7 +1867,7 @@ functions:
     // remove
     } else if (pen->m_iFlare == FLARE_REMOVE) {
       switch (m_iCurrentWeapon) {
-        case WEAPON_DOUBLECOLT: case WEAPON_COLT:
+        case WEAPON_COLT:
           HideFlare(m_moWeapon, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE);
           break;
         case WEAPON_SINGLESHOTGUN:
@@ -1935,25 +1914,13 @@ functions:
         AddAttachmentToModel(this, m_moWeapon, KNIFE_ATTACHMENT_KNIFEITEM, MODEL_KNIFEITEM, TEXTURE_KNIFEITEM, TEX_REFL_BWRIPLES02, TEX_SPEC_WEAK, 0);
       } break;
 
-      case WEAPON_DOUBLECOLT: {
-        SetComponents(this, m_moWeaponSecond, MODEL_COLT, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeaponSecond, COLT_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeaponSecond, COLT_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeaponSecond, COLT_ATTACHMENT_COLT, MODEL_COLTMAIN, TEXTURE_COLTMAIN, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-        CModelObject &mo = m_moWeaponSecond.GetAttachmentModel(COLT_ATTACHMENT_COLT)->amo_moModelObject;
-        AddAttachmentToModel(this, mo, COLTMAIN_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0); }
-        m_moWeaponSecond.StretchModel(FLOAT3D(-1.0f, 1.0f, 1.0f));
-
       case WEAPON_COLT: {
-        // [Cecil] Don't set Colt again
-        if (m_iPreviousWeapon != WEAPON_COLT && m_iPreviousWeapon != WEAPON_DOUBLECOLT) {
-          SetComponents(this, m_moWeapon, MODEL_COLT, TEXTURE_HAND, 0, 0, 0);
-          AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-          AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-          AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_COLT, MODEL_COLTMAIN, TEXTURE_COLTMAIN, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-          CModelObject &mo = m_moWeapon.GetAttachmentModel(COLT_ATTACHMENT_COLT)->amo_moModelObject;
-          AddAttachmentToModel(this, mo, COLTMAIN_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-        }
+        SetComponents(this, m_moWeapon, MODEL_COLT, TEXTURE_HAND, 0, 0, 0);
+        AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
+        AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
+        AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_COLT, MODEL_COLTMAIN, TEXTURE_COLTMAIN, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
+        CModelObject &mo = m_moWeapon.GetAttachmentModel(COLT_ATTACHMENT_COLT)->amo_moModelObject;
+        AddAttachmentToModel(this, mo, COLTMAIN_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
       } break;
 
       case WEAPON_SINGLESHOTGUN: {
@@ -2764,10 +2731,7 @@ functions:
         ASSERT(FALSE);
       // [Cecil] Drop knife
       case WEAPON_KNIFE: wit = WIT_KNIFE; break;
-
-      case WEAPON_COLT:
-      case WEAPON_DOUBLECOLT: wit = WIT_COLT; break;
-
+      case WEAPON_COLT: wit = WIT_COLT; break;
       case WEAPON_SINGLESHOTGUN: wit = WIT_SINGLESHOTGUN; break;
       case WEAPON_DOUBLESHOTGUN: wit = WIT_DOUBLESHOTGUN; break;
       case WEAPON_TOMMYGUN: wit = WIT_TOMMYGUN; break;
@@ -2794,7 +2758,7 @@ functions:
   WeaponType GetStrongerWeapon(INDEX iWeapon) {
     switch(iWeapon) {
       case 1: return WEAPON_CHAINSAW;
-      case 2: return WEAPON_DOUBLECOLT;
+      case 2: return WEAPON_COLT;
       case 3: return WEAPON_DOUBLESHOTGUN;
       case 4: return WEAPON_MINIGUN;
       case 5: return WEAPON_ROCKETLAUNCHER;
@@ -2809,7 +2773,7 @@ functions:
   INDEX GetSelectedWeapon(WeaponType EwtSelectedWeapon) {
     switch(EwtSelectedWeapon) {
       case WEAPON_KNIFE: case WEAPON_CHAINSAW: return 1;
-      case WEAPON_COLT: case WEAPON_DOUBLECOLT: return 2;
+      case WEAPON_COLT: return 2;
       case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN: return 3;
       case WEAPON_TOMMYGUN: case WEAPON_MINIGUN: return 4;
       case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER: return 5;
@@ -2826,8 +2790,7 @@ functions:
     switch (EwtWeapon) {
       case WEAPON_KNIFE: return WEAPON_CHAINSAW;
       case WEAPON_CHAINSAW: return WEAPON_KNIFE;
-      case WEAPON_COLT: return WEAPON_DOUBLECOLT;
-      case WEAPON_DOUBLECOLT: return WEAPON_COLT;
+      case WEAPON_COLT: return WEAPON_COLT;
       case WEAPON_SINGLESHOTGUN: return WEAPON_DOUBLESHOTGUN;
       case WEAPON_DOUBLESHOTGUN: return WEAPON_SINGLESHOTGUN;
       case WEAPON_TOMMYGUN: return WEAPON_MINIGUN;
@@ -2878,14 +2841,13 @@ functions:
     // [Cecil] Added WEAPON_NONE
     switch (m_iCurrentWeapon) {
       case WEAPON_NONE: 
-      case WEAPON_KNIFE: case WEAPON_COLT: case WEAPON_DOUBLECOLT: 
+      case WEAPON_KNIFE: case WEAPON_COLT:
       case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN:
       case WEAPON_TOMMYGUN: case WEAPON_MINIGUN: case WEAPON_SNIPER:
         WeaponSelectOk(WEAPON_MINIGUN)||
         WeaponSelectOk(WEAPON_TOMMYGUN)||
         WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
         WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_DOUBLECOLT)||
         WeaponSelectOk(WEAPON_COLT)||
         WeaponSelectOk(WEAPON_KNIFE)||
         WeaponSelectOk(WEAPON_NONE);
@@ -2898,7 +2860,6 @@ functions:
         WeaponSelectOk(WEAPON_TOMMYGUN)||
         WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
         WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_DOUBLECOLT)||
         WeaponSelectOk(WEAPON_COLT)||
         WeaponSelectOk(WEAPON_KNIFE)||
         WeaponSelectOk(WEAPON_NONE);
@@ -2912,7 +2873,6 @@ functions:
         WeaponSelectOk(WEAPON_TOMMYGUN)||
         WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
         WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_DOUBLECOLT)||
         WeaponSelectOk(WEAPON_COLT)||
         WeaponSelectOk(WEAPON_KNIFE)||
         WeaponSelectOk(WEAPON_NONE);
@@ -2925,7 +2885,6 @@ functions:
         WeaponSelectOk(WEAPON_TOMMYGUN)||
         WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
         WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_DOUBLECOLT)||
         WeaponSelectOk(WEAPON_COLT)||
         WeaponSelectOk(WEAPON_KNIFE)||
         WeaponSelectOk(WEAPON_NONE);
@@ -2959,8 +2918,6 @@ functions:
         m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, ulFlags);
         break;
 
-      case WEAPON_DOUBLECOLT:
-        m_moWeaponSecond.PlayAnim(COLT_ANIM_WAIT1, ulFlags);
       case WEAPON_COLT:
         m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, ulFlags);
         break;
@@ -3032,22 +2989,6 @@ functions:
     }
     m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
     return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT DoubleColtBoring(void) {
-    // play boring anim for one colt
-    INDEX iAnim;
-    switch (IRnd()%2) {
-      case 0: iAnim = COLT_ANIM_WAIT3; break;
-      case 1: iAnim = COLT_ANIM_WAIT4; break;
-    }
-    if (IRnd()&1) {
-      m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-      return m_moWeapon.GetAnimLength(iAnim);
-    } else {
-      m_moWeaponSecond.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-      return m_moWeaponSecond.GetAnimLength(iAnim);
-    }
   };
 
   FLOAT SingleShotgunBoring(void) {
@@ -3366,7 +3307,7 @@ procedures:
         m_iAnim = KNIFE_ANIM_PULLOUT;
         break;
 
-      case WEAPON_DOUBLECOLT: case WEAPON_COLT:
+      case WEAPON_COLT:
         m_iAnim = COLT_ANIM_DEACTIVATE;
         break;
 
@@ -3427,22 +3368,6 @@ procedures:
     if (m_iCurrentWeapon == WEAPON_NONE) {
       return EEnd();
     }
-      
-    // --->>>  COLT -> DOUBLE COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon == WEAPON_COLT && m_iWantedWeapon == WEAPON_DOUBLECOLT) {
-      return EEnd();
-    }
-
-    // --->>>  DOUBLE COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
-      m_moWeaponSecond.PlayAnim(m_iAnim, 0);
-    }
-
-    // --->>>  DOUBLE COLT -> COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon == WEAPON_DOUBLECOLT && m_iWantedWeapon == WEAPON_COLT) {
-      autowait(m_moWeapon.GetAnimLength(m_iAnim));
-      return EEnd();
-    }
 
     m_moWeapon.PlayAnim(m_iAnim, 0);
     autowait(m_moWeapon.GetAnimLength(m_iAnim));
@@ -3465,10 +3390,9 @@ procedures:
         m_iAnim = KNIFE_ANIM_PULL;
         break;
 
-      case WEAPON_COLT: case WEAPON_DOUBLECOLT:
+      case WEAPON_COLT:
         m_iAnim = COLT_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
-        SetFlare(1, FLARE_REMOVE);
         break;
 
       case WEAPON_SINGLESHOTGUN:
@@ -3533,33 +3457,12 @@ procedures:
     plan.BodyPullAnimation();
 
     // [Cecil] Reload colts automagically when taking them out
-    BOOL bNowColt = (m_iCurrentWeapon == WEAPON_COLT || m_iCurrentWeapon == WEAPON_DOUBLECOLT);
-    BOOL bPrevColt = (m_iPreviousWeapon == WEAPON_COLT || m_iPreviousWeapon == WEAPON_DOUBLECOLT);
+    BOOL bNowColt = (m_iCurrentWeapon == WEAPON_COLT);
+    BOOL bPrevColt = (m_iPreviousWeapon == WEAPON_COLT);
     
     // [Cecil] Reload mags
     if (bNowColt && !bPrevColt) {
       GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
-      GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(m_bExtraWeapon, TRUE);
-    }
-
-    // --->>>  DOUBLE COLT -> COLT SPECIFIC  <<<---
-    if (m_iPreviousWeapon == WEAPON_DOUBLECOLT && m_iCurrentWeapon == WEAPON_COLT) {
-      // mark that weapon change has ended
-      m_tmWeaponChangeRequired -= hud_tmWeaponsOnScreen/2;
-      return EEnd();
-    }
-
-    // --->>>  DOUBLE COLT SPECIFIC  <<<---
-    if (m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
-      m_moWeaponSecond.PlayAnim(m_iAnim, 0);
-    }
-
-    // --->>>  COLT -> COLT DOUBLE SPECIFIC  <<<---
-    if (m_iPreviousWeapon == WEAPON_COLT && m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
-      autowait(m_moWeapon.GetAnimLength(m_iAnim));
-      // mark that weapon change has ended
-      m_tmWeaponChangeRequired -= hud_tmWeaponsOnScreen/2;
-      return EEnd();
     }
 
     m_moWeapon.PlayAnim(m_iAnim, 0);
@@ -3633,7 +3536,6 @@ procedures:
 
             case WEAPON_KNIFE: call SwingKnife(); break;
             case WEAPON_COLT: call FireColt(); break;
-            case WEAPON_DOUBLECOLT: call FireDoubleColt(); break;
             case WEAPON_SINGLESHOTGUN: call FireSingleShotgun(); break;
             case WEAPON_DOUBLESHOTGUN: call FireDoubleShotgun(); break;
             case WEAPON_TOMMYGUN: call FireTommyGun(); break;
@@ -3807,7 +3709,6 @@ procedures:
     SpawnRangeSound(40.0f);
 
     DecMag(WEAPON_COLT, FALSE);
-    DecMag(WEAPON_DOUBLECOLT, FALSE);
     SetFlare(0, FLARE_ADD);
     PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
@@ -3852,97 +3753,6 @@ procedures:
 
     // [Cecil] Reload mag
     GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(m_bExtraWeapon, TRUE);
-
-    return EEnd();
-  };
-
-  // ***************** FIRE DOUBLE COLT *****************
-  FireDoubleColt() {
-    // fire first colt - one bullet less in colt
-    GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0);
-    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, GetInventory()->GetDamage(WEAPON_DOUBLECOLT));
-
-    if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
-
-    DoRecoil();
-    SpawnRangeSound(50.0f);
-    
-    DecMag(WEAPON_COLT, FALSE);
-    DecMag(WEAPON_DOUBLECOLT, FALSE);
-    SetFlare(0, FLARE_ADD);
-    PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
-
-    // sound
-    PlaySound(m_soWeapon0, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
-
-    // random colt fire
-    switch (IRnd() % 3) {
-      case 0: m_iAnim = COLT_ANIM_FIRE1; break;
-      case 1: m_iAnim = COLT_ANIM_FIRE2; break;
-      case 2: m_iAnim = COLT_ANIM_FIRE3; break;
-    }
-
-    m_moWeapon.PlayAnim(m_iAnim, 0); // play first colt anim
-    // [Cecil] Multiply speed
-    autowait(m_moWeapon.GetAnimLength(m_iAnim)/2 * FireSpeedMul()); // wait half of the anim
-
-    // fire second colt
-    GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRELEFT, 0);
-    m_bMirrorFire = TRUE;
-    FireOneBullet(FirePos(WEAPON_DOUBLECOLT), 500.0f, GetInventory()->GetDamage(WEAPON_DOUBLECOLT));
-
-    if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
-    
-    DoRecoil();
-    m_iSecondFlare = FLARE_ADD;
-    ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).m_iSecondFlare = FLARE_ADD;
-    PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
-    m_bMirrorFire = FALSE;
-
-    // sound
-    PlaySound(m_soWeapon1, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
-
-    m_moWeaponSecond.PlayAnim(m_iAnim, 0);
-    // [Cecil] Multiply speed
-    autowait(m_moWeapon.GetAnimLength(m_iAnim)/2 * FireSpeedMul()); // wait half of the anim
-
-    // no more bullets in colt -> reload
-    if (!ENOUGH_MAG) {
-      jump ReloadDoubleColt();
-    }
-    return EEnd();
-  };
-
-  // reload double colt
-  ReloadDoubleColt() {
-    // [Cecil] Enough ammo
-    if (!CURRENT_WEAPON.CanReload(m_bExtraWeapon)) {
-      return EEnd();
-    }
-
-    m_moWeapon.PlayAnim(COLT_ANIM_RELOAD, 0);
-
-    // sound
-    PlaySound(m_soWeapon2, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
-
-    // [Cecil] Multiply speed
-    // wait half of reload time
-    autowait(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD)/2 * FireSpeedMul());
-
-    m_moWeaponSecond.PlayAnim(COLT_ANIM_RELOAD, 0);
-
-    // sound
-    PlaySound(m_soWeapon3, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
-    if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_reload");}
-
-    // [Cecil] Multiply speed
-    // wait second halt minus half shortest fire animation
-    autowait((m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD) - 0.25f) * FireSpeedMul());
-
-    // [Cecil] Reload mag
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
-    GetInventory()->m_aWeapons[WEAPON_DOUBLECOLT].Reload(m_bExtraWeapon, TRUE);
 
     return EEnd();
   };
@@ -5313,8 +5123,6 @@ procedures:
     // reload
     if (m_iCurrentWeapon == WEAPON_COLT) {
       autocall ReloadColt() EEnd;
-    } else if (m_iCurrentWeapon == WEAPON_DOUBLECOLT) {
-      autocall ReloadDoubleColt() EEnd;
     }
 
     jump Idle();
@@ -5328,7 +5136,6 @@ procedures:
     switch (m_iCurrentWeapon) {
       case WEAPON_KNIFE: fWait = KnifeBoring(); break;
       case WEAPON_COLT: fWait = ColtBoring(); break;
-      case WEAPON_DOUBLECOLT: fWait = DoubleColtBoring(); break;
       case WEAPON_SINGLESHOTGUN: fWait = SingleShotgunBoring(); break;
       case WEAPON_DOUBLESHOTGUN: fWait = DoubleShotgunBoring(); break;
       case WEAPON_TOMMYGUN: fWait = TommyGunBoring(); break;
