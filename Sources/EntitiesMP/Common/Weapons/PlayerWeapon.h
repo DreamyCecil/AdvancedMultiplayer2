@@ -78,6 +78,11 @@ struct SPlayerWeapon {
   inline BOOL EmptyMag(const INDEX &iExtra) {
     return (pwsWeapon->iMaxMag > 0 && aiMag[iExtra] <= 0);
   };
+
+  // Get weapon group
+  inline INDEX GetGroup(void) {
+    return pwsWeapon->iGroup;
+  };
   
   // Can be dual
   inline BOOL DualWeapon(void) {

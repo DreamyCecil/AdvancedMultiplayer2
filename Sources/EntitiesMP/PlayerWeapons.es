@@ -72,8 +72,11 @@ void ResetWeaponPosition(void) {
 #include "EntitiesMP/TeslaLightning.h"
 #include "EntitiesMP/PlayerInventory.h"
 
+// [Cecil] Weapon list
+#define GET_WEAPON(_Index) GetInventory()->m_aWeapons[_Index]
+
 // [Cecil] Current player weapon
-#define CURRENT_WEAPON GetInventory()->m_aWeapons[m_iCurrentWeapon]
+#define CURRENT_WEAPON GET_WEAPON(m_iCurrentWeapon)
 
 // [Cecil] Enough ammo
 #define ENOUGH_AMMO EnoughAmmo(SWeaponStruct::DWA_AMMO)
@@ -894,7 +897,7 @@ functions:
       return;
     }
 
-    SPlayerWeapon &pw = GetInventory()->m_aWeapons[iWeapon];
+    SPlayerWeapon &pw = GET_WEAPON(iWeapon);
 
     if (bAlt) {
       if (pw.ppaAlt != NULL) {
@@ -911,7 +914,7 @@ functions:
       return;
     }
 
-    SPlayerWeapon &pw = GetInventory()->m_aWeapons[m_iCurrentWeapon];
+    SPlayerWeapon &pw = CURRENT_WEAPON;
     INDEX iDec = pw.GetDecAmmo(bAlt);
 
     DecAmmoExact(m_iCurrentWeapon, iDec, bAlt);
@@ -919,7 +922,7 @@ functions:
 
   // [Cecil] Decrease magazine
   void DecMag(INDEX iWeapon, BOOL bAmmo) {
-    SPlayerWeapon &pw = GetInventory()->m_aWeapons[iWeapon];
+    SPlayerWeapon &pw = GET_WEAPON(iWeapon);
     INDEX iDec = pw.GetDecAmmo(SWeaponStruct::DWA_MAG);
 
     // decrease overall ammo
@@ -937,7 +940,7 @@ functions:
 
   // [Cecil] Get fire position
   FLOAT3D FirePos(INDEX iWeapon) {
-    SWeaponPos wps = GetInventory()->m_aWeapons[iWeapon].GetPosition();
+    SWeaponPos wps = GET_WEAPON(iWeapon).GetPosition();
     return wps.vFire;
   };
 
@@ -952,7 +955,7 @@ functions:
 
   // [Cecil] Get weapon position for rendering
   SWeaponPos RenderPos(INDEX iWeapon) {
-    SWeaponPos wps = GetInventory()->m_aWeapons[iWeapon].GetPosition();
+    SWeaponPos wps = GET_WEAPON(iWeapon).GetPosition();
 
     // weapon position shifting for dual weapons
     FLOAT fLerp = Lerp(_fLastDualWeaponShift, _fDualWeaponShift, _pTimer->GetLerpFactor());
@@ -2769,28 +2772,16 @@ functions:
     return WEAPON_NONE;
   };
 
-  // get selected number for weapon
-  INDEX GetSelectedWeapon(WeaponType EwtSelectedWeapon) {
-    switch(EwtSelectedWeapon) {
-      case WEAPON_KNIFE: case WEAPON_CHAINSAW: return 1;
-      case WEAPON_COLT: return 2;
-      case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN: return 3;
-      case WEAPON_TOMMYGUN: case WEAPON_MINIGUN: return 4;
-      case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER: return 5;
-      case WEAPON_FLAMER: case WEAPON_SNIPER: return 6;
-      case WEAPON_LASER: return 7;
-      case WEAPON_IRONCANNON: return 8;
-    }
-
-    return 0;
+  // [Cecil] Get group index of a weapon
+  INDEX GetWeaponGroup(WeaponType eWeapon) {
+    return GET_WEAPON(eWeapon).GetGroup();
   };
 
   // get secondary weapon from selected one
-  WeaponType GetAltWeapon(WeaponType EwtWeapon) {
-    switch (EwtWeapon) {
+  WeaponType GetAltWeapon(WeaponType eWeapon) {
+    switch (eWeapon) {
       case WEAPON_KNIFE: return WEAPON_CHAINSAW;
       case WEAPON_CHAINSAW: return WEAPON_KNIFE;
-      case WEAPON_COLT: return WEAPON_COLT;
       case WEAPON_SINGLESHOTGUN: return WEAPON_DOUBLESHOTGUN;
       case WEAPON_DOUBLESHOTGUN: return WEAPON_SINGLESHOTGUN;
       case WEAPON_TOMMYGUN: return WEAPON_MINIGUN;
@@ -2799,27 +2790,26 @@ functions:
       case WEAPON_GRENADELAUNCHER: return WEAPON_ROCKETLAUNCHER;
       case WEAPON_FLAMER: return WEAPON_SNIPER;
       case WEAPON_SNIPER: return WEAPON_FLAMER;
-      case WEAPON_LASER: return WEAPON_LASER;
-      case WEAPON_IRONCANNON: return WEAPON_IRONCANNON;
     }
 
-    return WEAPON_NONE;
+    // [Cecil] Return the same weapon
+    return eWeapon;
   };
 
   // select new weapon if possible
-  BOOL WeaponSelectOk(WeaponType wtToTry) {
+  BOOL WeaponSelectOk(INDEX iDesired) {
     // [Cecil] Always select nothing
-    if (wtToTry == WEAPON_NONE) {
+    if (iDesired == WEAPON_NONE) {
       ForceWeaponChange(WEAPON_NONE);
       return TRUE;
     }
 
     // if player has weapon and has enough ammo
-    if (GetInventory()->HasWeapon(wtToTry) && HasAmmo(wtToTry)) {
+    if (GetInventory()->HasWeapon(iDesired) && HasAmmo(iDesired)) {
       // if different weapon
-      if (wtToTry != m_iCurrentWeapon) {
+      if (iDesired != m_iCurrentWeapon) {
         // initiate change
-        m_iWantedWeapon = wtToTry;
+        m_iWantedWeapon = (WeaponType)iDesired;
         m_bChangeWeapon = TRUE;
       }
 
@@ -2897,9 +2887,8 @@ functions:
   };
 
   // does weapon have ammo
-  BOOL HasAmmo(WeaponType EwtWeapon) {
-    // [Cecil] TODO: Fix this abomination
-    return GetInventory()->PredTail()->m_aWeapons[EwtWeapon].HasAmmo(GetInventory()->AltFireExists(EwtWeapon));
+  BOOL HasAmmo(INDEX iWeapon) {
+    return GetInventory()->PredTail()->HasAmmo(iWeapon);
   };
 
   // [Cecil] Forced animation flag
@@ -3105,35 +3094,35 @@ functions:
 
   // find first possible weapon in given direction
   WeaponType FindWeaponInDirection(INDEX iDir) {
-    // [Cecil] No position remapping
-    INDEX wtOrg = m_iWantedWeapon;
-    INDEX wti = wtOrg;
+    // start with wanted weapon
+    INDEX iWanted = m_iWantedWeapon;
+    INDEX iSelect = iWanted;
 
     FOREVER {
-      wti += iDir;
+      iSelect += iDir;
 
-      // [Cecil] 1 -> 0
-      if (wti < 0) {
-        wti = WEAPON_IRONCANNON;
+      // wrap to the last weapon
+      if (iSelect < 0) {
+        iSelect = WEAPON_IRONCANNON;
+      }
+      
+      // wrap to the first weapon
+      if (iSelect > 14) {
+        iSelect = WEAPON_NONE;
       }
 
-      // [Cecil] Knife -> None
-      if (wti > 14) {
-        wti = WEAPON_NONE;
-      }
-
-      if (wti == wtOrg) {
+      // exit the loop if looped to the same weapon
+      if (iSelect == iWanted) {
         break;
       }
 
-      // [Cecil] No position remapping
-      WeaponType wt = (WeaponType)wti;
-
-      if (GetInventory()->HasWeapon(wt) && HasAmmo(wt)) {
-        return wt;
+      // select this weapon if possible
+      if (GetInventory()->HasWeapon(iSelect) && HasAmmo(iSelect)) {
+        return (WeaponType)iSelect;
       }
     }
 
+    // return wanted weapon
     return m_iWantedWeapon;
   };
 
@@ -3144,7 +3133,7 @@ functions:
       return;
     }
     
-    WeaponType EwtTemp;
+    WeaponType eWeapon;
 
     // mark that weapon change is required
     m_tmWeaponChangeRequired = _pTimer->CurrentTick();
@@ -3164,36 +3153,36 @@ functions:
 
     // if flipping weapon
     if (iSelect == -3) {
-      EwtTemp = GetAltWeapon(m_iWantedWeapon);
+      eWeapon = GetAltWeapon(m_iWantedWeapon);
 
     // if selecting previous weapon
     } else if (iSelect == -2) {
-      EwtTemp = FindWeaponInDirection(-1);
+      eWeapon = FindWeaponInDirection(-1);
 
     // if selecting next weapon
     } else if (iSelect == -1) {
-      EwtTemp = FindWeaponInDirection(+1);
+      eWeapon = FindWeaponInDirection(+1);
 
     // if selecting directly
     } else {
       // flip current weapon
-      if (iSelect == GetSelectedWeapon(m_iWantedWeapon)) {
-        EwtTemp = GetAltWeapon(m_iWantedWeapon);
+      if (iSelect == GetWeaponGroup(m_iWantedWeapon)) {
+        eWeapon = GetAltWeapon(m_iWantedWeapon);
 
       // change to wanted weapon
       } else {
-        EwtTemp = GetStrongerWeapon(iSelect);
+        eWeapon = GetStrongerWeapon(iSelect);
         
         // [Cecil] Check if doesn't exist
         // if weapon don't exist or don't have ammo flip it
-        if (!GetInventory()->HasWeapon(EwtTemp) || !HasAmmo(EwtTemp)) {
-          EwtTemp = GetAltWeapon(EwtTemp);
+        if (!GetInventory()->HasWeapon(eWeapon) || !HasAmmo(eWeapon)) {
+          eWeapon = GetAltWeapon(eWeapon);
         }
       }
     }
 
     // [Cecil] Change weapon
-    ForceWeaponChange(EwtTemp);
+    ForceWeaponChange(eWeapon);
   };
 
   // [Cecil] Force weapon change
@@ -3269,7 +3258,7 @@ procedures:
       m_iPreviousWeapon = m_iCurrentWeapon;
       
       // [Cecil] Put away extra weapon if can't be dual
-      SPlayerWeapon &pwWeapon = GetInventory()->m_aWeapons[m_iWantedWeapon];
+      SPlayerWeapon &pwWeapon = GET_WEAPON(m_iWantedWeapon);
 
       if (!m_bExtraWeapon && !pwWeapon.DualWeapon()) {
         GetInventory()->PutAwayExtraWeapon();
@@ -3462,7 +3451,7 @@ procedures:
     
     // [Cecil] Reload mags
     if (bNowColt && !bPrevColt) {
-      GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
+      GET_WEAPON(WEAPON_COLT).Reload(m_bExtraWeapon, TRUE);
     }
 
     m_moWeapon.PlayAnim(m_iAnim, 0);
@@ -3752,7 +3741,7 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD) * FireSpeedMul());
 
     // [Cecil] Reload mag
-    GetInventory()->m_aWeapons[WEAPON_COLT].Reload(m_bExtraWeapon, TRUE);
+    GET_WEAPON(WEAPON_COLT).Reload(m_bExtraWeapon, TRUE);
 
     return EEnd();
   };

@@ -220,7 +220,7 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
   int iDual = 0;
 
   if (cb.GetValue("Group", iGroup)) {
-    ws.iGroup = iGroup;
+    ws.iGroup = Clamp(iGroup, (int)0, (int)31);
   }
 
   if (cb.GetValue("Dual", iDual)) {

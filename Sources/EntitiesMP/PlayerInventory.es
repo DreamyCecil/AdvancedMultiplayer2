@@ -863,6 +863,14 @@ functions:
     return (GetSP()->sp_iAltFire & iFlag);
   };
 
+  // Check if weapon has enough ammo
+  BOOL HasAmmo(INDEX iWeapon) {
+    // check alt ammo
+    BOOL bAlt = AltFireExists(iWeapon);
+
+    return m_aWeapons[iWeapon].HasAmmo(bAlt);
+  };
+
   // Clamp amounts of all ammunition to maximum values
   void ClampAllAmmo(void) {
     for (INDEX i = 0; i < m_aAmmo.Count(); i++) {
