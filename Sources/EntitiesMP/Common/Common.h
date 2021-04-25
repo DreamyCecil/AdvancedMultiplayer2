@@ -369,6 +369,11 @@ inline BOOL StrongerEnemies(void) {
   return GetSP()->sp_iAMPOptions & AMP_ENEMIES;
 };
 
+// [Cecil] Valid enemy multiplier
+inline INDEX EnemyMul(void) {
+  return ClampDn(GetSP()->sp_iEnemyMultiplier, (INDEX)1);
+};
+
 // [Cecil] Item type to item removal flag table
 static const INDEX _aiWeaponItemFlags[13] = {
   IRF_KNIFE,

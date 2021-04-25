@@ -1131,9 +1131,9 @@ functions:
   // [Cecil] Combo payout
   INDEX GetComboPayout(void) {
     FLOAT fScore = FLOAT(m_iComboScore) / 100.0f;
-    INDEX iEnemies = ClampDn(GetSP()->sp_iEnemyMultiplier, (INDEX)1);
-    INDEX iPayout = ClampUp(fScore * FLOAT(m_iCombo/2) / iEnemies, 100000.0f);
+    INDEX iEnemies = EnemyMul();
 
+    INDEX iPayout = ClampUp(fScore * FLOAT(m_iCombo/2) / iEnemies, 100000.0f);
     return iPayout;
   };
 

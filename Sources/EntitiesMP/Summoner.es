@@ -34,6 +34,7 @@ static EntityInfo eiSummoner = {
 #define FIREPOS_ARMS FLOAT3D(0.131292f, 1.61069f, -0.314068f)
 
 #define SUMMONER_MAX_SS 6
+
                                         // hlth  grp1  grp2  grp3 
 INDEX aiSpawnScheme[SUMMONER_MAX_SS][7] = {100,  4,7,  0,0,  0,0, 
                                             90,  3,5,  2,4,  0,0, 
@@ -41,7 +42,11 @@ INDEX aiSpawnScheme[SUMMONER_MAX_SS][7] = {100,  4,7,  0,0,  0,0,
                                             50,  1,3,  3,5,  1,1, 
                                             30,  1,2,  2,3,  2,2, 
                                             15,  1,1,  2,4,  2,3 };
+
 #define SUMMONER_TEMP_PER_GROUP 6
+
+// [Cecil] Apply enemy multiplier (5x for legion mode)
+#define SUMMONER_MAX_ENEMIES (GetSP()->sp_iEnemyMultiplier < 0 ? (6 * 5) : (6 * GetSP()->sp_iEnemyMultiplier))
 %}
 
 
@@ -420,7 +425,10 @@ functions:
     }
     
     // adjust fuss
-    m_fMaxCurrentFuss = (1.0f-(GetHealth()/m_fMaxHealth))*(m_fMaxEndFuss-m_fMaxBeginFuss)+m_fMaxBeginFuss;
+    m_fMaxCurrentFuss = (1.0f - (GetHealth() / m_fMaxHealth)) * (m_fMaxEndFuss - m_fMaxBeginFuss) + m_fMaxBeginFuss;
+
+    // [Cecil] Multiply fuss
+    m_fMaxCurrentFuss *= EnemyMul();
     
     // bosses don't darken when burning
     m_colBurning=COLOR(C_WHITE|CT_OPAQUE);
@@ -518,8 +526,7 @@ functions:
     return (0.995 + 0.005 * pow(m_iEnemyCount , 2.8));
   }
 
-  void RecalculateFuss(void)
-  {
+  void RecalculateFuss(void) {
     // get area box
     FLOATaabbox3D box;
     ((CAreaMarker &)*m_penControlArea).GetAreaBox(box);
@@ -537,7 +544,7 @@ functions:
         if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate
          && IsAlive(apenNearEntities[i])) {
           m_fFuss += ((CEnemyBase &)*apenNearEntities[i]).m_iScore;
-          m_iEnemyCount  ++;
+          m_iEnemyCount++;
         }
       }
     }
@@ -545,22 +552,17 @@ functions:
     m_fFuss *= FussModifier(m_iEnemyCount);
 
     // if too much fuss, make disable firing
-    if (m_fFuss>m_fMaxCurrentFuss) {
-//CPrintF("FIRE DISABLED -> too much fuss\n");
+    if (m_fFuss > m_fMaxCurrentFuss) {
       m_bFireOK = FALSE;
+
     // enable firing only when very little fuss
-    } else if (m_fFuss<0.4*m_fMaxCurrentFuss) {
-//CPrintF("FIRE ENABLE -> fuss more then %f\n", 0.4*m_fMaxCurrentFuss);
-      m_bFireOK = TRUE; 
+    } else if (m_fFuss < 0.4f * m_fMaxCurrentFuss) {
+      m_bFireOK = TRUE;
+
     // but if significant damage since last spawn, enable firing anyway
-    } else if (m_fDamageSinceLastSpawn>0.07f*m_fMaxHealth) {
-//CPrintF("FIRE ENABLED -> much damagesincelastspawn - %f\n", m_fDamageSinceLastSpawn);
+    } else if (m_fDamageSinceLastSpawn > 0.07f * m_fMaxHealth) {
       m_bFireOK = TRUE;
     }
-
-//CPrintF("Fuss = %f/%f (%d enemies) at %f\n", m_fFuss, m_fMaxCurrentFuss, m_iEnemyCount, _pTimer->CurrentTick());
-//CPrintF("health: %f, scheme: %i\n", GetHealth(), m_iSpawnScheme);
-    return;
   }
 
   void CountEnemiesAndScoreValue(INDEX& iEnemies, FLOAT& fScore)
@@ -582,7 +584,7 @@ functions:
         if (!((CEnemyBase &)*apenNearEntities[i]).m_bTemplate
          && IsAlive(apenNearEntities[i])) {
           fScore += ((CEnemyBase &)*apenNearEntities[i]).m_iScore;
-          iEnemies  ++;
+          iEnemies++;
         }
       }
     }
@@ -837,26 +839,32 @@ procedures:
         FLOAT fTmpFuss = 0.0f;
         
         // for each group in current spawn scheme
-        for (i=0; i<3; i++) {
-          INDEX iMin = aiSpawnScheme[m_iSpawnScheme][i*2+1];
-          INDEX iMax = aiSpawnScheme[m_iSpawnScheme][i*2+2];
-          ASSERT(iMin<=iMax);
-          INDEX iToSpawn;
-          iToSpawn = iMin + IRnd()%(iMax - iMin + 1);
-          for (j=0; j<iToSpawn; j++) {
+        for (i = 0; i < 3; i++) {
+          // [Cecil] Apply enemy multiplier
+          INDEX iMin = aiSpawnScheme[m_iSpawnScheme][i*2+1] * EnemyMul();
+          INDEX iMax = aiSpawnScheme[m_iSpawnScheme][i*2+2] * EnemyMul();
+
+          ASSERT(iMin <= iMax);
+
+          INDEX iToSpawn = iMin + IRnd() % (iMax - iMin + 1);
+
+          for (j = 0; j < iToSpawn; j++) {
             CEnemyBase *penTemplate = GetRandomTemplate(i);
             vTarget = AcquireTarget();
             LaunchMonster(vTarget, penTemplate);
-            fTotalSpawnedScore+= penTemplate->m_iScore;
+            fTotalSpawnedScore += penTemplate->m_iScore;
             iTotalSpawnedCount++;
+
             // increase the number of spawned enemies in music holder
             if (penMusicHolder!=NULL) {
               penMusicHolder->m_ctEnemiesInWorld++;
             }
+
             ChangeEnemyNumberForAllPlayers(+1);
+
             // stop spawning if too much fuss or too many enemies
-            fTmpFuss = (fTotalSpawnedScore+fScore)*FussModifier(iTotalSpawnedCount+iEnemyCount);
-            if (fTmpFuss>m_fMaxCurrentFuss) { 
+            fTmpFuss = (fTotalSpawnedScore + fScore) * FussModifier(iTotalSpawnedCount + iEnemyCount);
+            if (fTmpFuss > m_fMaxCurrentFuss) { 
               break; 
             }
           }
@@ -895,35 +903,41 @@ procedures:
         FLOAT fToSpawn;
 
         INDEX iScheme;
+
         // find last active scheme
-        for (INDEX i=0; i<3; i++) {
-          if (aiSpawnScheme[m_iSpawnScheme][i*2+2]>0) {
+        for (INDEX i = 0; i < 3; i++) {
+          if (aiSpawnScheme[m_iSpawnScheme][i*2+2] > 0) {
             iScheme = i;
           }
         }
         
-        if (m_iSpawnScheme>3) {
-          iEnemyCount += (m_iSpawnScheme-3);
+        if (m_iSpawnScheme > 3) {
+          iEnemyCount += (m_iSpawnScheme - 3);
         }
         
-        if (iEnemyCount<6) {
-          fToSpawn = (6.0 - (FLOAT)iEnemyCount)/2.0f;
+        // [Cecil] Apply enemy multiplier
+        if (iEnemyCount < SUMMONER_MAX_ENEMIES) {
+          fToSpawn = FLOAT(SUMMONER_MAX_ENEMIES - iEnemyCount) / 2.0f;
+
         } else {
           fToSpawn = 1.0f;
         }
+
         INDEX iToSpawn = ceilf(fToSpawn);
         
         CMusicHolder *penMusicHolder = GetMusicHolder();
-//CPrintF("spawning %d from %d group\n", iToSpawn, iScheme);
+
         // spawn
-        for (INDEX j=0; j<iToSpawn; j++) {
+        for (INDEX j = 0; j < iToSpawn; j++) {
           CEnemyBase *penTemplate = GetRandomTemplate(iScheme);
           FLOAT3D vTarget = AcquireTarget();
           LaunchMonster(vTarget, penTemplate);
+
           // increase the number of spawned enemies in music holder
-          if (penMusicHolder!=NULL) {
+          if (penMusicHolder != NULL) {
             penMusicHolder->m_ctEnemiesInWorld++;
           }
+
           ChangeEnemyNumberForAllPlayers(+1);
         }
 
@@ -931,6 +945,7 @@ procedures:
         ESummonerTeleport est;
         est.fWait = FRnd()*1.0f+3.0f;
         SendEvent(est);
+
         // laugh
         autowait(1.0f);
         
@@ -1349,7 +1364,10 @@ procedures:
     }
 
     m_iSpawnScheme = 0;
-    m_fMaxCurrentFuss = m_fMaxBeginFuss;
+    
+    // [Cecil] Multiply fuss
+    m_fMaxCurrentFuss = m_fMaxBeginFuss * EnemyMul();
+
     m_bDying = FALSE;
     m_tmDeathBegin = 0.0f;
     m_fDeathDuration = 0.0f;
