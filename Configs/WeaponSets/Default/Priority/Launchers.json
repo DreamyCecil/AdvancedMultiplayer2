@@ -1,0 +1,4 @@
+{
+  // Grenade Launcher -> Knife
+  "Priority" : [8, 9, 7, 6, 5, 4, 3, 1],
+}

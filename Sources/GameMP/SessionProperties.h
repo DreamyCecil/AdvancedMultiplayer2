@@ -42,10 +42,10 @@
 #define WAF_MINIGUN   (1 << 6)
 #define WAF_RLAUNCHER (1 << 7)
 #define WAF_GLAUNCHER (1 << 8)
-#define WAF_FLAMER    (1 << 10)
+#define WAF_FLAMER    (1 << 9)
+#define WAF_SNIPER    (1 << 10)
 #define WAF_LASER     (1 << 11)
-#define WAF_SNIPER    (1 << 12)
-#define WAF_CANNON    (1 << 13)
+#define WAF_CANNON    (1 << 12)
 
 // [Cecil] Dual weapon modes
 #define DWP_NO     0

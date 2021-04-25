@@ -1,4 +1,6 @@
 {
+  "Include" : "Priority\Launchers.json",
+  
   "Name" : "MKIII Grenade Launcher",
   "Icon" : "TexturesMP\Interface\WGrenadeLauncher.tex",
   

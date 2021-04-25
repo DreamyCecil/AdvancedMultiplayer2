@@ -1,4 +1,6 @@
 {
+  "Include" : "Priority\General.json",
+  
   "Name" : "Double Barrel Coach Gun",
   "Icon" : "TexturesMP\Interface\WDoubleShotgun.tex",
   

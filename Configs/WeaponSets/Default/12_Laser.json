@@ -1,4 +1,6 @@
 {
+  "Include" : "Priority\Fuel.json",
+  
   "Name" : "XL2 Lasergun",
   "Icon" : "TexturesMP\Interface\WLaser.tex",
   

@@ -3755,19 +3755,18 @@ functions:
   };
 
   // if computer is pressed
-  void ComputerPressed(void)
-  {
+  void ComputerPressed(void) {
     // call computer if not holding sniper
-//    if (GetWeapon(0)->m_iCurrentWeapon!=WEAPON_SNIPER){
-      if (cmp_ppenPlayer==NULL && _pNetwork->IsPlayerLocal(this)) {
-        cmp_ppenPlayer = this;
-      }
-      m_bComputerInvoked = TRUE;
-      // clear analyses message
-      m_tmAnalyseEnd = 0;
-      m_bPendingMessage = FALSE;
-      m_tmMessagePlay = 0;
-//    }
+    if (cmp_ppenPlayer == NULL && _pNetwork->IsPlayerLocal(this)) {
+      cmp_ppenPlayer = this;
+    }
+
+    m_bComputerInvoked = TRUE;
+
+    // clear analyses message
+    m_tmAnalyseEnd = 0;
+    m_bPendingMessage = FALSE;
+    m_tmMessagePlay = 0;
   }
 
 
@@ -3981,7 +3980,7 @@ functions:
     // sniper zooming
     CPlayerWeapons *penWeapon = GetWeapon(0);
 
-    if (penWeapon->m_iCurrentWeapon == WEAPON_SNIPER) {
+    if (penWeapon->GetCurrent() == WEAPON_SNIPER) {
       if (bUseButtonHeld && m_ulFlags & PLF_ISZOOMING) {
         m_fLastSniperFOV = m_fSniperFOV;
         m_fSniperFOV -= m_fSnipingZoomSpeed;
@@ -4360,7 +4359,7 @@ functions:
 
     // [Cecil] TODO: Call PlayerInventory and check if it's only knives selected
     // enable faster moving if holding knife in DM
-    if (GetWeapon(0)->m_iCurrentWeapon == WEAPON_KNIFE && !GetSP()->sp_bCooperative) {
+    if (GetWeapon(0)->GetCurrent() == WEAPON_KNIFE && !GetSP()->sp_bCooperative) {
       vTranslation *= 1.3f;
     }
 
@@ -4976,14 +4975,15 @@ functions:
 
     // if use is pressed
     if (ulNewButtons & PLACT_USE) {
-      if (GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER) {
+      if (GetWeapon(0)->GetCurrent() == WEAPON_SNIPER) {
         UsePressed(FALSE);
+
       } else {
         UsePressed(ulNewButtons & PLACT_COMPUTER);
       }
 
     // if USE is not detected due to doubleclick and player is holding sniper
-    } else if (ulNewButtons & PLACT_SNIPER_USE && GetWeapon(0)->m_iCurrentWeapon == WEAPON_SNIPER) {
+    } else if (ulNewButtons & PLACT_SNIPER_USE && GetWeapon(0)->GetCurrent() == WEAPON_SNIPER) {
       UsePressed(FALSE);
 
     // if computer is pressed
@@ -6885,7 +6885,7 @@ procedures:
       BODY_ANIM_COLT_REDRAW, BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, 0);
     autowait(plan.m_fBodyAnimTime);
 
-    m_iAutoOrgWeapon = GetWeapon(0)->m_iCurrentWeapon;  
+    m_iAutoOrgWeapon = GetWeapon(0)->GetCurrent();  
     GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
     GetWeapon(0)->m_iWantedWeapon = WEAPON_NONE;
     GetInventory()->MuteWeaponAmbient();
@@ -6898,7 +6898,7 @@ procedures:
     plan.RemoveWeapon();
     GetPlayerAnimator()->SyncWeapon();
 
-    GetWeapon(0)->m_iCurrentWeapon = (WeaponType) m_iAutoOrgWeapon;
+    GetWeapon(0)->m_iCurrentWeapon = m_iAutoOrgWeapon;
     // [Cecil] Default animation instead of wait animation; DEACTIVATETOWALK -> REDRAW
     plan.BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_REDRAW,
       BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, AOF_SMOOTHCHANGE);

@@ -66,19 +66,18 @@ extern FLOAT plr_fViewDampLimitGroundUp;
 extern FLOAT plr_fViewDampLimitGroundDn;
 extern FLOAT plr_fViewDampLimitWater;
 
-void CPlayerAnimator_Precache(ULONG ulAvailable)
-{
+void CPlayerAnimator_Precache(void) {
   CDLLEntityClass *pdec = &CPlayerAnimator_DLLClass;
 
-  pdec->PrecacheTexture(TEX_REFL_BWRIPLES01      );
-  pdec->PrecacheTexture(TEX_REFL_BWRIPLES02      );
-  pdec->PrecacheTexture(TEX_REFL_LIGHTMETAL01    );
+  pdec->PrecacheTexture(TEX_REFL_BWRIPLES01);
+  pdec->PrecacheTexture(TEX_REFL_BWRIPLES02);
+  pdec->PrecacheTexture(TEX_REFL_LIGHTMETAL01);
   pdec->PrecacheTexture(TEX_REFL_LIGHTBLUEMETAL01);
-  pdec->PrecacheTexture(TEX_REFL_DARKMETAL       );
-  pdec->PrecacheTexture(TEX_REFL_PURPLE01        );
-  pdec->PrecacheTexture(TEX_SPEC_WEAK            );
-  pdec->PrecacheTexture(TEX_SPEC_MEDIUM          );
-  pdec->PrecacheTexture(TEX_SPEC_STRONG          );
+  pdec->PrecacheTexture(TEX_REFL_DARKMETAL);
+  pdec->PrecacheTexture(TEX_REFL_PURPLE01);
+  pdec->PrecacheTexture(TEX_SPEC_WEAK);
+  pdec->PrecacheTexture(TEX_SPEC_MEDIUM);
+  pdec->PrecacheTexture(TEX_SPEC_STRONG);
   pdec->PrecacheModel(MODEL_FLARE02);
   pdec->PrecacheTexture(TEXTURE_FLARE02);
   pdec->PrecacheModel(MODEL_GOLDAMON);
@@ -91,113 +90,87 @@ void CPlayerAnimator_Precache(ULONG ulAvailable)
   CPlayerWeaponsEffects_Precache();
 
   // precache weapons player has
-  if (WeaponExists(ulAvailable, WEAPON_KNIFE)) {
-    pdec->PrecacheModel(MODEL_KNIFE);
-    pdec->PrecacheTexture(TEXTURE_KNIFE);
-  }
+  pdec->PrecacheModel(MODEL_KNIFE);
+  pdec->PrecacheTexture(TEXTURE_KNIFE);
 
-  if (WeaponExists(ulAvailable, WEAPON_COLT)) {
-    pdec->PrecacheModel(MODEL_COLT);
-    pdec->PrecacheModel(MODEL_COLTCOCK);
-    pdec->PrecacheModel(MODEL_COLTMAIN);
-    pdec->PrecacheModel(MODEL_COLTBULLETS);
-    pdec->PrecacheTexture(TEXTURE_COLTMAIN);
-    pdec->PrecacheTexture(TEXTURE_COLTBULLETS);
-    pdec->PrecacheTexture(TEXTURE_COLTBULLETS);
-  }
+  pdec->PrecacheModel(MODEL_COLT);
+  pdec->PrecacheModel(MODEL_COLTCOCK);
+  pdec->PrecacheModel(MODEL_COLTMAIN);
+  pdec->PrecacheModel(MODEL_COLTBULLETS);
+  pdec->PrecacheTexture(TEXTURE_COLTMAIN);
+  pdec->PrecacheTexture(TEXTURE_COLTBULLETS);
+  pdec->PrecacheTexture(TEXTURE_COLTBULLETS);
 
-  if (WeaponExists(ulAvailable, WEAPON_SINGLESHOTGUN)) {
-    pdec->PrecacheModel(MODEL_SINGLESHOTGUN);
-    pdec->PrecacheModel(MODEL_SS_SLIDER);
-    pdec->PrecacheModel(MODEL_SS_HANDLE);
-    pdec->PrecacheModel(MODEL_SS_BARRELS);
-    pdec->PrecacheTexture(TEXTURE_SS_HANDLE);
-    pdec->PrecacheTexture(TEXTURE_SS_BARRELS);
-  }
+  pdec->PrecacheModel(MODEL_SINGLESHOTGUN);
+  pdec->PrecacheModel(MODEL_SS_SLIDER);
+  pdec->PrecacheModel(MODEL_SS_HANDLE);
+  pdec->PrecacheModel(MODEL_SS_BARRELS);
+  pdec->PrecacheTexture(TEXTURE_SS_HANDLE);
+  pdec->PrecacheTexture(TEXTURE_SS_BARRELS);
 
-  if (WeaponExists(ulAvailable, WEAPON_DOUBLESHOTGUN)) {
-    pdec->PrecacheModel(MODEL_DOUBLESHOTGUN);
-    pdec->PrecacheModel(MODEL_DS_HANDLE);
-    pdec->PrecacheModel(MODEL_DS_BARRELS);
-    pdec->PrecacheModel(MODEL_DS_SWITCH);
-    pdec->PrecacheTexture(TEXTURE_DS_HANDLE);
-    pdec->PrecacheTexture(TEXTURE_DS_BARRELS);
-    pdec->PrecacheTexture(TEXTURE_DS_SWITCH);
-  }
+  pdec->PrecacheModel(MODEL_DOUBLESHOTGUN);
+  pdec->PrecacheModel(MODEL_DS_HANDLE);
+  pdec->PrecacheModel(MODEL_DS_BARRELS);
+  pdec->PrecacheModel(MODEL_DS_SWITCH);
+  pdec->PrecacheTexture(TEXTURE_DS_HANDLE);
+  pdec->PrecacheTexture(TEXTURE_DS_BARRELS);
+  pdec->PrecacheTexture(TEXTURE_DS_SWITCH);
 
-  if (WeaponExists(ulAvailable, WEAPON_TOMMYGUN)) {
-    pdec->PrecacheModel(MODEL_TOMMYGUN);
-    pdec->PrecacheModel(MODEL_TG_BODY);
-    pdec->PrecacheModel(MODEL_TG_SLIDER);
-    pdec->PrecacheTexture(TEXTURE_TG_BODY);
-  }
+  pdec->PrecacheModel(MODEL_TOMMYGUN);
+  pdec->PrecacheModel(MODEL_TG_BODY);
+  pdec->PrecacheModel(MODEL_TG_SLIDER);
+  pdec->PrecacheTexture(TEXTURE_TG_BODY);
 
-  if (WeaponExists(ulAvailable, WEAPON_SNIPER)) {
-    pdec->PrecacheModel(MODEL_SNIPER);
-    pdec->PrecacheModel(MODEL_SNIPER_BODY);
-    pdec->PrecacheTexture(TEXTURE_SNIPER_BODY);
-  }
+  pdec->PrecacheModel(MODEL_SNIPER);
+  pdec->PrecacheModel(MODEL_SNIPER_BODY);
+  pdec->PrecacheTexture(TEXTURE_SNIPER_BODY);
 
-  if (WeaponExists(ulAvailable, WEAPON_MINIGUN)) {
-    pdec->PrecacheModel(MODEL_MINIGUN);
-    pdec->PrecacheModel(MODEL_MG_BARRELS);
-    pdec->PrecacheModel(MODEL_MG_BODY);
-    pdec->PrecacheModel(MODEL_MG_ENGINE);
-    pdec->PrecacheTexture(TEXTURE_MG_BODY);
-    pdec->PrecacheTexture(TEXTURE_MG_BARRELS);
-  }
-                                         
-  if (WeaponExists(ulAvailable, WEAPON_ROCKETLAUNCHER)) {
-    pdec->PrecacheModel(MODEL_ROCKETLAUNCHER);
-    pdec->PrecacheModel(MODEL_RL_BODY);
-    pdec->PrecacheModel(MODEL_RL_ROTATINGPART);
-    pdec->PrecacheModel(MODEL_RL_ROCKET);
-    pdec->PrecacheTexture(TEXTURE_RL_BODY);
-    pdec->PrecacheTexture(TEXTURE_RL_ROCKET);
-    pdec->PrecacheTexture(TEXTURE_RL_ROTATINGPART);
-  }                                        
+  pdec->PrecacheModel(MODEL_MINIGUN);
+  pdec->PrecacheModel(MODEL_MG_BARRELS);
+  pdec->PrecacheModel(MODEL_MG_BODY);
+  pdec->PrecacheModel(MODEL_MG_ENGINE);
+  pdec->PrecacheTexture(TEXTURE_MG_BODY);
+  pdec->PrecacheTexture(TEXTURE_MG_BARRELS);
 
-  if (WeaponExists(ulAvailable, WEAPON_GRENADELAUNCHER)) {
-    pdec->PrecacheModel(MODEL_GRENADELAUNCHER);
-    pdec->PrecacheModel(MODEL_GL_BODY);
-    pdec->PrecacheModel(MODEL_GL_MOVINGPART);
-    pdec->PrecacheModel(MODEL_GL_GRENADE);
-    pdec->PrecacheTexture(TEXTURE_GL_BODY);
-    pdec->PrecacheTexture(TEXTURE_GL_MOVINGPART);
-  }
+  pdec->PrecacheModel(MODEL_ROCKETLAUNCHER);
+  pdec->PrecacheModel(MODEL_RL_BODY);
+  pdec->PrecacheModel(MODEL_RL_ROTATINGPART);
+  pdec->PrecacheModel(MODEL_RL_ROCKET);
+  pdec->PrecacheTexture(TEXTURE_RL_BODY);
+  pdec->PrecacheTexture(TEXTURE_RL_ROCKET);
+  pdec->PrecacheTexture(TEXTURE_RL_ROTATINGPART);
 
-  if (WeaponExists(ulAvailable, WEAPON_FLAMER)) {
-    pdec->PrecacheModel(MODEL_FLAMER);
-    pdec->PrecacheModel(MODEL_FL_BODY);
-    pdec->PrecacheModel(MODEL_FL_RESERVOIR);
-    pdec->PrecacheModel(MODEL_FL_FLAME);
-    pdec->PrecacheTexture(TEXTURE_FL_BODY);
-    pdec->PrecacheTexture(TEXTURE_FL_FLAME);
-  }
-  
-  if (WeaponExists(ulAvailable, WEAPON_CHAINSAW)) {
-    pdec->PrecacheModel(MODEL_CHAINSAW);
-    pdec->PrecacheModel(MODEL_CS_BODY);
-    pdec->PrecacheModel(MODEL_CS_BLADE);
-    pdec->PrecacheModel(MODEL_CS_TEETH);
-    pdec->PrecacheTexture(TEXTURE_CS_BODY);
-    pdec->PrecacheTexture(TEXTURE_CS_BLADE);
-    pdec->PrecacheTexture(TEXTURE_CS_TEETH);
-  }
+  pdec->PrecacheModel(MODEL_GRENADELAUNCHER);
+  pdec->PrecacheModel(MODEL_GL_BODY);
+  pdec->PrecacheModel(MODEL_GL_MOVINGPART);
+  pdec->PrecacheModel(MODEL_GL_GRENADE);
+  pdec->PrecacheTexture(TEXTURE_GL_BODY);
+  pdec->PrecacheTexture(TEXTURE_GL_MOVINGPART);
 
-  if (WeaponExists(ulAvailable, WEAPON_LASER)) {
-    pdec->PrecacheModel(MODEL_LASER);
-    pdec->PrecacheModel(MODEL_LS_BODY);
-    pdec->PrecacheModel(MODEL_LS_BARREL);
-    pdec->PrecacheTexture(TEXTURE_LS_BODY);
-    pdec->PrecacheTexture(TEXTURE_LS_BARREL);
-  }
+  pdec->PrecacheModel(MODEL_FLAMER);
+  pdec->PrecacheModel(MODEL_FL_BODY);
+  pdec->PrecacheModel(MODEL_FL_RESERVOIR);
+  pdec->PrecacheModel(MODEL_FL_FLAME);
+  pdec->PrecacheTexture(TEXTURE_FL_BODY);
+  pdec->PrecacheTexture(TEXTURE_FL_FLAME);
 
-  if (WeaponExists(ulAvailable, WEAPON_IRONCANNON)) {
-    pdec->PrecacheModel(MODEL_CANNON);
-    pdec->PrecacheModel(MODEL_CN_BODY);
-    pdec->PrecacheTexture(TEXTURE_CANNON);
-  }
+  pdec->PrecacheModel(MODEL_CHAINSAW);
+  pdec->PrecacheModel(MODEL_CS_BODY);
+  pdec->PrecacheModel(MODEL_CS_BLADE);
+  pdec->PrecacheModel(MODEL_CS_TEETH);
+  pdec->PrecacheTexture(TEXTURE_CS_BODY);
+  pdec->PrecacheTexture(TEXTURE_CS_BLADE);
+  pdec->PrecacheTexture(TEXTURE_CS_TEETH);
+
+  pdec->PrecacheModel(MODEL_LASER);
+  pdec->PrecacheModel(MODEL_LS_BODY);
+  pdec->PrecacheModel(MODEL_LS_BARREL);
+  pdec->PrecacheTexture(TEXTURE_LS_BODY);
+  pdec->PrecacheTexture(TEXTURE_LS_BARREL);
+
+  pdec->PrecacheModel(MODEL_CANNON);
+  pdec->PrecacheModel(MODEL_CN_BODY);
+  pdec->PrecacheTexture(TEXTURE_CANNON);
 }
 %}
 
@@ -409,8 +382,7 @@ functions:
   }
 
   void Precache(void) {
-    INDEX iAvailableWeapons = GetPlayer()->GetInventory()->GetCurrentWeaponMask();
-    CPlayerAnimator_Precache(iAvailableWeapons);
+    CPlayerAnimator_Precache();
   }
   
   CPlayer *GetPlayer(void) {

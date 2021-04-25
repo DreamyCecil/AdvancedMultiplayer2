@@ -14,24 +14,44 @@
 #include "EntitiesMP/PlayerWeapons.h"
 #include "EntitiesMP/WorldBase.h"
 
+// [Cecil] Weapon flags
+inline INDEX WeaponFlag(const INDEX &iWeapon) {
+  return (1 << (iWeapon-1));
+};
+
 // [Cecil] TFE weapon flags to TSE flags
-void ConvertWeapon(INDEX &iFlags, const INDEX &iWeapon) {
+void ConvertWeaponTFE(INDEX &iFlags, const INDEX &iWeapon) {
   switch (iWeapon) {
     // Laser
-    case 14:
-      iFlags |= WeaponFlag(WEAPON_LASER);
-      break;
+    case 14: iFlags |= WeaponFlag(WEAPON_LASER); break;
 
     // Cannon
-    case 16:
-      iFlags |= WeaponFlag(WEAPON_IRONCANNON);
-      break;
+    case 16: iFlags |= WeaponFlag(WEAPON_IRONCANNON); break;
 
     // non-existent weapons
-    case 10: case 12: case 15: case 17:
-    case WEAPON_FLAMER: case WEAPON_SNIPER:
-      break;
+    case 10: case 11: case 12: case 13: case 15: case 17: break;
+    
+    // other
+    default: iFlags |= WeaponFlag(iWeapon);
+  }
+};
 
+// [Cecil] TSE weapon flags to AMP2 flags
+void ConvertWeaponTSE(INDEX &iFlags, const INDEX &iWeapon) {
+  switch (iWeapon) {
+    // Chainsaw
+    case 10: iFlags |= WeaponFlag(WEAPON_CHAINSAW); break;
+
+    // Flamer
+    case 11: iFlags |= WeaponFlag(WEAPON_FLAMER); break;
+
+    // Sniper
+    case 13: iFlags |= WeaponFlag(WEAPON_SNIPER); break;
+
+    // Cannon
+    case 14: iFlags |= WeaponFlag(WEAPON_IRONCANNON); break;
+
+    // other
     default: iFlags |= WeaponFlag(iWeapon);
   }
 };
@@ -81,23 +101,7 @@ extern void ConvertWorld(CEntity *penWorld) {
       continue;
     }
   
-    // [Cecil] NOTE: Not needed because PlayerWeapons isn't present on maps
-    /*if (IsOfClass(pen, "Player Weapons")) {
-      CPlayerWeapons *penWeapons = (CPlayerWeapons *)pen;
-      INDEX *piWeapons = &penWeapons->m_iAvailableWeapons;
-      INDEX iWeapons = *piWeapons & ~GetSP()->sp_iWeaponGiver;
-      INDEX iNewWeapons = 0x03;
-
-      for (INDEX iGetWeapon = 1; iGetWeapon < 18; iGetWeapon++) {
-        // replace the weapon if we have it
-        if (WeaponExists(iWeapons, iGetWeapon)) {
-          ConvertWeapon(iNewWeapons, iGetWeapon);
-        }
-      }
-      *piWeapons = iNewWeapons | GetSP()->sp_iWeaponGiver;
-      CPrintF(" - Converted PlayerWeapons\n");
-
-    } else*/ if (IsOfClass(pen, "Player Marker")) {
+    if (IsOfClass(pen, "Player Marker")) {
       CPlayerMarker *penWeapons = (CPlayerMarker *)pen;
       INDEX *piWeapons = &penWeapons->m_iGiveWeapons;
       INDEX *piTakeWeapons = &penWeapons->m_iTakeWeapons;
@@ -106,12 +110,12 @@ extern void ConvertWorld(CEntity *penWorld) {
 
       for (INDEX iGetWeapon = 1; iGetWeapon < 18; iGetWeapon++) {
         // replace the weapon if we have it
-        if (WeaponExists(*piWeapons, iGetWeapon)) {
-          ConvertWeapon(iNewWeapons, iGetWeapon);
+        if (*piWeapons & WeaponFlag(iGetWeapon)) {
+          ConvertWeaponTFE(iNewWeapons, iGetWeapon);
         }
     
-        if (WeaponExists(*piTakeWeapons, iGetWeapon)) {
-          ConvertWeapon(iNewTakeWeapons, iGetWeapon);
+        if (*piTakeWeapons & WeaponFlag(iGetWeapon)) {
+          ConvertWeaponTFE(iNewTakeWeapons, iGetWeapon);
         }
       }
       *piWeapons = iNewWeapons;

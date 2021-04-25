@@ -113,12 +113,15 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
   CConfigValue val;
 
   // get weapon positions
-  GetConfigPlacement(cb, "Pos1", ws.wpsPos.plPos);
-  GetConfigPlacement(cb, "Pos3", ws.wpsPos.plThird);
-
-  // copy first person position in case the dual weapon position doesn't exist
-  ws.wpsPos.plPos2 = ws.wpsPos.plPos;
+  if (cb.FindKeyIndex("Pos1") != -1) {
+    GetConfigPlacement(cb, "Pos1", ws.wpsPos.plPos);
+  
+    // copy first person position in case the dual weapon position doesn't exist
+    ws.wpsPos.plPos2 = ws.wpsPos.plPos;
+  }
+  
   GetConfigPlacement(cb, "Pos2", ws.wpsPos.plPos2);
+  GetConfigPlacement(cb, "Pos3", ws.wpsPos.plThird);
 
   GetConfigVector(cb, "PosFire", ws.wpsPos.vFire);
 
@@ -225,6 +228,18 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
 
   if (cb.GetValue("Dual", iDual)) {
     ws.bDualWeapon = iDual;
+  }
+
+  // weapon priority list
+  DJSON_Array aPriority;
+
+  if (cb.GetValue("Priority", aPriority)) {
+    INDEX ctPriorities = aPriority.Count();
+    ws.aiWeaponPriority.New(ctPriorities);
+
+    for (INDEX iCopy = 0; iCopy < ctPriorities; iCopy++) {
+      ws.aiWeaponPriority[iCopy] = aPriority[iCopy].GetNumber();
+    }
   }
 
   // models

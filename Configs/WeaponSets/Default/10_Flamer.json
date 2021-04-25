@@ -1,12 +1,14 @@
 {
+  "Include" : "Priority\Fuel.json",
+  
   "Name" : "XOP Flamethrower",
   "Icon" : "TexturesMP\Interface\WFlamer.tex",
   
   "Bit" : 10,
   "Group" : 6,
   
-  "Model1" : "Models1\11_Flamer.json",
-  "Model3" : "Models3\11_Flamer.json",
+  "Model1" : "Models1\10_Flamer.json",
+  "Model3" : "Models3\10_Flamer.json",
   
   "Ammo" : 5,
   "AltAmmo": 5,

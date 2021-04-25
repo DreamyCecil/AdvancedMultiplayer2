@@ -226,6 +226,26 @@ functions:
     return iMask;
   };
 
+  // Get weapon's bit (PlayerMarker compatibility)
+  ULONG GetWeaponMask(const INDEX &iWeapon) {
+    SWeaponStruct *pws = m_aWeapons[iWeapon].pwsWeapon;
+    ULONG ulMask = 0;
+
+    // go through weapon bits
+    for (INDEX iWeaponBit = 0; iWeaponBit < pws->aiBits.Count(); iWeaponBit++) {
+      INDEX iBit = pws->aiBits[iWeaponBit];
+        
+      // invalid bit
+      if (iBit < 0 || iBit > 31) { 
+        continue;
+      }
+
+      ulMask |= (1 << iBit);
+    }
+
+    return ulMask;
+  };
+
   // Add weapons using a weapon mask (PlayerMarker compatibility)
   void GiveWeaponMask(const INDEX &iGiveWeapons) {
     for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
@@ -265,6 +285,22 @@ functions:
     }
   };
 
+  // Count existing weapons
+  INDEX CountWeapons(void) {
+    INDEX ctWeapons = 0;
+
+    for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
+      // haven't picked up any
+      if (m_aWeapons[i].iPicked <= 0) {
+        continue;
+      }
+
+      ctWeapons++;
+    }
+
+    return ctWeapons;
+  };
+
   // Check if certain weapon exists
   BOOL HasWeapon(INDEX iWeapon) {
     return (m_aWeapons[iWeapon].iPicked > 0);
@@ -274,10 +310,10 @@ functions:
   BOOL HasEnoughWeapons(INDEX iWeapon) {
     INDEX ctWeapons = 2;
 
-    // [Cecil] TODO: Implement this
-    /*if (!m_aWeapons[iWeapon].IsDual()) {
+    // can't be selected as an extra weapon
+    if (!m_aWeapons[iWeapon].ExtraWeapon()) {
       ctWeapons = 1;
-    }*/
+    }
 
     return (m_aWeapons[iWeapon].iPicked >= ctWeapons);
   };
@@ -379,7 +415,7 @@ functions:
 
     // for each new weapon
     for (INDEX iWeapon = WEAPON_KNIFE; iWeapon < WEAPON_LAST; iWeapon++) {
-      if (WeaponExists(ulNewWeapons, iWeapon)) {
+      if (ulNewWeapons & GetWeaponMask(iWeapon)) {
         // add default amount of ammo
         AddDefaultAmmoForWeapon(iWeapon, (bStartAmmo ? 1.0f : fAmmoRatio));
       }
@@ -662,7 +698,7 @@ functions:
 
     if (bAutoSelect) {
       // select it
-      if (GetWeapon(0)->WeaponSelectOk((WeaponType)iReceiveType)) {
+      if (GetWeapon(0)->WeaponSelectOk(iReceiveType)) {
         GetWeapon(0)->SendEvent(EBegin());
       }
     }
@@ -865,6 +901,11 @@ functions:
 
   // Check if weapon has enough ammo
   BOOL HasAmmo(INDEX iWeapon) {
+    // infinite ammo
+    if (GetSP()->sp_bInfiniteAmmo) {
+      return TRUE;
+    }
+
     // check alt ammo
     BOOL bAlt = AltFireExists(iWeapon);
 

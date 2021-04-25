@@ -1,12 +1,14 @@
 {
+  "Include" : "Priority\General.json",
+  
   "Name" : "Shofield .45 w/ TMAR",
   "Icon" : "TexturesMP\Interface\WColt.tex",
   
   "Bit" : [1, 2], // Colt + Double Colt
   "Group" : 2,
   
-  "Model1" : "Models1\02_Colt.json",
-  "Model3" : "Models3\02_Colt.json",
+  "Model1" : "Models1\03_Colt.json",
+  "Model3" : "Models3\03_Colt.json",
   
   "Damage" : 10.0,
   "DamageDM" : 15.0,

@@ -1,4 +1,6 @@
 {
+  "Include" : "Priority\General.json",
+  
   "Name" : "12 Gauge Pump Action Shotgun",
   "Icon" : "TexturesMP\Interface\WSingleShotgun.tex",
   

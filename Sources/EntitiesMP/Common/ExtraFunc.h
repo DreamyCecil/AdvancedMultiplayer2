@@ -1,13 +1,10 @@
 #pragma once
 
-// [Cecil] Weapon flags
-inline INDEX WeaponFlag(const INDEX &iWeapon) {
-  return (1 << (iWeapon-1));
-};
+// [Cecil] TFE weapon flags to TSE flags
+DECL_DLL void ConvertWeaponTFE(INDEX &iFlags, const INDEX &iWeapon);
 
-inline BOOL WeaponExists(const INDEX &iFlags, const INDEX &iWeapon) {
-  return (iFlags & WeaponFlag(iWeapon));
-};
+// [Cecil] TSE weapon flags to AMP2 flags
+DECL_DLL void ConvertWeaponTSE(INDEX &iFlags, const INDEX &iWeapon);
 
 // [Cecil] Properly remove decorations from the string
 DECL_DLL void ProperUndecorate(CTString &str);

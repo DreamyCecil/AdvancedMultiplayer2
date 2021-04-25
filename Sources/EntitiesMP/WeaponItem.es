@@ -50,7 +50,7 @@ event EWeaponItem {
 };
 
 %{
-extern void CPlayerWeapons_Precache(ULONG ulAvailable);
+extern void CPlayerWeapons_Precache(void);
 %}
 
 class CWeaponItem : CItem {
@@ -197,21 +197,7 @@ functions:
     PrecacheModel(MODEL_TRIGGER);
     PrecacheTexture(TEXTURE_TRIGGER);
 
-    switch (m_EwitType) {
-      case WIT_KNIFE:           CPlayerWeapons_Precache(1<<(INDEX(WEAPON_KNIFE          )-1)); break;
-      case WIT_COLT:            CPlayerWeapons_Precache(1<<(INDEX(WEAPON_COLT           )-1)); break;
-      case WIT_SINGLESHOTGUN:   CPlayerWeapons_Precache(1<<(INDEX(WEAPON_SINGLESHOTGUN  )-1)); break;
-      case WIT_DOUBLESHOTGUN:   CPlayerWeapons_Precache(1<<(INDEX(WEAPON_DOUBLESHOTGUN  )-1)); break;
-      case WIT_TOMMYGUN:        CPlayerWeapons_Precache(1<<(INDEX(WEAPON_TOMMYGUN       )-1)); break;
-      case WIT_MINIGUN:         CPlayerWeapons_Precache(1<<(INDEX(WEAPON_MINIGUN        )-1)); break;
-      case WIT_ROCKETLAUNCHER:  CPlayerWeapons_Precache(1<<(INDEX(WEAPON_ROCKETLAUNCHER )-1)); break;
-      case WIT_GRENADELAUNCHER: CPlayerWeapons_Precache(1<<(INDEX(WEAPON_GRENADELAUNCHER)-1)); break;
-      case WIT_SNIPER:          CPlayerWeapons_Precache(1<<(INDEX(WEAPON_SNIPER         )-1)); break;
-      case WIT_FLAMER:          CPlayerWeapons_Precache(1<<(INDEX(WEAPON_FLAMER         )-1)); break;
-      case WIT_CHAINSAW:        CPlayerWeapons_Precache(1<<(INDEX(WEAPON_CHAINSAW       )-1)); break;
-      case WIT_LASER:           CPlayerWeapons_Precache(1<<(INDEX(WEAPON_LASER          )-1)); break;
-      case WIT_CANNON:          CPlayerWeapons_Precache(1<<(INDEX(WEAPON_IRONCANNON     )-1)); break;
-    }
+    CPlayerWeapons_Precache();
   };
 
   /* Fill in entity statistics - for AI purposes only */

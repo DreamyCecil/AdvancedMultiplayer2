@@ -1,4 +1,6 @@
 {
+  "Include" : "Priority\Launchers.json",
+  
   "Name" : "XPML21 Rocket Launcher",
   "Icon" : "TexturesMP\Interface\WRocketLauncher.tex",
   

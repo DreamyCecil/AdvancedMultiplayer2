@@ -4,8 +4,8 @@
 #include "WeaponPos.h"
 #include "WeaponModel.h"
 
-// Special weapon bits
-typedef CDArray<INDEX> CWeaponBits;
+// List of indices
+typedef CDArray<INDEX> CIndexList;
 
 // Weapon properties
 struct SWeaponStruct : public SWeaponBase {
@@ -19,9 +19,11 @@ struct SWeaponStruct : public SWeaponBase {
   SWeaponAmmo *pwaAlt; // alt ammo
   INDEX iMaxMag; // magazine size
 
-  CWeaponBits aiBits; // special bits of the weapon (for compatibility with PlayerMarker)
-  INDEX iGroup;       // weapon group (0 - 31)
-  BOOL bDualWeapon;   // can be selected as an extra weapon
+  CIndexList aiBits; // special bits of the weapon (for compatibility with PlayerMarker)
+  INDEX iGroup;      // weapon group (0 - 31)
+  BOOL bDualWeapon;  // can be selected as an extra weapon
+
+  CIndexList aiWeaponPriority; // weapons to switch to if needed (if no more ammo etc.)
 
   enum EDecWeaponAmmo {
     DWA_AMMO = 0, // main ammo

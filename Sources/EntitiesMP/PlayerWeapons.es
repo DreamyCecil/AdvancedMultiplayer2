@@ -147,21 +147,21 @@ event EAltFire {};
 
 // weapons (do not change order! - needed by HUD.cpp)
 enum WeaponType {
-  0 WEAPON_NONE               "",
-  1 WEAPON_KNIFE              "",
-  2 WEAPON_COLT               "",
-  4 WEAPON_SINGLESHOTGUN      "",
-  5 WEAPON_DOUBLESHOTGUN      "",
-  6 WEAPON_TOMMYGUN           "",
-  7 WEAPON_MINIGUN            "",
-  8 WEAPON_ROCKETLAUNCHER     "",
-  9 WEAPON_GRENADELAUNCHER    "",
- 10 WEAPON_CHAINSAW           "",
- 11 WEAPON_FLAMER             "",
- 12 WEAPON_LASER              "",
- 13 WEAPON_SNIPER             "",
- 14 WEAPON_IRONCANNON         "",
- 15 WEAPON_LAST               "",
+  0 WEAPON_NONE            "",
+  1 WEAPON_KNIFE           "",
+  2 WEAPON_CHAINSAW        "",
+  3 WEAPON_COLT            "",
+  4 WEAPON_SINGLESHOTGUN   "",
+  5 WEAPON_DOUBLESHOTGUN   "",
+  6 WEAPON_TOMMYGUN        "",
+  7 WEAPON_MINIGUN         "",
+  8 WEAPON_ROCKETLAUNCHER  "",
+  9 WEAPON_GRENADELAUNCHER "",
+ 10 WEAPON_FLAMER          "",
+ 11 WEAPON_SNIPER          "",
+ 12 WEAPON_LASER           "",
+ 13 WEAPON_IRONCANNON      "",
+ 14 WEAPON_LAST            "",
 };
 
 %{
@@ -234,8 +234,7 @@ CTFileName fn5 = CTFILENAME("Textures\\Interface\\Crosshairs\\Crosshair5.tex");
 CTFileName fn6 = CTFILENAME("Textures\\Interface\\Crosshairs\\Crosshair6.tex");
 CTFileName fn7 = CTFILENAME("Textures\\Interface\\Crosshairs\\Crosshair7.tex");
 
-void CPlayerWeapons_Precache(ULONG ulAvailable)
-{
+void CPlayerWeapons_Precache(void) {
   CDLLEntityClass *pdec = &CPlayerWeapons_DLLClass;
 
   // precache general stuff always
@@ -393,8 +392,8 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
   pdec->PrecacheClass(CLASS_CANNONBALL);
 
   // precache animator too
-  extern void CPlayerAnimator_Precache(ULONG ulAvailable);
-  CPlayerAnimator_Precache(ulAvailable);
+  extern void CPlayerAnimator_Precache(void);
+  CPlayerAnimator_Precache();
 };
 
 void CPlayerWeapons_Init(void) {
@@ -424,7 +423,7 @@ void CPlayerWeapons_Init(void) {
   _pShell->DeclareSymbol("persistent user INDEX amp_bWeaponMirrored;", &amp_bWeaponMirrored);
 
   // precache base weapons
-  CPlayerWeapons_Precache(0x03);
+  CPlayerWeapons_Precache();
 };
 
 // [Cecil] FLOAT[3] -> FLOAT3D
@@ -458,10 +457,10 @@ properties:
   2 BOOL m_bFireWeapon = FALSE,       // weapon is firing
   3 BOOL m_bHasAmmo    = FALSE,       // weapon has ammo
 
-  // [Cecil] Knife -> None
-  4 enum WeaponType m_iCurrentWeapon  = WEAPON_NONE,    // currently active weapon (internal)
-  5 enum WeaponType m_iWantedWeapon   = WEAPON_NONE,     // wanted weapon (internal)
-  6 enum WeaponType m_iPreviousWeapon = WEAPON_NONE,   // previous active weapon (internal)
+  // [Cecil] Knife -> None; changed type to INDEX
+  4 INDEX m_iCurrentWeapon  = WEAPON_NONE, // currently active weapon (internal)
+  5 INDEX m_iWantedWeapon   = WEAPON_NONE, // wanted weapon (internal)
+  6 INDEX m_iPreviousWeapon = WEAPON_NONE, // previous active weapon (internal)
 
  12 BOOL  m_bChangeWeapon = FALSE,      // change current weapon
  13 BOOL  m_bReloadWeapon = FALSE,      // reload weapon
@@ -856,12 +855,12 @@ functions:
   };
 
   // [Cecil] Get current weapon
-  WeaponType &GetCurrent(void) {
+  INDEX &GetCurrent(void) {
     return m_iCurrentWeapon;
   };
 
   // [Cecil] Get wanted weapon
-  WeaponType &GetWanted(void) {
+  INDEX &GetWanted(void) {
     return m_iWantedWeapon;
   };
 
@@ -886,9 +885,9 @@ functions:
       iAmmo = (ppaAmmo == NULL ? 0 : ppaAmmo->iAmount);
     }
 
-    INDEX iDec = pw.GetDecAmmo(iType) - 1;
+    INDEX iDec = pw.GetDecAmmo(iType);
 
-    return (iAmmo > Max(iDec, (INDEX)0));
+    return (iAmmo >= iDec);
   };
 
   // [Cecil] Moved from the C++ block, added alt flag
@@ -921,13 +920,13 @@ functions:
   };
 
   // [Cecil] Decrease magazine
-  void DecMag(INDEX iWeapon, BOOL bAmmo) {
-    SPlayerWeapon &pw = GET_WEAPON(iWeapon);
+  void DecMag(BOOL bAmmo) {
+    SPlayerWeapon &pw = CURRENT_WEAPON;
     INDEX iDec = pw.GetDecAmmo(SWeaponStruct::DWA_MAG);
 
     // decrease overall ammo
     if (bAmmo) {
-      DecAmmoExact(iWeapon, iDec, FALSE);
+      DecAmmoExact(m_iCurrentWeapon, iDec, FALSE);
     }
 
     // no mag
@@ -1171,7 +1170,7 @@ functions:
   };
 
   void Precache(void) {
-    CPlayerWeapons_Precache(GetInventory()->GetCurrentWeaponMask());
+    CPlayerWeapons_Precache();
   };
 
   CPlayer *GetPlayer(void) {
@@ -2758,7 +2757,7 @@ functions:
   };
 
   // get weapon from selected number
-  WeaponType GetStrongerWeapon(INDEX iWeapon) {
+  INDEX GetStrongerWeapon(INDEX iWeapon) {
     switch(iWeapon) {
       case 1: return WEAPON_CHAINSAW;
       case 2: return WEAPON_COLT;
@@ -2769,17 +2768,18 @@ functions:
       case 7: return WEAPON_LASER;
       case 8: return WEAPON_IRONCANNON;
     }
+
     return WEAPON_NONE;
   };
 
   // [Cecil] Get group index of a weapon
-  INDEX GetWeaponGroup(WeaponType eWeapon) {
-    return GET_WEAPON(eWeapon).GetGroup();
+  INDEX GetWeaponGroup(INDEX iWeapon) {
+    return GET_WEAPON(iWeapon).GetGroup();
   };
 
   // get secondary weapon from selected one
-  WeaponType GetAltWeapon(WeaponType eWeapon) {
-    switch (eWeapon) {
+  INDEX GetAltWeapon(INDEX iWeapon) {
+    switch (iWeapon) {
       case WEAPON_KNIFE: return WEAPON_CHAINSAW;
       case WEAPON_CHAINSAW: return WEAPON_KNIFE;
       case WEAPON_SINGLESHOTGUN: return WEAPON_DOUBLESHOTGUN;
@@ -2793,7 +2793,7 @@ functions:
     }
 
     // [Cecil] Return the same weapon
-    return eWeapon;
+    return iWeapon;
   };
 
   // select new weapon if possible
@@ -2809,7 +2809,7 @@ functions:
       // if different weapon
       if (iDesired != m_iCurrentWeapon) {
         // initiate change
-        m_iWantedWeapon = (WeaponType)iDesired;
+        m_iWantedWeapon = iDesired;
         m_bChangeWeapon = TRUE;
       }
 
@@ -2828,61 +2828,25 @@ functions:
       return;
     }
 
-    // [Cecil] Added WEAPON_NONE
-    switch (m_iCurrentWeapon) {
-      case WEAPON_NONE: 
-      case WEAPON_KNIFE: case WEAPON_COLT:
-      case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN:
-      case WEAPON_TOMMYGUN: case WEAPON_MINIGUN: case WEAPON_SNIPER:
-        WeaponSelectOk(WEAPON_MINIGUN)||
-        WeaponSelectOk(WEAPON_TOMMYGUN)||
-        WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
-        WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_COLT)||
-        WeaponSelectOk(WEAPON_KNIFE)||
-        WeaponSelectOk(WEAPON_NONE);
-        break;
+    // get valid weapon priority list
+    INDEX iWeapon = ClampDn((INDEX)m_iCurrentWeapon, (INDEX)1);
+    SPlayerWeapon &pw = GET_WEAPON(iWeapon);
 
-      case WEAPON_IRONCANNON:
-        WeaponSelectOk(WEAPON_ROCKETLAUNCHER)||
-        WeaponSelectOk(WEAPON_GRENADELAUNCHER)||
-        WeaponSelectOk(WEAPON_MINIGUN)||
-        WeaponSelectOk(WEAPON_TOMMYGUN)||
-        WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
-        WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_COLT)||
-        WeaponSelectOk(WEAPON_KNIFE)||
-        WeaponSelectOk(WEAPON_NONE);
-        break;
+    CIndexList &aiWeapons = pw.pwsWeapon->aiWeaponPriority;
 
-      case WEAPON_ROCKETLAUNCHER:
-      case WEAPON_GRENADELAUNCHER:
-        WeaponSelectOk(WEAPON_ROCKETLAUNCHER)||
-        WeaponSelectOk(WEAPON_GRENADELAUNCHER)||
-        WeaponSelectOk(WEAPON_MINIGUN)||
-        WeaponSelectOk(WEAPON_TOMMYGUN)||
-        WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
-        WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_COLT)||
-        WeaponSelectOk(WEAPON_KNIFE)||
-        WeaponSelectOk(WEAPON_NONE);
-        break;
+    // no priority list
+    if (aiWeapons.Count() <= 0) {
+      // pick the first weapon or nothing
+      WeaponSelectOk(1) || WeaponSelectOk(0);
+      return;
+    }
 
-      case WEAPON_LASER:  case WEAPON_FLAMER:  case WEAPON_CHAINSAW:
-        WeaponSelectOk(WEAPON_LASER)||
-        WeaponSelectOk(WEAPON_FLAMER)||
-        WeaponSelectOk(WEAPON_MINIGUN)||
-        WeaponSelectOk(WEAPON_TOMMYGUN)||
-        WeaponSelectOk(WEAPON_DOUBLESHOTGUN)||
-        WeaponSelectOk(WEAPON_SINGLESHOTGUN)||
-        WeaponSelectOk(WEAPON_COLT)||
-        WeaponSelectOk(WEAPON_KNIFE)||
-        WeaponSelectOk(WEAPON_NONE);
+    // go through weapon list
+    for (INDEX i = 0; i < aiWeapons.Count(); i++) {
+      // quit if able to select the weapon
+      if (WeaponSelectOk(aiWeapons[i])) {
         break;
-
-      default:
-        WeaponSelectOk(WEAPON_KNIFE)||
-        WeaponSelectOk(WEAPON_NONE);
+      }
     }
   };
 
@@ -3093,7 +3057,7 @@ functions:
   };
 
   // find first possible weapon in given direction
-  WeaponType FindWeaponInDirection(INDEX iDir) {
+  INDEX FindWeaponInDirection(INDEX iDir) {
     // start with wanted weapon
     INDEX iWanted = m_iWantedWeapon;
     INDEX iSelect = iWanted;
@@ -3102,12 +3066,12 @@ functions:
       iSelect += iDir;
 
       // wrap to the last weapon
-      if (iSelect < 0) {
+      if (iSelect < WEAPON_NONE) {
         iSelect = WEAPON_IRONCANNON;
       }
       
       // wrap to the first weapon
-      if (iSelect > 14) {
+      if (iSelect >= WEAPON_LAST) {
         iSelect = WEAPON_NONE;
       }
 
@@ -3118,7 +3082,7 @@ functions:
 
       // select this weapon if possible
       if (GetInventory()->HasWeapon(iSelect) && HasAmmo(iSelect)) {
-        return (WeaponType)iSelect;
+        return iSelect;
       }
     }
 
@@ -3128,12 +3092,12 @@ functions:
 
   // select new weapon
   void SelectWeaponChange(INDEX iSelect) {
-    // [Cecil] TEMP: No weapons in the mask
-    if (GetInventory()->GetCurrentWeaponMask() == 0x00) {
+    // [Cecil] No weapons
+    if (GetInventory()->CountWeapons() <= 0) {
       return;
     }
     
-    WeaponType eWeapon;
+    INDEX iSelectWeapon;
 
     // mark that weapon change is required
     m_tmWeaponChangeRequired = _pTimer->CurrentTick();
@@ -3153,49 +3117,49 @@ functions:
 
     // if flipping weapon
     if (iSelect == -3) {
-      eWeapon = GetAltWeapon(m_iWantedWeapon);
+      iSelectWeapon = GetAltWeapon(m_iWantedWeapon);
 
     // if selecting previous weapon
     } else if (iSelect == -2) {
-      eWeapon = FindWeaponInDirection(-1);
+      iSelectWeapon = FindWeaponInDirection(-1);
 
     // if selecting next weapon
     } else if (iSelect == -1) {
-      eWeapon = FindWeaponInDirection(+1);
+      iSelectWeapon = FindWeaponInDirection(+1);
 
     // if selecting directly
     } else {
       // flip current weapon
       if (iSelect == GetWeaponGroup(m_iWantedWeapon)) {
-        eWeapon = GetAltWeapon(m_iWantedWeapon);
+        iSelectWeapon = GetAltWeapon(m_iWantedWeapon);
 
       // change to wanted weapon
       } else {
-        eWeapon = GetStrongerWeapon(iSelect);
+        iSelectWeapon = GetStrongerWeapon(iSelect);
         
         // [Cecil] Check if doesn't exist
         // if weapon don't exist or don't have ammo flip it
-        if (!GetInventory()->HasWeapon(eWeapon) || !HasAmmo(eWeapon)) {
-          eWeapon = GetAltWeapon(eWeapon);
+        if (!GetInventory()->HasWeapon(iSelectWeapon) || !HasAmmo(iSelectWeapon)) {
+          iSelectWeapon = GetAltWeapon(iSelectWeapon);
         }
       }
     }
 
     // [Cecil] Change weapon
-    ForceWeaponChange(eWeapon);
+    ForceWeaponChange(iSelectWeapon);
   };
 
   // [Cecil] Force weapon change
-  void ForceWeaponChange(WeaponType eWeapon) {
+  void ForceWeaponChange(INDEX iSelectWeapon) {
     BOOL bChange = TRUE;
     
     // check if some weapon exists and has ammo
-    if (eWeapon != WEAPON_NONE) {
-      bChange = (GetInventory()->HasWeapon(eWeapon) && HasAmmo(eWeapon));
+    if (iSelectWeapon != WEAPON_NONE) {
+      bChange = (GetInventory()->HasWeapon(iSelectWeapon) && HasAmmo(iSelectWeapon));
     }
 
     if (bChange) {
-      m_iWantedWeapon = eWeapon;
+      m_iWantedWeapon = iSelectWeapon;
       m_bChangeWeapon = TRUE;
     }
   };
@@ -3697,7 +3661,7 @@ procedures:
     DoRecoil();
     SpawnRangeSound(40.0f);
 
-    DecMag(WEAPON_COLT, FALSE);
+    DecMag(FALSE);
     SetFlare(0, FLARE_ADD);
     PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
@@ -5188,7 +5152,7 @@ procedures:
         // try to change weapon
         if (eSelect.bAbsolute) {
           m_tmWeaponChangeRequired = _pTimer->CurrentTick();
-          ForceWeaponChange((WeaponType)eSelect.iWeapon);
+          ForceWeaponChange(eSelect.iWeapon);
 
         } else {
           SelectWeaponChange(eSelect.iWeapon);
@@ -5282,7 +5246,7 @@ procedures:
         // try to change weapon
         if (eSelect.bAbsolute) {
           m_tmWeaponChangeRequired = _pTimer->CurrentTick();
-          ForceWeaponChange((WeaponType)eSelect.iWeapon);
+          ForceWeaponChange(eSelect.iWeapon);
 
         } else {
           SelectWeaponChange(eSelect.iWeapon);

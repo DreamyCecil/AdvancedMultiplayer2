@@ -84,6 +84,14 @@ void SWeaponStruct::Write(CTStream *strm) {
 
   *strm << iGroup;
   *strm << bDualWeapon;
+
+  // write weapon priorities
+  INDEX ctPriorities = aiWeaponPriority.Count();
+  *strm << ctPriorities;
+
+  for (INDEX iPriority = 0; iPriority < ctPriorities; iPriority++) {
+    *strm << aiWeaponPriority[iPriority];
+  }
 };
 
 // Read weapon properties
@@ -120,4 +128,14 @@ void SWeaponStruct::Read(CTStream *strm) {
 
   *strm >> iGroup;
   *strm >> bDualWeapon;
+
+  // read weapon priorities
+  INDEX ctPriorities;
+  *strm >> ctPriorities;
+
+  aiWeaponPriority.New(ctPriorities);
+
+  for (INDEX iPriority = 0; iPriority < ctPriorities; iPriority++) {
+    *strm >> aiWeaponPriority[iPriority];
+  }
 };

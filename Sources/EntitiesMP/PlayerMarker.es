@@ -7,7 +7,7 @@
 uses "EntitiesMP/Marker";
 
 %{
-  extern void CPlayerWeapons_Precache(ULONG ulAvailable);
+extern void CPlayerWeapons_Precache(void);
 %}
 
 class CPlayerMarker: CMarker {
@@ -35,10 +35,9 @@ components:
 
 functions:
   void Precache(void) {
-    if (m_iGiveWeapons>1) {
-      CPlayerWeapons_Precache(m_iGiveWeapons);
-    }
+    CPlayerWeapons_Precache();
   }
+
   BOOL HandleEvent(const CEntityEvent &ee) {
     if (ee.ee_slEvent == EVENTCODE_ETrigger) {
       CEntity *penMainMusicHolder = _pNetwork->GetEntityWithName("MusicHolder", 0);
