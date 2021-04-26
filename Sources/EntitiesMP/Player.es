@@ -1492,6 +1492,7 @@ functions:
   export void Copy(CEntity &enOther, ULONG ulFlags) {
     CPlayerEntity::Copy(enOther, ulFlags);
     CPlayer *penOther = (CPlayer *)(&enOther);
+
     m_moRender.Copy(penOther->m_moRender);
     m_psLevelStats = penOther->m_psLevelStats;
     m_psLevelTotal = penOther->m_psLevelTotal;
@@ -5764,12 +5765,13 @@ functions:
         }
       }
 
-      CPlayerMarker &CpmStart = (CPlayerMarker&)*pen;
+      CPlayerMarker &penStart = (CPlayerMarker&)*pen;
+
       // set player characteristics
       if (bSetHealth) {
-        SetHealth(CpmStart.m_fHealth/100.0f*TopHealth());
+        SetHealth(penStart.m_fHealth/100.0f*TopHealth());
         m_iMana  = GetSP()->sp_iInitialMana;
-        m_fArmor = CpmStart.m_fShield;
+        m_fArmor = penStart.m_fShield;
 
       } else if (bAdjustHealth) {
         FLOAT fHealth = GetHealth();
@@ -5780,7 +5782,7 @@ functions:
       }
 
       // if should start in computer
-      if (CpmStart.m_bStartInComputer && GetSP()->sp_bSinglePlayer) {
+      if (penStart.m_bStartInComputer && GetSP()->sp_bSinglePlayer) {
         // mark that
         if (_pNetwork->IsPlayerLocal(this)) {
           cmp_ppenPlayer = this;
@@ -5789,7 +5791,7 @@ functions:
       }
 
       // start with first message linked to the marker
-      CMessageHolder *penMessage = (CMessageHolder *)&*CpmStart.m_penMessage;
+      CMessageHolder *penMessage = (CMessageHolder *)&*penStart.m_penMessage;
       // while there are some messages to add
       while (penMessage!=NULL && IsOfClass(penMessage, "MessageHolder")) {
         const CTFileName &fnmMessage = penMessage->m_fnmMessage;
@@ -5804,24 +5806,23 @@ functions:
 
       // set weapons
       if (!GetSP()->sp_bCooperative) {
-        GetInventory()->InitWeapons(CpmStart.m_iGiveWeapons, 0, 0, CpmStart.m_fMaxAmmoRatio);
+        GetInventory()->InitWeapons(penStart.m_iGiveWeapons, 0, 0, penStart.m_fMaxAmmoRatio);
 
       } else {
-        GetInventory()->InitWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
-          GetSP()->sp_bInfiniteAmmo ? 0 : CpmStart.m_iTakeAmmo, CpmStart.m_fMaxAmmoRatio);
+        GetInventory()->InitWeapons(penStart.m_iGiveWeapons, penStart.m_iTakeWeapons, penStart.m_iTakeAmmo, penStart.m_fMaxAmmoRatio);
       }
 
       // start position relative to link
       if (EwltType == WLT_RELATIVE) {
         plSet.AbsoluteToRelative(_SwcWorldChange.plLink);   // relative to link position
-        plSet.RelativeToAbsolute(CpmStart.GetPlacement());  // absolute to start marker position
+        plSet.RelativeToAbsolute(penStart.GetPlacement());  // absolute to start marker position
 
         // [Cecil] No telefrag
         Teleport(plSet, FALSE);
       // fixed start position
       } else if (EwltType == WLT_FIXED) {
-        CPlacement3D plNew = CpmStart.GetPlacement();
-        vOffsetRel*=CpmStart.en_mRotation;
+        CPlacement3D plNew = penStart.GetPlacement();
+        vOffsetRel *= penStart.en_mRotation;
         plNew.pl_PositionVector += vOffsetRel;
 
         // [Cecil] No telefrag
@@ -5835,8 +5836,8 @@ functions:
       }
 
       // if there is a start trigger target
-      if (CpmStart.m_penTarget != NULL) {
-        SendToTarget(CpmStart.m_penTarget, EET_TRIGGER, this);
+      if (penStart.m_penTarget != NULL) {
+        SendToTarget(penStart.m_penTarget, EET_TRIGGER, this);
       }
 
     // default start position
@@ -5853,8 +5854,10 @@ functions:
       // start position
       Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0.0f, 0.0f, 0.0f)));
     }
+
     // send teleport event to all entities in range
     SendEventInRange(ETeleport(), FLOATaabbox3D(GetPlacement().pl_PositionVector, 200.0f));
+
     // stop moving
     ForceFullStop();
 

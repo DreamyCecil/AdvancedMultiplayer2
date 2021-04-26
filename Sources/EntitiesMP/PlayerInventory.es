@@ -174,6 +174,38 @@ functions:
       m_aAmmo[iAmmo].Read(istr);
     }
   };
+  
+  // Copy constructor
+  export void Copy(CEntity &enOther, ULONG ulFlags) {
+    CRationalEntity::Copy(enOther, ulFlags);
+    CPlayerInventory *penOther = (CPlayerInventory *)(&enOther);
+
+    // copy arsenal
+    m_aAmmo = penOther->m_aAmmo;
+    m_aWeapons = penOther->m_aWeapons;
+
+    // set new ammo pointers for weapons
+    for (INDEX iWeapon = 0; iWeapon < m_aWeapons.Count(); iWeapon++) {
+      SPlayerWeapon &pw = m_aWeapons[iWeapon];
+      pw.pwsWeapon = &_awsPlayerWeapons[iWeapon];
+
+      // set ammo
+      ULONG *pulID = pw.GetAmmoID();
+
+      if (pulID != NULL) {
+        pw.ppaAmmo = &m_aAmmo[*pulID];
+      }
+      
+      // set alt ammo
+      pulID = pw.GetAltID();
+
+      if (pulID != NULL) {
+        pw.ppaAlt = &m_aAmmo[*pulID];
+      }
+    }
+
+    m_fDualWeaponShift = penOther->m_fDualWeaponShift;
+  };
 
   // Add to prediction any entities that this entity depends on
   void AddDependentsToPrediction(void) {
@@ -338,7 +370,7 @@ functions:
   };
 
   // Initialize weapons
-  void InitWeapons(const INDEX &iGiveWeapons, const INDEX &iTakeWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
+  void InitWeapons(INDEX iGiveWeapons, INDEX iTakeWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
     GetWeapon(0)->ResetWeaponMovingOffset();
     GetWeapon(1)->ResetWeaponMovingOffset();
 
@@ -351,19 +383,27 @@ functions:
     if (bKeep) {
       ulOldWeapons = 0;
     }
+    
+    // don't take ammo if it's infinite
+    if (GetSP()->sp_bInfiniteAmmo) {
+      iTakeWeapons = 0;
+    } else {
+      iTakeWeapons &= ~iGiveWeapons;
+    }
 
     // take weapons
     TakeWeaponMask(iTakeWeapons);
 
-    // [Cecil] 0x03 -> GetSP()->sp_iWeaponGiver
-    GiveWeaponMask(GetSP()->sp_iWeaponGiver | iGiveWeapons);
+    // only give new weapons
+    iGiveWeapons = (GetSP()->sp_iWeaponGiver | iGiveWeapons) & ~GetCurrentWeaponMask();
+    GiveWeaponMask(iGiveWeapons);
 
     // [Cecil] Remove weapons whose items were disabled
     if (GetSP()->sp_iAMPOptions & AMP_TAKEWEAPONS) {
       INDEX iRemoved = (GetSP()->sp_iItemRemoval & WEAPONS_ALLAVAILABLEMASK);
       TakeWeaponMask(~iRemoved);
     }
-
+    
     TakeWeaponMask(~WEAPONS_ALLAVAILABLEMASK);
 
     // find which weapons are new

@@ -150,7 +150,7 @@ functions:
       m_iSniperBullets = 0;
     }
 
-    if (GetSP()->sp_bInfiniteAmmo && m_penTarget==NULL) {
+    if (GetSP()->sp_bInfiniteAmmo && m_penTarget == NULL) {
       Destroy();
     }
   }
