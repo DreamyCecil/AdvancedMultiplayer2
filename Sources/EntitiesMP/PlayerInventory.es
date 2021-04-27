@@ -31,6 +31,9 @@ static const _aiAmmoSetTypes[] = {
 extern FLOAT _fDualWeaponShift = 0.0f;
 extern FLOAT _fLastDualWeaponShift = 0.0f;
 
+// Currently selected weapon set
+extern CTString _strCurrentWeaponSet;
+
 #define PLAYER_POWERUPS 4
 
 // Max powerup times
@@ -86,6 +89,9 @@ properties:
 
   // Weapon position shift ratio
   FLOAT m_fDualWeaponShift;
+
+  // Currently selected weapon set locally
+  CTString m_strWeaponSet;
 }
 
 components:
@@ -135,12 +141,16 @@ functions:
     FatalError(str);*/
 
     m_fDualWeaponShift = 0.0f;
+
+    // save current weapon set
+    m_strWeaponSet = _strCurrentWeaponSet;
   };
 
   // Write weapons and ammo
   void Write_t(CTStream *ostr) {
     CRationalEntity::Write_t(ostr);
-
+    
+    // write weapon arsenal
     INDEX ctWeapons = m_aWeapons.Count();
     INDEX ctAmmo = m_aAmmo.Count();
 
@@ -154,12 +164,16 @@ functions:
     for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
       m_aAmmo[iAmmo].Write(ostr);
     }
+    
+    // write weapon set
+    *ostr << m_strWeaponSet;
   };
 
   // Read weapons and ammo
   void Read_t(CTStream *istr) {
     CRationalEntity::Read_t(istr);
 
+    // read weapon arsenal
     INDEX ctWeapons = 0;
     INDEX ctAmmo = 0;
     
@@ -173,12 +187,23 @@ functions:
     for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
       m_aAmmo[iAmmo].Read(istr);
     }
+    
+    // read weapon set
+    *istr >> m_strWeaponSet;
   };
   
   // Copy constructor
   export void Copy(CEntity &enOther, ULONG ulFlags) {
     CRationalEntity::Copy(enOther, ulFlags);
     CPlayerInventory *penOther = (CPlayerInventory *)(&enOther);
+
+    m_fDualWeaponShift = 0.0f;
+
+    // weapon set doesn't match
+    if (m_strWeaponSet != penOther->m_strWeaponSet) {
+      // don't copy weapons
+      return;
+    }
 
     // copy arsenal
     m_aAmmo = penOther->m_aAmmo;
@@ -203,8 +228,6 @@ functions:
         pw.ppaAlt = &m_aAmmo[*pulID];
       }
     }
-
-    m_fDualWeaponShift = penOther->m_fDualWeaponShift;
   };
 
   // Add to prediction any entities that this entity depends on

@@ -218,7 +218,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
 
   CPlayerSettings *pps = (CPlayerSettings *)pc.pc_aubAppearance;
 
-  // [Cecil] Set controls into constrols masks
+  // [Cecil] Set controls into controls masks
   for (INDEX iSetKey = 0; iSetKey < PCTL_LAST; iSetKey++) {
     CTL_SET_KEY(iSetKey, _aiPlayerControls[iSetKey]);
   }

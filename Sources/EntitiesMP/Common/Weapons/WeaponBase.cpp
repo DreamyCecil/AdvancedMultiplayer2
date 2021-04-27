@@ -284,6 +284,7 @@ static BOOL ParseWeaponConfig(SWeaponStruct &ws, CTString strSet, CTString strCo
 
 // Check if weapons have been loaded
 static BOOL _bWeaponsLoaded = FALSE;
+extern CTString _strCurrentWeaponSet = "";
 
 // Load weapons and ammo for this world
 extern void LoadWorldWeapons(CWorld *pwo) {
@@ -292,12 +293,15 @@ extern void LoadWorldWeapons(CWorld *pwo) {
     return;
   }
 
+  // select weapon set
+  _strCurrentWeaponSet = "Default";
+
   // load default sets
   CDynamicStackArray<CTFileName> aList;
   HookConfigFunctions();
 
   // go through ammo configs
-  CTString strAmmoSet = "Configs\\AmmoSets\\Default\\";
+  CTString strAmmoSet = "Configs\\AmmoSets\\" + _strCurrentWeaponSet + "\\";
   MakeDirList(aList, CTFileName(strAmmoSet), "*.json", 0);
 
   for (INDEX iAmmo = 0; iAmmo < aList.Count(); iAmmo++) {
@@ -315,7 +319,7 @@ extern void LoadWorldWeapons(CWorld *pwo) {
   AddWeapon(SWeaponStruct(NULL, NULL, "", ""));
   
   // go through weapon configs
-  CTString strWeaponSet = "Configs\\WeaponSets\\Default\\";
+  CTString strWeaponSet = "Configs\\WeaponSets\\" + _strCurrentWeaponSet + "\\";
   MakeDirList(aList, CTFileName(strWeaponSet), "*.json", 0);
 
   for (INDEX iWeapon = 0; iWeapon < aList.Count(); iWeapon++) {
