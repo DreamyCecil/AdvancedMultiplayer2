@@ -1773,14 +1773,14 @@ functions:
     if (bGibs && !m_bRobotBlowup) {
       // readout blood type
       const INDEX iBloodType = GetBloodType();
-
+      
+      // [Cecil] Switch red and green textures around
       // determine debris texture (color)
-      ULONG ulFleshTexture = TEXTURE_FLESH_GREEN;
+      ULONG ulFleshTexture = TEXTURE_FLESH_RED;
       ULONG ulFleshModel = MODEL_FLESH;
 
-      // [Cecil] 2 -> 1
-      if (iBloodType == 1) {
-        ulFleshTexture = TEXTURE_FLESH_RED;
+      if (iBloodType == 2) {
+        ulFleshTexture = TEXTURE_FLESH_GREEN;
       }
 
       // [Cecil] Colorful type
