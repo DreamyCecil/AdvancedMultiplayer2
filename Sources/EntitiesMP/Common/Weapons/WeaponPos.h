@@ -1,9 +1,17 @@
 #pragma once
 
+// Position offset for player's body attachments
+#define COLT_LEFT_POS  FLOAT3D(0.00f, -0.02f, -0.2f)
+#define COLT_RIGHT_POS FLOAT3D(0.03f, -0.01f, -0.2f)
+
+// Rotation offset for player's body attachments
+#define COLT_LEFT_ROT  ANGLE3D(0.0f, 5.0f, 0.0f)
+#define COLT_RIGHT_ROT ANGLE3D(0.0f, 5.0f, 0.0f)
+
 // Weapon position
 struct SWeaponPos {
-  CPlacement3D plPos; // first person position
-  CPlacement3D plPos2; // first person position for dual weapons
+  CPlacement3D plPos;   // first person position
+  CPlacement3D plPos2;  // first person position for dual weapons
   CPlacement3D plThird; // third person position
 
   FLOAT3D vFire; // attack offset

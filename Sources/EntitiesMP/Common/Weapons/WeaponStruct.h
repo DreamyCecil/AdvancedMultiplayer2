@@ -20,7 +20,7 @@ struct SWeaponStruct : public SWeaponBase {
   INDEX iMaxMag; // magazine size
 
   CIndexList aiBits; // special bits of the weapon (for compatibility with PlayerMarker)
-  INDEX iGroup;      // weapon group (0 - 31)
+  UBYTE ubGroup;      // weapon group (0 - 31)
   BOOL bDualWeapon;  // can be selected as an extra weapon
 
   CIndexList aiWeaponPriority; // weapons to switch to if needed (if no more ammo etc.)

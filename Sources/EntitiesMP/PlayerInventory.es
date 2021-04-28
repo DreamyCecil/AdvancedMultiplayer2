@@ -131,15 +131,6 @@ functions:
       }
     }
 
-    // [Cecil] TEMP: See copied weapons
-    /*CTString str = "";
-    for (iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
-      SPlayerWeapon &pw = m_aWeapons[iWeapon];
-
-      str.PrintF("%s%d: ammo: %d, alt %d\n", str, pw.pwsWeapon->ulID, (pw.GetAmmoID() != NULL ? *pw.GetAmmoID() : -1), (pw.GetAltID() != NULL ? *pw.GetAltID() : -1));
-    }
-    FatalError(str);*/
-
     m_fDualWeaponShift = 0.0f;
 
     // save current weapon set
@@ -459,13 +450,13 @@ functions:
 
       // set weapon model for current weapon
       plw.SetCurrentWeaponModel();
+
+      // remove weapon attachment
+      GetPlayer()->GetPlayerAnimator()->RemoveWeapon(plw.m_bExtraWeapon);
+
+      // add weapon attachment
+      GetPlayer()->GetPlayerAnimator()->SetWeapon(plw.m_bExtraWeapon);
     }
-
-    // remove weapon attachment
-    GetPlayer()->GetPlayerAnimator()->RemoveWeapon();
-
-    // add weapon attachment
-    GetPlayer()->GetPlayerAnimator()->SetWeapon();
 
     // precache new weapons
     GetWeapon(0)->Precache();

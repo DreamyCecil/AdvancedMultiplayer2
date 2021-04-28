@@ -5887,11 +5887,13 @@ functions:
     ValidateCharacter();
     SetPlayerAppearance(&m_moRender, &en_pcCharacter, strDummy, /*bPreview=*/FALSE);
     ParseGender(strDummy);
-    GetPlayerAnimator()->SetWeapon();
+
+    GetPlayerAnimator()->SetWeapon(FALSE);
     m_ulFlags |= PLF_SYNCWEAPON;
 
     // spawn teleport effect
     SpawnTeleport();
+
     // return from editor model (if was fragged into pieces)
     SwitchToModel();
     m_tmSpawned = _pTimer->CurrentTick();
@@ -6235,13 +6237,16 @@ procedures:
     m_iLastViewState = m_iViewState;
 
     // mark player as death
-    SetFlags(GetFlags()&~ENF_ALIVE);
+    SetFlags(GetFlags() & ~ENF_ALIVE);
+
     // stop player
     SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
     SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
 
     // remove weapon from hand
-    ((CPlayerAnimator&)*m_penAnimator).RemoveWeapon();
+    ((CPlayerAnimator&)*m_penAnimator).RemoveWeapon(FALSE);
+    ((CPlayerAnimator&)*m_penAnimator).RemoveWeapon(TRUE);
+
     // kill weapon animations
     GetWeapon(0)->SendEvent(EStop());
     GetWeapon(1)->SendEvent(EStop());
@@ -6251,7 +6256,6 @@ procedures:
       // drop current weapon as item so others can pick it
       GetWeapon(0)->DropWeapon();
     }
-
 
     // play death
     INDEX iAnim1;
@@ -6895,10 +6899,14 @@ procedures:
 
     // sync apperances
     GetPlayerAnimator()->SyncWeapon();
+
     // remove weapon attachment
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.m_iWeaponLast = m_iAutoOrgWeapon;
-    plan.RemoveWeapon();
+
+    plan.RemoveWeapon(FALSE);
+    plan.RemoveWeapon(TRUE);
+
     GetPlayerAnimator()->SyncWeapon();
 
     GetWeapon(0)->m_iCurrentWeapon = m_iAutoOrgWeapon;

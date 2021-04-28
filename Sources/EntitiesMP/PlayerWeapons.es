@@ -1818,7 +1818,7 @@ functions:
     pmo->StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
   };
 
-  void SetFlare(INDEX iFlare, INDEX iAction) {
+  void SetFlare(INDEX iAction) {
     // if not a prediction head
     if (!IsPredictionHead()) {
       // do nothing
@@ -1827,9 +1827,12 @@ functions:
 
     // get your prediction tail
     CPlayerWeapons *pen = (CPlayerWeapons*)GetPredictionTail();
-    if (iFlare==0) {
+
+    // [Cecil] Flare for the extra weapon
+    if (!m_bExtraWeapon) {
       pen->m_iFlare = iAction;
       pen->GetPlayer()->GetPlayerAnimator()->m_iFlare = iAction;
+
     } else {
       pen->m_iSecondFlare = iAction;
       pen->GetPlayer()->GetPlayerAnimator()->m_iSecondFlare = iAction;
@@ -3331,6 +3334,7 @@ procedures:
   BringUp() {
     // reset weapon draw offset
     ResetWeaponMovingOffset();
+
     // set weapon model for current weapon
     SetCurrentWeaponModel();
 
@@ -3345,27 +3349,27 @@ procedures:
 
       case WEAPON_COLT:
         m_iAnim = COLT_ANIM_ACTIVATE;
-        SetFlare(0, FLARE_REMOVE);
+        SetFlare(FLARE_REMOVE);
         break;
 
       case WEAPON_SINGLESHOTGUN:
         m_iAnim = SINGLESHOTGUN_ANIM_ACTIVATE;
-        SetFlare(0, FLARE_REMOVE);
+        SetFlare(FLARE_REMOVE);
         break;
 
       case WEAPON_DOUBLESHOTGUN:
         m_iAnim = DOUBLESHOTGUN_ANIM_ACTIVATE;
-        SetFlare(0, FLARE_REMOVE);
+        SetFlare(FLARE_REMOVE);
         break;
 
       case WEAPON_TOMMYGUN:
         m_iAnim = TOMMYGUN_ANIM_ACTIVATE;
-        SetFlare(0, FLARE_REMOVE);
+        SetFlare(FLARE_REMOVE);
         break;
 
       case WEAPON_SNIPER:
         m_iAnim = SNIPER_ANIM_ACTIVATE;
-        SetFlare(0, FLARE_REMOVE);
+        SetFlare(FLARE_REMOVE);
         break;
 
       case WEAPON_MINIGUN: {
@@ -3373,7 +3377,7 @@ procedures:
         m_aMiniGunLast = m_aMiniGun = amo->amo_plRelative.pl_OrientationAngle(3);
 
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
-        SetFlare(0, FLARE_REMOVE);
+        SetFlare(FLARE_REMOVE);
       } break;
 
       case WEAPON_ROCKETLAUNCHER:
@@ -3405,9 +3409,10 @@ procedures:
 
       default: ASSERTALWAYS("Unknown weapon.");
     }
+
     // start animator
     CPlayerAnimator &plan = (CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator;
-    plan.BodyPullAnimation();
+    plan.BodyPullAnimation(m_bExtraWeapon);
 
     // [Cecil] Reload colts automagically when taking them out
     BOOL bNowColt = (m_iCurrentWeapon == WEAPON_COLT);
@@ -3462,7 +3467,7 @@ procedures:
       jump ChainsawFire();
 
     } else if (m_iCurrentWeapon == WEAPON_LASER) {
-      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING);
+      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING, m_bExtraWeapon);
 
     } else if (m_iCurrentWeapon == WEAPON_TOMMYGUN) {
       autocall TommyGunStart() EEnd;
@@ -3550,7 +3555,7 @@ procedures:
 
     // start weapon firing animation for continuous firing
     if (m_iCurrentWeapon == WEAPON_LASER) {
-      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING);
+      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING, m_bExtraWeapon);
 
     } else if (m_iCurrentWeapon == WEAPON_IRONCANNON) {
       jump NukeCannonFire();
@@ -3613,7 +3618,7 @@ procedures:
   // ***************** SWING KNIFE *****************
   SwingKnife() {
     // animator swing
-    GetAnimator()->FireAnimation(BODY_ANIM_KNIFE_ATTACK, 0);
+    GetAnimator()->FireAnimation(BODY_ANIM_KNIFE_ATTACK, 0, m_bExtraWeapon);
 
     // [Cecil] Simplified by removing repeating code
     switch (IRnd() % 2) {
@@ -3652,7 +3657,7 @@ procedures:
   
   // ***************** FIRE COLT *****************
   FireColt() {
-    GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0);
+    GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0, m_bExtraWeapon);
 
     // fire bullet
     FireOneBullet(FirePos(WEAPON_COLT), 500.0f, GetInventory()->GetDamage(WEAPON_COLT));
@@ -3662,7 +3667,7 @@ procedures:
     SpawnRangeSound(40.0f);
 
     DecMag(FALSE);
-    SetFlare(0, FLARE_ADD);
+    SetFlare(FLARE_ADD);
     PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
     // sound
@@ -3714,7 +3719,7 @@ procedures:
   FireSingleShotgun() {
     // fire one shell
     if (ENOUGH_AMMO) {
-      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0, m_bExtraWeapon);
       FireBullets(FirePos(WEAPON_SINGLESHOTGUN), 500.0f, GetInventory()->GetDamage(WEAPON_SINGLESHOTGUN), 7, afSingleShotgunPellets, 0.2f, 0.03f, 0.0f);
 
       DoRecoil();
@@ -3722,7 +3727,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Snglshotgun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(0, FLARE_ADD);
+      SetFlare(FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST, 0);
 
@@ -3775,7 +3780,7 @@ procedures:
 
       // sound
       PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
-      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0, m_bExtraWeapon);
 
       // release spring
       while (m_fWeaponDrawPower > 0.0f) {
@@ -3809,7 +3814,7 @@ procedures:
   FireDoubleShotgun() {
     // fire two shell
     if (ENOUGH_AMMO) {
-      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0, m_bExtraWeapon);
       FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, GetInventory()->GetDamage(WEAPON_DOUBLESHOTGUN), 14, afDoubleShotgunPellets, 0.3f, 0.03f, 0.0f);
 
       DoRecoil();
@@ -3817,7 +3822,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(0, FLARE_ADD);
+      SetFlare(FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
       // [Cecil] Show the hand
@@ -3861,7 +3866,7 @@ procedures:
   FirePunchShotgun() {
     // fire two shell
     if (ENOUGH_AMMO) {
-      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0, m_bExtraWeapon);
       FireBullets(FirePos(WEAPON_DOUBLESHOTGUN), 500.0f, GetInventory()->GetDamageAlt(WEAPON_DOUBLESHOTGUN), 14, afDoubleShotgunPellets, 0.3f, 0.03f, 70.0f);
 
       DoRecoil();
@@ -3869,7 +3874,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(0, FLARE_ADD);
+      SetFlare(FLARE_ADD);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
       // [Cecil] Show the hand
@@ -3919,7 +3924,7 @@ procedures:
     PlaySound(m_soWeapon0, SOUND_TOMMYGUN_FIRE, SOF_LOOP|SOF_3D|SOF_VOLUMETRIC);
 
     PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
-    GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING);
+    GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRESHORT, AOF_LOOPING, m_bExtraWeapon);
 
     return EEnd();
   };
@@ -3976,7 +3981,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(0, FLARE_ADD);
+      SetFlare(FLARE_ADD);
       m_moWeapon.PlayAnim(TOMMYGUN_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
 
       // [Cecil] Drop bullet
@@ -4022,13 +4027,13 @@ procedures:
 
       SpawnRangeSound(50.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
-      SetFlare(0, FLARE_ADD);
+      SetFlare(FLARE_ADD);
       m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
       
       m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
       PlaySound(m_soWeapon0, SOUND_TOMMYGUN_BURST, SOF_3D|SOF_VOLUMETRIC);
 
-      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_SHOTGUN_FIRELONG, 0, m_bExtraWeapon);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
       // release spring
@@ -4073,7 +4078,7 @@ procedures:
       DecAmmo(FALSE);
 
       if (!GetPlayer()->m_bSniping) {
-        SetFlare(0, FLARE_ADD);
+        SetFlare(FLARE_ADD);
       }
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
@@ -4126,7 +4131,7 @@ procedures:
       DecAmmo(FALSE);
 
       if (!GetPlayer()->m_bSniping) {
-        SetFlare(0, FLARE_ADD);
+        SetFlare(FLARE_ADD);
       }
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
@@ -4221,7 +4226,7 @@ procedures:
       // play fire sound
       PlaySound(m_soWeapon0, SOUND_MINIGUN_FIRE, SOF_3D|SOF_LOOP|SOF_VOLUMETRIC);
       PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
-      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRESHORT, AOF_LOOPING);
+      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRESHORT, AOF_LOOPING, m_bExtraWeapon);
     }
 
     m_iBulletsOnFireStart = GetInventory()->CurrentAmmo(m_iCurrentWeapon);
@@ -4234,7 +4239,7 @@ procedures:
         if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_fire");}
 
         PlayLightAnim(LIGHT_ANIM_TOMMYGUN, AOF_LOOPING);
-        GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRESHORT, AOF_LOOPING);
+        GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRESHORT, AOF_LOOPING, m_bExtraWeapon);
         m_bHasAmmo = TRUE;
       }
 
@@ -4248,7 +4253,7 @@ procedures:
         DoRecoil();
         SpawnRangeSound(60.0f);
         DecAmmo(FALSE);
-        SetFlare(0, FLARE_ADD);
+        SetFlare(FLARE_ADD);
 
         // [Cecil] Drop bullets
         CPlayer &pl = (CPlayer&)*m_penPlayer;
@@ -4358,7 +4363,7 @@ procedures:
   RocketLauncherFire() {
     // fire one rocket
     if (ENOUGH_AMMO) {
-      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
       m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_FIRE, 0);
 
       // [Cecil] Custom damage
@@ -4466,7 +4471,7 @@ procedures:
 
       // sound
       PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
-      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
       // release spring
       TM_START = _pTimer->CurrentTick();
@@ -4536,7 +4541,7 @@ procedures:
 
       // sound
       PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
-      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
       // release spring
       TM_START = _pTimer->CurrentTick();
@@ -4714,7 +4719,7 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_WAIT2FIRE)-0.05f);
 
     CPlayerAnimator &pa = *GetAnimator();
-    pa.FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
+    pa.FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
     
     CModelObject *pmoTeeth = GetChainSawTeeth();
     if (pmoTeeth != NULL) {
@@ -4917,7 +4922,7 @@ procedures:
     if (ENOUGH_AMMO) {
       // [Cecil] Multiply power
       INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeed());
-      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
       FLOAT fRange, fFalloff;
       if (GetSP()->sp_bCooperative) {
@@ -5014,7 +5019,7 @@ procedures:
     if (ENOUGH_AMMO) {
       // [Cecil] Multiply power
       INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeed());
-      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0);
+      GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
       FLOAT fRange, fFalloff;
       if (GetSP()->sp_bCooperative) {

@@ -9,7 +9,7 @@ extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 // Constructors
 SWeaponStruct::SWeaponStruct(void) :
   SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pwaAmmo(NULL), pwaAlt(NULL), iGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
+  pwaAmmo(NULL), pwaAlt(NULL), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
   aiDecAmmo[DWA_AMMO] = 1;
@@ -19,7 +19,7 @@ SWeaponStruct::SWeaponStruct(void) :
 
 SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
   SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), iGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
+  pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
   aiDecAmmo[DWA_AMMO] = 1;
@@ -82,7 +82,7 @@ void SWeaponStruct::Write(CTStream *strm) {
     *strm << aiBits[iBit];
   }
 
-  *strm << iGroup;
+  *strm << ubGroup;
   *strm << bDualWeapon;
 
   // write weapon priorities
@@ -126,7 +126,7 @@ void SWeaponStruct::Read(CTStream *strm) {
     *strm >> aiBits[iBit];
   }
 
-  *strm >> iGroup;
+  *strm >> ubGroup;
   *strm >> bDualWeapon;
 
   // read weapon priorities

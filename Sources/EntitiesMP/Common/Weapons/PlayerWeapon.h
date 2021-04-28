@@ -80,8 +80,8 @@ struct SPlayerWeapon {
   };
 
   // Get weapon group
-  inline INDEX GetGroup(void) {
-    return pwsWeapon->iGroup;
+  inline UBYTE GetGroup(void) {
+    return pwsWeapon->ubGroup;
   };
   
   // Can be dual
