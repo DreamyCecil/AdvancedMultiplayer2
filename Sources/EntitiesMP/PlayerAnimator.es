@@ -216,7 +216,6 @@ properties:
  35 BOOL m_bSidestepBankingRight = FALSE,
  36 FLOAT m_fSidestepLastBanking = 0.0f,
  37 FLOAT m_fSidestepBanking = 0.0f,
- 38 INDEX m_iWeaponLast = -1,
  39 FLOAT m_fBodyAnimTime = -1.0f,
 
 {
@@ -381,9 +380,15 @@ functions:
     CPlayerAnimator_Precache();
   }
   
+  // [Cecil] Get player entity
   CPlayer *GetPlayer(void) {
     return ((CPlayer*)&*m_penPlayer);
-  }
+  };
+
+  // [Cecil] Get some weapon
+  CPlayerWeapons *GetWeapon(const INDEX &iExtra) {
+    return GetPlayer()->GetWeapon(iExtra);
+  };
 
   CModelObject *GetBody(void) {
     CAttachmentModelObject *pamoBody = GetPlayer()->GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
@@ -453,26 +458,27 @@ functions:
   };
 
   // synchronize any possible weapon attachment(s) with default appearance
-  void SyncWeapon(void)
-  {
+  void SyncWeapon(void) {
     CModelObject *pmoBodyRen = GetBodyRen();
     CModelObject *pmoBodyDef = GetBody();
+
     // for each weapon attachment
-    for (INDEX iWeapon = BODY_ATTACHMENT_COLT_RIGHT; iWeapon<=BODY_ATTACHMENT_ITEM; iWeapon++) {
+    for (INDEX iWeapon = BODY_ATTACHMENT_COLT_RIGHT; iWeapon <= BODY_ATTACHMENT_ITEM; iWeapon++) {
       CAttachmentModelObject *pamoWeapDef = pmoBodyDef->GetAttachmentModel(iWeapon);
       CAttachmentModelObject *pamoWeapRen = pmoBodyRen->GetAttachmentModel(iWeapon);
+
       // if it doesn't exist in either
-      if (pamoWeapRen==NULL && pamoWeapDef==NULL) {
+      if (pamoWeapRen == NULL && pamoWeapDef == NULL) {
         // just skip it
         NOTHING;
 
       // if exists only in rendering model
-      } else if (pamoWeapRen!=NULL && pamoWeapDef==NULL) {
+      } else if (pamoWeapRen != NULL && pamoWeapDef == NULL) {
         // remove it from rendering
-        delete pamoWeapRen;
+        pmoBodyRen->RemoveAttachmentModel(iWeapon);
 
       // if exists only in default
-      } else if (pamoWeapRen==NULL && pamoWeapDef!=NULL) {
+      } else if (pamoWeapRen == NULL && pamoWeapDef != NULL) {
         // add it to rendering
         pamoWeapRen = pmoBodyRen->AddAttachmentModel(iWeapon);
         pamoWeapRen->amo_plRelative = pamoWeapDef->amo_plRelative;
@@ -489,8 +495,10 @@ functions:
 
   // set weapon
   void SetWeapon(BOOL bExtra) {
-    INDEX iWeapon = GetPlayer()->GetWeapon(bExtra)->GetCurrent();
-    m_iWeaponLast = iWeapon;
+    // [Cecil] Remove old weapon
+    RemoveWeapon(bExtra);
+
+    INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
 
     CPlayer &pl = (CPlayer&)*m_penPlayer;
     m_pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
@@ -572,9 +580,10 @@ functions:
         AddWeaponAttachment(iAttach, MODEL_MINIGUN, TEXTURE_MG_BODY, 0, 0, 0);
         SetAttachment(iAttach);
 
-        AddWeaponAttachment(MINIGUNITEM_ATTACHMENT_BARRELS, MODEL_MG_BARRELS, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0); 
-        AddWeaponAttachment(MINIGUNITEM_ATTACHMENT_BODY, MODEL_MG_BODY, TEXTURE_MG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);          
-        AddWeaponAttachment(MINIGUNITEM_ATTACHMENT_ENGINE, MODEL_MG_ENGINE, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);      
+        AddWeaponAttachment(MINIGUNITEM_ATTACHMENT_BARRELS, MODEL_MG_BARRELS, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
+        AddWeaponAttachment(MINIGUNITEM_ATTACHMENT_BODY, MODEL_MG_BODY, TEXTURE_MG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
+        AddWeaponAttachment(MINIGUNITEM_ATTACHMENT_ENGINE, MODEL_MG_ENGINE, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
+
         SetAttachment(MINIGUNITEM_ATTACHMENT_BODY);
         AddWeaponAttachment(BODY_ATTACHMENT_FLARE, MODEL_FLARE02, TEXTURE_FLARE02, 0, 0, 0);
         break;
@@ -650,7 +659,7 @@ functions:
     CAttachmentModelObject *pamoWeapon = m_pmoModel->GetAttachmentModel(iAttach);
 
     if (pamoWeapon != NULL) {
-      INDEX iCurrent = GetPlayer()->GetWeapon(bExtra)->GetCurrent();
+      INDEX iCurrent = GetWeapon(bExtra)->GetCurrent();
       SWeaponPos wps = GetPlayer()->GetInventory()->m_aWeapons[iCurrent].GetPosition();
 
       // add weapon position
@@ -723,6 +732,7 @@ functions:
 
     // weapon
     SetWeapon(FALSE);
+    SetWeapon(TRUE);
     SetBodyAnimation(BODY_ANIM_COLT_STAND, AOF_LOOPING|AOF_NORESTART);
   };
 
@@ -1006,11 +1016,11 @@ functions:
       // [Cecil] Vary between both weapons
       INDEX iBoringWeapon = 0;
 
-      if (pl.GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+      if (GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
         iBoringWeapon = IRnd() % 2;
       }
 
-      pl.GetWeapon(iBoringWeapon)->SendEvent(EBoringWeapon());
+      GetWeapon(iBoringWeapon)->SendEvent(EBoringWeapon());
     }
 
     // moving view change
@@ -1101,7 +1111,7 @@ functions:
   // fire/attack
   void FireAnimation(INDEX iAnim, ULONG ulFlags, BOOL bExtra) {
     // [Cecil] Force Colt animations for dual weapons
-    if (GetPlayer()->GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
       iAnim = BODY_ANIM_COLT_STAND; //(bExtra ? BODY_ANIM_COLT_FIRELEFT : BODY_ANIM_COLT_FIRERIGHT);
 
       if (m_bSwim) {
@@ -1109,7 +1119,7 @@ functions:
       }
 
     } else if (m_bSwim) {
-      INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
+      INDEX iWeapon = GetWeapon(0)->GetCurrent();
 
       switch (iWeapon) {
         case WEAPON_NONE:
@@ -1150,7 +1160,7 @@ functions:
   // body animation template
   void BodyAnimationTemplate(INDEX iNone, INDEX iColt, INDEX iShotgun, INDEX iMinigun, ULONG ulFlags) {
     // [Cecil] Force Colt animations for dual weapons
-    if (GetPlayer()->GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
       if (m_bSwim) {
         iColt += BODY_ANIM_COLT_SWIM_STAND - BODY_ANIM_COLT_STAND;
       }
@@ -1159,7 +1169,7 @@ functions:
       return;
     }
 
-    INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
+    INDEX iWeapon = GetWeapon(0)->GetCurrent();
 
     switch (iWeapon) {
       case WEAPON_NONE:
@@ -1228,9 +1238,6 @@ functions:
 
   // pull weapon
   void BodyPullAnimation(BOOL bExtra) {
-    // remove old weapon
-    RemoveWeapon(bExtra);
-
     // set new weapon
     SetWeapon(bExtra);
 
@@ -1241,7 +1248,7 @@ functions:
     BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
       BODY_ANIM_COLT_DRAW, BODY_ANIM_SHOTGUN_DRAW, BODY_ANIM_MINIGUN_DRAW, 0);
 
-    INDEX iWeapon = GetPlayer()->GetWeapon(0)->GetCurrent();
+    INDEX iWeapon = GetWeapon(0)->GetCurrent();
 
     if (iWeapon != WEAPON_NONE) {
       m_bChangeWeapon = TRUE;
@@ -1309,7 +1316,7 @@ functions:
 
     // Minigun specific
     for (INDEX iWeapon = 0; iWeapon < 2; iWeapon++) {
-      CPlayerWeapons &plw = *GetPlayer()->GetWeapon(iWeapon);
+      CPlayerWeapons &plw = *GetWeapon(iWeapon);
 
       if (plw.GetCurrent() == WEAPON_MINIGUN) {
         ANGLE aAngle = Lerp(plw.m_aMiniGunLast, plw.m_aMiniGun, _pTimer->GetLerpFactor());
@@ -1322,32 +1329,26 @@ functions:
           PLAYER_ATTACHMENT_TORSO, iAttach, MINIGUNITEM_ATTACHMENT_BARRELS, -1);
 
         if (pamo != NULL) {
-          pamo->amo_plRelative.pl_OrientationAngle(3) = aAngle;
+          // [Cecil] Mirror for the extra weapon
+          pamo->amo_plRelative.pl_OrientationAngle(3) = aAngle * (iWeapon % 2 ? -1.0f : 1.0f);
         }
       }
     }
   };
 
-  // show flare
-  void ShowFlare(INDEX iAttachWeapon, INDEX iAttachObject, INDEX iAttachFlare) {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    CAttachmentModelObject *pamo = pl.GetModelObject()->GetAttachmentModelList(
+  // [Cecil] Unified show & hide flare functions
+  void WeaponFlare(INDEX iAttachWeapon, INDEX iAttachObject, INDEX iAttachFlare, const BOOL &bShow) {
+    CAttachmentModelObject *pamo = GetPlayer()->GetModelObject()->GetAttachmentModelList(
       PLAYER_ATTACHMENT_TORSO, iAttachWeapon, iAttachObject, iAttachFlare, -1);
-    if (pamo!=NULL) {
-      pamo->amo_plRelative.pl_OrientationAngle(3) = (rand()*360.0f)/RAND_MAX;
-      CModelObject &mo = pamo->amo_moModelObject;
-      mo.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
-    }
-  };
 
-  // hide flare
-  void HideFlare(INDEX iAttachWeapon, INDEX iAttachObject, INDEX iAttachFlare) {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    CAttachmentModelObject *pamo = pl.GetModelObject()->GetAttachmentModelList(
-      PLAYER_ATTACHMENT_TORSO, iAttachWeapon, iAttachObject, iAttachFlare, -1);
-    if (pamo!=NULL) {
+    if (pamo != NULL) {
+      // [Cecil] Set random angle
+      if (bShow) {
+        pamo->amo_plRelative.pl_OrientationAngle(3) = (rand() * 360.0f) / RAND_MAX;
+      }
+
       CModelObject &mo = pamo->amo_moModelObject;
-      mo.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
+      mo.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f) * bShow);
     }
   };
 
@@ -1360,65 +1361,47 @@ functions:
     INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
 
     // [Cecil] Current weapon and flare
-    INDEX iWeapon = GetPlayer()->GetWeapon(bExtra)->GetCurrent();
+    INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
     INDEX &iFlare = (bExtra ? pen->m_iSecondFlare : pen->m_iFlare);
+
+    INDEX iShowFlare = -1;
 
     // add flare
     if (iFlare == FLARE_ADD) {
       iFlare = FLARE_REMOVE;
       pen->m_tmFlareAdded = _pTimer->CurrentTick();
 
-      switch (iWeapon) {
-        case WEAPON_COLT:
-          ShowFlare(iAttach, COLTITEM_ATTACHMENT_BODY, COLTMAIN_ATTACHMENT_FLARE);
-          break;
-
-        case WEAPON_SINGLESHOTGUN:
-          ShowFlare(iAttach, SINGLESHOTGUNITEM_ATTACHMENT_BARRELS, BARRELS_ATTACHMENT_FLARE);
-          break;
-
-        case WEAPON_DOUBLESHOTGUN:
-          ShowFlare(iAttach, DOUBLESHOTGUNITEM_ATTACHMENT_BARRELS, DSHOTGUNBARRELS_ATTACHMENT_FLARE);
-          break;
-
-        case WEAPON_TOMMYGUN:
-          ShowFlare(iAttach, TOMMYGUNITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
-          break;
-
-        case WEAPON_SNIPER:
-          ShowFlare(iAttach, SNIPERITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
-          break;
-
-        case WEAPON_MINIGUN:
-          ShowFlare(iAttach, MINIGUNITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
-          break;
-      }
+      iShowFlare = 1;
 
     // remove
     } else if (m_iFlare == FLARE_REMOVE && _pTimer->CurrentTick() > pen->m_tmFlareAdded + _pTimer->TickQuantum) {
+      iShowFlare = 0;
+    }
+
+    if (iShowFlare != -1) {
       switch (iWeapon) {
         case WEAPON_COLT:
-          HideFlare(iAttach, COLTITEM_ATTACHMENT_BODY, COLTMAIN_ATTACHMENT_FLARE);
+          WeaponFlare(iAttach, COLTITEM_ATTACHMENT_BODY, COLTMAIN_ATTACHMENT_FLARE, iShowFlare);
           break;
 
         case WEAPON_SINGLESHOTGUN:
-          HideFlare(iAttach, SINGLESHOTGUNITEM_ATTACHMENT_BARRELS, BARRELS_ATTACHMENT_FLARE);
+          WeaponFlare(iAttach, SINGLESHOTGUNITEM_ATTACHMENT_BARRELS, BARRELS_ATTACHMENT_FLARE, iShowFlare);
           break;
 
         case WEAPON_DOUBLESHOTGUN:
-          HideFlare(iAttach, DOUBLESHOTGUNITEM_ATTACHMENT_BARRELS, DSHOTGUNBARRELS_ATTACHMENT_FLARE);
+          WeaponFlare(iAttach, DOUBLESHOTGUNITEM_ATTACHMENT_BARRELS, DSHOTGUNBARRELS_ATTACHMENT_FLARE, iShowFlare);
           break;
 
         case WEAPON_TOMMYGUN:
-          HideFlare(iAttach, TOMMYGUNITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
+          WeaponFlare(iAttach, TOMMYGUNITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, iShowFlare);
           break;
 
         case WEAPON_SNIPER:
-          HideFlare(iAttach, SNIPERITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
+          WeaponFlare(iAttach, SNIPERITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, iShowFlare);
           break;
 
         case WEAPON_MINIGUN:
-          HideFlare(iAttach, MINIGUNITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
+          WeaponFlare(iAttach, MINIGUNITEM_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, iShowFlare);
           break;
       }
     }

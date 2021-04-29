@@ -238,6 +238,11 @@ functions:
     return (CPlayer*)&*m_penPlayer;
   };
 
+  // Get player animator
+  CPlayerAnimator *GetAnimator(void) {
+    return GetPlayer()->GetPlayerAnimator();
+  };
+
   // Get some weapon
   CPlayerWeapons *GetWeapon(const INDEX &iExtra) {
     return (CPlayerWeapons*)&*(&m_penWeapons1)[iExtra];
@@ -451,11 +456,8 @@ functions:
       // set weapon model for current weapon
       plw.SetCurrentWeaponModel();
 
-      // remove weapon attachment
-      GetPlayer()->GetPlayerAnimator()->RemoveWeapon(plw.m_bExtraWeapon);
-
       // add weapon attachment
-      GetPlayer()->GetPlayerAnimator()->SetWeapon(plw.m_bExtraWeapon);
+      GetAnimator()->SetWeapon(plw.m_bExtraWeapon);
     }
 
     // precache new weapons

@@ -5889,6 +5889,7 @@ functions:
     ParseGender(strDummy);
 
     GetPlayerAnimator()->SetWeapon(FALSE);
+    GetPlayerAnimator()->SetWeapon(TRUE);
     m_ulFlags |= PLF_SYNCWEAPON;
 
     // spawn teleport effect
@@ -6902,8 +6903,6 @@ procedures:
 
     // remove weapon attachment
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.m_iWeaponLast = m_iAutoOrgWeapon;
-
     plan.RemoveWeapon(FALSE);
     plan.RemoveWeapon(TRUE);
 
