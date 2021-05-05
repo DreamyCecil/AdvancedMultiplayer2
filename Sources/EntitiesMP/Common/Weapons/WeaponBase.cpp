@@ -273,7 +273,7 @@ static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
     }
 
     // set model from the config
-    if (apModels[iModel].SetWeaponModel(strModelConfig) == WM_MODELERROR) {
+    if (!apModels[iModel].SetWeaponModel(strModelConfig)) {
       // couldn't set the model
       FatalError("Couldn't set model \"%s\" for the weapon in \"%s\"!", strType[iModel], strConfig);
       return FALSE;

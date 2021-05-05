@@ -22,35 +22,25 @@ CWeaponModel &CWeaponModel::operator=(CWeaponModel &wmOther) {
   }
 
   strConfig = wmOther.strConfig;
-  SetWeaponModel(strConfig);
+  cbModel = wmOther.cbModel;
 
   return *this;
 };
 
 // Set model from a config
-INDEX CWeaponModel::SetWeaponModel(const CTString &strConfigFile) {
+BOOL CWeaponModel::SetWeaponModel(const CTString &strConfigFile) {
   // remember config file
   strConfig = strConfigFile;
+  cbModel.Clear();
   bModelSet = FALSE;
-
-  CConfigBlock cbModel;
 
   // load config
   if (LoadJSON(strConfigFile, cbModel) != DJSON_OK) {
-    return WM_NOCONFIG;
-  }
-
-  // set model
-  try {
-    ParseModelConfig(cbModel, &moModel, NULL);
-
-  } catch (char *strError) {
-    FatalError(strError);
-    return WM_MODELERROR;
+    return FALSE;
   }
 
   bModelSet = TRUE;
-  return WM_MODELSET;
+  return TRUE;
 };
 
 // Write weapon model

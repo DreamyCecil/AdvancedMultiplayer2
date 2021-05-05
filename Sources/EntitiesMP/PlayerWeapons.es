@@ -181,11 +181,7 @@ enum WeaponType {
 #define MINIGUN_TICKTIME        (_pTimer->TickQuantum)
 
 // chainsaw specific
-#define CHAINSAW_UPDATETIME     0.05f
-
-// fire flare specific
-#define FLARE_REMOVE 1
-#define FLARE_ADD 2
+#define CHAINSAW_UPDATETIME 0.05f
 
 // animation light specific
 #define LIGHT_ANIM_MINIGUN 2
@@ -517,10 +513,6 @@ properties:
 // ghostbuster
 250 CEntityPointer m_penGhostBusterRay,
 
-// fire flare
-251 INDEX m_iFlare = FLARE_REMOVE,       // 0-none, 1-remove, 2-add
-252 INDEX m_iSecondFlare = FLARE_REMOVE, // 0-none, 1-remove, 2-add
-
 // cannon
 260 FLOAT m_fWeaponDrawPowerOld = 0,
 261 FLOAT m_fWeaponDrawPower = 0,
@@ -549,6 +541,10 @@ properties:
   // [Cecil] Weapon models has been set
   BOOL m_bModelSet1;
   BOOL m_bModelSet2;
+
+  // [Cecil] Weapon attachments lists
+  CAttachList m_aAttachments1;
+  CAttachList m_aAttachments2;
 }
 
 components:
@@ -752,8 +748,8 @@ functions:
 
     m_bLastWeaponMirrored = penOther->m_bLastWeaponMirrored;
 
-    m_bModelSet1 = penOther->m_bModelSet1;
-    m_bModelSet2 = penOther->m_bModelSet2;
+    // reset weapon model
+    SetCurrentWeaponModel();
   };
 
   // [Cecil] Destroy ghostbuster ray
@@ -1805,123 +1801,85 @@ functions:
     }
   };
 
-  // show flare
-  void ShowFlare(CModelObject &moWeapon, INDEX iAttachObject, INDEX iAttachFlare, FLOAT fSize) {
-    // [Cecil] Safety check
-    CAttachmentModelObject *pamoObject = moWeapon.GetAttachmentModel(iAttachObject);
-    if (pamoObject == NULL) {
-      return;
+  // [Cecil] Get attachment model under a certain flag
+  CAttachmentModelObject *GetModel(const string &strFlag, const BOOL &bSecond) {
+    CAttachList &aList = (&m_aAttachments1)[bSecond];
+
+    if (aList.FindKeyIndex(strFlag) != -1) {
+      return aList[strFlag].pamo;
     }
 
-    CModelObject *pmo = &(moWeapon.GetAttachmentModel(iAttachObject)->amo_moModelObject);
-    CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttachFlare);
-
-    // [Cecil] Safety check
-    if (pamo == NULL) {
-      return;
-    }
-
-    pamo->amo_plRelative.pl_OrientationAngle(3) = (rand()*360.0f)/RAND_MAX;
-    pmo = &(pamo->amo_moModelObject);
-    pmo->StretchModel(FLOAT3D(fSize, fSize, fSize));
+    return NULL;
   };
 
-  // hide flare
-  void HideFlare(CModelObject &moWeapon, INDEX iAttachObject, INDEX iAttachFlare) {
-    // [Cecil] Safety check
-    CAttachmentModelObject *pamoObject = moWeapon.GetAttachmentModel(iAttachObject);
-    if (pamoObject == NULL) {
+  // [Cecil] Show/hide weapon flare
+  void WeaponFlare(FLOAT fSize, BOOL bShow) {
+    CAttachmentModelObject *pamoFlare = GetModel("flare", FALSE);
+
+    // no flare
+    if (pamoFlare == NULL) {
       return;
     }
 
-    CModelObject *pmo = &(moWeapon.GetAttachmentModel(iAttachObject)->amo_moModelObject);
-
-    // [Cecil] Safety check
-    CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttachFlare);
-    if (pamo == NULL) {
-      return;
+    // random angle
+    if (bShow) {
+      pamoFlare->amo_plRelative.pl_OrientationAngle(3) = (rand() * 360.0f) / RAND_MAX;
     }
 
-    pmo = &(pamo->amo_moModelObject);
-    pmo->StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
+    // stretch flare
+    CModelObject *pmo = &pamoFlare->amo_moModelObject;
+    pmo->StretchModel(FLOAT3D(fSize, fSize, fSize) * bShow);
   };
 
-  void SetFlare(INDEX iAction) {
+  void SetFlare(BOOL bSet) {
     // if not a prediction head
     if (!IsPredictionHead()) {
       // do nothing
       return;
     }
 
-    // get your prediction tail
-    CPlayerWeapons *pen = (CPlayerWeapons*)GetPredictionTail();
+    // [Cecil] Get inventory
+    CPlayerInventory *pen = GetInventory()->PredTail();
 
     // [Cecil] Flare for the extra weapon
     if (!m_bExtraWeapon) {
-      pen->m_iFlare = iAction;
-      pen->GetPlayer()->GetPlayerAnimator()->m_iFlare = iAction;
-
+      pen->m_bFlare1 = bSet;
     } else {
-      pen->m_iSecondFlare = iAction;
-      pen->GetPlayer()->GetPlayerAnimator()->m_iSecondFlare = iAction;
+      pen->m_bFlare2 = bSet;
     }
   }
 
   // flare attachment
   void ControlFlareAttachment(void) {
-    // get your prediction tail
-    CPlayerWeapons *pen = (CPlayerWeapons*)GetPredictionTail();
+    CPlayerInventory *pen = GetInventory()->PredTail();
+
+    // flare indices
+    BOOL &bFlare = (m_bExtraWeapon ? pen->m_bFlare2 : pen->m_bFlare1);
+    BOOL bTimeOut = (_pTimer->CurrentTick() > pen->m_tmFlareAdded + _pTimer->TickQuantum);
+    INDEX iShowFlare = -1;
 
     // add flare
-    if (pen->m_iFlare == FLARE_ADD) {
-      pen->m_iFlare = FLARE_REMOVE;
+    if (bFlare) {
+      bFlare = FALSE;
+      pen->m_tmFlareAdded = _pTimer->CurrentTick();
 
-      switch (m_iCurrentWeapon) {
-        case WEAPON_COLT:
-          ShowFlare(m_moWeapon, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE, 0.75f);
-          break;
-        case WEAPON_SINGLESHOTGUN:
-          ShowFlare(m_moWeapon, SINGLESHOTGUN_ATTACHMENT_BARRELS, BARRELS_ATTACHMENT_FLARE, 1.0f);
-          break;
-        case WEAPON_DOUBLESHOTGUN:
-          ShowFlare(m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_BARRELS, DSHOTGUNBARRELS_ATTACHMENT_FLARE, 1.75f);
-          break;
-        case WEAPON_TOMMYGUN:
-          ShowFlare(m_moWeapon, TOMMYGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, 0.5f);
-          break;
-        case WEAPON_SNIPER:
-          ShowFlare(m_moWeapon, SNIPER_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, 0.5f);
-          break;
-        case WEAPON_MINIGUN:
-          ShowFlare(m_moWeapon, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE, 1.25f);
-          break;
-      }
+      iShowFlare = 1;
 
     // remove
-    } else if (pen->m_iFlare == FLARE_REMOVE) {
-      switch (m_iCurrentWeapon) {
-        case WEAPON_COLT:
-          HideFlare(m_moWeapon, COLT_ATTACHMENT_COLT, COLTMAIN_ATTACHMENT_FLARE);
-          break;
-        case WEAPON_SINGLESHOTGUN:
-          HideFlare(m_moWeapon, SINGLESHOTGUN_ATTACHMENT_BARRELS, BARRELS_ATTACHMENT_FLARE);
-          break;
-        case WEAPON_DOUBLESHOTGUN:
-          HideFlare(m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_BARRELS, DSHOTGUNBARRELS_ATTACHMENT_FLARE);
-          break;
-        case WEAPON_TOMMYGUN:
-          HideFlare(m_moWeapon, TOMMYGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
-          break;
-        case WEAPON_SNIPER:
-          HideFlare(m_moWeapon, SNIPER_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
-          break;
-        case WEAPON_MINIGUN:
-          HideFlare(m_moWeapon, MINIGUN_ATTACHMENT_BODY, BODY_ATTACHMENT_FLARE);
-          break;
-      }
+    } else if (!bFlare && bTimeOut) {
+      iShowFlare = 0;
+    }
 
-    } else {
-      ASSERT(FALSE);
+    // [Cecil] Set flare
+    if (iShowFlare != -1) {
+      switch (m_iCurrentWeapon) {
+        case WEAPON_COLT:          WeaponFlare(0.75f, iShowFlare); break;
+        case WEAPON_SINGLESHOTGUN: WeaponFlare(1.0f,  iShowFlare); break;
+        case WEAPON_DOUBLESHOTGUN: WeaponFlare(1.75f, iShowFlare); break;
+        case WEAPON_TOMMYGUN:      WeaponFlare(0.5f,  iShowFlare); break;
+        case WEAPON_SNIPER:        WeaponFlare(0.5f,  iShowFlare); break;
+        case WEAPON_MINIGUN:       WeaponFlare(1.25f, iShowFlare); break;
+      }
     }
   };
 
@@ -1933,173 +1891,46 @@ functions:
     }
   };
 
-  // Set weapon model for current weapon.
+  // [Cecil] Set weapon model for the current weapon
   void SetCurrentWeaponModel(void) {
-    // [Cecil] Reset weapon models
+    // reset weapon models
     m_moWeapon.SetData(NULL);
     m_moWeaponSecond.SetData(NULL);
+
     m_bModelSet1 = FALSE;
     m_bModelSet2 = FALSE;
+
+    m_aAttachments1.Clear();
+    m_aAttachments2.Clear();
 
     if (m_iCurrentWeapon == WEAPON_NONE) {
       return;
     }
 
-    // [Cecil] Reset mirroring
+    // reset mirroring
     m_moWeapon.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
     m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
 
-    // [Cecil] Weapon models
+    // weapon models
     CWeaponModel &wm1 = GET_WEAPON(m_iCurrentWeapon).pwsWeapon->wmModel1;
     CWeaponModel &wm2 = GET_WEAPON(m_iCurrentWeapon).pwsWeapon->wmModel2;
 
-    // [Cecil] Set main model
+    // set main model
     if (wm1.bModelSet) {
-      m_moWeapon.Copy(wm1.moModel);
+      ParseModelConfig(wm1.cbModel, &m_moWeapon, NULL, &m_aAttachments1);
       m_bModelSet1 = TRUE;
     }
 
-    // [Cecil] Set second model
+    // set second model
     if (wm2.bModelSet) {
-      m_moWeaponSecond.Copy(wm2.moModel);
+      ParseModelConfig(wm2.cbModel, &m_moWeaponSecond, NULL, &m_aAttachments2);
       m_bModelSet2 = TRUE;
     }
 
-    /*switch (m_iCurrentWeapon) {
-      case WEAPON_NONE: break;
-
-      case WEAPON_KNIFE: {
-        SetComponents(this, m_moWeapon, MODEL_KNIFE, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, KNIFE_ATTACHMENT_KNIFEITEM, MODEL_KNIFEITEM, TEXTURE_KNIFEITEM, TEX_REFL_BWRIPLES02, TEX_SPEC_WEAK, 0);
-      } break;
-
-      case WEAPON_COLT: {
-        SetComponents(this, m_moWeapon, MODEL_COLT, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_BULLETS, MODEL_COLTBULLETS, TEXTURE_COLTBULLETS, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_COCK, MODEL_COLTCOCK, TEXTURE_COLTCOCK, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, COLT_ATTACHMENT_COLT, MODEL_COLTMAIN, TEXTURE_COLTMAIN, TEX_REFL_LIGHTBLUEMETAL01, TEX_SPEC_MEDIUM, 0);
-        CModelObject &mo = m_moWeapon.GetAttachmentModel(COLT_ATTACHMENT_COLT)->amo_moModelObject;
-        AddAttachmentToModel(this, mo, COLTMAIN_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-      } break;
-
-      case WEAPON_SINGLESHOTGUN: {
-        SetComponents(this, m_moWeapon, MODEL_SINGLESHOTGUN, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, SINGLESHOTGUN_ATTACHMENT_BARRELS, MODEL_SS_BARRELS, TEXTURE_SS_BARRELS, TEX_REFL_DARKMETAL, TEX_SPEC_WEAK, 0);
-        AddAttachmentToModel(this, m_moWeapon, SINGLESHOTGUN_ATTACHMENT_HANDLE, MODEL_SS_HANDLE, TEXTURE_SS_HANDLE, TEX_REFL_DARKMETAL, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, SINGLESHOTGUN_ATTACHMENT_SLIDER, MODEL_SS_SLIDER, TEXTURE_SS_BARRELS, TEX_REFL_DARKMETAL, TEX_SPEC_MEDIUM, 0);
-        CModelObject &mo = m_moWeapon.GetAttachmentModel(SINGLESHOTGUN_ATTACHMENT_BARRELS)->amo_moModelObject;
-        AddAttachmentToModel(this, mo, BARRELS_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-      } break;
-
-      case WEAPON_DOUBLESHOTGUN: {
-        SetComponents(this, m_moWeapon, MODEL_DOUBLESHOTGUN, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_BARRELS, MODEL_DS_BARRELS, TEXTURE_DS_BARRELS, TEX_REFL_BWRIPLES01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_HANDLE, MODEL_DS_HANDLE, TEXTURE_DS_HANDLE, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_SWITCH, MODEL_DS_SWITCH, TEXTURE_DS_SWITCH, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, DOUBLESHOTGUN_ATTACHMENT_AMMO, MODEL_DS_AMMO, TEXTURE_DS_AMMO, 0 ,0, 0);
-        CModelObject &mo = m_moWeapon.GetAttachmentModel(DOUBLESHOTGUN_ATTACHMENT_BARRELS)->amo_moModelObject;
-        AddAttachmentToModel(this, mo, DSHOTGUNBARRELS_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-
-        SetComponents(this, m_moWeaponSecond, MODEL_DS_HANDWITHAMMO, TEXTURE_HAND, 0, 0, 0);
-        // [Cecil] Hide by default
-        m_moWeaponSecond.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
-      } break;
-
-      case WEAPON_TOMMYGUN: {
-        SetComponents(this, m_moWeapon, MODEL_TOMMYGUN, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, TOMMYGUN_ATTACHMENT_BODY, MODEL_TG_BODY, TEXTURE_TG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, TOMMYGUN_ATTACHMENT_SLIDER, MODEL_TG_SLIDER, TEXTURE_TG_BODY, 0, TEX_SPEC_MEDIUM, 0);
-        CModelObject &mo = m_moWeapon.GetAttachmentModel(TOMMYGUN_ATTACHMENT_BODY)->amo_moModelObject;
-        AddAttachmentToModel(this, mo, BODY_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-      } break;
-
-      case WEAPON_SNIPER: {
-        SetComponents(this, m_moWeapon, MODEL_SNIPER, TEXTURE_SNIPER_BODY, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, SNIPER_ATTACHMENT_BODY, MODEL_SNIPER_BODY, TEXTURE_SNIPER_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        CModelObject &mo = m_moWeapon.GetAttachmentModel(SNIPER_ATTACHMENT_BODY)->amo_moModelObject;
-        AddAttachmentToModel(this, mo, BODY_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-      } break;
-
-      case WEAPON_MINIGUN: {
-        SetComponents(this, m_moWeapon, MODEL_MINIGUN, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, MINIGUN_ATTACHMENT_BARRELS, MODEL_MG_BARRELS, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, MINIGUN_ATTACHMENT_BODY, MODEL_MG_BODY, TEXTURE_MG_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, MINIGUN_ATTACHMENT_ENGINE, MODEL_MG_ENGINE, TEXTURE_MG_BARRELS, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-
-        CModelObject &mo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BODY)->amo_moModelObject;
-        AddAttachmentToModel(this, mo, BODY_ATTACHMENT_FLARE, MODEL_FLARE01, TEXTURE_FLARE01, 0, 0, 0);
-      } break;
-
-      case WEAPON_ROCKETLAUNCHER: {
-        SetComponents(this, m_moWeapon, MODEL_ROCKETLAUNCHER, TEXTURE_RL_BODY, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_BODY, MODEL_RL_BODY, TEXTURE_RL_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROTATINGPART, MODEL_RL_ROTATINGPART, TEXTURE_RL_ROTATINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-
-        // [Cecil] Chainsaw launcher
-        if (m_bChainLauncher && GetInventory()->AltFireExists(WEAPON_ROCKETLAUNCHER)) {
-          for (INDEX iSaw = 0; iSaw < 3; iSaw++) {
-            AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROCKET1 + iSaw, MODEL_CS_BLADE, TEXTURE_CS_BLADE, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-
-            CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(ROCKETLAUNCHER_ATTACHMENT_ROCKET1 + iSaw)->amo_moModelObject);
-            AddAttachmentToModel(this, *pmo, BLADE_ATTACHMENT_TEETH, MODEL_CS_TEETH, TEXTURE_CS_TEETH, 0, 0, 0);
-
-            pmo = &(pmo->GetAttachmentModel(BLADE_ATTACHMENT_TEETH)->amo_moModelObject);
-            pmo->PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING|AOF_NORESTART);
-          }
-
-          // [Cecil] Stretch all saws
-          StretchAllRockets(FLOAT3D(1.0f, 1.0f, 1.0f));
-          RotateAllRockets(70.0f);
-
-        } else {
-          AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROCKET1, MODEL_RL_ROCKET, TEXTURE_RL_ROCKET, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-          AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROCKET2, MODEL_RL_ROCKET, TEXTURE_RL_ROCKET, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-          AddAttachmentToModel(this, m_moWeapon, ROCKETLAUNCHER_ATTACHMENT_ROCKET3, MODEL_RL_ROCKET, TEXTURE_RL_ROCKET, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        }
-      } break;
-
-      case WEAPON_GRENADELAUNCHER: {
-        SetComponents(this, m_moWeapon, MODEL_GRENADELAUNCHER, TEXTURE_GL_BODY, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, GRENADELAUNCHER_ATTACHMENT_BODY, MODEL_GL_BODY, TEXTURE_GL_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, GRENADELAUNCHER_ATTACHMENT_MOVING_PART, MODEL_GL_MOVINGPART, TEXTURE_GL_MOVINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, GRENADELAUNCHER_ATTACHMENT_GRENADE, MODEL_GL_GRENADE, TEXTURE_GL_MOVINGPART, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-      } break;
-
-      case WEAPON_FLAMER: {
-        SetComponents(this, m_moWeapon, MODEL_FLAMER, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, FLAMER_ATTACHMENT_BODY, MODEL_FL_BODY, TEXTURE_FL_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, FLAMER_ATTACHMENT_FUEL, MODEL_FL_RESERVOIR, TEXTURE_FL_FUELRESERVOIR, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, FLAMER_ATTACHMENT_FLAME, MODEL_FL_FLAME, TEXTURE_FL_FLAME, 0, 0, 0);
-      } break;
-
-      case WEAPON_CHAINSAW: {
-        SetComponents(this, m_moWeapon, MODEL_CHAINSAW, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, CHAINSAW_ATTACHMENT_CHAINSAW, MODEL_CS_BODY, TEXTURE_CS_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, CHAINSAW_ATTACHMENT_BLADE, MODEL_CS_BLADE, TEXTURE_CS_BLADE, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        CModelObject *pmo;
-        pmo = &(m_moWeapon.GetAttachmentModel(CHAINSAW_ATTACHMENT_BLADE)->amo_moModelObject);
-        AddAttachmentToModel(this, *pmo, BLADE_ATTACHMENT_TEETH, MODEL_CS_TEETH, TEXTURE_CS_TEETH, 0, 0, 0);
-      } break;
-
-      case WEAPON_LASER: {
-        SetComponents(this, m_moWeapon, MODEL_LASER, TEXTURE_HAND, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_BODY, MODEL_LS_BODY, TEXTURE_LS_BODY, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_LEFTUP,    MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_LEFTDOWN,  MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_RIGHTUP,   MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-        AddAttachmentToModel(this, m_moWeapon, LASER_ATTACHMENT_RIGHTDOWN, MODEL_LS_BARREL, TEXTURE_LS_BARREL, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-      } break;
-
-      case WEAPON_IRONCANNON: {
-        SetComponents(this, m_moWeapon, MODEL_CANNON, TEXTURE_CANNON, 0, 0, 0);
-        AddAttachmentToModel(this, m_moWeapon, CANNON_ATTACHMENT_BODY, MODEL_CN_BODY, TEXTURE_CANNON, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
-      } break;
-    }*/
-
-    // [Cecil] Mirror the weapon
+    // mirror the weapon
     ApplyMirroring(MirrorState());
 
-    // [Cecil] Play default animation
+    // play default animation
     PlayDefaultAnim(TRUE);
   };
 
@@ -3406,27 +3237,27 @@ procedures:
 
       case WEAPON_COLT:
         m_iAnim = COLT_ANIM_ACTIVATE;
-        SetFlare(FLARE_REMOVE);
+        SetFlare(FALSE);
         break;
 
       case WEAPON_SINGLESHOTGUN:
         m_iAnim = SINGLESHOTGUN_ANIM_ACTIVATE;
-        SetFlare(FLARE_REMOVE);
+        SetFlare(FALSE);
         break;
 
       case WEAPON_DOUBLESHOTGUN:
         m_iAnim = DOUBLESHOTGUN_ANIM_ACTIVATE;
-        SetFlare(FLARE_REMOVE);
+        SetFlare(FALSE);
         break;
 
       case WEAPON_TOMMYGUN:
         m_iAnim = TOMMYGUN_ANIM_ACTIVATE;
-        SetFlare(FLARE_REMOVE);
+        SetFlare(FALSE);
         break;
 
       case WEAPON_SNIPER:
         m_iAnim = SNIPER_ANIM_ACTIVATE;
-        SetFlare(FLARE_REMOVE);
+        SetFlare(FALSE);
         break;
 
       case WEAPON_MINIGUN: {
@@ -3434,7 +3265,7 @@ procedures:
         m_aMiniGunLast = m_aMiniGun = amo->amo_plRelative.pl_OrientationAngle(3);
 
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
-        SetFlare(FLARE_REMOVE);
+        SetFlare(FALSE);
       } break;
 
       case WEAPON_ROCKETLAUNCHER:
@@ -3470,6 +3301,10 @@ procedures:
     // start animator
     CPlayerAnimator &plan = (CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator;
     plan.BodyPullAnimation(m_bExtraWeapon);
+
+    if (m_iCurrentWeapon == WEAPON_NONE) {
+      return EEnd();
+    }
 
     // [Cecil] Reload colts automagically when taking them out
     BOOL bNowColt = (m_iCurrentWeapon == WEAPON_COLT);
@@ -3724,7 +3559,7 @@ procedures:
     SpawnRangeSound(40.0f);
 
     DecMag(FALSE);
-    SetFlare(FLARE_ADD);
+    SetFlare(TRUE);
     PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
     // sound
@@ -3784,7 +3619,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Snglshotgun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(FLARE_ADD);
+      SetFlare(TRUE);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
       m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST, 0);
 
@@ -3879,7 +3714,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(FLARE_ADD);
+      SetFlare(TRUE);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
       // [Cecil] Show the hand
@@ -3931,7 +3766,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Dblshotgun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(FLARE_ADD);
+      SetFlare(TRUE);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
       // [Cecil] Show the hand
@@ -4038,7 +3873,7 @@ procedures:
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
 
       DecAmmo(FALSE);
-      SetFlare(FLARE_ADD);
+      SetFlare(TRUE);
       m_moWeapon.PlayAnim(TOMMYGUN_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
 
       // [Cecil] Drop bullet
@@ -4084,7 +3919,7 @@ procedures:
 
       SpawnRangeSound(50.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
-      SetFlare(FLARE_ADD);
+      SetFlare(TRUE);
       m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
       
       m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
@@ -4135,7 +3970,7 @@ procedures:
       DecAmmo(FALSE);
 
       if (!GetPlayer()->m_bSniping) {
-        SetFlare(FLARE_ADD);
+        SetFlare(TRUE);
       }
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
@@ -4188,7 +4023,7 @@ procedures:
       DecAmmo(FALSE);
 
       if (!GetPlayer()->m_bSniping) {
-        SetFlare(FLARE_ADD);
+        SetFlare(TRUE);
       }
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
 
@@ -4310,7 +4145,7 @@ procedures:
         DoRecoil();
         SpawnRangeSound(60.0f);
         DecAmmo(FALSE);
-        SetFlare(FLARE_ADD);
+        SetFlare(TRUE);
 
         // [Cecil] Drop bullets
         CPlayer &pl = (CPlayer&)*m_penPlayer;

@@ -19,6 +19,8 @@
     
     "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
     "Specular"   : "Models\SpecularTextures\Medium.tex",
+    
+    "Flag" : "rotate",
   },
   
   "Attachment 2" : {

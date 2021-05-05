@@ -16,6 +16,8 @@
     
     "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
     "Specular"   : "Models\SpecularTextures\Medium.tex",
+    
+    "Flag" : "move",
   },
   
   "Attachment 0" : {

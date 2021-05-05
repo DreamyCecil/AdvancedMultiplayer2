@@ -51,11 +51,6 @@ enum AnimatorAction {
   AA_ATTACK,
 };
 
-// fire flare specific
-#define FLARE_NONE 0
-#define FLARE_REMOVE 1
-#define FLARE_ADD 2
-
 extern FLOAT plr_fBreathingStrength;
 extern FLOAT plr_fViewDampFactor;
 extern FLOAT plr_fViewDampLimitGroundUp;
@@ -187,8 +182,6 @@ properties:
  11 BOOL m_iRiseUpWait = FALSE,               // wait for rise up
  12 BOOL m_bChangeWeapon = FALSE,             // wait for weapon change
  13 BOOL m_bSwim = FALSE,                     // player in water
- 14 INDEX m_iFlare = FLARE_REMOVE,            // 0-none, 1-remove, 2-add
- 15 INDEX m_iSecondFlare = FLARE_REMOVE,      // 0-none, 1-remove, 2-add
  16 BOOL m_bAttacking = FALSE,                // currently firing weapon/swinging knife
  19 FLOAT m_tmAttackingDue = -1.0f,           // when firing animation is due
  17 FLOAT m_tmFlareAdded = -1.0f,             // for better flare add/remove
@@ -1354,27 +1347,25 @@ functions:
 
   // flare attachment
   void ControlFlareAttachment(BOOL bExtra) {
-    // get your prediction tail
-    CPlayerAnimator *pen = (CPlayerAnimator *)GetPredictionTail();
+    CPlayerInventory *pen = GetPlayer()->GetInventory()->PredTail();
 
-    // [Cecil] Weapon attachment
+    // weapon attachment
     INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
 
-    // [Cecil] Current weapon and flare
+    // current weapon and flare
     INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
-    INDEX &iFlare = (bExtra ? pen->m_iSecondFlare : pen->m_iFlare);
-
+    
+    // flare indices
+    BOOL &bFlare = (bExtra ? pen->m_bFlare2 : pen->m_bFlare1);
+    BOOL bTimeOut = (_pTimer->CurrentTick() > pen->m_tmFlareAdded + _pTimer->TickQuantum);
     INDEX iShowFlare = -1;
 
     // add flare
-    if (iFlare == FLARE_ADD) {
-      iFlare = FLARE_REMOVE;
-      pen->m_tmFlareAdded = _pTimer->CurrentTick();
-
+    if (bFlare) {
       iShowFlare = 1;
 
     // remove
-    } else if (m_iFlare == FLARE_REMOVE && _pTimer->CurrentTick() > pen->m_tmFlareAdded + _pTimer->TickQuantum) {
+    } else if (!bFlare && bTimeOut) {
       iShowFlare = 0;
     }
 

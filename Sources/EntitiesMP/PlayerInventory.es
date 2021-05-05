@@ -76,11 +76,15 @@ properties:
   2 CEntityPointer m_penWeapons1, // player's main weapon
   3 CEntityPointer m_penWeapons2, // player's extra weapon
 
- // Powerup timers
- 10 FLOAT m_tmInvis  = 0.0f,
- 11 FLOAT m_tmInvul  = 0.0f,
- 12 FLOAT m_tmDamage = 0.0f,
- 13 FLOAT m_tmSpeed  = 0.0f,
+ 10 FLOAT m_tmFlareAdded = -1.0f, // when weapon flare was added
+ 11 BOOL m_bFlare1 = FALSE, // main flare
+ 12 BOOL m_bFlare2 = FALSE, // secondary flare
+
+// Power up timers
+100 FLOAT m_tmInvis  = 0.0f,
+101 FLOAT m_tmInvul  = 0.0f,
+102 FLOAT m_tmDamage = 0.0f,
+103 FLOAT m_tmSpeed  = 0.0f,
 
 {
   // Player's personal arsenal

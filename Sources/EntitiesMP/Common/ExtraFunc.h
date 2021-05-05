@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Weapons/WeaponModel.h"
+
 // [Cecil] TFE weapon flags to TSE flags
 DECL_DLL void ConvertWeaponTFE(INDEX &iFlags, const INDEX &iWeapon);
 
@@ -13,7 +15,7 @@ DECL_DLL void ProperUndecorate(CTString &str);
 DECL_DLL CEntity *GetFirstPlayer(const CTString &strExecutor = "<unknown>");
 
 // [Cecil] Parse model config
-DECL_DLL void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment);
+DECL_DLL void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment, CAttachList *paAttachments);
 
 // [Cecil] Load JSON config
 DJSON_ERROR LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel);

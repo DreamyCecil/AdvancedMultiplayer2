@@ -252,7 +252,7 @@ CEntity *GetFirstPlayer(const CTString &strExecutor) {
   }
 
 // [Cecil] Parse model config
-void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment) {
+void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment, CAttachList *paAttachments) {
   INDEX ctValues = mapBlock.Count();
 
   for (INDEX iValue = 0; iValue < ctValues; iValue++) {
@@ -282,6 +282,15 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
       ASSERT_VALUE_TYPE(cv, STRING);
       pmo->mo_toBump.SetData_t(CTString(cv.cv_strValue));
 
+    // flagged element
+    } else if (strName == "Flag") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+
+      // add to the attachment list
+      if (paAttachments != NULL) {
+        paAttachments->Add(cv.cv_strValue, SListModel(pamoAttachment, pmo));
+      }
+
     // apply animation
     } else if (strName == "Animation") {
       ASSERT_VALUE_TYPE(cv, INDEX);
@@ -302,7 +311,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
       }
 
       // set model
-      ParseModelConfig(cbInclude, pmo, NULL);
+      ParseModelConfig(cbInclude, pmo, NULL, paAttachments);
 
     // attachment position
     } else if (strName == "Pos" || strName == "PosAdd") {
@@ -363,7 +372,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
           pamo = pmo->AddAttachmentModel(iAttach);
         }
 
-        ParseModelConfig(cv.cv_mapBlock, &pamo->amo_moModelObject, pamo);
+        ParseModelConfig(cv.cv_mapBlock, &pamo->amo_moModelObject, pamo, paAttachments);
 
       } else {
         ThrowF_t("Expected attachment index for the attachment!");
