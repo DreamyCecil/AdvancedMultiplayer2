@@ -12,18 +12,18 @@
   
   // Barrels
   "Attachment 1" : {
-    "Include" : "Configs\WeaponSets\Default\Models\LaserBarrel.json",
+    "Include" : "Configs\WeaponSets\Default\Models1\LaserBarrel.json",
   },
   
   "Attachment 2" : {
-    "Include" : "Configs\WeaponSets\Default\Models\LaserBarrel.json",
+    "Include" : "Configs\WeaponSets\Default\Models1\LaserBarrel.json",
   },
   
   "Attachment 3" : {
-    "Include" : "Configs\WeaponSets\Default\Models\LaserBarrel.json",
+    "Include" : "Configs\WeaponSets\Default\Models1\LaserBarrel.json",
   },
   
   "Attachment 4" : {
-    "Include" : "Configs\WeaponSets\Default\Models\LaserBarrel.json",
+    "Include" : "Configs\WeaponSets\Default\Models1\LaserBarrel.json",
   },
 }

@@ -841,11 +841,11 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   SPlayerWeapon &pwCurrent1 = aWeapons[aiCurrentWeapon[0]];
   SPlayerWeapon &pwCurrent2 = aWeapons[aiCurrentWeapon[1]];
 
-  SWeaponAmmo *pwaAmmo1 = pwCurrent1.GetAmmo();
-  SWeaponAmmo *pwaAmmo2 = pwCurrent2.GetAmmo();
+  CWeaponAmmo *pwaAmmo1 = pwCurrent1.GetAmmo();
+  CWeaponAmmo *pwaAmmo2 = pwCurrent2.GetAmmo();
 
-  SWeaponAmmo *pwaAltAmmo1 = pwCurrent1.GetAlt();
-  SWeaponAmmo *pwaAltAmmo2 = pwCurrent2.GetAlt();
+  CWeaponAmmo *pwaAltAmmo1 = pwCurrent1.GetAlt();
+  CWeaponAmmo *pwaAltAmmo2 = pwCurrent2.GetAlt();
 
   // 0 or 1
   INDEX iShowAltAmmo = (pwaAmmo1 != pwaAltAmmo1);

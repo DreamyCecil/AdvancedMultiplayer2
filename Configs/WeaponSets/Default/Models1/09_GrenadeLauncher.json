@@ -20,7 +20,7 @@
   
   "Attachment 0" : {
     "Model"   : "Models\Weapons\GrenadeLauncher\GrenadeBack.mdl",
-    "Texture" : "Models\Weapons\GrenadeLauncher\MovingPart.tex",
+    "Texture" : "Models\Weapons\GrenadeLauncher\MovingPipe.tex",
     
     "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
     "Specular"   : "Models\SpecularTextures\Medium.tex",

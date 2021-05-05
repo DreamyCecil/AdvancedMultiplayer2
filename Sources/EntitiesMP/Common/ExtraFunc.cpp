@@ -263,11 +263,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
     // load model
     if (strName == "Model") {
       ASSERT_VALUE_TYPE(cv, STRING);
-
-      CTString strModel = CTString(cv.cv_strValue);
-      if (pmo->GetData() == NULL || pmo->GetData()->ser_FileName != strModel) {
-        pmo->SetData_t(strModel);
-      }
+      pmo->SetData_t(CTString(cv.cv_strValue));
 
     // load textures
     } else if (strName == "Texture") {
@@ -300,16 +296,13 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
       
       // load model config
       CConfigBlock cbInclude;
-      BOOL bFailed = !LoadJSON(CTString(cv.cv_strValue), cbInclude);
+
+      if (LoadJSON(CTString(cv.cv_strValue), cbInclude) != DJSON_OK) {
+        ThrowF_t("Couldn't parse the included model \"%s\"", cv.cv_strValue);
+      }
 
       // set model
-      if (!bFailed) {
-        bFailed = !SetModelFromJSON(pmo, cbInclude);
-      }
-
-      if (bFailed) {
-        ThrowF_t("Couldn't parse the included model! (%s)", cv.cv_strValue);
-      }
+      ParseModelConfig(cbInclude, pmo, NULL);
 
     // attachment position
     } else if (strName == "Pos" || strName == "PosAdd") {
@@ -384,28 +377,11 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
 };
 
 // [Cecil] Load JSON config
-BOOL LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel) {
+DJSON_ERROR LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel) {
   HookConfigFunctions();
 
   // load the config
   return ParseConfig(fnJSON.str_String, mapModel);
-};
-
-// [Cecil] Set model from a JSON config
-BOOL SetModelFromJSON(CModelObject *pmo, DJSON_Block &mapModel) {
-  HookConfigFunctions();
-
-  // parse the model
-  try {
-    ParseModelConfig(mapModel, pmo, NULL);
-    return TRUE;
-
-  } catch (char *strError) {
-    CPrintF("[^cff0000JSON Error^r]: %s\n", strError);
-    return FALSE;
-  }
-
-  return FALSE;
 };
 
 // [Cecil] Precache some resource

@@ -3,23 +3,32 @@
 #include "WeaponModel.h"
 
 // Constructor
-SWeaponModel::SWeaponModel(void) : strConfig(""), bModelSet(FALSE), pmoModel(NULL) {};
+CWeaponModel::CWeaponModel(void) : strConfig(""), bModelSet(FALSE) {};
 
-// Destructor
-SWeaponModel::~SWeaponModel(void) {
-  DeleteModel();
+// Copy constructor
+CWeaponModel::CWeaponModel(CWeaponModel &wmOther) {
+  operator=(wmOther);
 };
 
-// Delete the model
-void SWeaponModel::DeleteModel(void) {
-  if (pmoModel != NULL) {
-    delete pmoModel;
-    pmoModel = NULL;
+// Destructor
+CWeaponModel::~CWeaponModel(void) {
+
+};
+
+// Assignment
+CWeaponModel &CWeaponModel::operator=(CWeaponModel &wmOther) {
+  if (&wmOther == this) {
+    return *this;
   }
+
+  strConfig = wmOther.strConfig;
+  SetWeaponModel(strConfig);
+
+  return *this;
 };
 
 // Set model from a config
-INDEX SWeaponModel::SetModel(const CTString &strConfigFile) {
+INDEX CWeaponModel::SetWeaponModel(const CTString &strConfigFile) {
   // remember config file
   strConfig = strConfigFile;
   bModelSet = FALSE;
@@ -27,35 +36,32 @@ INDEX SWeaponModel::SetModel(const CTString &strConfigFile) {
   CConfigBlock cbModel;
 
   // load config
-  if (!LoadJSON(strConfigFile, cbModel)) {
+  if (LoadJSON(strConfigFile, cbModel) != DJSON_OK) {
     return WM_NOCONFIG;
   }
 
-  // create a new model
-  if (pmoModel == NULL) {
-    pmoModel = new CModelObject;
-  }
-
   // set model
-  bModelSet = SetModelFromJSON(pmoModel, cbModel);
+  try {
+    ParseModelConfig(cbModel, &moModel, NULL);
 
-  // reset the model
-  if (!bModelSet) {
-    DeleteModel();
+  } catch (char *strError) {
+    FatalError(strError);
+    return WM_MODELERROR;
   }
 
-  return bModelSet;
+  bModelSet = TRUE;
+  return WM_MODELSET;
 };
 
 // Write weapon model
-void SWeaponModel::Write(CTStream *strm) {
+void CWeaponModel::Write(CTStream *strm) {
   *strm << strConfig;
 };
   
 // Read weapon model
-void SWeaponModel::Read(CTStream *strm) {
+void CWeaponModel::Read(CTStream *strm) {
   *strm >> strConfig;
 
   // reset the model
-  SetModel(strConfig);
+  SetWeaponModel(strConfig);
 };

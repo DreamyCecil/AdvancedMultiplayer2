@@ -15,7 +15,7 @@
   
   "Attachment 1" : {
     "Model"   : "Models\Weapons\Tommygun\Slider.mdl",
-    "Texture" : "Models\Weapons\Tommygun\Slider.tex",
+    "Texture" : "Models\Weapons\Tommygun\Body.tex",
     
     "Specular"   : "Models\SpecularTextures\Medium.tex",
   },

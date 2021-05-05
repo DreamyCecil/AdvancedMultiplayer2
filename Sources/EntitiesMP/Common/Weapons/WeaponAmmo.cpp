@@ -3,24 +3,24 @@
 #include "WeaponAmmo.h"
 
 // Ammo structures and icons
-extern CDList<SWeaponAmmo> _awaWeaponAmmo = CDList<SWeaponAmmo>();
+extern CDList<CWeaponAmmo *> _apWeaponAmmo = CDList<CWeaponAmmo *>();
 extern CWeaponIcons _aAmmoIcons = CWeaponIcons();
 
 // Write and read
-void SWeaponAmmo::Write(CTStream *strm) {
+void CWeaponAmmo::Write(CTStream *strm) {
   *strm << strIcon;
   *strm << iMaxAmount;
   *strm << bDisplay;
 };
 
-void SWeaponAmmo::Read(CTStream *strm) {
+void CWeaponAmmo::Read(CTStream *strm) {
   *strm >> strIcon;
   *strm >> iMaxAmount;
   *strm >> bDisplay;
 };
 
 // Set max ammo
-void SWeaponAmmo::SetAmmo(INDEX iSet) {
+void CWeaponAmmo::SetAmmo(INDEX iSet) {
   // ammo multiplier
   FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f) * AmmoMul();
   INDEX iTopAmmo = floor(1000.0f * AmmoMul());

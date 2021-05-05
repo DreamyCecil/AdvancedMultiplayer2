@@ -4,7 +4,7 @@
 
 // Player's ammo
 struct SPlayerAmmo {
-  SWeaponAmmo *pwaAmmoStruct; // ammo reference
+  CWeaponAmmo *pwaAmmoStruct; // ammo reference
   INDEX iAmount; // current amount
   
   // Local variables for the HUD
@@ -14,7 +14,7 @@ struct SPlayerAmmo {
 
   // Constructors
   SPlayerAmmo(void);
-  SPlayerAmmo(SWeaponAmmo *pSetAmmo);
+  SPlayerAmmo(CWeaponAmmo *pSetAmmo);
 
   // Assignment
   SPlayerAmmo &operator=(const SPlayerAmmo &paOther);

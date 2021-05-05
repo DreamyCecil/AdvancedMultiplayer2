@@ -5,25 +5,29 @@
 #define WM_MODELSET   1
 
 // Custom weapon model
-struct SWeaponModel {
-  CTString strConfig; // path to the model config
-  BOOL bModelSet; // if model has been set
+class CWeaponModel {
+  public:
+    CTString strConfig; // path to the model config
+    BOOL bModelSet; // if model has been set
 
-  CModelObject *pmoModel;
+    CModelObject moModel;
 
-  // Constructor
-  SWeaponModel(void);
+    // Constructor
+    CWeaponModel(void);
 
-  // Destructor
-  ~SWeaponModel(void);
+    // Copy constructor
+    CWeaponModel(CWeaponModel &wmOther);
 
-  // Delete the model
-  void DeleteModel(void);
+    // Destructor
+    ~CWeaponModel(void);
 
-  // Set model from a config
-  INDEX SetModel(const CTString &strConfigFile);
+    // Assignment
+    CWeaponModel &operator=(CWeaponModel &wmOther);
 
-  // Write and read weapon model
-  void Write(CTStream *strm);
-  void Read(CTStream *strm);
+    // Set model from a config
+    INDEX SetWeaponModel(const CTString &strConfigFile);
+
+    // Write and read weapon model
+    void Write(CTStream *strm);
+    void Read(CTStream *strm);
 };

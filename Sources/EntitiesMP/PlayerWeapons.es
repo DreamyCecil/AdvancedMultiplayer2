@@ -79,9 +79,9 @@ void ResetWeaponPosition(void) {
 #define CURRENT_WEAPON GET_WEAPON(m_iCurrentWeapon)
 
 // [Cecil] Enough ammo
-#define ENOUGH_AMMO EnoughAmmo(SWeaponStruct::DWA_AMMO)
-#define ENOUGH_ALT  EnoughAmmo(SWeaponStruct::DWA_ALT)
-#define ENOUGH_MAG  EnoughAmmo(SWeaponStruct::DWA_MAG)
+#define ENOUGH_AMMO EnoughAmmo(CWeaponStruct::DWA_AMMO)
+#define ENOUGH_ALT  EnoughAmmo(CWeaponStruct::DWA_ALT)
+#define ENOUGH_MAG  EnoughAmmo(CWeaponStruct::DWA_MAG)
 
 // [Cecil] Position shift for dual weapons
 extern FLOAT _fDualWeaponShift;
@@ -545,6 +545,10 @@ properties:
 
   // [Cecil] Weapon mirroring
   INDEX m_bLastWeaponMirrored;
+
+  // [Cecil] Weapon models has been set
+  BOOL m_bModelSet1;
+  BOOL m_bModelSet2;
 }
 
 components:
@@ -735,6 +739,21 @@ functions:
   void CPlayerWeapons(void) {
     // weapon mirroring
     m_bLastWeaponMirrored = FALSE;
+
+    // models has been set
+    m_bModelSet1 = FALSE;
+    m_bModelSet2 = FALSE;
+  };
+
+  // [Cecil] Copy constructor
+  export void Copy(CEntity &enOther, ULONG ulFlags) {
+    CRationalEntity::Copy(enOther, ulFlags);
+    CPlayerWeapons *penOther = (CPlayerWeapons *)(&enOther);
+
+    m_bLastWeaponMirrored = penOther->m_bLastWeaponMirrored;
+
+    m_bModelSet1 = penOther->m_bModelSet1;
+    m_bModelSet2 = penOther->m_bModelSet2;
   };
 
   // [Cecil] Destroy ghostbuster ray
@@ -870,7 +889,7 @@ functions:
     SPlayerWeapon &pw = PredTail()->CURRENT_WEAPON;
 
     // mag amount
-    if (iType == SWeaponStruct::DWA_MAG) {
+    if (iType == CWeaponStruct::DWA_MAG) {
       iAmmo = pw.aiMag[m_bExtraWeapon];
 
     } else {
@@ -878,7 +897,7 @@ functions:
       SPlayerAmmo *ppaAmmo = pw.ppaAmmo;
       
       // alt ammo amount
-      if (iType == SWeaponStruct::DWA_ALT) {
+      if (iType == CWeaponStruct::DWA_ALT) {
         ppaAmmo = pw.ppaAlt;
       }
 
@@ -922,7 +941,7 @@ functions:
   // [Cecil] Decrease magazine
   void DecMag(BOOL bAmmo) {
     SPlayerWeapon &pw = CURRENT_WEAPON;
-    INDEX iDec = pw.GetDecAmmo(SWeaponStruct::DWA_MAG);
+    INDEX iDec = pw.GetDecAmmo(CWeaponStruct::DWA_MAG);
 
     // decrease overall ammo
     if (bAmmo) {
@@ -1255,6 +1274,7 @@ functions:
 
     // added: chainsaw shaking
     CPlacement3D plWeapon;
+
     if (m_iCurrentWeapon == WEAPON_CHAINSAW) {
       CPlayer *plPlayer = (CPlayer*)&*m_penPlayer;
 
@@ -1268,21 +1288,25 @@ functions:
     }
 
     // make sure that weapon will be bright enough
-    UBYTE ubLR,ubLG,ubLB, ubAR,ubAG,ubAB;
-    ColorToRGB( colViewerLight,   ubLR,ubLG,ubLB);
-    ColorToRGB( colViewerAmbient, ubAR,ubAG,ubAB);
-    INDEX iMinDL = Min( Min(ubLR,ubLG),ubLB) -32;
-    INDEX iMinDA = Min( Min(ubAR,ubAG),ubAB) -32;
-    if( iMinDL<0) {
-      ubLR = ClampUp( ubLR-iMinDL, (INDEX)255);
-      ubLG = ClampUp( ubLG-iMinDL, (INDEX)255);
-      ubLB = ClampUp( ubLB-iMinDL, (INDEX)255);
+    UBYTE ubLR, ubLG, ubLB, ubAR, ubAG, ubAB;
+    ColorToRGB(colViewerLight, ubLR, ubLG, ubLB);
+    ColorToRGB(colViewerAmbient, ubAR, ubAG, ubAB);
+
+    INDEX iMinDL = Min(Min(ubLR, ubLG), ubLB) - 32;
+    INDEX iMinDA = Min(Min(ubAR, ubAG), ubAB) - 32;
+
+    if (iMinDL < 0) {
+      ubLR = ClampUp(ubLR - iMinDL, (INDEX)255);
+      ubLG = ClampUp(ubLG - iMinDL, (INDEX)255);
+      ubLB = ClampUp(ubLB - iMinDL, (INDEX)255);
     }
-    if( iMinDA<0) {
-      ubAR = ClampUp( ubAR-iMinDA, (INDEX)255);
-      ubAG = ClampUp( ubAG-iMinDA, (INDEX)255);
-      ubAB = ClampUp( ubAB-iMinDA, (INDEX)255);
+
+    if (iMinDA < 0) {
+      ubAR = ClampUp(ubAR - iMinDA, (INDEX)255);
+      ubAG = ClampUp(ubAG - iMinDA, (INDEX)255);
+      ubAB = ClampUp(ubAB - iMinDA, (INDEX)255);
     }
+
     const COLOR colLight   = RGBToColor( ubLR,ubLG,ubLB);
     const COLOR colAmbient = RGBToColor( ubAR,ubAG,ubAB);
     const FLOAT tmNow = _pTimer->GetLerpedCurrentTick();
@@ -1301,12 +1325,12 @@ functions:
         ubBlend = (INDEX)(INVISIBILITY_ALPHA_LOCAL + (FLOAT)(254 - INVISIBILITY_ALPHA_LOCAL) * fIntensity);      
       }      
     }
-      
-    // DRAW WEAPON MODEL
-    //  Double shotgun - hand with ammo
-    if (iWeapon == WEAPON_DOUBLESHOTGUN) {
+    
+    // [Cecil] Draw second weapon model
+    if (m_bModelSet2) {
       // prepare render model structure and projection
       CRenderModel rmMain;
+
       CPerspectiveProjection3D prMirror = prProjection;
       prMirror.ViewerPlacementL() = plView;
       prMirror.FrontClipDistanceL() = 0.1f; // [Cecil] 0.1 for every weapon
@@ -1350,53 +1374,57 @@ functions:
 
       EndModelRenderingView();
     }
-
-    // minigun specific (update rotation)
-    if (iWeapon == WEAPON_MINIGUN) {
-      RotateMinigun();
-    }
-
-    // prepare render model structure
-    CRenderModel rmMain;
-    prProjection.ViewerPlacementL() = plView;
-    prProjection.FrontClipDistanceL() = 0.1f; // [Cecil] 0.1 for every weapon
-    prProjection.DepthBufferNearL() = 0.0f;
-    prProjection.DepthBufferFarL() = 0.1f;
-    ((CPerspectiveProjection3D &)prProjection).FOVL() = AngleDeg(wps.fFOV);
-
-    CAnyProjection3D apr;
-    apr = prProjection;
-    Stereo_AdjustProjection(*apr, iEye, 0.1f);
-    BeginModelRenderingView(apr, pdp);
-
-    // [Cecil] Added angle
-    WeaponMovingOffset(plWeapon.pl_PositionVector, plWeapon.pl_OrientationAngle);
-    plWeapon.RelativeToAbsoluteSmooth(plView);
-    rmMain.SetObjectPlacement(plWeapon);
-
-    rmMain.rm_colLight   = colLight;  
-    rmMain.rm_colAmbient = colAmbient;
-    rmMain.rm_vLightDirection = vViewerLightDirection;
-    rmMain.rm_ulFlags |= RMF_WEAPON; // TEMP: for Truform
-
-    if (bInvisible) {
-      rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xffffff00) | ubBlend;
-    }      
     
-    m_moWeapon.SetupModelRendering(rmMain);
-    m_moWeapon.RenderModel(rmMain);
+    // [Cecil] Draw main weapon model
+    if (m_bModelSet1) {
+      // minigun specific (update rotation)
+      if (iWeapon == WEAPON_MINIGUN) {
+        RotateMinigun();
+      }
+
+      // prepare render model structure
+      CRenderModel rmMain;
+
+      prProjection.ViewerPlacementL() = plView;
+      prProjection.FrontClipDistanceL() = 0.1f; // [Cecil] 0.1 for every weapon
+      prProjection.DepthBufferNearL() = 0.0f;
+      prProjection.DepthBufferFarL() = 0.1f;
+      ((CPerspectiveProjection3D &)prProjection).FOVL() = AngleDeg(wps.fFOV);
+
+      CAnyProjection3D apr;
+      apr = prProjection;
+      Stereo_AdjustProjection(*apr, iEye, 0.1f);
+      BeginModelRenderingView(apr, pdp);
+
+      // [Cecil] Added angle
+      WeaponMovingOffset(plWeapon.pl_PositionVector, plWeapon.pl_OrientationAngle);
+      plWeapon.RelativeToAbsoluteSmooth(plView);
+      rmMain.SetObjectPlacement(plWeapon);
+
+      rmMain.rm_colLight   = colLight;  
+      rmMain.rm_colAmbient = colAmbient;
+      rmMain.rm_vLightDirection = vViewerLightDirection;
+      rmMain.rm_ulFlags |= RMF_WEAPON; // TEMP: for Truform
+
+      if (bInvisible) {
+        rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xffffff00) | ubBlend;
+      }      
     
-    // [Cecil] Power Up particles
-    if (amp_bPowerUpParticles) {
-      Particle_PrepareSystem(pdp, apr);
-      Particle_PrepareEntity(1, 0, 0, NULL);
+      m_moWeapon.SetupModelRendering(rmMain);
+      m_moWeapon.RenderModel(rmMain);
+    
+      // [Cecil] Power Up particles
+      if (amp_bPowerUpParticles) {
+        Particle_PrepareSystem(pdp, apr);
+        Particle_PrepareEntity(1, 0, 0, NULL);
 
-      GetInventory()->PowerupParticles(NULL, &m_moWeapon, plWeapon, FLOAT2D(0.025f, 0.01f));
+        GetInventory()->PowerupParticles(NULL, &m_moWeapon, plWeapon, FLOAT2D(0.025f, 0.01f));
 
-      Particle_EndSystem();
+        Particle_EndSystem();
+      }
+
+      EndModelRenderingView();
     }
-
-    EndModelRenderingView();
 
     // restore FOV for Crosshair
     ((CPerspectiveProjection3D &)prProjection).FOVL() = fFOV;
@@ -1907,11 +1935,37 @@ functions:
 
   // Set weapon model for current weapon.
   void SetCurrentWeaponModel(void) {
+    // [Cecil] Reset weapon models
+    m_moWeapon.SetData(NULL);
+    m_moWeaponSecond.SetData(NULL);
+    m_bModelSet1 = FALSE;
+    m_bModelSet2 = FALSE;
+
+    if (m_iCurrentWeapon == WEAPON_NONE) {
+      return;
+    }
+
     // [Cecil] Reset mirroring
     m_moWeapon.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
     m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
 
-    switch (m_iCurrentWeapon) {
+    // [Cecil] Weapon models
+    CWeaponModel &wm1 = GET_WEAPON(m_iCurrentWeapon).pwsWeapon->wmModel1;
+    CWeaponModel &wm2 = GET_WEAPON(m_iCurrentWeapon).pwsWeapon->wmModel2;
+
+    // [Cecil] Set main model
+    if (wm1.bModelSet) {
+      m_moWeapon.Copy(wm1.moModel);
+      m_bModelSet1 = TRUE;
+    }
+
+    // [Cecil] Set second model
+    if (wm2.bModelSet) {
+      m_moWeaponSecond.Copy(wm2.moModel);
+      m_bModelSet2 = TRUE;
+    }
+
+    /*switch (m_iCurrentWeapon) {
       case WEAPON_NONE: break;
 
       case WEAPON_KNIFE: {
@@ -2040,7 +2094,7 @@ functions:
         SetComponents(this, m_moWeapon, MODEL_CANNON, TEXTURE_CANNON, 0, 0, 0);
         AddAttachmentToModel(this, m_moWeapon, CANNON_ATTACHMENT_BODY, MODEL_CN_BODY, TEXTURE_CANNON, TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
       } break;
-    }
+    }*/
 
     // [Cecil] Mirror the weapon
     ApplyMirroring(MirrorState());
@@ -2056,8 +2110,11 @@ functions:
     ANGLE aAngle = Lerp(m_aMiniGunLast, m_aMiniGun, _pTimer->GetLerpFactor());
 
     // rotate minigun barrels
-    CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
-    amo->amo_plRelative.pl_OrientationAngle(3) = aAngle * fMirror;
+    CAttachmentModelObject *pamo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
+
+    if (pamo != NULL) {
+      pamo->amo_plRelative.pl_OrientationAngle(3) = aAngle * fMirror;
+    }
   };
 
   // [Cecil] Calculate weapon position of some type

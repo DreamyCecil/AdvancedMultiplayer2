@@ -6,7 +6,7 @@
 SPlayerAmmo::SPlayerAmmo(void) :
   pwaAmmoStruct(NULL), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
 
-SPlayerAmmo::SPlayerAmmo(SWeaponAmmo *pSetAmmo) :
+SPlayerAmmo::SPlayerAmmo(CWeaponAmmo *pSetAmmo) :
   pwaAmmoStruct(pSetAmmo), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
 
 // Assignment

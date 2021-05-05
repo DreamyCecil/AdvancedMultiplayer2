@@ -5,7 +5,7 @@
 
 // Player's weapon
 struct SPlayerWeapon {
-  SWeaponStruct *pwsWeapon; // weapon reference
+  CWeaponStruct *pwsWeapon; // weapon reference
   SPlayerAmmo *ppaAmmo; // current ammo for this weapon
   SPlayerAmmo *ppaAlt; // current alt ammo for this weapon
 
@@ -14,7 +14,7 @@ struct SPlayerWeapon {
 
   // Constructors
   SPlayerWeapon(void);
-  SPlayerWeapon(SWeaponStruct *pSetWeapon, SPlayerAmmo *pSetAmmo, SPlayerAmmo *pSetAlt);
+  SPlayerWeapon(CWeaponStruct *pSetWeapon, SPlayerAmmo *pSetAmmo, SPlayerAmmo *pSetAlt);
 
   // Assignment
   SPlayerWeapon &operator=(const SPlayerWeapon &pwOther);
@@ -24,11 +24,11 @@ struct SPlayerWeapon {
   void Read(CTStream *strm);
 
   // Get ammo structures
-  inline SWeaponAmmo *GetAmmo(void) {
+  inline CWeaponAmmo *GetAmmo(void) {
     return pwsWeapon->pwaAmmo;
   };
 
-  inline SWeaponAmmo *GetAlt(void) {
+  inline CWeaponAmmo *GetAlt(void) {
     return pwsWeapon->pwaAlt;
   };
 

@@ -101,20 +101,20 @@ functions:
   // Constructor
   void CPlayerInventory(void) {
     // copy ammo
-    INDEX ctAmmo = _awaWeaponAmmo.Count();
+    INDEX ctAmmo = _apWeaponAmmo.Count();
     m_aAmmo.New(ctAmmo);
 
     for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
-      m_aAmmo[iAmmo].pwaAmmoStruct = &_awaWeaponAmmo[iAmmo];
+      m_aAmmo[iAmmo].pwaAmmoStruct = _apWeaponAmmo[iAmmo];
     }
 
     // copy weapons
-    INDEX ctWeapons = _awsPlayerWeapons.Count();
+    INDEX ctWeapons = _apPlayerWeapons.Count();
     m_aWeapons.New(ctWeapons);
 
     for (INDEX iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
-      pw.pwsWeapon = &_awsPlayerWeapons[iWeapon];
+      pw.pwsWeapon = _apPlayerWeapons[iWeapon];
 
       // set ammo
       ULONG *pulID = pw.GetAmmoID();
@@ -203,7 +203,7 @@ functions:
     // set new ammo pointers for weapons
     for (INDEX iWeapon = 0; iWeapon < m_aWeapons.Count(); iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
-      pw.pwsWeapon = &_awsPlayerWeapons[iWeapon];
+      pw.pwsWeapon = _apPlayerWeapons[iWeapon];
 
       // set ammo
       ULONG *pulID = pw.GetAmmoID();
@@ -264,7 +264,7 @@ functions:
         continue;
       }
 
-      SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
+      CWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
 
       // invalid bit
       if (pws->GetBit() < 0 || pws->GetBit() > 31) { 
@@ -279,7 +279,7 @@ functions:
 
   // Get weapon's bit (PlayerMarker compatibility)
   ULONG GetWeaponMask(const INDEX &iWeapon) {
-    SWeaponStruct *pws = m_aWeapons[iWeapon].pwsWeapon;
+    CWeaponStruct *pws = m_aWeapons[iWeapon].pwsWeapon;
     ULONG ulMask = 0;
 
     // go through weapon bits
@@ -300,7 +300,7 @@ functions:
   // Add weapons using a weapon mask (PlayerMarker compatibility)
   void GiveWeaponMask(const INDEX &iGiveWeapons) {
     for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
-      SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
+      CWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
 
       // go through weapon bits
       for (INDEX iWeaponBit = 0; iWeaponBit < pws->aiBits.Count(); iWeaponBit++) {
@@ -322,7 +322,7 @@ functions:
   // Remove weapons using a weapon mask (PlayerMarker compatibility)
   void TakeWeaponMask(const INDEX &iTakeWeapons) {
     for (INDEX i = 0; i < m_aWeapons.Count(); i++) {
-      SWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
+      CWeaponStruct *pws = m_aWeapons[i].pwsWeapon;
 
       // invalid bit
       if (pws->GetBit() < 0 || pws->GetBit() > 31) { 
@@ -542,7 +542,7 @@ functions:
     
     // get weapon
     SPlayerWeapon &pw = m_aWeapons[iWeapon];
-    SWeaponStruct &ws = *pw.pwsWeapon;
+    CWeaponStruct &ws = *pw.pwsWeapon;
 
     // define ammo amounts
     FLOAT fPickupAmmo = Max(FLOAT(ws.iPickup), pw.MaxAmmo() * fMaxAmmoRatio);
@@ -1005,7 +1005,7 @@ functions:
 
   // Get main weapon damage
   FLOAT GetDamage(const INDEX &iWeapon) {
-    SWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
+    CWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
     BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageDM <= 0.0f);
     
     return (bCoop ? ws.fDamage : ws.fDamageDM);
@@ -1013,7 +1013,7 @@ functions:
   
   // Get alt weapon damage
   FLOAT GetDamageAlt(const INDEX &iWeapon) {
-    SWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
+    CWeaponStruct &ws = *m_aWeapons[iWeapon].pwsWeapon;
     BOOL bCoop = (GetSP()->sp_bCooperative || ws.fDamageAltDM <= 0.0f);
     
     return (bCoop ? ws.fDamageAlt : ws.fDamageAltDM);

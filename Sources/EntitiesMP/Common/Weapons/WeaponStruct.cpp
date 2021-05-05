@@ -3,12 +3,12 @@
 #include "WeaponStruct.h"
 
 // Weapon structures and icons
-extern CDList<SWeaponStruct> _awsPlayerWeapons = CDList<SWeaponStruct>();
+extern CDList<CWeaponStruct *> _apPlayerWeapons = CDList<CWeaponStruct *>();
 extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 
 // Constructors
-SWeaponStruct::SWeaponStruct(void) :
-  SWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
+CWeaponStruct::CWeaponStruct(void) :
+  CWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(NULL), pwaAlt(NULL), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
@@ -17,8 +17,8 @@ SWeaponStruct::SWeaponStruct(void) :
   aiDecAmmo[DWA_MAG]  = 1;
 };
 
-SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
-  SWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
+CWeaponStruct::CWeaponStruct(CWeaponAmmo *pSetAmmo, CWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
+  CWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
 {
@@ -28,7 +28,7 @@ SWeaponStruct::SWeaponStruct(SWeaponAmmo *pSetAmmo, SWeaponAmmo *pSetAlt, CTStri
 };
 
 // Get main weapon bit
-INDEX SWeaponStruct::GetBit(void) {
+INDEX CWeaponStruct::GetBit(void) {
   if (aiBits.Count() <= 0) {
     return -1;
   }
@@ -37,7 +37,7 @@ INDEX SWeaponStruct::GetBit(void) {
 };
 
 // Check if the bit matches available ones
-BOOL SWeaponStruct::BitMatches(const INDEX &iBit) {
+BOOL CWeaponStruct::BitMatches(const INDEX &iBit) {
   if (aiBits.Count() <= 0) {
     return FALSE;
   }
@@ -53,7 +53,7 @@ BOOL SWeaponStruct::BitMatches(const INDEX &iBit) {
 };
 
 // Write weapon properties
-void SWeaponStruct::Write(CTStream *strm) {
+void CWeaponStruct::Write(CTStream *strm) {
   *strm << strIcon;
   *strm << wpsPos.plPos;
   *strm << wpsPos.plPos2;
@@ -63,13 +63,13 @@ void SWeaponStruct::Write(CTStream *strm) {
 
   // ammo position in the list
   if (pwaAmmo != NULL) {
-    *strm << _awaWeaponAmmo.FindIndex(*pwaAmmo);
+    *strm << _apWeaponAmmo.FindIndex(pwaAmmo);
   } else {
     *strm << INDEX(-1);
   }
 
   if (pwaAlt != NULL) {
-    *strm << _awaWeaponAmmo.FindIndex(*pwaAlt);
+    *strm << _apWeaponAmmo.FindIndex(pwaAlt);
   } else {
     *strm << INDEX(-1);
   }
@@ -95,7 +95,7 @@ void SWeaponStruct::Write(CTStream *strm) {
 };
 
 // Read weapon properties
-void SWeaponStruct::Read(CTStream *strm) {
+void CWeaponStruct::Read(CTStream *strm) {
   *strm >> strIcon;
   *strm >> wpsPos.plPos;
   *strm >> wpsPos.plPos2;
@@ -109,11 +109,11 @@ void SWeaponStruct::Read(CTStream *strm) {
 
   // set ammo
   if (iAmmo != -1) {
-    pwaAmmo = &_awaWeaponAmmo[iAmmo];
+    pwaAmmo = _apWeaponAmmo[iAmmo];
   }
 
   if (iAlt != -1) {
-    pwaAlt = &_awaWeaponAmmo[iAlt];
+    pwaAlt = _apWeaponAmmo[iAlt];
   }
 
   // read weapon bits
