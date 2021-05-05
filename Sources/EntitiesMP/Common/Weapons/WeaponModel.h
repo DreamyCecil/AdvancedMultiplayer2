@@ -27,7 +27,6 @@ class CWeaponModel {
   public:
     CTString strConfig; // path to the model config
     CConfigBlock cbModel; // loaded model config
-    BOOL bModelSet; // if model has been set
 
     // Constructor
     CWeaponModel(void);

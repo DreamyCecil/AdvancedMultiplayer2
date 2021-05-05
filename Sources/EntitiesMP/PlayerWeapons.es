@@ -1916,15 +1916,25 @@ functions:
     CWeaponModel &wm2 = GET_WEAPON(m_iCurrentWeapon).pwsWeapon->wmModel2;
 
     // set main model
-    if (wm1.bModelSet) {
-      ParseModelConfig(wm1.cbModel, &m_moWeapon, NULL, &m_aAttachments1);
-      m_bModelSet1 = TRUE;
+    if (wm1.cbModel.Count() > 0) {
+      try {
+        ParseModelConfig(wm1.cbModel, &m_moWeapon, NULL, &m_aAttachments1);
+        m_bModelSet1 = TRUE;
+
+      } catch (char *strError) {
+        FatalError(strError);
+      }
     }
 
     // set second model
-    if (wm2.bModelSet) {
-      ParseModelConfig(wm2.cbModel, &m_moWeaponSecond, NULL, &m_aAttachments2);
-      m_bModelSet2 = TRUE;
+    if (wm2.cbModel.Count() > 0) {
+      try {
+        ParseModelConfig(wm2.cbModel, &m_moWeaponSecond, NULL, &m_aAttachments2);
+        m_bModelSet2 = TRUE;
+
+      } catch (char *strError) {
+        FatalError(strError);
+      }
     }
 
     // mirror the weapon

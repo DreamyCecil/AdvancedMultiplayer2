@@ -1,7 +1,7 @@
 {
   "Attachment 0" : {
-    "Model"   : "Models/Effects/Weapons/Flare01/Flare.mdl",
-    "Texture" : "Models/Effects/Weapons/Flare01/Flare.tex",
+    "Model"   : "Models\Effects\Weapons\Flare01\Flare.mdl",
+    "Texture" : "Models\Effects\Weapons\Flare01\Flare.tex",
     
     "Flag" : "flare",
   }

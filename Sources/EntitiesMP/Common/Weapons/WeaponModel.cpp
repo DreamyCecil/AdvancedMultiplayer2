@@ -3,7 +3,7 @@
 #include "WeaponModel.h"
 
 // Constructor
-CWeaponModel::CWeaponModel(void) : strConfig(""), bModelSet(FALSE) {};
+CWeaponModel::CWeaponModel(void) : strConfig("") {};
 
 // Copy constructor
 CWeaponModel::CWeaponModel(CWeaponModel &wmOther) {
@@ -22,7 +22,7 @@ CWeaponModel &CWeaponModel::operator=(CWeaponModel &wmOther) {
   }
 
   strConfig = wmOther.strConfig;
-  cbModel = wmOther.cbModel;
+  cbModel.CopyMap(wmOther.cbModel);
 
   return *this;
 };
@@ -32,14 +32,13 @@ BOOL CWeaponModel::SetWeaponModel(const CTString &strConfigFile) {
   // remember config file
   strConfig = strConfigFile;
   cbModel.Clear();
-  bModelSet = FALSE;
 
   // load config
   if (LoadJSON(strConfigFile, cbModel) != DJSON_OK) {
+    cbModel.Clear();
     return FALSE;
   }
 
-  bModelSet = TRUE;
   return TRUE;
 };
 
