@@ -1,0 +1,7 @@
+{
+  "Model"   : "Models\Weapons\Knife\KnifeItem.mdl",
+  "Texture" : "Models\Weapons\Knife\KnifeItem.tex",
+  
+  "Reflection" : "Models\ReflectionTextures\BWRiples02.tex",
+  "Specular"   : "Models\SpecularTextures\Weak.tex",
+}

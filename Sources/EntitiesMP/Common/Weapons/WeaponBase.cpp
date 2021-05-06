@@ -267,7 +267,7 @@ static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
     // weapon set path
     strModelConfig = strSet + strModelConfig;
 
-    // [Cecil] TEMP: Skip if no config
+    // skip if no config
     if (!FileExists(strModelConfig)) {
       continue;
     }

@@ -234,110 +234,37 @@ void CPlayerWeapons_Precache(void) {
   CDLLEntityClass *pdec = &CPlayerWeapons_DLLClass;
 
   // precache general stuff always
-  pdec->PrecacheTexture(TEX_REFL_BWRIPLES01);
-  pdec->PrecacheTexture(TEX_REFL_BWRIPLES02);
-  pdec->PrecacheTexture(TEX_REFL_LIGHTMETAL01);
-  pdec->PrecacheTexture(TEX_REFL_LIGHTBLUEMETAL01);
-  pdec->PrecacheTexture(TEX_REFL_DARKMETAL);
-  pdec->PrecacheTexture(TEX_REFL_PURPLE01);
-  pdec->PrecacheTexture(TEX_SPEC_WEAK);
-  pdec->PrecacheTexture(TEX_SPEC_MEDIUM);
-  pdec->PrecacheTexture(TEX_SPEC_STRONG);
-  pdec->PrecacheTexture(TEXTURE_HAND);
-  pdec->PrecacheTexture(TEXTURE_FLARE01);
-  pdec->PrecacheModel(MODEL_FLARE01);
   pdec->PrecacheClass(CLASS_BULLET);
   pdec->PrecacheSound(SOUND_SILENCE);
 
-  // precache other weapons if available
-  pdec->PrecacheModel(MODEL_KNIFE);
-  pdec->PrecacheModel(MODEL_KNIFEITEM);
-  pdec->PrecacheTexture(TEXTURE_KNIFEITEM);
+  // [Cecil] TEMP: Precache default sounds
   pdec->PrecacheSound(SOUND_KNIFE_BACK);
   pdec->PrecacheSound(SOUND_KNIFE_HIGH);
   pdec->PrecacheSound(SOUND_KNIFE_LONG);
   pdec->PrecacheSound(SOUND_KNIFE_LOW);
 
-  pdec->PrecacheModel(MODEL_COLT);
-  pdec->PrecacheModel(MODEL_COLTCOCK);
-  pdec->PrecacheModel(MODEL_COLTMAIN);
-  pdec->PrecacheModel(MODEL_COLTBULLETS);
-  pdec->PrecacheTexture(TEXTURE_COLTMAIN);
-  pdec->PrecacheTexture(TEXTURE_COLTCOCK);
-  pdec->PrecacheTexture(TEXTURE_COLTBULLETS);
   pdec->PrecacheSound(SOUND_COLT_FIRE);
   pdec->PrecacheSound(SOUND_COLT_RELOAD);
 
-  pdec->PrecacheModel(MODEL_SINGLESHOTGUN);
-  pdec->PrecacheModel(MODEL_SS_SLIDER);
-  pdec->PrecacheModel(MODEL_SS_HANDLE);
-  pdec->PrecacheModel(MODEL_SS_BARRELS);
-  pdec->PrecacheTexture(TEXTURE_SS_HANDLE);
-  pdec->PrecacheTexture(TEXTURE_SS_BARRELS);
   pdec->PrecacheSound(SOUND_SINGLESHOTGUN_FIRE);
-
-  pdec->PrecacheModel(MODEL_DOUBLESHOTGUN);
-  pdec->PrecacheModel(MODEL_DS_HANDLE);
-  pdec->PrecacheModel(MODEL_DS_BARRELS);
-  pdec->PrecacheModel(MODEL_DS_AMMO);
-  pdec->PrecacheModel(MODEL_DS_SWITCH);
-  pdec->PrecacheModel(MODEL_DS_HANDWITHAMMO);
-  pdec->PrecacheTexture(TEXTURE_DS_HANDLE);
-  pdec->PrecacheTexture(TEXTURE_DS_BARRELS);
-  pdec->PrecacheTexture(TEXTURE_DS_AMMO);
-  pdec->PrecacheTexture(TEXTURE_DS_SWITCH);
   pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_FIRE);
   pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_RELOAD);
-
-  pdec->PrecacheModel(MODEL_TOMMYGUN);
-  pdec->PrecacheModel(MODEL_TG_BODY);
-  pdec->PrecacheModel(MODEL_TG_SLIDER);
-  pdec->PrecacheTexture(TEXTURE_TG_BODY);
   pdec->PrecacheSound(SOUND_TOMMYGUN_FIRE);
-
-  pdec->PrecacheModel(MODEL_SNIPER);
-  pdec->PrecacheModel(MODEL_SNIPER_BODY);
-  pdec->PrecacheTexture(TEXTURE_SNIPER_BODY);
   pdec->PrecacheSound(SOUND_SNIPER_FIRE);
 
-  pdec->PrecacheModel(MODEL_MINIGUN);
-  pdec->PrecacheModel(MODEL_MG_BARRELS);
-  pdec->PrecacheModel(MODEL_MG_BODY);
-  pdec->PrecacheModel(MODEL_MG_ENGINE);
-  pdec->PrecacheTexture(TEXTURE_MG_BODY);
-  pdec->PrecacheTexture(TEXTURE_MG_BARRELS);
   pdec->PrecacheSound(SOUND_MINIGUN_FIRE);
   pdec->PrecacheSound(SOUND_MINIGUN_ROTATE);
   pdec->PrecacheSound(SOUND_MINIGUN_SPINUP);
   pdec->PrecacheSound(SOUND_MINIGUN_SPINDOWN);
   pdec->PrecacheSound(SOUND_MINIGUN_CLICK);
 
-  pdec->PrecacheModel(MODEL_ROCKETLAUNCHER);
-  pdec->PrecacheModel(MODEL_RL_BODY);
-  pdec->PrecacheModel(MODEL_RL_ROTATINGPART);
-  pdec->PrecacheModel(MODEL_RL_ROCKET);
-  pdec->PrecacheTexture(TEXTURE_RL_BODY);
-  pdec->PrecacheTexture(TEXTURE_RL_ROCKET);
   pdec->PrecacheSound(SOUND_ROCKETLAUNCHER_FIRE);
   pdec->PrecacheClass(CLASS_PROJECTILE, PRT_ROCKET);
   pdec->PrecacheClass(CLASS_PROJECTILE, PRT_CHAINSAW_ROCKET);
 
-  pdec->PrecacheModel(MODEL_GRENADELAUNCHER);
-  pdec->PrecacheModel(MODEL_GL_BODY);
-  pdec->PrecacheModel(MODEL_GL_MOVINGPART);
-  pdec->PrecacheModel(MODEL_GL_GRENADE);
-  pdec->PrecacheTexture(TEXTURE_GL_BODY);
-  pdec->PrecacheTexture(TEXTURE_GL_MOVINGPART);
   pdec->PrecacheSound(SOUND_GRENADELAUNCHER_FIRE);
   pdec->PrecacheClass(CLASS_PROJECTILE, PRT_GRENADE);
 
-  pdec->PrecacheModel(MODEL_CHAINSAW);
-  pdec->PrecacheModel(MODEL_CS_BODY);
-  pdec->PrecacheModel(MODEL_CS_BLADE);
-  pdec->PrecacheModel(MODEL_CS_TEETH);
-  pdec->PrecacheTexture(TEXTURE_CS_BODY);
-  pdec->PrecacheTexture(TEXTURE_CS_BLADE);
-  pdec->PrecacheTexture(TEXTURE_CS_TEETH);
   pdec->PrecacheSound(SOUND_CS_FIRE);
   pdec->PrecacheSound(SOUND_CS_BEGINFIRE);
   pdec->PrecacheSound(SOUND_CS_ENDFIRE);
@@ -345,47 +272,36 @@ void CPlayerWeapons_Precache(void) {
   pdec->PrecacheSound(SOUND_CS_BRINGDOWN);
   pdec->PrecacheSound(SOUND_CS_IDLE);
 
-  pdec->PrecacheModel(MODEL_FLAMER);
-  pdec->PrecacheModel(MODEL_FL_BODY);
-  pdec->PrecacheModel(MODEL_FL_RESERVOIR);
-  pdec->PrecacheModel(MODEL_FL_FLAME);
-  pdec->PrecacheTexture(TEXTURE_FL_BODY);
-  pdec->PrecacheTexture(TEXTURE_FL_FLAME);
-  pdec->PrecacheTexture(TEXTURE_FL_FUELRESERVOIR);
   pdec->PrecacheSound(SOUND_FL_FIRE);
   pdec->PrecacheSound(SOUND_FL_START);
   pdec->PrecacheSound(SOUND_FL_STOP);
   pdec->PrecacheClass(CLASS_PROJECTILE, PRT_FLAME);
+
+  pdec->PrecacheSound(SOUND_LASER_FIRE);
+  pdec->PrecacheClass(CLASS_PROJECTILE, PRT_LASER_RAY);
+
+  pdec->PrecacheSound(SOUND_CANNON);
+  pdec->PrecacheSound(SOUND_CANNON_PREPARE);
+  pdec->PrecacheClass(CLASS_CANNONBALL);
 
   // [Cecil] Tesla gun
   pdec->PrecacheSound(SOUND_TESLA_FIRE);
   pdec->PrecacheSound(SOUND_TESLA_START1);
   pdec->PrecacheSound(SOUND_TESLA_START2);
   pdec->PrecacheSound(SOUND_TESLA_START3);
+
   // [Cecil] Death ray
   pdec->PrecacheSound(SOUND_DEATHRAY);
   pdec->PrecacheClass(CLASS_GHOSTBUSTERRAY);
+
   // [Cecil] Chainsaw Launcher
   pdec->PrecacheSound(SOUND_LAUNCHERMODE);
+
   // [Cecil] Accurate sniper
   pdec->PrecacheSound(SOUND_ACCURATE_SNIPER);
+
   // [Cecil] Tommygun burst
   pdec->PrecacheSound(SOUND_TOMMYGUN_BURST);
-
-  pdec->PrecacheModel(MODEL_LASER);
-  pdec->PrecacheModel(MODEL_LS_BODY);
-  pdec->PrecacheModel(MODEL_LS_BARREL);
-  pdec->PrecacheTexture(TEXTURE_LS_BODY);
-  pdec->PrecacheTexture(TEXTURE_LS_BARREL);
-  pdec->PrecacheSound(SOUND_LASER_FIRE);
-  pdec->PrecacheClass(CLASS_PROJECTILE, PRT_LASER_RAY);
-
-  pdec->PrecacheModel(MODEL_CANNON);
-  pdec->PrecacheModel(MODEL_CN_BODY);
-  pdec->PrecacheTexture(TEXTURE_CANNON);
-  pdec->PrecacheSound(SOUND_CANNON);
-  pdec->PrecacheSound(SOUND_CANNON_PREPARE);
-  pdec->PrecacheClass(CLASS_CANNONBALL);
 
   // precache animator too
   extern void CPlayerAnimator_Precache(void);
@@ -557,178 +473,68 @@ components:
   7 class   CLASS_WEAPONITEM        "Classes\\WeaponItem.ecl",
   8 class   CLASS_BASIC_EFFECT      "Classes\\BasicEffect.ecl",
 
-// [Cecil] Tesla gun lightning
+  // [Cecil] Tesla gun lightning
   9 class CLASS_TESLA "Classes\\TeslaLightning.ecl",
 
-// ************** HAND **************
- 10 texture TEXTURE_HAND                "Models\\Weapons\\Hand.tex",
-
-// ************** KNIFE **************
- 20 model   MODEL_KNIFEITEM             "Models\\Weapons\\Knife\\KnifeItem.mdl",
- 21 texture TEXTURE_KNIFEITEM           "Models\\Weapons\\Knife\\KnifeItem.tex",
- 22 model   MODEL_KNIFE                 "Models\\Weapons\\Knife\\Knife.mdl",
- 23 sound   SOUND_KNIFE_BACK            "Models\\Weapons\\Knife\\Sounds\\Back.wav",
- 24 sound   SOUND_KNIFE_HIGH            "Models\\Weapons\\Knife\\Sounds\\High.wav",
- 25 sound   SOUND_KNIFE_LONG            "Models\\Weapons\\Knife\\Sounds\\Long.wav",
- 26 sound   SOUND_KNIFE_LOW             "Models\\Weapons\\Knife\\Sounds\\Low.wav",
+  // [Cecil] TEMP: Default sounds
+ 50 sound SOUND_KNIFE_BACK "Models\\Weapons\\Knife\\Sounds\\Back.wav",
+ 51 sound SOUND_KNIFE_HIGH "Models\\Weapons\\Knife\\Sounds\\High.wav",
+ 52 sound SOUND_KNIFE_LONG "Models\\Weapons\\Knife\\Sounds\\Long.wav",
+ 53 sound SOUND_KNIFE_LOW  "Models\\Weapons\\Knife\\Sounds\\Low.wav",
  
-// ************** COLT **************
- 30 model   MODEL_COLT                  "Models\\Weapons\\Colt\\Colt.mdl",
- 31 model   MODEL_COLTCOCK              "Models\\Weapons\\Colt\\ColtCock.mdl",
- 32 model   MODEL_COLTMAIN              "Models\\Weapons\\Colt\\ColtMain.mdl",
- 33 model   MODEL_COLTBULLETS           "Models\\Weapons\\Colt\\ColtBullets.mdl",
- 34 texture TEXTURE_COLTMAIN            "Models\\Weapons\\Colt\\ColtMain.tex",
- 35 texture TEXTURE_COLTCOCK            "Models\\Weapons\\Colt\\ColtCock.tex",
- 36 texture TEXTURE_COLTBULLETS         "Models\\Weapons\\Colt\\ColtBullets.tex",
- 37 sound   SOUND_COLT_FIRE             "Models\\Weapons\\Colt\\Sounds\\Fire.wav",
- 38 sound   SOUND_COLT_RELOAD           "Models\\Weapons\\Colt\\Sounds\\Reload.wav",
+ 54 sound SOUND_COLT_FIRE   "Models\\Weapons\\Colt\\Sounds\\Fire.wav",
+ 55 sound SOUND_COLT_RELOAD "Models\\Weapons\\Colt\\Sounds\\Reload.wav",
 
-// ************** SINGLE SHOTGUN ************
- 40 model   MODEL_SINGLESHOTGUN         "Models\\Weapons\\SingleShotgun\\SingleShotgun.mdl",
- 41 model   MODEL_SS_SLIDER             "Models\\Weapons\\SingleShotgun\\Slider.mdl",
- 42 model   MODEL_SS_HANDLE             "Models\\Weapons\\SingleShotgun\\Handle.mdl",
- 43 model   MODEL_SS_BARRELS            "Models\\Weapons\\SingleShotgun\\Barrels.mdl",
- 44 texture TEXTURE_SS_HANDLE           "Models\\Weapons\\SingleShotgun\\Handle.tex",
- 45 texture TEXTURE_SS_BARRELS          "Models\\Weapons\\SingleShotgun\\Barrels.tex",
- 46 sound   SOUND_SINGLESHOTGUN_FIRE    "Models\\Weapons\\SingleShotgun\\Sounds\\_Fire.wav",
+ 60 sound SOUND_SINGLESHOTGUN_FIRE "Models\\Weapons\\SingleShotgun\\Sounds\\_Fire.wav",
+ 61 sound SOUND_DOUBLESHOTGUN_FIRE    "Models\\Weapons\\DoubleShotgun\\Sounds\\Fire.wav",
+ 62 sound SOUND_DOUBLESHOTGUN_RELOAD  "Models\\Weapons\\DoubleShotgun\\Sounds\\Reload.wav",
+ 63 sound SOUND_TOMMYGUN_FIRE "Models\\Weapons\\TommyGun\\Sounds\\_Fire.wav",
 
-// ************** DOUBLE SHOTGUN **************
- 50 model   MODEL_DOUBLESHOTGUN         "Models\\Weapons\\DoubleShotgun\\DoubleShotgun.mdl",
- 51 model   MODEL_DS_HANDLE             "Models\\Weapons\\DoubleShotgun\\Dshotgunhandle.mdl",
- 52 model   MODEL_DS_BARRELS            "Models\\Weapons\\DoubleShotgun\\Dshotgunbarrels.mdl",
- 53 model   MODEL_DS_AMMO               "Models\\Weapons\\DoubleShotgun\\Ammo.mdl",
- 54 model   MODEL_DS_SWITCH             "Models\\Weapons\\DoubleShotgun\\Switch.mdl",
- 55 model   MODEL_DS_HANDWITHAMMO       "Models\\Weapons\\DoubleShotgun\\HandWithAmmo.mdl",
- 56 texture TEXTURE_DS_HANDLE           "Models\\Weapons\\DoubleShotgun\\Handle.tex",
- 57 texture TEXTURE_DS_BARRELS          "Models\\Weapons\\DoubleShotgun\\Barrels.tex",
- 58 texture TEXTURE_DS_AMMO             "Models\\Weapons\\DoubleShotgun\\Ammo.tex",
- 59 texture TEXTURE_DS_SWITCH           "Models\\Weapons\\DoubleShotgun\\Switch.tex",
- 60 sound   SOUND_DOUBLESHOTGUN_FIRE    "Models\\Weapons\\DoubleShotgun\\Sounds\\Fire.wav",
- 61 sound   SOUND_DOUBLESHOTGUN_RELOAD  "Models\\Weapons\\DoubleShotgun\\Sounds\\Reload.wav",
+ 70 sound SOUND_MINIGUN_FIRE     "Models\\Weapons\\MiniGun\\Sounds\\Fire.wav",
+ 71 sound SOUND_MINIGUN_ROTATE   "Models\\Weapons\\MiniGun\\Sounds\\Rotate.wav",
+ 72 sound SOUND_MINIGUN_SPINUP   "Models\\Weapons\\MiniGun\\Sounds\\RotateUp.wav",
+ 73 sound SOUND_MINIGUN_SPINDOWN "Models\\Weapons\\MiniGun\\Sounds\\RotateDown.wav",
+ 74 sound SOUND_MINIGUN_CLICK    "Models\\Weapons\\MiniGun\\Sounds\\Click.wav",
 
-// ************** TOMMYGUN **************
- 70 model   MODEL_TOMMYGUN              "Models\\Weapons\\TommyGun\\TommyGun.mdl",
- 71 model   MODEL_TG_BODY               "Models\\Weapons\\TommyGun\\Body.mdl",
- 72 model   MODEL_TG_SLIDER             "Models\\Weapons\\TommyGun\\Slider.mdl",
- 73 texture TEXTURE_TG_BODY             "Models\\Weapons\\TommyGun\\Body.tex",
- 74 sound   SOUND_TOMMYGUN_FIRE         "Models\\Weapons\\TommyGun\\Sounds\\_Fire.wav",
+ 75 sound SOUND_ROCKETLAUNCHER_FIRE "Models\\Weapons\\RocketLauncher\\Sounds\\_Fire.wav",
+ 76 sound SOUND_GRENADELAUNCHER_FIRE "Models\\Weapons\\GrenadeLauncher\\Sounds\\_Fire.wav",
+ 77 sound SOUND_SNIPER_FIRE "ModelsMP\\Weapons\\Sniper\\Sounds\\Fire.wav",
 
-// ************** MINIGUN **************
- 80 model   MODEL_MINIGUN               "Models\\Weapons\\MiniGun\\MiniGun.mdl",
- 81 model   MODEL_MG_BARRELS            "Models\\Weapons\\MiniGun\\Barrels.mdl",
- 82 model   MODEL_MG_BODY               "Models\\Weapons\\MiniGun\\Body.mdl",
- 83 model   MODEL_MG_ENGINE             "Models\\Weapons\\MiniGun\\Engine.mdl",
- 84 texture TEXTURE_MG_BODY             "Models\\Weapons\\MiniGun\\Body.tex",
- 99 texture TEXTURE_MG_BARRELS          "Models\\Weapons\\MiniGun\\Barrels.tex",
- 85 sound   SOUND_MINIGUN_FIRE          "Models\\Weapons\\MiniGun\\Sounds\\Fire.wav",
- 86 sound   SOUND_MINIGUN_ROTATE        "Models\\Weapons\\MiniGun\\Sounds\\Rotate.wav",
- 87 sound   SOUND_MINIGUN_SPINUP        "Models\\Weapons\\MiniGun\\Sounds\\RotateUp.wav",
- 88 sound   SOUND_MINIGUN_SPINDOWN      "Models\\Weapons\\MiniGun\\Sounds\\RotateDown.wav",
- 89 sound   SOUND_MINIGUN_CLICK         "Models\\Weapons\\MiniGun\\Sounds\\Click.wav",
+ 80 sound SOUND_FL_FIRE  "ModelsMP\\Weapons\\Flamer\\Sounds\\Fire.wav",
+ 81 sound SOUND_FL_START "ModelsMP\\Weapons\\Flamer\\Sounds\\Start.wav",
+ 82 sound SOUND_FL_STOP  "ModelsMP\\Weapons\\Flamer\\Sounds\\Stop.wav",
+ 83 sound SOUND_LASER_FIRE "Models\\Weapons\\Laser\\Sounds\\_Fire.wav",
 
-// ************** ROCKET LAUNCHER **************
- 90 model   MODEL_ROCKETLAUNCHER        "Models\\Weapons\\RocketLauncher\\RocketLauncher.mdl",
- 91 model   MODEL_RL_BODY               "Models\\Weapons\\RocketLauncher\\Body.mdl",
- 92 texture TEXTURE_RL_BODY             "Models\\Weapons\\RocketLauncher\\Body.tex",
- 93 model   MODEL_RL_ROTATINGPART       "Models\\Weapons\\RocketLauncher\\RotatingPart.mdl",
- 94 texture TEXTURE_RL_ROTATINGPART     "Models\\Weapons\\RocketLauncher\\RotatingPart.tex",
- 95 model   MODEL_RL_ROCKET             "Models\\Weapons\\RocketLauncher\\Projectile\\Rocket.mdl",
- 96 texture TEXTURE_RL_ROCKET           "Models\\Weapons\\RocketLauncher\\Projectile\\Rocket.tex",
- 97 sound   SOUND_ROCKETLAUNCHER_FIRE   "Models\\Weapons\\RocketLauncher\\Sounds\\_Fire.wav",
+ 90 sound SOUND_CS_FIRE      "ModelsMP\\Weapons\\Chainsaw\\Sounds\\Fire.wav",
+ 91 sound SOUND_CS_BEGINFIRE "ModelsMP\\Weapons\\Chainsaw\\Sounds\\BeginFire.wav",
+ 92 sound SOUND_CS_ENDFIRE   "ModelsMP\\Weapons\\Chainsaw\\Sounds\\EndFire.wav",
+ 93 sound SOUND_CS_BRINGUP   "ModelsMP\\Weapons\\Chainsaw\\Sounds\\BringUp.wav",
+ 94 sound SOUND_CS_IDLE      "ModelsMP\\Weapons\\Chainsaw\\Sounds\\Idle.wav",
+ 95 sound SOUND_CS_BRINGDOWN "ModelsMP\\Weapons\\Chainsaw\\Sounds\\BringDown.wav",
 
-// ************** GRENADE LAUNCHER **************
-100 model   MODEL_GRENADELAUNCHER       "Models\\Weapons\\GrenadeLauncher\\GrenadeLauncher.mdl",
-101 model   MODEL_GL_BODY               "Models\\Weapons\\GrenadeLauncher\\Body.mdl",
-102 model   MODEL_GL_MOVINGPART         "Models\\Weapons\\GrenadeLauncher\\MovingPipe.mdl",
-103 model   MODEL_GL_GRENADE            "Models\\Weapons\\GrenadeLauncher\\GrenadeBack.mdl",
-104 texture TEXTURE_GL_BODY             "Models\\Weapons\\GrenadeLauncher\\Body.tex",
-105 texture TEXTURE_GL_MOVINGPART       "Models\\Weapons\\GrenadeLauncher\\MovingPipe.tex",
-106 sound   SOUND_GRENADELAUNCHER_FIRE  "Models\\Weapons\\GrenadeLauncher\\Sounds\\_Fire.wav",
-
-// ************** SNIPER **************
-110 model   MODEL_SNIPER                "ModelsMP\\Weapons\\Sniper\\Sniper.mdl",
-111 model   MODEL_SNIPER_BODY           "ModelsMP\\Weapons\\Sniper\\Body.mdl",
-112 texture TEXTURE_SNIPER_BODY         "ModelsMP\\Weapons\\Sniper\\Body.tex",
-113 sound   SOUND_SNIPER_FIRE           "ModelsMP\\Weapons\\Sniper\\Sounds\\Fire.wav",
-
-// ************** FLAMER **************
-130 model   MODEL_FLAMER                "ModelsMP\\Weapons\\Flamer\\Flamer.mdl",
-131 model   MODEL_FL_BODY               "ModelsMP\\Weapons\\Flamer\\Body.mdl",
-132 model   MODEL_FL_RESERVOIR          "ModelsMP\\Weapons\\Flamer\\FuelReservoir.mdl",
-133 model   MODEL_FL_FLAME              "ModelsMP\\Weapons\\Flamer\\Flame.mdl",
-134 texture TEXTURE_FL_BODY             "ModelsMP\\Weapons\\Flamer\\Body.tex",
-135 texture TEXTURE_FL_FLAME            "ModelsMP\\Effects\\Flame\\Flame.tex",
-136 sound   SOUND_FL_FIRE               "ModelsMP\\Weapons\\Flamer\\Sounds\\Fire.wav",
-137 sound   SOUND_FL_START              "ModelsMP\\Weapons\\Flamer\\Sounds\\Start.wav",
-138 sound   SOUND_FL_STOP               "ModelsMP\\Weapons\\Flamer\\Sounds\\Stop.wav",
-139 texture TEXTURE_FL_FUELRESERVOIR    "ModelsMP\\Weapons\\Flamer\\FuelReservoir.tex",
-
-// ************** LASER **************
-140 model   MODEL_LASER                 "Models\\Weapons\\Laser\\Laser.mdl",
-141 model   MODEL_LS_BODY               "Models\\Weapons\\Laser\\Body.mdl",
-142 model   MODEL_LS_BARREL             "Models\\Weapons\\Laser\\Barrel.mdl",
-144 texture TEXTURE_LS_BODY             "Models\\Weapons\\Laser\\Body.tex",
-145 texture TEXTURE_LS_BARREL           "Models\\Weapons\\Laser\\Barrel.tex",
-146 sound   SOUND_LASER_FIRE            "Models\\Weapons\\Laser\\Sounds\\_Fire.wav",
-
-// ************** CHAINSAW **************
-150 model   MODEL_CHAINSAW              "ModelsMP\\Weapons\\Chainsaw\\Chainsaw.mdl",
-151 model   MODEL_CS_BODY               "ModelsMP\\Weapons\\Chainsaw\\Body.mdl",
-152 model   MODEL_CS_BLADE              "ModelsMP\\Weapons\\Chainsaw\\Blade.mdl",
-160 model   MODEL_CS_TEETH              "ModelsMP\\Weapons\\Chainsaw\\Teeth.mdl",
-153 texture TEXTURE_CS_BODY             "ModelsMP\\Weapons\\Chainsaw\\Body.tex",
-154 texture TEXTURE_CS_BLADE            "ModelsMP\\Weapons\\Chainsaw\\Blade.tex",
-161 texture TEXTURE_CS_TEETH            "ModelsMP\\Weapons\\Chainsaw\\Teeth.tex",
-155 sound   SOUND_CS_FIRE               "ModelsMP\\Weapons\\Chainsaw\\Sounds\\Fire.wav",
-156 sound   SOUND_CS_BEGINFIRE          "ModelsMP\\Weapons\\Chainsaw\\Sounds\\BeginFire.wav",
-157 sound   SOUND_CS_ENDFIRE            "ModelsMP\\Weapons\\Chainsaw\\Sounds\\EndFire.wav",
-158 sound   SOUND_CS_BRINGUP            "ModelsMP\\Weapons\\Chainsaw\\Sounds\\BringUp.wav",
-159 sound   SOUND_CS_IDLE               "ModelsMP\\Weapons\\Chainsaw\\Sounds\\Idle.wav",
-162 sound   SOUND_CS_BRINGDOWN          "ModelsMP\\Weapons\\Chainsaw\\Sounds\\BringDown.wav",
-
-// ************** CANNON **************
-170 model   MODEL_CANNON                "Models\\Weapons\\Cannon\\Cannon.mdl",
-171 model   MODEL_CN_BODY               "Models\\Weapons\\Cannon\\Body.mdl",
-173 texture TEXTURE_CANNON              "Models\\Weapons\\Cannon\\Body.tex",
-174 sound   SOUND_CANNON                "Models\\Weapons\\Cannon\\Sounds\\Fire.wav",
-175 sound   SOUND_CANNON_PREPARE        "Models\\Weapons\\Cannon\\Sounds\\Prepare.wav",
-
-// ************** REFLECTIONS **************
-200 texture TEX_REFL_BWRIPLES01         "Models\\ReflectionTextures\\BWRiples01.tex",
-201 texture TEX_REFL_BWRIPLES02         "Models\\ReflectionTextures\\BWRiples02.tex",
-202 texture TEX_REFL_LIGHTMETAL01       "Models\\ReflectionTextures\\LightMetal01.tex",
-203 texture TEX_REFL_LIGHTBLUEMETAL01   "Models\\ReflectionTextures\\LightBlueMetal01.tex",
-204 texture TEX_REFL_DARKMETAL          "Models\\ReflectionTextures\\DarkMetal.tex",
-205 texture TEX_REFL_PURPLE01           "Models\\ReflectionTextures\\Purple01.tex",
-
-// ************** SPECULAR **************
-210 texture TEX_SPEC_WEAK               "Models\\SpecularTextures\\Weak.tex",
-211 texture TEX_SPEC_MEDIUM             "Models\\SpecularTextures\\Medium.tex",
-212 texture TEX_SPEC_STRONG             "Models\\SpecularTextures\\Strong.tex",
-
-// ************** FLARES **************
-250 model   MODEL_FLARE01               "Models\\Effects\\Weapons\\Flare01\\Flare.mdl",
-251 texture TEXTURE_FLARE01             "Models\\Effects\\Weapons\\Flare01\\Flare.tex",
-
-280 sound   SOUND_SILENCE               "Sounds\\Misc\\Silence.wav",
+ 96 sound SOUND_CANNON         "Models\\Weapons\\Cannon\\Sounds\\Fire.wav",
+ 97 sound SOUND_CANNON_PREPARE "Models\\Weapons\\Cannon\\Sounds\\Prepare.wav",
+ 
+// [Cecil] No sound
+100 sound SOUND_SILENCE "Sounds\\Misc\\Silence.wav",
 
 // [Cecil] Tesla gun sounds
-300 sound SOUND_TESLA_FIRE   "Sounds\\Weapons\\TeslaFire.wav",
-301 sound SOUND_TESLA_START1 "Sounds\\Weapons\\TeslaGun1.wav",
-302 sound SOUND_TESLA_START2 "Sounds\\Weapons\\TeslaGun2.wav",
-303 sound SOUND_TESLA_START3 "Sounds\\Weapons\\TeslaGun3.wav",
+150 sound SOUND_TESLA_FIRE   "Sounds\\Weapons\\TeslaFire.wav",
+151 sound SOUND_TESLA_START1 "Sounds\\Weapons\\TeslaGun1.wav",
+152 sound SOUND_TESLA_START2 "Sounds\\Weapons\\TeslaGun2.wav",
+153 sound SOUND_TESLA_START3 "Sounds\\Weapons\\TeslaGun3.wav",
 
 // [Cecil] Death ray sound
-310 sound SOUND_DEATHRAY "SoundsMP\\Environment\\Laser.wav",
+160 sound SOUND_DEATHRAY "SoundsMP\\Environment\\Laser.wav",
 
 // [Cecil] Chainsaw Launcher switch sound
-315 sound SOUND_LAUNCHERMODE "SoundsMP\\Items\\SeriousBomb.wav",
+165 sound SOUND_LAUNCHERMODE "SoundsMP\\Items\\SeriousBomb.wav",
 
 // [Cecil] Accurate sniper sound
-320 sound SOUND_ACCURATE_SNIPER "Sounds\\Weapons\\SniperXbox.wav",
+170 sound SOUND_ACCURATE_SNIPER "Sounds\\Weapons\\SniperXbox.wav",
 
 // [Cecil] Tommygun burst sound
-325 sound SOUND_TOMMYGUN_BURST "Sounds\\Weapons\\TommygunBurst.wav",
+175 sound SOUND_TOMMYGUN_BURST "Sounds\\Weapons\\TommygunBurst.wav",
 
 functions:
   // [Cecil] Constructor
@@ -1812,7 +1618,7 @@ functions:
     return NULL;
   };
 
-  // [Cecil] Show/hide weapon flare
+  // [Cecil] Unified show & hide flare functions
   void WeaponFlare(FLOAT fSize, BOOL bShow) {
     CAttachmentModelObject *pamoFlare = GetModel("flare", FALSE);
 
@@ -1856,30 +1662,28 @@ functions:
     // flare indices
     BOOL &bFlare = (m_bExtraWeapon ? pen->m_bFlare2 : pen->m_bFlare1);
     BOOL bTimeOut = (_pTimer->CurrentTick() > pen->m_tmFlareAdded + _pTimer->TickQuantum);
-    INDEX iShowFlare = -1;
+
+    // [Cecil] TEMP: Fixed flare size
+    FLOAT fFlareSize = 1.0f;
+
+    switch (m_iCurrentWeapon) {
+      case WEAPON_COLT:          fFlareSize = 0.75f; break;
+      case WEAPON_DOUBLESHOTGUN: fFlareSize = 1.75f; break;
+      case WEAPON_TOMMYGUN:      fFlareSize = 0.5f; break;
+      case WEAPON_SNIPER:        fFlareSize = 0.5f; break;
+      case WEAPON_MINIGUN:       fFlareSize = 1.25f; break;
+    }
 
     // add flare
     if (bFlare) {
       bFlare = FALSE;
       pen->m_tmFlareAdded = _pTimer->CurrentTick();
 
-      iShowFlare = 1;
+      WeaponFlare(fFlareSize, TRUE);
 
     // remove
     } else if (!bFlare && bTimeOut) {
-      iShowFlare = 0;
-    }
-
-    // [Cecil] Set flare
-    if (iShowFlare != -1) {
-      switch (m_iCurrentWeapon) {
-        case WEAPON_COLT:          WeaponFlare(0.75f, iShowFlare); break;
-        case WEAPON_SINGLESHOTGUN: WeaponFlare(1.0f,  iShowFlare); break;
-        case WEAPON_DOUBLESHOTGUN: WeaponFlare(1.75f, iShowFlare); break;
-        case WEAPON_TOMMYGUN:      WeaponFlare(0.5f,  iShowFlare); break;
-        case WEAPON_SNIPER:        WeaponFlare(0.5f,  iShowFlare); break;
-        case WEAPON_MINIGUN:       WeaponFlare(1.25f, iShowFlare); break;
-      }
+      WeaponFlare(fFlareSize, FALSE);
     }
   };
 
