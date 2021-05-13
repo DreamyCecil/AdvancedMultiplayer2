@@ -5,6 +5,19 @@
 #include "EntitiesMP/PlayerWeapons.h"
 #include "EntitiesMP/PlayerAnimator.h"
 
+#include "EntitiesMP/AmmoItem.h"
+#include "EntitiesMP/AmmoPack.h"
+#include "EntitiesMP/ArmorItem.h"
+#include "EntitiesMP/HealthItem.h"
+#include "EntitiesMP/WeaponItem.h"
+
+#include "EntitiesMP/KeyItem.h"
+#include "EntitiesMP/MessageItem.h"
+
+// Computer message adding flags
+#define CMF_READ    (1L << 0)
+#define CMF_ANALYZE (1L << 1)
+
 // Current global weapon
 extern INDEX wpn_iCurrent;
 
@@ -34,7 +47,7 @@ extern FLOAT _fLastDualWeaponShift = 0.0f;
 // Currently selected weapon set
 extern CTString _strCurrentWeaponSet;
 
-#define PLAYER_POWERUPS 4
+#define PLAYER_POWERUPS 5
 
 // Max powerup times
 static const FLOAT _afPowerupMaxTime[PLAYER_POWERUPS] = {
@@ -42,6 +55,7 @@ static const FLOAT _afPowerupMaxTime[PLAYER_POWERUPS] = {
   30.0f,
   40.0f,
   20.0f,
+  0.0f, // unused
 };
 
 // Powerup factors
@@ -50,6 +64,16 @@ static const FLOAT _afPowerupFactor[PLAYER_POWERUPS] = {
   0.0f, // received damage
   4.0f, // damage multiplier
   2.0f, // speed multiplier
+  1.0f, // bombs amount
+};
+
+// Powerup pickup messages
+static const CTString _astrPowerupPickup[PLAYER_POWERUPS] = {
+  "^cABE3FFInvisibility",
+  "^c00B440Invulnerability",
+  "^cFF0000Serious Damage!",
+  "^cFF9400Serious Speed",
+  "^cFF0000Serious Bomb!",
 };
 %}
 
@@ -80,11 +104,17 @@ properties:
  11 BOOL m_bFlare1 = FALSE, // main flare
  12 BOOL m_bFlare2 = FALSE, // secondary flare
 
+ 20 INDEX m_iKeys = 0, // mask for all taken keys
+
 // Power up timers
 100 FLOAT m_tmInvis  = 0.0f,
 101 FLOAT m_tmInvul  = 0.0f,
 102 FLOAT m_tmDamage = 0.0f,
 103 FLOAT m_tmSpeed  = 0.0f,
+
+150 INDEX m_iBombs = 0,     // amount of serious bombs player has
+151 INDEX m_iLastBombs = 0, // amount of serious bombs player had before firing
+152 FLOAT m_tmBombFired = -10.0f, // when the bomb was last fired
 
 {
   // Player's personal arsenal
@@ -94,7 +124,7 @@ properties:
   // Weapon position shift ratio
   FLOAT m_fDualWeaponShift;
 
-  // Currently selected weapon set locally
+  // Currently selected weapon set (local)
   CTString m_strWeaponSet;
 }
 
@@ -254,6 +284,171 @@ functions:
 
   // Render particles
   void RenderParticles(void) {
+  };
+
+  // Misc functions
+
+  // Use some key
+  BOOL UseKey(const ULONG &ulKey) {
+    if (m_iKeys & ulKey) {
+      m_iKeys &= ~ulKey;
+      return TRUE;
+    }
+
+    return FALSE;
+  };
+
+  // Receive items
+  BOOL ReceiveItem(const CEntityEvent &ee, CPlayer *penPlayer) {
+    switch (ee.ee_slEvent) {
+      case EVENTCODE_EHealth: {
+        EHealth &eHealth = (EHealth &)ee;
+
+        // determine old and new health values
+        FLOAT fHealthOld = penPlayer->GetHealth();
+        FLOAT fHealthNew = fHealthOld + eHealth.fHealth;
+
+        if (eHealth.bOverTopHealth) {
+          fHealthNew = ClampUp(fHealthNew, MaxHealth());
+        } else {
+          fHealthNew = ClampUp(fHealthNew, TopHealth());
+        }
+
+        // if value can be changed
+        if (ceil(fHealthNew) > ceil(fHealthOld)) {
+          // receive it
+          penPlayer->SetHealth(fHealthNew);
+          penPlayer->ItemPicked(TRANS("Health"), eHealth.fHealth);
+
+          penPlayer->m_iMana += eHealth.fHealth;
+          penPlayer->m_fPickedMana += eHealth.fHealth;
+          return TRUE;
+        }
+      } break;
+
+      case EVENTCODE_EArmor: {
+        EArmor &eArmor = (EArmor &)ee;
+
+        // determine old and new health values
+        FLOAT fArmorOld = penPlayer->m_fArmor;
+        FLOAT fArmorNew = fArmorOld + eArmor.fArmor;
+
+        if (eArmor.bOverTopArmor) {
+          fArmorNew = ClampUp(fArmorNew, MaxArmor());
+        } else {
+          fArmorNew = ClampUp(fArmorNew, TopArmor());
+        }
+
+        // if value can be changed
+        if (ceil(fArmorNew) > ceil(fArmorOld)) {
+          // receive it
+          penPlayer->m_fArmor = fArmorNew;
+          penPlayer->ItemPicked(TRANS("Armor"), eArmor.fArmor);
+
+          penPlayer->m_iMana += eArmor.fArmor;
+          penPlayer->m_fPickedMana += eArmor.fArmor;
+          return TRUE;
+        }
+      } break;
+
+      // messages
+      case EVENTCODE_EMessageItem: {
+        EMessageItem &eMessage = (EMessageItem &)ee;
+
+        penPlayer->ReceiveComputerMessage(eMessage.fnmMessage, CMF_ANALYZE);
+        penPlayer->ItemPicked(TRANS("Ancient papyrus"), 0);
+      } return TRUE;
+
+      // weapons and ammo
+      case EVENTCODE_EWeaponItem:   return ReceiveWeapon(ee);
+      case EVENTCODE_EAmmoItem:     return ReceiveAmmo(ee);
+      case EVENTCODE_EAmmoPackItem: return ReceiveAmmoPack(ee);
+
+      // keys
+      case EVENTCODE_EKey: {
+        // don't pick up keys if in auto action mode
+        if (penPlayer->GetAction() != NULL) {
+          return FALSE;
+        }
+
+        EKey &eKey = (EKey &)ee;
+
+        // make key mask
+        ULONG ulKey = 1 << INDEX(eKey.kitType);
+
+        // dummy keys
+        switch (eKey.kitType) {
+          case KIT_HAWKWINGS01DUMMY: case KIT_HAWKWINGS02DUMMY:
+          case KIT_TABLESDUMMY: case KIT_JAGUARGOLDDUMMY:
+            ulKey = 0;
+            break;
+        }
+
+        // if key is already in inventory
+        if (m_iKeys & ulKey) {
+          // ignore it
+          return FALSE;
+
+        // if key is not in inventory
+        } else {
+          // pick it up
+          m_iKeys |= ulKey;
+
+          CTString strKey = GetKeyName(eKey.kitType);
+          penPlayer->ItemPicked(strKey, 0);
+
+          // if in cooperative
+          if (GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
+            CPrintF(TRANS("^cFFFFFF%s - %s^r\n"), penPlayer->GetPlayerName(), strKey);
+          }
+          return TRUE;
+        }
+      } break;
+
+      // powerups
+      case EVENTCODE_EPowerUp: {
+        // powerup type
+        INDEX iPowerup = ((EPowerUp &)ee).puitType;
+
+        // don't pickup disabled powerups
+        BOOL bDisabled = FALSE;
+
+        switch (iPowerup) {
+          case PUIT_INVISIB:  bDisabled = !(GetSP()->sp_iItemRemoval & IRF_INVIS); break;
+          case PUIT_INVULNER: bDisabled = !(GetSP()->sp_iItemRemoval & IRF_INVUL); break;
+          case PUIT_DAMAGE:   bDisabled = !(GetSP()->sp_iItemRemoval & IRF_DAMAGE); break;
+          case PUIT_SPEED:    bDisabled = !(GetSP()->sp_iItemRemoval & IRF_SPEED); break;
+        }
+
+        if (bDisabled) {
+          return TRUE;
+        }
+
+        // serious bomb
+        if (iPowerup == PUIT_BOMB) {
+          m_iBombs += _afPowerupFactor[iPowerup];
+
+          // send computer message
+          if (GetSP()->sp_bCooperative) {
+            EComputerMessage eMsg;
+            eMsg.fnmMessage = CTFILENAME("DataMP\\Messages\\Weapons\\seriousbomb.txt");
+            penPlayer->SendEvent(eMsg);
+          }
+
+        // normal powerups
+        } else {
+          ActivatePowerup(iPowerup);
+        }
+
+        // pickup message
+        penPlayer->ItemPicked(Translate(_astrPowerupPickup[iPowerup].str_String), 0);
+
+        return TRUE;
+      }
+    }
+
+    // nothing picked
+    return FALSE;
   };
 
   // Weapon functions

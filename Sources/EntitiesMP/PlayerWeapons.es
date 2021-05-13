@@ -553,9 +553,6 @@ functions:
     CPlayerWeapons *penOther = (CPlayerWeapons *)(&enOther);
 
     m_bLastWeaponMirrored = penOther->m_bLastWeaponMirrored;
-
-    // reset weapon model
-    SetCurrentWeaponModel();
   };
 
   // [Cecil] Destroy ghostbuster ray
@@ -1726,7 +1723,7 @@ functions:
         m_bModelSet1 = TRUE;
 
       } catch (char *strError) {
-        FatalError(strError);
+        FatalError("Cannot load first weapon model config '%s':\n%s", wm1.strConfig, strError);
       }
     }
 
@@ -1737,7 +1734,7 @@ functions:
         m_bModelSet2 = TRUE;
 
       } catch (char *strError) {
-        FatalError(strError);
+        FatalError("Cannot load second weapon model config '%s':\n%s", wm2.strConfig, strError);
       }
     }
 

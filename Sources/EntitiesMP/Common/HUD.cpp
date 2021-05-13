@@ -656,26 +656,34 @@ static void HUD_DrawEntityStack()
 
 // render interface (frontend) to drawport
 // (units are in pixels for 640x480 resolution - for other res HUD will be scalled automatically)
-extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOOL bSnooping, const CPlayer *penPlayerOwner)
-{
+extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOOL bSnooping, const CPlayer *penPlayerOwner) {
   // no player - no info, sorry
-  if( penPlayerCurrent==NULL || (penPlayerCurrent->GetFlags()&ENF_DELETED)) return;
+  if (penPlayerCurrent == NULL || (penPlayerCurrent->GetFlags()&ENF_DELETED)) {
+    return;
+  }
   
-  // if snooping and owner player ins NULL, return
-  if ( bSnooping && penPlayerOwner==NULL) return;
+  // snooping and owner player don't exist
+  if (bSnooping && penPlayerOwner == NULL) {
+    return;
+  }
 
   // find last values in case of predictor
   CPlayer *penLast = (CPlayer*)penPlayerCurrent;
-  if( penPlayerCurrent->IsPredictor()) penLast = (CPlayer*)(((CPlayer*)penPlayerCurrent)->GetPredicted());
-  ASSERT( penLast!=NULL);
-  if( penLast==NULL) return; // !!!! just in case
+  if (penPlayerCurrent->IsPredictor()) {
+    penLast = (CPlayer*)(((CPlayer*)penPlayerCurrent)->GetPredicted());
+  }
+
+  ASSERT(penLast != NULL);
+  if (penLast == NULL) {
+    return; // !!!! just in case
+  }
 
   // cache local variables
   hud_fOpacity = Clamp(hud_fOpacity, 0.1f, 1.0f);
   hud_fScaling = Clamp(hud_fScaling, 0.5f, 1.2f);
   
   // [Cecil] Player
-  _penPlayer  = penPlayerCurrent;
+  _penPlayer = penPlayerCurrent;
 
   // [Cecil] Player's inventory
   _penInventory = (CPlayerInventory*)&*_penPlayer->m_penInventory;
@@ -978,19 +986,19 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   fCol = pixRightBound -fHalfUnitS;
   const FLOAT fBarPos = fHalfUnitS*0.7f;
 
-  FLOAT fBombCount = penPlayerCurrent->m_iSeriousBombCount;
-  BOOL  bBombFiring = FALSE;
+  FLOAT fBombCount = _penInventory->m_iBombs;
+  BOOL bBombFiring = FALSE;
 
   // draw serious bomb
   #define BOMB_FIRE_TIME 1.5f
 
-  if (penPlayerCurrent->m_tmSeriousBombFired + BOMB_FIRE_TIME > _pTimer->GetLerpedCurrentTick()) {
+  if (_penInventory->m_tmBombFired + BOMB_FIRE_TIME > _pTimer->GetLerpedCurrentTick()) {
     fBombCount = ClampUp(fBombCount + 1.0f, 3.0f);
     bBombFiring = TRUE;
   }
 
   if (fBombCount > 0) {
-    fNormValue = (FLOAT) fBombCount / 3.0f;
+    fNormValue = (FLOAT)fBombCount / 3.0f;
     COLOR colBombBorder = _colHUD;
     COLOR colBombIcon = C_WHITE;
     COLOR colBombBar = _colHUDText;
@@ -1000,7 +1008,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     }
 
     if (bBombFiring) { 
-      FLOAT fFactor = (_pTimer->GetLerpedCurrentTick() - penPlayerCurrent->m_tmSeriousBombFired) / BOMB_FIRE_TIME;
+      FLOAT fFactor = (_pTimer->GetLerpedCurrentTick() - _penInventory->m_tmBombFired) / BOMB_FIRE_TIME;
+
       colBombBorder = LerpColor(colBombBorder, C_RED, fFactor);
       colBombIcon = LerpColor(colBombIcon, C_RED, fFactor);
       colBombBar = LerpColor(colBombBar, C_RED, fFactor);
@@ -1009,6 +1018,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     HUD_DrawBorder( fCol,         fRow, fOneUnitS, fOneUnitS, colBombBorder);
     HUD_DrawIcon(   fCol,         fRow, _toASeriousBomb, colBombIcon, fNormValue, FALSE, 1.0f);
     HUD_DrawBar(    fCol+fBarPos, fRow, fOneUnitS/5, fOneUnitS-2, BO_DOWN, colBombBar, fNormValue);
+
     // make space for serious bomb
     fCol -= fAdvUnitS;
   }

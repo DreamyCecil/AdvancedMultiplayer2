@@ -286,7 +286,7 @@ functions:
         ModelChangeNotify();
 
       } catch (char *strError) {
-        FatalError(strError);
+        FatalError("Cannot load third person weapon model config '%s':\n%s", wm.strConfig, strError);
       }
 
       // apply third person offset

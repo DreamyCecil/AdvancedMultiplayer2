@@ -243,33 +243,30 @@ procedures:
       // wait to someone enter
       wait() {
         on (EPass ePass) : {
-          if (IsDerivedFromClass(ePass.penOther, "Player")) {
+          if (IsDerivedFromClass(ePass.penOther, "Player"))
+          {
             CPlayer *penPlayer = (CPlayer*)&*ePass.penOther;
-            // if he has the key
-            ULONG ulKey = (1<<INDEX(m_kitKey));
-            if (penPlayer->m_ulKeys&ulKey) {
-              // use the key
-              penPlayer->m_ulKeys&=~ulKey;
-              // open the dook
+            ULONG ulKey = (1 << INDEX(m_kitKey));
+
+            // [Cecil] Can use some key
+            if (penPlayer->UseKey(ulKey)) {
+              // open the door
               TriggerDoor();
 
-              /*
-              // tell the key bearer that the key was used
-              CTString strMsg;
-              strMsg.PrintF(TRANS("%s used"), GetKeyName(m_kitKey));
-              PrintCenterMessage(this, ePass.penOther, strMsg, 3.0f, MSS_INFO);
-              */
               // become automatic door
               jump DoorAuto();
-            // if he has no key
+
+            // no key
             } else {
-              if (m_penLockedTarget!=NULL) {
+              if (m_penLockedTarget != NULL) {
                 SendToTarget(m_penLockedTarget, EET_TRIGGER, ePass.penOther);
               }
             }
+
             resume;
           }
         }
+
         otherwise() : {
           resume;
         };
@@ -290,17 +287,21 @@ procedures:
           // become auto door
           jump DoorAuto();
         }
+
         on (EPass ePass) : {
           if (CanReactOnEntity(ePass.penOther)) {
-            if (m_strLockedMessage!="") {
+            if (m_strLockedMessage != "") {
               PrintCenterMessage(this, ePass.penOther, TranslateConst(m_strLockedMessage), 3.0f, MSS_INFO);
             }
-            if (m_penLockedTarget!=NULL) {
+
+            if (m_penLockedTarget != NULL) {
               SendToTarget(m_penLockedTarget, EET_TRIGGER, ePass.penOther);
             }
           }
+
           resume;
         }
+
         otherwise() : {
           resume;
         };
@@ -311,8 +312,7 @@ procedures:
     }
   }
 
-  Main()
-  {
+  Main() {
     InitAsEditorModel();
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_TOUCHMODEL);
@@ -327,20 +327,22 @@ procedures:
     autowait(0.1f);
 
     // dispatch to aproppriate loop
-    switch(m_dtType) {
-    case DT_AUTO: {
-      jump DoorAuto();
-                  } break;
-    case DT_TRIGGERED: {
-      jump DoorTriggered();
-                       } break;
-    case DT_TRIGGEREDAUTO: {
-      jump DoorTriggeredAuto();
-                       } break;
-    case DT_LOCKED: {
-      jump DoorLocked();
-                    } break;
+    switch (m_dtType) {
+      case DT_AUTO: {
+        jump DoorAuto();
+      } break;
+
+      case DT_TRIGGERED: {
+        jump DoorTriggered();
+      } break;
+
+      case DT_TRIGGEREDAUTO: {
+        jump DoorTriggeredAuto();
+      } break;
+
+      case DT_LOCKED: {
+        jump DoorLocked();
+      } break;
     }
   }
 };
-

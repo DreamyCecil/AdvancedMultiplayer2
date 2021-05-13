@@ -349,6 +349,27 @@ inline BOOL GlobalCutscenes(void) {
   return SPWorld();
 };
 
+// [Cecil] Get top and max amount of health and armor
+inline FLOAT MaxArmor(void) {
+  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
+  return GetSP()->sp_fMaxArmor * (bEasy ? 1.5f : 1.0f);
+};
+
+inline FLOAT TopArmor(void) {
+  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
+  return GetSP()->sp_fMaxArmor * (bEasy ? 1.0f : 0.5f);
+};
+
+inline FLOAT MaxHealth(void) {
+  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
+  return GetSP()->sp_fMaxHealth * (bEasy ? 1.5f : 1.0f);
+};
+
+inline FLOAT TopHealth(void) {
+  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
+  return GetSP()->sp_fStartHealth * (bEasy ? 2.0f : 1.0f);
+};
+
 // [Cecil] Fire speed multiplier
 inline FLOAT FireSpeedMul(void) {
   return (1.0f / GetSP()->sp_fFireSpeed);

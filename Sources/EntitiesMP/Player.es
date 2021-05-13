@@ -21,14 +21,6 @@
 #include "EntitiesMP/MessageHolder.h"
 #include "EntitiesMP/Camera.h"
 #include "EntitiesMP/WorldLink.h"
-#include "EntitiesMP/HealthItem.h"
-#include "EntitiesMP/ArmorItem.h"
-#include "EntitiesMP/WeaponItem.h"
-#include "EntitiesMP/AmmoItem.h"
-#include "EntitiesMP/PowerUpItem.h"
-#include "EntitiesMP/MessageItem.h"
-#include "EntitiesMP/AmmoPack.h"
-#include "EntitiesMP/KeyItem.h"
 #include "EntitiesMP/MusicHolder.h"
 #include "EntitiesMP/EnemyBase.h"
 #include "EntitiesMP/PlayerActionMarker.h"
@@ -165,8 +157,8 @@ BOOL _bDiscard3rdView = FALSE;
 const FLOAT _fBlowUpAmount = 70.0f;
 
 // Computer message adding flags
-#define CMF_READ    (1L<<0)
-#define CMF_ANALYZE (1L<<1)
+#define CMF_READ    (1L << 0)
+#define CMF_ANALYZE (1L << 1)
 
 // Export current player projection
 CAnyProjection3D prPlayerProjection;
@@ -636,43 +628,6 @@ CTString GetDifficultyString(void) {
   }
 };
 
-// Armor & health constants getters
-FLOAT MaxArmor(void) {
-  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
-
-  if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-    return GetSP()->sp_fMaxArmor * (bEasy ? 1.5f : 1.0f);
-  }
-  return (bEasy ? 300.0f : 200.0f);
-};
-
-FLOAT TopArmor(void) {
-  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
-  
-  if (GetSP()->sp_iAMPOptions & AMP_ENABLE) {
-    return GetSP()->sp_fMaxArmor * (bEasy ? 1.0f : 0.5f);
-  }
-  return (bEasy ? 200.0f : 100.0f);
-};
-
-FLOAT MaxHealth(void) {
-  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
-
-  if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fMaxHealth != 200.0f) {
-    return GetSP()->sp_fMaxHealth * (bEasy ? 1.5f : 1.0f);
-  }
-  return (bEasy ? 300.0f : 200.0f);
-};
-
-FLOAT TopHealth(void) {
-  BOOL bEasy = (GetSP()->sp_gdGameDifficulty <= CSessionProperties::GD_EASY);
-
-  if (GetSP()->sp_iAMPOptions & AMP_ENABLE && GetSP()->sp_fStartHealth != 100.0f) {
-    return GetSP()->sp_fStartHealth * (bEasy ? 2.0f : 1.0f);
-  }
-  return (bEasy ? 200.0f : 100.0f);
-};
-
 // Info structures
 static EntityInfo eiPlayerGround = {
   EIBT_FLESH, 80.0f,
@@ -792,7 +747,6 @@ properties:
   2 COLOR m_ulLastButtons = 0, // buttons last pressed
   3 FLOAT m_fArmor = 0.0f,     // armor
   4 CTString m_strGroup = "",  // group name for world change
-  5 INDEX m_ulKeys = 0,        // mask for all picked-up keys
   6 FLOAT m_fMaxHealth = 1.0f, // default health supply player can have
   7 INDEX m_ulFlags = 0,       // various flags
 
@@ -923,10 +877,6 @@ properties:
  182 FLOAT m_fChainShakeFreqMod = 1.0f,  // shaking frequency modifier
  183 FLOAT m_fChainsawShakeDX = 0.0f, 
  184 FLOAT m_fChainsawShakeDY = 0.0f,
-
- 190 INDEX m_iSeriousBombCount = 0,      // ammount of serious bombs player owns
- 191 INDEX m_iLastSeriousBombCount = 0,  // ammount of serious bombs player had before firing
- 192 FLOAT m_tmSeriousBombFired = -10.0f,  // when the bomb was last fired
  
  // [Cecil] Advanced Multiplayer
  200 FLOAT m_fComboTime = 0.0f,
@@ -1380,6 +1330,11 @@ functions:
       return GetGlobalMessageTime();
     }
     return m_tmCenterMessageEnd;
+  };
+
+  // [Cecil] Use some key
+  BOOL UseKey(const ULONG &ulKey) {
+    return GetInventory()->UseKey(ulKey);
   };
 
   INDEX GenderSound(INDEX iSound) {
@@ -3549,180 +3504,9 @@ functions:
 
   // Receive item
   BOOL ReceiveItem(const CEntityEvent &ee) {
-    // [Cecil] TODO: Let PlayerInventory handle this
-
-    // *********** HEALTH ***********
-    if( ee.ee_slEvent == EVENTCODE_EHealth)
-    {
-      // determine old and new health values
-      FLOAT fHealthOld = GetHealth();
-      FLOAT fHealthNew = fHealthOld + ((EHealth&)ee).fHealth;
-      if (((EHealth&)ee).bOverTopHealth) {
-        fHealthNew = ClampUp(fHealthNew, MaxHealth());
-      } else {
-        fHealthNew = ClampUp(fHealthNew, TopHealth());
-      }
-
-      // if value can be changed
-      if (ceil(fHealthNew) > ceil(fHealthOld)) {
-        // receive it
-        SetHealth(fHealthNew);
-        ItemPicked( TRANS("Health"), ((EHealth&)ee).fHealth);
-        m_iMana += (INDEX)(((EHealth&)ee).fHealth);
-        m_fPickedMana   += ((EHealth&)ee).fHealth;
-        return TRUE;
-      }
-    } 
-
-    // *********** ARMOR ***********
-    else if( ee.ee_slEvent == EVENTCODE_EArmor)
-    {
-      // determine old and new health values
-      FLOAT fArmorOld = m_fArmor;
-      FLOAT fArmorNew = fArmorOld + ((EArmor&)ee).fArmor;
-      if (((EArmor&)ee).bOverTopArmor) {
-        fArmorNew = ClampUp(fArmorNew, MaxArmor());
-      } else {
-        fArmorNew = ClampUp(fArmorNew, TopArmor());
-      }
-
-      // if value can be changed
-      if (ceil(fArmorNew) > ceil(fArmorOld)) {
-        // receive it
-        m_fArmor = fArmorNew;
-        ItemPicked( TRANS("Armor"), ((EArmor&)ee).fArmor);
-        m_iMana += (INDEX)(((EArmor&)ee).fArmor);
-        m_fPickedMana   += ((EArmor&)ee).fArmor;
-        return TRUE;
-      }
-    }
-
-    // *********** MESSAGE ***********
-    else if (ee.ee_slEvent == EVENTCODE_EMessageItem) {
-      EMessageItem &eMI = (EMessageItem &)ee;
-      ReceiveComputerMessage(eMI.fnmMessage, CMF_ANALYZE);
-      ItemPicked(TRANS("Ancient papyrus"), 0);
-      return TRUE;
-    }
-
-    // *********** WEAPON ***********
-    else if (ee.ee_slEvent == EVENTCODE_EWeaponItem) {
-      return GetInventory()->ReceiveWeapon(ee);
-    }
-
-    // *********** AMMO ***********
-    else if (ee.ee_slEvent == EVENTCODE_EAmmoItem) {
-      return GetInventory()->ReceiveAmmo(ee);
-    }
-
-    else if (ee.ee_slEvent == EVENTCODE_EAmmoPackItem) {
-      return GetInventory()->ReceiveAmmoPack(ee);
-    }
-
-    // *********** KEYS ***********
-    else if (ee.ee_slEvent == EVENTCODE_EKey) {
-      // don't pick up key if in auto action mode
-      if (GetAction() != NULL) {
-        return FALSE;
-      }
-
-      // make key mask
-      ULONG ulKey = 1<<INDEX(((EKey&)ee).kitType);
-      EKey &eKey = (EKey&)ee;
-      if(eKey.kitType == KIT_HAWKWINGS01DUMMY || eKey.kitType == KIT_HAWKWINGS02DUMMY
-        || eKey.kitType == KIT_TABLESDUMMY || eKey.kitType ==KIT_JAGUARGOLDDUMMY)
-      {
-        ulKey = 0;
-      }
-      // if key is already in inventory
-      if (m_ulKeys&ulKey) {
-        // ignore it
-        return FALSE;
-      // if key is not in inventory
-      } else {
-        // pick it up
-        m_ulKeys |= ulKey;
-        CTString strKey = GetKeyName(((EKey&)ee).kitType);
-        ItemPicked(strKey, 0);
-        // if in cooperative
-        if (GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
-          CPrintF(TRANS("^cFFFFFF%s - %s^r\n"), GetPlayerName(), strKey);
-        }
-        return TRUE;
-      }
-    }
-
-    // *********** POWERUPS ***********
-    else if( ee.ee_slEvent == EVENTCODE_EPowerUp) {
-      // [Cecil] Don't pickup disabled powerups
-      BOOL bDisabled = FALSE;
-
-      switch (((EPowerUp&)ee).puitType) {
-        case PUIT_INVISIB:  bDisabled = !(GetSP()->sp_iItemRemoval & IRF_INVIS); break;
-        case PUIT_INVULNER: bDisabled = !(GetSP()->sp_iItemRemoval & IRF_INVUL); break;
-        case PUIT_DAMAGE:   bDisabled = !(GetSP()->sp_iItemRemoval & IRF_DAMAGE); break;
-        case PUIT_SPEED:    bDisabled = !(GetSP()->sp_iItemRemoval & IRF_SPEED); break;
-      }
-
-      if (bDisabled) {
-        return TRUE;
-      }
-
-      // [Cecil] Powerup type
-      INDEX iPowerup = ((EPowerUp&)ee).puitType;
-
-      switch (iPowerup) {
-        case PUIT_INVISIB:
-          // [Cecil] Power Up removal and time multiplier
-          if (GetSP()->sp_iItemRemoval & IRF_INVIS) {
-            GetInventory()->ActivatePowerup(iPowerup);
-            ItemPicked(TRANS("^cABE3FFInvisibility"), 0);
-          }
-          return TRUE;
-
-        case PUIT_INVULNER:
-          // [Cecil] Power Up removal and time multiplier
-          if (GetSP()->sp_iItemRemoval & IRF_INVUL) {
-            GetInventory()->ActivatePowerup(iPowerup);
-            ItemPicked(TRANS("^c00B440Invulnerability"), 0);
-          }
-          return TRUE;
-
-        case PUIT_DAMAGE:
-          // [Cecil] Power Up removal and time multiplier
-          if (GetSP()->sp_iItemRemoval & IRF_DAMAGE) {
-            GetInventory()->ActivatePowerup(iPowerup);
-            ItemPicked(TRANS("^cFF0000Serious Damage!"), 0);
-          }
-          return TRUE;
-
-        case PUIT_SPEED:
-          // [Cecil] Power Up removal and time multiplier
-          if (GetSP()->sp_iItemRemoval & IRF_SPEED) {
-            GetInventory()->ActivatePowerup(iPowerup);
-            ItemPicked(TRANS("^cFF9400Serious Speed"), 0);
-          }
-          return TRUE;
-
-        case PUIT_BOMB:
-          m_iSeriousBombCount++;
-          ItemPicked(TRANS("^cFF0000Serious Bomb!"), 0);
-
-          // send computer message
-          if (GetSP()->sp_bCooperative) {
-            EComputerMessage eMsg;
-            eMsg.fnmMessage = CTFILENAME("DataMP\\Messages\\Weapons\\seriousbomb.txt");
-            this->SendEvent(eMsg);
-          }
-          return TRUE;              
-      }
-    }
-
-    // nothing picked
-    return FALSE;
+    // [Cecil] Forward to PlayerInventory
+    return GetInventory()->ReceiveItem(ee, this);
   };
-
-
 
   // Change Player view
   void ChangePlayerView()
@@ -4957,13 +4741,17 @@ functions:
 
     // if fire bomb is pressed
     if (ulNewButtons & PLACT_FIREBOMB) {
-      if (m_iSeriousBombCount>0 && m_tmSeriousBombFired+4.0f<_pTimer->CurrentTick()) {
-        m_iLastSeriousBombCount = m_iSeriousBombCount;
-        m_iSeriousBombCount--;
-        m_tmSeriousBombFired = _pTimer->CurrentTick();
+      // [Cecil] Use bombs from the inventory
+      CPlayerInventory &penInventory = *GetInventory();
+
+      if (penInventory.m_iBombs > 0 && penInventory.m_tmBombFired + 4.0f < _pTimer->CurrentTick()) {
+        penInventory.m_iLastBombs = penInventory.m_iBombs;
+        penInventory.m_iBombs--;
+        penInventory.m_tmBombFired = _pTimer->CurrentTick();
         
         ESeriousBomb esb;
         esb.penOwner = this;
+
         CEntityPointer penBomb = CreateEntity(GetPlacement(), CLASS_SERIOUSBOMB);
         penBomb->Initialize(esb);
       }
@@ -7499,22 +7287,24 @@ procedures:
     // we get here if the player is disconnected from the server
 
     // if we have some keys
-    if (!IsPredictor() && m_ulKeys!=0) {
+    if (!IsPredictor() && GetInventory()->m_iKeys != 0) {
       // find first live player
       CPlayer *penNextPlayer = NULL;
-      for(INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
+
+      for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
         CPlayer *pen = (CPlayer*)&*GetPlayerEntity(iPlayer);
+
         if (pen != NULL && pen != this && IsAlive(pen) && !(pen->GetFlags() & ENF_DELETED)) {
           penNextPlayer = pen;
         }
       }
 
       // if any found
-      if (penNextPlayer!=NULL) {
+      if (penNextPlayer != NULL) {
         // transfer keys to that player
         CPrintF(TRANS("%s leaving, all keys transfered to %s\n"), 
           (const char*)m_strName, (const char*)penNextPlayer->GetPlayerName());
-        penNextPlayer->m_ulKeys |= m_ulKeys;
+        penNextPlayer->GetInventory()->m_iKeys |= GetInventory()->m_iKeys;
       }
     }
 

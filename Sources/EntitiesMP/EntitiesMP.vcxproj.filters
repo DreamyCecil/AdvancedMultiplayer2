@@ -1694,6 +1694,9 @@
     <ClInclude Include="PlayerControls_tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataLinkedList.h">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">
@@ -2149,6 +2152,9 @@
       <Filter>Header Files\DreamyStructures</Filter>
     </None>
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.inl">
+      <Filter>Header Files\DreamyStructures</Filter>
+    </None>
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataLinkedList.inl">
       <Filter>Header Files\DreamyStructures</Filter>
     </None>
   </ItemGroup>

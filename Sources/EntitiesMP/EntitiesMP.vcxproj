@@ -436,6 +436,7 @@ copy Debug\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Command>
     <ClInclude Include="..\Depends\DreamyJSON\ConfigBase.h" />
     <ClInclude Include="..\Depends\DreamyJSON\DreamyJSON.h" />
     <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataArray.h" />
+    <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataLinkedList.h" />
     <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataList.h" />
     <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataMap.h" />
     <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.h" />
@@ -2369,6 +2370,7 @@ ecc EntitiesMP/%(Filename).es </Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataArray.inl" />
+    <None Include="..\Depends\DreamyJSON\DreamyStructures\DataLinkedList.inl" />
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataList.inl" />
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataMap.inl" />
     <None Include="..\Depends\DreamyJSON\DreamyStructures\DataStack.inl" />

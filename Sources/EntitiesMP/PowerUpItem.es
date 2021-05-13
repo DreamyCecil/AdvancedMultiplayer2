@@ -2,6 +2,9 @@
 %{
 #include "StdH.h"
 #include "Models/Items/ItemHolder/ItemHolder.h"
+
+// [Cecil] Bomb count access
+#include "EntitiesMP/PlayerInventory.h"
 %}
 
 uses "EntitiesMP/Item";
@@ -225,7 +228,7 @@ procedures:
     // don't pick up more bombs then you can carry
     if (m_puitType == PUIT_BOMB) {
       if (IsOfClass(epass.penOther, "Player")) {
-        if (((CPlayer &)*epass.penOther).m_iSeriousBombCount>=3) {
+        if (((CPlayer &)*epass.penOther).GetInventory()->m_iBombs >= 3) {
           return;
         }
       }
