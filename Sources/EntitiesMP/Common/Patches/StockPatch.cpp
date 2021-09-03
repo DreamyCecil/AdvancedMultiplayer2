@@ -3,6 +3,17 @@
 #include "StockPatch.h"
 #include "PatchFunctions.h"
 
+// Entity class name table
+#define TYPE CEntityClass
+#define CNameTable_TYPE CNameTable_CEntityClass
+#define CNameTableSlot_TYPE CNameTableSlot_CEntityClass
+
+#include <Engine/Templates/NameTable.cpp>
+
+#undef CNameTableSlot_TYPE
+#undef CNameTable_TYPE
+#undef TYPE
+
 // Patch config
 extern DJSON_Block _cbConfig;
 extern INDEX _ctConfigEntries;
@@ -56,10 +67,6 @@ static void PatchClassLink_t(CTString &strClass) {
   }
 };
 
-// Class table
-static CDList<string> _aClassNames;
-static CDList<CEntityClass *> _aClasses;
-
 // Obtain an object from stock - loads if not loaded
 CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
   // try to patch the class link file
@@ -75,11 +82,9 @@ CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
   string strFile = fnECL.str_String;
 
   // find stocked object with same name
-  INDEX iClass = _aClassNames.FindIndex(strFile);
+  CEntityClass *pExisting = st_ntObjects.Find(strFile.c_str());
 
-  if (iClass != -1) {
-    CEntityClass *pExisting = _aClasses[iClass];
-  
+  if (pExisting != NULL) {
     // mark that it is used once again
     pExisting->MarkUsed();
     return pExisting;
@@ -90,8 +95,8 @@ CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
   ptNew->ser_FileName = fnECL;
 
   // add to the lists and get its index
-  iClass = _aClassNames.Add(strFile);
-  _aClasses.Add(ptNew);
+  st_ctObjects.Add(ptNew);
+  st_ntObjects.Add(ptNew);
 
   try {
     // load it
@@ -99,8 +104,8 @@ CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
 
   } catch (char *) {
     // delete the class
-    _aClassNames.Delete(iClass);
-    _aClasses.Delete(iClass);
+    st_ctObjects.Remove(ptNew);
+    st_ntObjects.Remove(ptNew);
 
     delete ptNew;
     throw;
@@ -109,57 +114,4 @@ CEntityClass *CClassStockPatch::Obtain_t(const CTFileName &fnmFileName) {
   // mark that it is used for the first time
   ptNew->MarkUsed();
   return ptNew;
-};
-
-// Release an object when not needed any more
-void CClassStockPatch::Release(CEntityClass *ptObject) {
-  // mark that it is used one less time
-  ptObject->MarkUnused();
-
-  // if it is not used at all any more and should be freed automatically
-  if (!ptObject->IsUsed() && ptObject->IsAutoFreed()) {
-    // remove it from stock
-    INDEX iClass = _aClasses.FindIndex(ptObject);
-
-    _aClassNames.Delete(iClass);
-    _aClasses.Delete(iClass);
-
-    delete ptObject;
-  }
-};
-
-// Free all unused elements of the stock
-void CClassStockPatch::FreeUnused(void) {
-  BOOL bAnyRemoved;
-
-  do {
-    // create container of objects that should be freed
-    CDList<CEntityClass *> aToFree;
-    CDList<INDEX> aiTable;
-
-    for (INDEX i = 0; i < _aClasses.Count(); i++) {
-      CEntityClass *pClass = _aClasses[i];
-
-      if (!pClass->IsUsed()) {
-        aToFree.Add(pClass);
-        aiTable.Add(i);
-      }
-    }
-
-    bAnyRemoved = (aToFree.Count() > 0);
-
-    // for each object that should be freed
-    for (INDEX iFree = 0; iFree < aToFree.Count(); iFree++) {
-      CEntityClass *pClass = aToFree[iFree];
-      INDEX iTableIndex = aiTable[iFree];
-
-      _aClassNames.Delete(iTableIndex);
-      // [Cecil] NOTE: Crashes here sometimes on "Stop Game"
-      _aClasses.Delete(iTableIndex);
-
-      delete pClass;
-    }
-
-  // as long as there is something to remove
-  } while (bAnyRemoved);
 };
