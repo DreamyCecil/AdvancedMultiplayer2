@@ -20,7 +20,7 @@ struct SListModel {
 };
 
 // Important attachments list
-typedef CDMap<string, SListModel> CAttachList;
+typedef DSMap<string, SListModel> CAttachList;
 
 // Custom weapon model
 class CWeaponModel {

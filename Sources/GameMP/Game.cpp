@@ -1018,10 +1018,17 @@ void CGame::InitInternal(void) {
   extern BOOL IsMenuEnabled(const CTString &strMenuName);
 
   _pShell->DeclareSymbol("user CTString GetGameSpyRulesInfo(void);", &GetGameSpyRulesInfo);
-  _pShell->DeclareSymbol("user CTString GetGameTypeName(INDEX);", &GetGameTypeName);
-  _pShell->DeclareSymbol("user CTString GetCurrentGameTypeName(void);", &GetCurrentGameTypeName);
-  _pShell->DeclareSymbol("user INDEX GetSpawnFlagsForGameType(INDEX);", &GetSpawnFlagsForGameType);
-  _pShell->DeclareSymbol("user INDEX IsMenuEnabled(CTString);", &IsMenuEnabled);
+  #ifdef _SE1_10
+    _pShell->DeclareSymbol("user CTString GetGameTypeNameSS(INDEX);", &GetGameTypeName);
+    _pShell->DeclareSymbol("user CTString GetCurrentGameTypeNameSS(void);", &GetCurrentGameTypeName);
+    _pShell->DeclareSymbol("user INDEX GetSpawnFlagsForGameTypeSS(INDEX);", &GetSpawnFlagsForGameType);
+    _pShell->DeclareSymbol("user INDEX IsMenuEnabledSS(CTString);", &IsMenuEnabled);
+  #else
+    _pShell->DeclareSymbol("user CTString GetGameTypeName(INDEX);", &GetGameTypeName);
+    _pShell->DeclareSymbol("user CTString GetCurrentGameTypeName(void);", &GetCurrentGameTypeName);
+    _pShell->DeclareSymbol("user INDEX GetSpawnFlagsForGameType(INDEX);", &GetSpawnFlagsForGameType);
+    _pShell->DeclareSymbol("user INDEX IsMenuEnabled(CTString);", &IsMenuEnabled);
+  #endif
   _pShell->DeclareSymbol("user void Say(CTString);", &Say);
   _pShell->DeclareSymbol("user void SayFromTo(INDEX, INDEX, CTString);", &SayFromTo);
 
@@ -2999,7 +3006,7 @@ void TiledTextureSE(PIXaabbox2D &_boxScreen, FLOAT fStretch, MEX2D &vScreen, MEX
 void CGame::LCDInit(void) {
   try {
     _toBcgClouds.SetData_t(CTFILENAME("Textures\\General\\Background6.tex"));
-    _toPointer.SetData_t(CTFILENAME("TexturesMP\\General\\Pointer.tex",));
+    _toPointer.SetData_t(CTFILENAME("TexturesMP\\General\\Pointer.tex"));
     _toBcgGrid.SetData_t(CTFILENAME("TexturesMP\\General\\grid.tex"));
     _toBackdrop.SetData_t(CTFILENAME("TexturesMP\\General\\MenuBack.tex"));
     _toSamU.SetData_t(CTFILENAME("TexturesMP\\General\\SamU.tex"));

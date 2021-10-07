@@ -3,7 +3,7 @@
 #include "WeaponStruct.h"
 
 // Weapon structures and icons
-extern CDList<CWeaponStruct *> _apPlayerWeapons = CDList<CWeaponStruct *>();
+extern DSList<CWeaponStruct *> _apPlayerWeapons = DSList<CWeaponStruct *>();
 extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 
 // Constructors

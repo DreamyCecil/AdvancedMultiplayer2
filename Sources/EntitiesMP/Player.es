@@ -1226,7 +1226,7 @@ functions:
     PlaySound(m_soMessage, SOUND_POWERUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
 
     // list of powerups that player doesn't have
-    CDList<INDEX> aiPowerups;
+    DSList<INDEX> aiPowerups;
 
     // a powerup with least active time
     INDEX iLeastTimeType = -1;
@@ -2884,7 +2884,9 @@ functions:
     }
 
     // [Cecil] Dual weapon position shifting
-    GetInventory()->DualWeaponShift();
+    if (_pNetwork->IsPlayerLocal(this)) {
+      GetInventory()->DualWeaponShift();
+    }
   };
 
   // Postmoving for soft player up-down movement
@@ -5711,7 +5713,7 @@ functions:
     TIME tmLevelTime = _pTimer->CurrentTick()-m_tmLevelStarted;
     m_psLevelStats.ps_tmTime = tmLevelTime;
     m_psGameStats.ps_tmTime += tmLevelTime;
-    FLOAT fTimeDelta = ClampDn(floor(m_tmEstTime)-floor(tmLevelTime), 0.0);
+    FLOAT fTimeDelta = ClampDn(floor(m_tmEstTime) - floor(tmLevelTime), 0.0f);
     m_iTimeScore = floor(fTimeDelta*100.0f);
     m_psLevelStats.ps_iScore+=m_iTimeScore;
     m_psGameStats.ps_iScore+=m_iTimeScore;
@@ -6712,6 +6714,7 @@ procedures:
   DoAutoActions(EVoid) {
     // don't look up/down
     en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
+
     // disable playeranimator animating
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.m_bDisableAnimating = TRUE;

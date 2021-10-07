@@ -25,7 +25,7 @@ extern INDEX wpn_iCurrent;
 #define WEAPONS_ALLAVAILABLEMASK 0x3FFF
 
 // Ammo types to default ammo set
-static const _aiAmmoSetTypes[] = {
+static const INDEX _aiAmmoSetTypes[] = {
   -1, // invalid
    1, // AIT_SHELLS
    2, // AIT_BULLETS

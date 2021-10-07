@@ -116,4 +116,4 @@ struct SPlayerWeapon {
 };
 
 // Player's arsenal type
-typedef CDArray<SPlayerWeapon> CWeaponArsenal;
+typedef DSArray<SPlayerWeapon> CWeaponArsenal;

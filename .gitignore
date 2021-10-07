@@ -51,6 +51,7 @@ Debug/
 *.exp
 *.res
 *.lastbuildstate
+*.user
 
 # Generated configuration files
 *.plr
