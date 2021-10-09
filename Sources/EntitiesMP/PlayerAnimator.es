@@ -91,7 +91,6 @@ properties:
  13 BOOL m_bSwim = FALSE,                     // player in water
  16 BOOL m_bAttacking = FALSE,                // currently firing weapon/swinging knife
  19 FLOAT m_tmAttackingDue = -1.0f,           // when firing animation is due
- 17 FLOAT m_tmFlareAdded = -1.0f,             // for better flare add/remove
  18 BOOL m_bDisableAnimating = FALSE,
 
 // player soft eyes on Y axis
@@ -298,6 +297,10 @@ functions:
         pamoWeapon->amo_plRelative.pl_OrientationAngle += (wps.Rot3() - COLT_LEFT_ROT);
       }
     }
+
+    // remove flares
+    WeaponFlare(FALSE, FALSE);
+    WeaponFlare(TRUE, FALSE);
 
     // sync apperances
     SyncWeapon();
@@ -951,8 +954,8 @@ functions:
   };
 
   void OnPreRender(void) {
-    ControlFlareAttachment(FALSE);
-    ControlFlareAttachment(TRUE);
+    //ControlFlareAttachment(FALSE);
+    //ControlFlareAttachment(TRUE);
 
     // Minigun specific
     for (INDEX iWeapon = 0; iWeapon < 2; iWeapon++) {
@@ -997,11 +1000,12 @@ functions:
 
   // flare attachment
   void ControlFlareAttachment(BOOL bExtra) {
-    CPlayerInventory *pen = GetPlayer()->GetInventory()->PredTail();
+    CPlayerInventory *pen = GetPlayer()->GetInventory();
+    INDEX iExtra = (bExtra ? 1 : 0);
     
     // flare indices
-    BOOL &bFlare = (bExtra ? pen->m_bFlare2 : pen->m_bFlare1);
-    BOOL bTimeOut = (_pTimer->CurrentTick() > pen->m_tmFlareAdded + _pTimer->TickQuantum);
+    BOOL &bFlare = (&pen->m_bFlare1)[iExtra];
+    BOOL bTimeOut = (_pTimer->CurrentTick() > (&pen->m_tmFlareAdded1)[iExtra] + _pTimer->TickQuantum);
 
     // add flare
     if (bFlare) {

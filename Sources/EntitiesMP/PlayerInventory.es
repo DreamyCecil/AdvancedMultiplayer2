@@ -100,9 +100,10 @@ properties:
   2 CEntityPointer m_penWeapons1, // player's main weapon
   3 CEntityPointer m_penWeapons2, // player's extra weapon
 
- 10 FLOAT m_tmFlareAdded = -1.0f, // when weapon flare was added
- 11 BOOL m_bFlare1 = FALSE, // main flare
- 12 BOOL m_bFlare2 = FALSE, // secondary flare
+ 10 FLOAT m_tmFlareAdded1 = -1.0f, // when main weapon flare was added
+ 11 FLOAT m_tmFlareAdded2 = -1.0f, // when extra weapon flare was added
+ 12 BOOL m_bFlare1 = FALSE, // main flare
+ 13 BOOL m_bFlare2 = FALSE, // secondary flare
 
  20 INDEX m_iKeys = 0, // mask for all taken keys
 
@@ -222,7 +223,7 @@ functions:
     CRationalEntity::Copy(enOther, ulFlags);
     CPlayerInventory *penOther = (CPlayerInventory *)(&enOther);
 
-    m_fDualWeaponShift = 0.0f;
+    m_fDualWeaponShift = penOther->m_fDualWeaponShift;
 
     // weapon set doesn't match
     if (m_strWeaponSet != penOther->m_strWeaponSet) {
@@ -269,16 +270,19 @@ functions:
 
   // Get player entity
   CPlayer *GetPlayer(void) {
+    ASSERT(m_penPlayer != NULL);
     return (CPlayer*)&*m_penPlayer;
   };
 
   // Get player animator
   CPlayerAnimator *GetAnimator(void) {
+    ASSERT(m_penPlayer != NULL);
     return GetPlayer()->GetPlayerAnimator();
   };
 
   // Get some weapon
   CPlayerWeapons *GetWeapon(const INDEX &iExtra) {
+    ASSERT((&m_penWeapons1)[iExtra] != NULL);
     return (CPlayerWeapons*)&*(&m_penWeapons1)[iExtra];
   };
 
@@ -1296,7 +1300,7 @@ procedures:
     // remember the initial parameters
     ASSERT(eInit.penPlayer != NULL);
     m_penPlayer = eInit.penPlayer;
-    ASSERT(IsOfClass(m_penOwner, "Player"));
+    ASSERT(IsOfClass(m_penPlayer, "Player"));
 
     InitAsVoid();
     SetFlags(GetFlags() | ENF_CROSSESLEVELS);

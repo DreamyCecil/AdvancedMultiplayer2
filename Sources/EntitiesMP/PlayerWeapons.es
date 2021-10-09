@@ -1039,6 +1039,9 @@ functions:
   void RenderWeaponModel(CPerspectiveProjection3D &prProjection, CDrawPort *pdp,
                          FLOAT3D vViewerLightDirection, COLOR colViewerLight, COLOR colViewerAmbient,
                          BOOL bRender, INDEX iEye) {
+    // [Cecil] Predicted weapon
+    CPlayerWeapons *pen = PredTail();
+
     // [Cecil] Current weapon
     const INDEX iWeapon = m_iCurrentWeapon;
 
@@ -1046,9 +1049,9 @@ functions:
     SWeaponPos wps = RenderPos(iWeapon);
 
     // [Cecil] Mirror the weapon
-    if (m_bLastWeaponMirrored != MirrorState()) {
-      ApplyMirroring(TRUE);
-      m_bLastWeaponMirrored = MirrorState();
+    if (pen->m_bLastWeaponMirrored != MirrorState()) {
+      pen->ApplyMirroring(TRUE);
+      pen->m_bLastWeaponMirrored = MirrorState();
     }
 
     // [Cecil] No weapon
@@ -1059,7 +1062,10 @@ functions:
     _mrpModelRenderPrefs.SetRenderType(RT_TEXTURE|RT_SHADING_PHONG);
 
     // flare attachment
-    ControlFlareAttachment();
+    pen->ControlFlareAttachment();
+
+    // [Cecil] Player flare attachment
+    //GetAnimator()->ControlFlareAttachment(m_bExtraWeapon);
 
     if (!bRender || GetPlayer()->GetSettings()->ps_ulFlags & PSF_HIDEWEAPON) {
       return;
@@ -1126,7 +1132,7 @@ functions:
     }
     
     // [Cecil] Draw second weapon model
-    if (m_bModelSet2) {
+    if (pen->m_bModelSet2) {
       // prepare render model structure and projection
       CRenderModel rmMain;
 
@@ -1155,11 +1161,11 @@ functions:
       rmMain.rm_ulFlags |= RMF_WEAPON; // TEMP: for Truform
 
       if (bInvisible) {
-        rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xffffff00) | ubBlend;
+        rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xFFFFFF00) | ubBlend;
       }
       
-      m_moWeaponSecond.SetupModelRendering(rmMain);
-      m_moWeaponSecond.RenderModel(rmMain);
+      pen->m_moWeaponSecond.SetupModelRendering(rmMain);
+      pen->m_moWeaponSecond.RenderModel(rmMain);
 
       // [Cecil] Power Up particles
       if (amp_bPowerUpParticles) {
@@ -1175,10 +1181,10 @@ functions:
     }
     
     // [Cecil] Draw main weapon model
-    if (m_bModelSet1) {
+    if (pen->m_bModelSet1) {
       // minigun specific (update rotation)
       if (iWeapon == WEAPON_MINIGUN) {
-        RotateMinigun();
+        pen->RotateMinigun();
       }
 
       // prepare render model structure
@@ -1206,11 +1212,11 @@ functions:
       rmMain.rm_ulFlags |= RMF_WEAPON; // TEMP: for Truform
 
       if (bInvisible) {
-        rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xffffff00) | ubBlend;
-      }      
+        rmMain.rm_colBlend = (rmMain.rm_colBlend & 0xFFFFFF00) | ubBlend;
+      }
     
-      m_moWeapon.SetupModelRendering(rmMain);
-      m_moWeapon.RenderModel(rmMain);
+      pen->m_moWeapon.SetupModelRendering(rmMain);
+      pen->m_moWeapon.RenderModel(rmMain);
     
       // [Cecil] Power Up particles
       if (amp_bPowerUpParticles) {
@@ -1654,11 +1660,13 @@ functions:
 
   // flare attachment
   void ControlFlareAttachment(void) {
-    CPlayerInventory *pen = GetInventory()->PredTail();
+    CPlayerInventory *pen = GetInventory();
+    INDEX iExtra = (m_bExtraWeapon ? 1 : 0);
 
     // flare indices
-    BOOL &bFlare = (m_bExtraWeapon ? pen->m_bFlare2 : pen->m_bFlare1);
-    BOOL bTimeOut = (_pTimer->CurrentTick() > pen->m_tmFlareAdded + _pTimer->TickQuantum);
+    BOOL &bFlare = (&pen->m_bFlare1)[iExtra];
+    FLOAT &tmFlare = (&pen->m_tmFlareAdded1)[iExtra];
+    BOOL bTimeOut = (_pTimer->CurrentTick() > tmFlare + _pTimer->TickQuantum);
 
     // [Cecil] TEMP: Fixed flare size
     FLOAT fFlareSize = 1.0f;
@@ -1674,13 +1682,15 @@ functions:
     // add flare
     if (bFlare) {
       bFlare = FALSE;
-      pen->m_tmFlareAdded = _pTimer->CurrentTick();
+      tmFlare = _pTimer->CurrentTick();
 
       WeaponFlare(fFlareSize, TRUE);
+      PredTail()->GetAnimator()->WeaponFlare(m_bExtraWeapon, TRUE);
 
     // remove
     } else if (!bFlare && bTimeOut) {
       WeaponFlare(fFlareSize, FALSE);
+      PredTail()->GetAnimator()->WeaponFlare(m_bExtraWeapon, FALSE);
     }
   };
 
@@ -1737,6 +1747,9 @@ functions:
         FatalError("Cannot load second weapon model config '%s':\n%s", wm2.strConfig, strError);
       }
     }
+
+    // remove flare by default
+    SetFlare(FALSE);
 
     // mirror the weapon
     ApplyMirroring(MirrorState());
@@ -3048,27 +3061,22 @@ procedures:
 
       case WEAPON_COLT:
         m_iAnim = COLT_ANIM_ACTIVATE;
-        SetFlare(FALSE);
         break;
 
       case WEAPON_SINGLESHOTGUN:
         m_iAnim = SINGLESHOTGUN_ANIM_ACTIVATE;
-        SetFlare(FALSE);
         break;
 
       case WEAPON_DOUBLESHOTGUN:
         m_iAnim = DOUBLESHOTGUN_ANIM_ACTIVATE;
-        SetFlare(FALSE);
         break;
 
       case WEAPON_TOMMYGUN:
         m_iAnim = TOMMYGUN_ANIM_ACTIVATE;
-        SetFlare(FALSE);
         break;
 
       case WEAPON_SNIPER:
         m_iAnim = SNIPER_ANIM_ACTIVATE;
-        SetFlare(FALSE);
         break;
 
       case WEAPON_MINIGUN: {
@@ -3076,7 +3084,6 @@ procedures:
         m_aMiniGunLast = m_aMiniGun = amo->amo_plRelative.pl_OrientationAngle(3);
 
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
-        SetFlare(FALSE);
       } break;
 
       case WEAPON_ROCKETLAUNCHER:
@@ -4825,9 +4832,6 @@ procedures:
         // play default anim
         PlayDefaultAnim(FALSE);
 
-        // [Cecil] Set weapon sounds owner
-        SetSoundOwner();
-
         // weapon changed
         if (m_bChangeWeapon) {
           jump ChangeWeapon();
@@ -4852,6 +4856,7 @@ procedures:
         if (m_bReloadWeapon) {
           jump Reload();
         }
+
         resume;
       }
 
@@ -4932,6 +4937,9 @@ procedures:
 
     m_penPlayer = eInit.penOwner;
     m_bExtraWeapon = eInit.bExtra;
+
+    // [Cecil] Set weapon sounds owner
+    SetSoundOwner();
 
     // declare yourself as a void
     InitAsVoid();
