@@ -124,7 +124,7 @@ procedures:
         // tell that player to do actions
         EAutoAction eAutoAction;
         eAutoAction.penFirstMarker = m_penAction;
-        m_penPlayer->SendEvent(eAutoAction);
+        GetFirstPlayer()->SendEvent(eAutoAction);
 
         resume;
       }

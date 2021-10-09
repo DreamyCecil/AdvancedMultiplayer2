@@ -83,10 +83,6 @@ functions:
       ETrigger &eTrigger = (ETrigger&)ee;
       // if triggered by a player
       if (IsDerivedFromClass(eTrigger.penCaused, "Player")) {
-        // send it event to start auto actions from here
-        EAutoAction eAutoAction;
-        eAutoAction.penFirstMarker = this;
-
         // [Cecil] Send actions to everyone
         if (GlobalCutscenes()) {
           EGlobalAction eAction;
@@ -94,7 +90,12 @@ functions:
           eAction.penAction = this;
 
           _penGlobalController->SendEvent(eAction);
+
+        // send event to start auto actions from here
         } else {
+          EAutoAction eAutoAction;
+          eAutoAction.penFirstMarker = this;
+
           eTrigger.penCaused->SendEvent(eAutoAction);
         }
       }

@@ -233,9 +233,6 @@ CEntity *GetFirstPlayer(const CTString &strExecutor) {
       penOne = pen;
 
       if (IsAlive(pen)) {
-        if (pen->IsPredictor()) {
-          return pen->GetPredicted();
-        }
         return pen;
       }
     }

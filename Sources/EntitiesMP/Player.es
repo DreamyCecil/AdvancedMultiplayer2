@@ -5713,7 +5713,7 @@ functions:
     TIME tmLevelTime = _pTimer->CurrentTick()-m_tmLevelStarted;
     m_psLevelStats.ps_tmTime = tmLevelTime;
     m_psGameStats.ps_tmTime += tmLevelTime;
-    FLOAT fTimeDelta = ClampDn(floor(m_tmEstTime) - floor(tmLevelTime), 0.0f);
+    FLOAT fTimeDelta = ClampDn(FLOAT(floor(m_tmEstTime) - floor(tmLevelTime)), 0.0f);
     m_iTimeScore = floor(fTimeDelta*100.0f);
     m_psLevelStats.ps_iScore+=m_iTimeScore;
     m_psGameStats.ps_iScore+=m_iTimeScore;
