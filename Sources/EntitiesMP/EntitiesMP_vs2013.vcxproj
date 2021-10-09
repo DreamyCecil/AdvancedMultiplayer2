@@ -460,10 +460,7 @@ copy vs2013\Debug_110\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Com
     </ClCompile>
     <ClCompile Include="Flame.cpp" />
     <ClCompile Include="FogMarker.cpp" />
-    <ClCompile Include="GhostBusterRay.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_110|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="GhostBusterRay.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="GradientMarker.cpp" />
