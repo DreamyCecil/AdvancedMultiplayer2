@@ -235,11 +235,11 @@ functions:
   };
 
   void WalkingAnim(void) {
-    if(_pTimer->CurrentTick()>=_tmLastStandingAnim-_pTimer->TickQuantum &&
+    /*if(_pTimer->CurrentTick()>=_tmLastStandingAnim-_pTimer->TickQuantum &&
        _pTimer->CurrentTick()<=_tmLastStandingAnim+_pTimer->TickQuantum)
     {
       BREAKPOINT;
-    }
+    }*/
 
     if(m_bcType==BT_BIG || m_bcType==BT_HUGE) {
       StartModelAnim(BEAST_ANIM_WALKBIG, AOF_LOOPING|AOF_NORESTART);
