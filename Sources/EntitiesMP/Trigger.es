@@ -191,7 +191,7 @@ procedures:
             } else if (m_bTellCount) {
               CTString strRemaining;
               strRemaining.PrintF(TRANS("%d more to go..."), m_iCountTmp);
-              PrintCenterMessage(this, m_penCaused, strRemaining, 3.0f, MSS_INFO);
+              PrintCenterMessage(this, m_penCaused, strRemaining, 3.0f, MSS_INFO, TRUE);
             }
           }
         // else send event

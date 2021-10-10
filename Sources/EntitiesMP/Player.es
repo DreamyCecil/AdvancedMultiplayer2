@@ -1218,7 +1218,7 @@ functions:
   // [Cecil] Purchase a random powerup with tokens
   void PurchasePowerup(void) {
     if (m_iTokens < 10) {
-      PrintCenterMessage(this, this, TRANS("Not enough tokens!"), 3.0f, MSS_INFO);
+      PrintCenterMessage(this, this, TRANS("Not enough tokens!"), 3.0f, MSS_INFO, TRUE);
       return;
     }
 
@@ -2641,8 +2641,12 @@ functions:
     pdp->SetTextScaling(fScale);
     pdp->SetTextAspect(1.0f);
 
+    // [Cecil] Override global message
+    if (_pTimer->CurrentTick() < m_tmCenterMessageEnd) {
+      pdp->PutTextCXY(m_strCenterMessage, pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
+
     // print center message
-    if (_pTimer->CurrentTick() < GetMessageTime()) {
+    } else if (_pTimer->CurrentTick() < GetMessageTime()) {
       pdp->PutTextCXY(GetCenterMessage(), pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
 
     // print picked item
@@ -2780,8 +2784,12 @@ functions:
       pdp->Fill(colBlend);
     }
 
+    // [Cecil] Override global message
+    BOOL bGlobalMessage = _pTimer->CurrentTick() < GetMessageTime();
+    BOOL bLocalMessage = _pTimer->CurrentTick() < m_tmCenterMessageEnd;
+
     // print center message
-    if (_pTimer->CurrentTick() < GetMessageTime()) {
+    if (bGlobalMessage || bLocalMessage) {
       PIX pixDPWidth = pdp->GetWidth();
       PIX pixDPHeight = pdp->GetHeight();
       FLOAT fScale = (FLOAT)pixDPWidth/640.0f;
@@ -2790,7 +2798,7 @@ functions:
       pdp->SetTextScaling(fScale);
       pdp->SetTextAspect(1.0f);
 
-      pdp->PutTextCXY(GetCenterMessage(), pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
+      pdp->PutTextCXY(bLocalMessage ? m_strCenterMessage : GetCenterMessage(), pixDPWidth*0.5f, pixDPHeight*0.85f, C_WHITE|0xDD);
     }
   };
 
@@ -3812,9 +3820,12 @@ functions:
     } else {
       DeathActions(paAction);
     }
+
+    // [Cecil] Check if affected by global cutscenes
+    BOOL bGlobalCutscenes = (GlobalCutscenes() && !IsPredictor());
     
     // [Cecil] In singleplayer cutscenes for other players
-    if (GlobalCutscenes() && ((CGlobalController*)_penGlobalController)->m_penPlayer != this) {
+    if (bGlobalCutscenes && ((CGlobalController*)_penGlobalController)->m_penPlayer != this) {
       // [Cecil] Hide players during actions
       if (GetAction() != NULL) {
         if (GetRenderType() != RT_EDITORMODEL) {
@@ -3900,7 +3911,7 @@ functions:
     }
 
     // [Cecil] Stop players globally
-    if (GlobalCutscenes() && GetGlobalStopMask() & (1 << GetMyPlayerIndex())) {
+    if (bGlobalCutscenes && GetGlobalStopMask() & (1 << GetMyPlayerIndex())) {
       // stop moving if no marker
       if (GetGlobalAction() == NULL) {
         SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
@@ -7162,7 +7173,7 @@ procedures:
 
       on (ECenterMessage eMsg) : {
         m_strCenterMessage = eMsg.strMessage;
-        m_tmCenterMessageEnd = _pTimer->CurrentTick()+eMsg.tmLength;
+        m_tmCenterMessageEnd = _pTimer->CurrentTick() + eMsg.tmLength;
 
         if (eMsg.mssSound == MSS_INFO) {
           m_soMessage.Set3DParameters(25.0f, 5.0f, 1.0f, 1.0f);

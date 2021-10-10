@@ -292,8 +292,9 @@ DECL_DLL EntityInfo *GetStdEntityInfo(EntityInfoBodyType eibt);
 DECL_DLL FLOAT DamageStrength(EntityInfoBodyType eibtBody, enum DamageType dtDamage);
 
 // Print center screen message
-DECL_DLL void PrintCenterMessage(CEntity *penThis, CEntity *penTarget, 
-  const CTString &strMessage, TIME tmLength, enum MessageSound mssSound);
+DECL_DLL void PrintCenterMessage(CEntity *penThis, CEntity *penTarget,
+  // [Cecil] Force local messages
+  const CTString &strMessage, TIME tmLength, enum MessageSound mssSound, const BOOL bLocal = FALSE);
 
 // get name of a key item
 DECL_DLL const char *GetKeyName(enum KeyItemType kit);

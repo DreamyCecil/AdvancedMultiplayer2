@@ -213,7 +213,7 @@ procedures:
         on (EPass ePass) : {
           if (CanReactOnEntity(ePass.penOther)) {
             if (m_strLockedMessage!="") {
-              PrintCenterMessage(this, ePass.penOther, TranslateConst(m_strLockedMessage), 3.0f, MSS_INFO);
+              PrintCenterMessage(this, ePass.penOther, TranslateConst(m_strLockedMessage), 3.0f, MSS_INFO, TRUE);
             }
             if (m_penLockedTarget!=NULL) {
               SendToTarget(m_penLockedTarget, EET_TRIGGER, ePass.penOther);
@@ -291,7 +291,7 @@ procedures:
         on (EPass ePass) : {
           if (CanReactOnEntity(ePass.penOther)) {
             if (m_strLockedMessage != "") {
-              PrintCenterMessage(this, ePass.penOther, TranslateConst(m_strLockedMessage), 3.0f, MSS_INFO);
+              PrintCenterMessage(this, ePass.penOther, TranslateConst(m_strLockedMessage), 3.0f, MSS_INFO, TRUE);
             }
 
             if (m_penLockedTarget != NULL) {

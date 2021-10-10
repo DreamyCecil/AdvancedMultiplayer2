@@ -1956,7 +1956,7 @@ functions:
         vToTarget.Normalize(); vTargetHeading.Normalize();
         if (vToTarget%vTargetHeading>0.64279) //CosFast(50.0f)
         {
-          PrintCenterMessage(this, m_penPlayer, TRANS("Backstab!"), 4.0f, MSS_NONE);
+          PrintCenterMessage(this, m_penPlayer, TRANS("Backstab!"), 4.0f, MSS_NONE, TRUE);
           fDamage *= 4.0f;
         }
       }

@@ -1255,10 +1255,10 @@ FLOAT DamageStrength(EntityInfoBodyType eibtBody, enum DamageType dtDamage)
 
 // Print center screen message
 void PrintCenterMessage(CEntity *penThis, CEntity *penCaused, 
-  const CTString &strMessage, TIME tmLength, enum MessageSound mssSound)
+  const CTString &strMessage, TIME tmLength, enum MessageSound mssSound, const BOOL bLocal)
 {
   // [Cecil] Send to the global controller
-  if (GlobalCutscenes()) {
+  if (GlobalCutscenes() && !bLocal) {
     penCaused = _penGlobalController;
   } else {
     penCaused = FixupCausedToPlayer(penThis, penCaused);
