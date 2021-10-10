@@ -968,12 +968,12 @@ functions:
   };
 
   // [Cecil] Set player as the owner of sound objects
-  void SetSoundOwner(void) {
-    m_soWeapon0.SetOwner(m_penPlayer);
-    m_soWeapon1.SetOwner(m_penPlayer);
-    m_soWeapon2.SetOwner(m_penPlayer);
-    m_soWeapon3.SetOwner(m_penPlayer);
-    m_soWeaponAmbient.SetOwner(m_penPlayer);
+  void SetSoundOwner(CEntity *penOwner) {
+    m_soWeapon0.SetOwner(penOwner);
+    m_soWeapon1.SetOwner(penOwner);
+    m_soWeapon2.SetOwner(penOwner);
+    m_soWeapon3.SetOwner(penOwner);
+    m_soWeaponAmbient.SetOwner(penOwner);
   };
   
   // add to prediction any entities that this entity depends on
@@ -4832,6 +4832,9 @@ procedures:
         // play default anim
         PlayDefaultAnim(FALSE);
 
+        // [Cecil] Set weapon sounds owner
+        SetSoundOwner(m_penPlayer->GetPredictionTail());
+
         // weapon changed
         if (m_bChangeWeapon) {
           jump ChangeWeapon();
@@ -4937,9 +4940,6 @@ procedures:
 
     m_penPlayer = eInit.penOwner;
     m_bExtraWeapon = eInit.bExtra;
-
-    // [Cecil] Set weapon sounds owner
-    SetSoundOwner();
 
     // declare yourself as a void
     InitAsVoid();
