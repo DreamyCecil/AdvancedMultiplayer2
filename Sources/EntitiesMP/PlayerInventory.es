@@ -792,6 +792,9 @@ functions:
         m_aWeapons[iClear].iPicked = 0;
       }
     }
+
+    // reset dual wielding
+    m_fDualWeaponShift = 0.0f;
   };
 
   // Receive new weapon
