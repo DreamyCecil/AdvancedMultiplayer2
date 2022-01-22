@@ -135,6 +135,7 @@ class CSessionProperties {
     INDEX sp_iAMPOptions; // main gameplay flags
     FLOAT sp_fSpeedMultiplier;
     FLOAT sp_fJumpMultiplier;
+    FLOAT sp_fGravityMul;
     FLOAT sp_fStartHealth;
     FLOAT sp_fMaxHealth;
     FLOAT sp_fMaxArmor;

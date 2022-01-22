@@ -6,6 +6,7 @@ static INDEX amp_bConversion = FALSE;
 
 static FLOAT amp_fSpeedMultiplier = 1.0f;
 static FLOAT amp_fJumpMultiplier = 1.0f;
+static FLOAT amp_fGravityMul = 1.0f;
 static FLOAT amp_fStartHealth = 100.0f;
 static FLOAT amp_fMaxHealth = 200.0f;
 static FLOAT amp_fMaxArmor = 200.0f;
@@ -100,6 +101,7 @@ static void RestoreDefaultOptions(void) {
 
   amp_fSpeedMultiplier = 1.0f;
   amp_fJumpMultiplier = 1.0f;
+  amp_fGravityMul = 1.0f;
   amp_fStartHealth = 100.0f;
   amp_fMaxHealth = 200.0f;
   amp_fMaxArmor = 200.0f;
@@ -195,6 +197,7 @@ extern void DeclareExtraSymbols(void) {
 
   _pShell->DeclareSymbol("persistent user FLOAT amp_fSpeedMultiplier;", &amp_fSpeedMultiplier);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fJumpMultiplier;", &amp_fJumpMultiplier);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fGravityMul;", &amp_fGravityMul);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fStartHealth;", &amp_fStartHealth);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fMaxHealth;", &amp_fMaxHealth);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fMaxArmor;", &amp_fMaxArmor);
@@ -340,6 +343,7 @@ extern void SetAdvancedParameters(CSessionProperties &sp) {
 
   sp.sp_fSpeedMultiplier = (bOpt ? amp_fSpeedMultiplier : 1.0f);
   sp.sp_fJumpMultiplier  = (bOpt ? amp_fJumpMultiplier : 1.0f);
+  sp.sp_fGravityMul      = (bOpt ? amp_fGravityMul : 1.0f);
   sp.sp_fStartHealth     = (bOpt ? amp_fStartHealth : 100.0f);
   sp.sp_fMaxHealth       = (bOpt ? amp_fMaxHealth : 200.0f);
   sp.sp_fMaxArmor        = (bOpt ? amp_fMaxArmor : 200.0f);

@@ -1123,6 +1123,11 @@ functions:
     }
     fsField.fs_fAcceleration = 0;
     fsField.fs_fVelocity = 0;
+
+    // [Cecil] Multiply gravitational acceleration
+    if (GetSP()->sp_fGravityMul != 1.0f) {
+      fsGravity.fs_fAcceleration *= GetSP()->sp_fGravityMul;
+    }
   }
 
   // Get entity that controls the force, used for change notification checking

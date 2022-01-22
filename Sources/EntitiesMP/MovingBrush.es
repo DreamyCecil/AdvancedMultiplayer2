@@ -151,6 +151,11 @@ functions:
   // Get force in given point
   void GetForce(INDEX iForce, const FLOAT3D &vPoint, CForceStrength &fsGravity, CForceStrength &fsField) {
     GetDefaultForce(iForce, vPoint, fsGravity, fsField);
+
+    // [Cecil] Multiply gravitational acceleration
+    if (GetSP()->sp_fGravityMul != 1.0f) {
+      fsGravity.fs_fAcceleration *= GetSP()->sp_fGravityMul;
+    }
   };
 
   // Receive damage
