@@ -600,7 +600,7 @@ functions:
     ULONG ulOldWeapons = GetCurrentWeaponMask();
 
     // [Cecil] Keep all weapons in coop
-    BOOL bKeep = (GetSP()->sp_bCooperative && GetSP()->sp_iAMPOptions & AMP_KEEPSECRETS);
+    BOOL bKeep = (GetSP()->sp_bCooperative && GetSP()->sp_iAMPOptions & AMP_KEEPWEAPONS);
 
     if (bKeep) {
       ulOldWeapons = 0;
@@ -774,7 +774,7 @@ functions:
   // Clear weapons
   void ClearWeapons(void) {
     // don't clear secret weapons in coop
-    BOOL bClearWeapons = !GetSP()->sp_bCooperative || !(GetSP()->sp_iAMPOptions & AMP_KEEPSECRETS);
+    BOOL bClearWeapons = !GetSP()->sp_bCooperative || !(GetSP()->sp_iAMPOptions & AMP_KEEPWEAPONS);
 
     // clear ammo amounts
     INDEX iClear;

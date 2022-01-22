@@ -48,7 +48,7 @@ static INDEX amp_bStrongerEnemies = FALSE;
 static FLOAT amp_fBossResistance = 1.0f;
 static INDEX amp_bNoRocketJump = FALSE;
 
-static INDEX amp_bKeepSecrets = FALSE;
+static INDEX amp_bKeepCollected = FALSE;
 static INDEX amp_bSharedWeapons = FALSE;
 static INDEX amp_iPlayerCollision = 0;
 static INDEX amp_bAutosave = TRUE;
@@ -143,7 +143,7 @@ static void RestoreDefaultOptions(void) {
   amp_fBossResistance = 1.0f;
   amp_bNoRocketJump = FALSE;
 
-  amp_bKeepSecrets = FALSE;
+  amp_bKeepCollected = FALSE;
   amp_bSharedWeapons = FALSE;
   amp_iPlayerCollision = 0;
   amp_bAutosave = TRUE;
@@ -239,7 +239,7 @@ extern void DeclareExtraSymbols(void) {
   _pShell->DeclareSymbol("persistent user FLOAT amp_fBossResistance;", &amp_fBossResistance);
   _pShell->DeclareSymbol("persistent user INDEX amp_bNoRocketJump;", &amp_bNoRocketJump);
 
-  _pShell->DeclareSymbol("persistent user INDEX amp_bKeepSecrets;", &amp_bKeepSecrets);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bKeepCollected;", &amp_bKeepCollected);
   _pShell->DeclareSymbol("persistent user INDEX amp_bSharedWeapons;", &amp_bSharedWeapons);
   _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerCollision;", &amp_iPlayerCollision);
   _pShell->DeclareSymbol("persistent user INDEX amp_bAutosave;", &amp_bAutosave);
@@ -374,7 +374,7 @@ extern void SetAdvancedParameters(CSessionProperties &sp) {
                     | (amp_bRocketDestruction ? AMP_ROCKETS : 0)
                     | (amp_bUnlimitedCombos   ? AMP_UNLIMITCOMBO : 0)
                     | (amp_bStrongerEnemies   ? AMP_ENEMIES : 0)
-                    | (amp_bKeepSecrets       ? AMP_KEEPSECRETS : 0)
+                    | (amp_bKeepCollected     ? AMP_KEEPWEAPONS : 0)
                     | (amp_bSharedWeapons     ? AMP_SHAREWEAPONS : 0)
                     | (amp_bAutosave          ? AMP_AUTOSAVE : 0)
                     | (amp_bTakeWeapons       ? AMP_TAKEWEAPONS : 0)

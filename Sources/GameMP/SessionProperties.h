@@ -6,7 +6,7 @@
 #define AMP_ROCKETS      (1 << 4)
 #define AMP_UNLIMITCOMBO (1 << 5)
 #define AMP_ENEMIES      (1 << 6)
-#define AMP_KEEPSECRETS  (1 << 7)
+#define AMP_KEEPWEAPONS  (1 << 7)
 #define AMP_AUTOSAVE     (1 << 8)
 #define AMP_BALANCED     (1 << 9)
 #define AMP_TAKEWEAPONS  (1 << 10)
