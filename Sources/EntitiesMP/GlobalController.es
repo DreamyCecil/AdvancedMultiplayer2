@@ -25,7 +25,7 @@ features  "IsImportant";
 
 properties:
 // Cutscenes
- 1 CEntityPointer m_penPlayer, // player who started the cutscene
+ 1 CEntityPointer m_penActor, // player who started the cutscene
  2 CEntityPointer m_penCamera, // current cutscene camera
  3 CEntityPointer m_penAction, // current cutscene action
  4 INDEX m_iStopMask = 0,
@@ -56,10 +56,15 @@ functions:
 
   // Reset controller properties
   void Reset(void) {
-    m_penPlayer = NULL;
+    m_penActor = NULL;
     m_penCamera = NULL;
     m_penAction = NULL;
     m_iStopMask = 0;
+  };
+
+  // Check if it's the the cutscene actor
+  BOOL IsActor(CEntity *pen) {
+    return (m_penActor == pen->GetPredictionTail());
   };
 
 procedures:
@@ -118,13 +123,13 @@ procedures:
       // retrieve action marker
       on (EGlobalAction eAction) : {
         // set current player and action
-        m_penPlayer = eAction.penCaused;
+        m_penActor = eAction.penCaused;
         m_penAction = eAction.penAction;
 
         // tell that player to do actions
         EAutoAction eAutoAction;
         eAutoAction.penFirstMarker = m_penAction;
-        GetFirstPlayer()->SendEvent(eAutoAction);
+        m_penActor->SendEvent(eAutoAction);
 
         resume;
       }

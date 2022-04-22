@@ -69,30 +69,23 @@ static FLOAT amp_fPlayerBrightness = 0.1f; // player model brightness
 
 // [Cecil] Global controller
 #include "EntitiesMP/GlobalController.h"
+
 extern CEntity *_penGlobalController;
+#define GLOBAL_CONTROLLER ((CGlobalController *)_penGlobalController)
 
 // [Cecil] Cutscenes
 inline CCamera *GetGlobalCamera(void) {
-  CCamera *pen = (CCamera*)&*((CGlobalController*)_penGlobalController)->m_penCamera;
+  CCamera *pen = (CCamera *)&*GLOBAL_CONTROLLER->m_penCamera;
   return pen;
 };
 
 inline CPlayerActionMarker *GetGlobalAction(void) {
-  CPlayerActionMarker *pen = (CPlayerActionMarker*)&*((CGlobalController*)_penGlobalController)->m_penAction;
+  CPlayerActionMarker *pen = (CPlayerActionMarker *)&*GLOBAL_CONTROLLER->m_penAction;
   return pen;
 };
 
 inline INDEX &GetGlobalStopMask(void) {
-  return ((CGlobalController*)_penGlobalController)->m_iStopMask;
-};
-
-// [Cecil] Center messages
-inline CTString GetGlobalMessage(void) {
-  return ((CGlobalController*)_penGlobalController)->m_strMessage;
-};
-
-inline FLOAT GetGlobalMessageTime(void) {
-  return ((CGlobalController*)_penGlobalController)->m_tmMessage;
+  return GLOBAL_CONTROLLER->m_iStopMask;
 };
 %}
 
@@ -1282,7 +1275,7 @@ functions:
   void ResetCamera(void) {
     if (GlobalCutscenes()) {
       // only the current player can reset
-      if (((CGlobalController*)_penGlobalController)->m_penPlayer == this) {
+      if (GLOBAL_CONTROLLER->IsActor(this)) {
         _penGlobalController->SendEvent(ECameraStop());
       }
       return;
@@ -1292,7 +1285,8 @@ functions:
 
   // [Cecil] Get current action
   CEntity *GetAction(void) {
-    if (GlobalCutscenes()) {
+    // actor relies on their own pointer
+    if (GlobalCutscenes() && !GLOBAL_CONTROLLER->IsActor(this)) {
       return GetGlobalAction();
     }
     return m_penActionMarker;
@@ -1300,26 +1294,37 @@ functions:
 
   // [Cecil] Set current action
   void SetAction(CEntity *pen) {
-    if (GlobalCutscenes()) {
-      // only the first player can set
-      if (((CGlobalController*)_penGlobalController)->m_penPlayer == this) {
-        ((CGlobalController*)_penGlobalController)->m_penAction = pen;
+    // set actor's pointer
+    m_penActionMarker = pen;
 
-        // clear the player if no more actions
-        if (!ASSERT_ENTITY(pen)) {
-          ((CGlobalController*)_penGlobalController)->m_penPlayer = NULL;
-        }
-      }
+    if (IsPredictor()) {
+      return;
+    }
+    
+    // only the cutscene actor can set
+    if (!GlobalCutscenes() || !GLOBAL_CONTROLLER->IsActor(this)) {
       return;
     }
 
-    m_penActionMarker = pen;
+    // clear the actor if no more actions
+    if (!ASSERT_ENTITY(pen)) {
+      GLOBAL_CONTROLLER->m_penActor = NULL;
+      GLOBAL_CONTROLLER->m_penAction = NULL;
+
+    } else {
+      GLOBAL_CONTROLLER->m_penAction = pen;
+    }
+  };
+
+  // [Cecil] Actions active
+  BOOL IsActionActive(void) {
+    return GetAction() != NULL;
   };
 
   // [Cecil] Get center message
   CTString GetCenterMessage(void) {
     if (GlobalCutscenes()) {
-      return GetGlobalMessage();
+      return GLOBAL_CONTROLLER->m_strMessage;
     }
     return m_strCenterMessage;
   };
@@ -1327,7 +1332,7 @@ functions:
   // [Cecil] Get center message time
   FLOAT GetMessageTime(void) {
     if (GlobalCutscenes()) {
-      return GetGlobalMessageTime();
+      return GLOBAL_CONTROLLER->m_tmMessage;
     }
     return m_tmCenterMessageEnd;
   };
@@ -2270,7 +2275,12 @@ functions:
 
   // Wrapper for action marker getting
   class CPlayerActionMarker *GetActionMarker(void) {
-    return (CPlayerActionMarker*)GetAction();
+    return (CPlayerActionMarker *)GetAction();
+  };
+
+  // [Cecil] Get current auto action type (only valid when action marker exists)
+  INDEX GetAutoAction(void) {
+    return GetActionMarker()->m_paaAction;
   };
 
   // Find main music holder if not remembered
@@ -2834,7 +2844,7 @@ functions:
     }
 
     // check for dualhead
-    BOOL bDualHead = (pdp->IsDualHead() && GetSP()->sp_gmGameMode != CSessionProperties::GM_FLYOVER && GetAction() == NULL);
+    BOOL bDualHead = (pdp->IsDualHead() && GetSP()->sp_gmGameMode != CSessionProperties::GM_FLYOVER && !IsActionActive());
 
     // if dualhead, or no camera active
     if (bDualHead || GetCamera() == NULL) {
@@ -2851,7 +2861,7 @@ functions:
     // if camera active
     if (GetCamera() != NULL) {
       // make left or right camera view
-      CDrawPort dpView(pdp, GetAction() != NULL);
+      CDrawPort dpView(pdp, IsActionActive());
 
       if (dpView.Lock()) {
         // draw it, listen if not dualhead
@@ -3309,7 +3319,7 @@ functions:
     }
 
     // if the player is doing autoactions
-    if (GetAction() != NULL) {
+    if (IsActionActive()) {
       // ignore all damage
       return;
     }
@@ -3799,7 +3809,7 @@ functions:
     // if alive
     if (IsAlive(this)) {
       // if not in auto-action mode
-      if (GetAction() == NULL) {
+      if (!IsActionActive()) {
         // apply actions
         AliveActions(paAction);
 
@@ -3825,9 +3835,9 @@ functions:
     BOOL bGlobalCutscenes = (GlobalCutscenes() && !IsPredictor());
     
     // [Cecil] In singleplayer cutscenes for other players
-    if (bGlobalCutscenes && ((CGlobalController*)_penGlobalController)->m_penPlayer != this) {
+    if (bGlobalCutscenes && !GLOBAL_CONTROLLER->IsActor(this)) {
       // [Cecil] Hide players during actions
-      if (GetAction() != NULL) {
+      if (IsActionActive()) {
         if (GetRenderType() != RT_EDITORMODEL) {
           SwitchToEditorModel();
           SetPhysicsFlags(GetPhysicsFlags() & ~EPF_TRANSLATEDBYGRAVITY);
@@ -4063,7 +4073,7 @@ functions:
 
         // if should hit the marker exactly
         FLOAT fSpeed = m_fAutoSpeed;
-        if (GetActionMarker()->m_paaAction == PAA_RUNANDSTOP) {
+        if (GetAutoAction() == PAA_RUNANDSTOP) {
           // adjust speed
           fSpeed = Min(fSpeed, fDistance/_pTimer->TickQuantum);
         }
@@ -4084,10 +4094,7 @@ functions:
       paAction.pa_vTranslation = m_vAutoSpeed;
     }
 
-    CPlayerActionMarker *ppam = GetActionMarker();
-    ASSERT(ppam != NULL);
-
-    if (ppam->m_paaAction == PAA_LOGO_FIRE_MINIGUN || ppam->m_paaAction == PAA_LOGO_FIRE_INTROSE) {
+    if (GetAutoAction() == PAA_LOGO_FIRE_MINIGUN || GetAutoAction() == PAA_LOGO_FIRE_INTROSE) {
       if (m_tmMinigunAutoFireStart != -1) {
         FLOAT tmDelta = _pTimer->CurrentTick() - m_tmMinigunAutoFireStart;
         FLOAT aDH = 0.0f;
@@ -4100,7 +4107,7 @@ functions:
           aDP = 0.5f*cos(fDT);
         }
 
-        if (ppam->m_paaAction == PAA_LOGO_FIRE_INTROSE) {
+        if (GetAutoAction() == PAA_LOGO_FIRE_INTROSE) {
           FLOAT fRatio = CalculateRatio(tmDelta, 0.25f, 5.0f, 0.1f, 0.1f);
           aDP = 2.0f*sin(tmDelta*200.0f)*fRatio;
 
@@ -6357,9 +6364,8 @@ procedures:
       StartModelAnim(PLAYER_ANIM_NORMALWALK, ulFlags);
     }
 
-    // while not at marker
+    // wait a bit while not at the marker
     while ((GetAction()->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > 1.0f) {
-      // wait a bit
       autowait(_pTimer->TickQuantum);
     }
 
@@ -6385,8 +6391,8 @@ procedures:
       StartModelAnim(PLAYER_ANIM_NORMALWALK, ulFlags);
     }
 
-    // wait a bit while not at marker
-    while ((GetAction()->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > m_fAutoSpeed*_pTimer->TickQuantum * 2.0f) {
+    // wait a bit while not at the marker
+    while ((GetAction()->GetPlacement().pl_PositionVector - GetPlacement().pl_PositionVector).Length() > m_fAutoSpeed * _pTimer->TickQuantum * 2.0f) {
       autowait(_pTimer->TickQuantum);
     }
 
@@ -6427,17 +6433,19 @@ procedures:
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.BodyRemoveItem();
 
+    CPlayerActionMarker *ppam = GetActionMarker();
+
     // if marker points to a trigger
-    if (GetActionMarker()->m_penTrigger != NULL) {
+    if (ppam->m_penTrigger != NULL) {
       // trigger it
-      SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
+      SendToTarget(ppam->m_penTrigger, EET_TRIGGER, this);
     }
 
     // fake that player has passed through the door controller
-    if (GetActionMarker()->m_penDoorController != NULL) {
+    if (ppam->m_penDoorController != NULL) {
       EPass ePass;
       ePass.penOther = this;
-      GetActionMarker()->m_penDoorController->SendEvent(ePass);
+      ppam->m_penDoorController->SendEvent(ePass);
     }
     
     autowait(1.05f);
@@ -6458,15 +6466,15 @@ procedures:
 
     autowait(1.2f);
 
+    CPlayerActionMarker *ppam = GetActionMarker();
+
     // if marker points to a trigger
-    if (GetActionMarker()->m_penTrigger != NULL) {
+    if (ppam->m_penTrigger != NULL) {
       // trigger it
-      SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
+      SendToTarget(ppam->m_penTrigger, EET_TRIGGER, this);
     }
 
     // item appears
-    CPlayerActionMarker *ppam = GetActionMarker();
-
     if (IsOfClass(ppam->m_penItem, "KeyItem")) {
       CModelObject &moItem = ppam->m_penItem->GetModelObject()->GetAttachmentModel(0)->amo_moModelObject;
       GetPlayerAnimator()->SetItem(&moItem);
@@ -6731,7 +6739,7 @@ procedures:
     plan.m_bDisableAnimating = TRUE;
 
     // [Cecil] Disable collision
-    if (SPWorld() && GetSP()->sp_iPlayerCollision != 2) {
+    if (GlobalCutscenes() && GetSP()->sp_iPlayerCollision != 2) {
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     }
 
@@ -6743,7 +6751,7 @@ procedures:
     while (!m_bActionLoopBreak && GetAction() != NULL && IsOfClass(GetAction(), "PlayerActionMarker"))
     {
       // if should wait
-      if (GetActionMarker()->m_paaAction == PAA_WAIT) {
+      if (GetAutoAction() == PAA_WAIT) {
         // play still anim
         CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
         // [Cecil] Default animation instead of wait animation
@@ -6751,7 +6759,7 @@ procedures:
         // wait given time
         autowait(GetActionMarker()->m_tmWait);
 
-      } else if (GetActionMarker()->m_paaAction == PAA_STOPANDWAIT) {
+      } else if (GetAutoAction() == PAA_STOPANDWAIT) {
         // play still anim
         StartModelAnim(PLAYER_ANIM_STAND, 0);
         CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
@@ -6761,30 +6769,30 @@ procedures:
         autowait(GetActionMarker()->m_tmWait);
 
       // if should teleport here
-      } else if (GetActionMarker()->m_paaAction == PAA_APPEARING) {
+      } else if (GetAutoAction() == PAA_APPEARING) {
         autocall AutoAppear() EReturn;
 
-      } else if (GetActionMarker()->m_paaAction == PAA_TRAVELING_IN_BEAM) {
+      } else if (GetAutoAction() == PAA_TRAVELING_IN_BEAM) {
         autocall TravellingInBeam() EReturn;
 
-      } else if (GetActionMarker()->m_paaAction == PAA_INTROSE_SELECT_WEAPON) {
+      } else if (GetAutoAction() == PAA_INTROSE_SELECT_WEAPON) {
         // order playerweapons to select weapon
         ESelectWeapon eSelect;
         eSelect.iWeapon = 1;
         GetWeapon(0)->SendEvent(eSelect);
 
-      } else if (GetActionMarker()->m_paaAction == PAA_LOGO_FIRE_INTROSE) {
+      } else if (GetAutoAction() == PAA_LOGO_FIRE_INTROSE) {
         autocall LogoFireMinigun() EReturn;
 
-      } else if (GetActionMarker()->m_paaAction == PAA_LOGO_FIRE_MINIGUN) {
+      } else if (GetAutoAction() == PAA_LOGO_FIRE_MINIGUN) {
         autocall LogoFireMinigun() EReturn;
 
       // if should appear here
-      } else if (GetActionMarker()->m_paaAction == PAA_TELEPORT) {
+      } else if (GetAutoAction() == PAA_TELEPORT) {
         autocall AutoTeleport() EReturn;
 
       // if should wait for trigger
-      } else if (GetActionMarker()->m_paaAction == PAA_WAITFOREVER) {
+      } else if (GetAutoAction() == PAA_WAITFOREVER) {
         // wait forever
         wait() {
           on (EBegin) : { resume; }
@@ -6792,37 +6800,37 @@ procedures:
         }
 
       // if should store weapon
-      } else if (GetActionMarker()->m_paaAction == PAA_STOREWEAPON) {
+      } else if (GetAutoAction() == PAA_STOREWEAPON) {
         autocall AutoStoreWeapon() EReturn;
       
       // if should draw weapon
-      } else if (GetActionMarker()->m_paaAction == PAA_DRAWWEAPON) {
+      } else if (GetAutoAction() == PAA_DRAWWEAPON) {
         // order playerweapons to select best weapon
         ESelectWeapon eSelect;
         eSelect.iWeapon = -4;
         GetWeapon(0)->SendEvent(eSelect);
 
       // if should wait
-      } else if (GetActionMarker()->m_paaAction == PAA_LOOKAROUND) {
+      } else if (GetAutoAction() == PAA_LOOKAROUND) {
         autocall AutoLookAround() EReturn;
 
       // if should use item
-      } else if (GetActionMarker()->m_paaAction == PAA_USEITEM) {
+      } else if (GetAutoAction() == PAA_USEITEM) {
         // use it
         autocall AutoUseItem() EReturn;
 
       // if should pick item
-      } else if (GetActionMarker()->m_paaAction == PAA_PICKITEM) {
+      } else if (GetAutoAction() == PAA_PICKITEM) {
         // pick it
         autocall AutoPickItem() EReturn;
 
       // if falling from bridge
-      } else if (GetActionMarker()->m_paaAction == PAA_FALLDOWN) {
+      } else if (GetAutoAction() == PAA_FALLDOWN) {
         // fall
         autocall AutoFallDown() EReturn;
 
       // if releasing player
-      } else if (GetActionMarker()->m_paaAction == PAA_RELEASEPLAYER) {
+      } else if (GetAutoAction() == PAA_RELEASEPLAYER) {
         if (GetCamera() != NULL) {
           ((CCamera*)&*GetCamera())->m_bStopMoving = TRUE;
         }
@@ -6842,7 +6850,7 @@ procedures:
         m_tmSpiritStart = 0;
 
       // if start computer
-      } else if (GetActionMarker()->m_paaAction == PAA_STARTCOMPUTER) {
+      } else if (GetAutoAction() == PAA_STARTCOMPUTER) {
         // mark that
         if (_pNetwork->IsPlayerLocal(this) && GetSP()->sp_bSinglePlayer) {
           cmp_ppenPlayer = this;
@@ -6850,31 +6858,31 @@ procedures:
         }
 
       // if start introscroll
-      } else if (GetActionMarker()->m_paaAction == PAA_STARTINTROSCROLL) {
+      } else if (GetAutoAction() == PAA_STARTINTROSCROLL) {
         _pShell->Execute("sam_iStartCredits=1;");
 
       // if start credits
-      } else if (GetActionMarker()->m_paaAction == PAA_STARTCREDITS) {
+      } else if (GetAutoAction() == PAA_STARTCREDITS) {
         _pShell->Execute("sam_iStartCredits=2;");
 
       // if stop scroller
-      } else if (GetActionMarker()->m_paaAction == PAA_STOPSCROLLER) {
+      } else if (GetAutoAction() == PAA_STOPSCROLLER) {
         _pShell->Execute("sam_iStartCredits=-1;");
 
       // if should run to the marker
-      } else if (GetActionMarker()->m_paaAction == PAA_RUN) {
+      } else if (GetAutoAction() == PAA_RUN) {
         // go to it
-        m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;
+        m_fAutoSpeed = plr_fSpeedForward * GetActionMarker()->m_fSpeed;
         autocall AutoGoToMarker() EReturn;
 
       // if should run to the marker and stop exactly there
-      } else if (GetActionMarker()->m_paaAction == PAA_RUNANDSTOP) {
+      } else if (GetAutoAction() == PAA_RUNANDSTOP) {
         // go to it
-        m_fAutoSpeed = plr_fSpeedForward*GetActionMarker()->m_fSpeed;
+        m_fAutoSpeed = plr_fSpeedForward * GetActionMarker()->m_fSpeed;
         autocall AutoGoToMarkerAndStop() EReturn;
 
       // if should record end-of-level stats
-      } else if (GetActionMarker()->m_paaAction == PAA_RECORDSTATS) {
+      } else if (GetAutoAction() == PAA_RECORDSTATS) {
 
         if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bPlayEntireGame) {
           // remeber estimated time
@@ -6886,7 +6894,7 @@ procedures:
         }
 
       // if should show statistics to the player
-      } else if (GetActionMarker()->m_paaAction == PAA_SHOWSTATS) {
+      } else if (GetAutoAction() == PAA_SHOWSTATS) {
         // call computer
         if (cmp_ppenPlayer == NULL && _pNetwork->IsPlayerLocal(this) && GetSP()->sp_bSinglePlayer) {
           m_bEndOfLevel = TRUE;
@@ -6914,17 +6922,17 @@ procedures:
           m_ulFlags &= !PLF_DONTRENDER;
         }
       // if end of entire game
-      } else if (GetActionMarker()->m_paaAction == PAA_ENDOFGAME) {
+      } else if (GetAutoAction() == PAA_ENDOFGAME) {
         // record stats
         jump TheEnd();
 
-      } else if (GetActionMarker()->m_paaAction == PAA_NOGRAVITY) {
+      } else if (GetAutoAction() == PAA_NOGRAVITY) {
         SetPhysicsFlags(GetPhysicsFlags() & ~(EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY));
         if (GetActionMarker()->GetParent() != NULL) {
           SetParent(GetActionMarker()->GetParent());
         }
 
-      } else if (GetActionMarker()->m_paaAction == PAA_TURNONGRAVITY) {
+      } else if (GetAutoAction() == PAA_TURNONGRAVITY) {
         SetPhysicsFlags(GetPhysicsFlags()|EPF_TRANSLATEDBYGRAVITY|EPF_ORIENTEDBYGRAVITY);
         SetParent(NULL);
 
@@ -6932,36 +6940,35 @@ procedures:
         ASSERT(FALSE);
       }
 
-      // [Cecil] Safety check
-      if (!ASSERT_ENTITY(GetAction())) {
-        m_bActionLoopBreak = TRUE;
-        SetAction(NULL);
-        m_penLastAction = NULL;
-
-      } else {
-        // if marker points to a trigger
-        if (GetActionMarker()->m_penTrigger != NULL &&
-            GetActionMarker()->m_paaAction != PAA_PICKITEM) {
-          // trigger it
-          SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
-        }
-
-        // [Cecil] Save last marker
-        m_penLastAction = GetAction();
-
-        SetAction(GetActionMarker()->m_penTarget);
+      // if marker points to a trigger
+      if (GetActionMarker()->m_penTrigger != NULL && GetAutoAction() != PAA_PICKITEM) {
+        // trigger it
+        SendToTarget(GetActionMarker()->m_penTrigger, EET_TRIGGER, this);
       }
+
+      // [Cecil] Save last marker that affect position
+      INDEX iAction = GetAutoAction();
+
+      if (iAction == PAA_RUN || iAction == PAA_RUNANDSTOP || iAction == PAA_TELEPORT
+       || iAction == PAA_APPEARING || iAction == PAA_TRAVELING_IN_BEAM
+       || iAction == PAA_LOGO_FIRE_INTROSE || iAction == PAA_LOGO_FIRE_MINIGUN) {
+        m_penLastAction = GetAction();
+      } else {
+        m_penLastAction = NULL;
+      }
+
+      SetAction(GetActionMarker()->m_penTarget);
     }
     
     // disable auto speed
     m_fAutoSpeed = 0.0f;
 
-    // [Cecil] If it's a singleplayer map
-    if (SPWorld()) {
+    // [Cecil] If global cutscenes
+    if (GlobalCutscenes()) {
       autowait(0.05f);
 
       // [Cecil] Teleport everyone back after the sequence
-      if (m_penLastAction != NULL /*&& ((CPlayerActionMarker*)&*m_penLastAction)->m_paaAction != PAA_TELEPORT*/) {
+      if (m_penLastAction != NULL) {
         for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
           CEntity *pen = GetPlayerEntity(iPlayer);
 
@@ -7007,7 +7014,7 @@ procedures:
     plan.m_bDisableAnimating = FALSE;
 
     // [Cecil] Enable collision
-    if (SPWorld() && GetSP()->sp_iPlayerCollision != 2) {
+    if (GlobalCutscenes() && GetSP()->sp_iPlayerCollision != 2) {
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS));
     }
 
