@@ -382,6 +382,70 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
   }
 };
 
+// [Cecil] Fill attachment list
+void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment, CAttachList &aAttachments) {
+  INDEX ctValues = mapBlock.Count();
+
+  for (INDEX iValue = 0; iValue < ctValues; iValue++) {
+    // get config value
+    string strName = mapBlock.GetKey(iValue);
+    CConfigValue &cv = mapBlock.GetValue(iValue);
+
+    // flagged element
+    if (strName == "Flag") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+
+      // add to the attachment list
+      aAttachments.Add(cv.cv_strValue, SListModel(pamoAttachment, pmo));
+
+    // include another model
+    } else if (strName == "Include") {
+      ASSERT_VALUE_TYPE(cv, STRING);
+      
+      // load model config
+      CConfigBlock cbInclude;
+
+      if (LoadJSON(CTString(cv.cv_strValue), cbInclude) != DJSON_OK) {
+        ThrowF_t("Couldn't parse the included model \"%s\"", cv.cv_strValue);
+      }
+
+      // set attachments
+      ParseModelAttachments(cbInclude, pmo, NULL, aAttachments);
+
+    // attachments
+    } else if (CTString(strName.c_str()).HasPrefix("Attachment")) {
+      INDEX iAttach;
+
+      if (CTString(strName.c_str()).ScanF("Attachment %i", &iAttach) > 0) {
+        ASSERT_VALUE_TYPE(cv, BLOCK);
+
+        // Invalid index
+        if (iAttach < 0) {
+          ThrowF_t("Invalid attachment number!");
+        }
+
+        CModelData *pmd = (CModelData*)pmo->GetData();
+
+        // Too many attachments
+        if (iAttach >= pmd->md_aampAttachedPosition.Count()) {
+          ThrowF_t("Attachment %d does not exist!", iAttach);
+        }
+
+        // Attach the model
+        CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttach);
+        if (pamo == NULL) {
+          pamo = pmo->AddAttachmentModel(iAttach);
+        }
+
+        ParseModelAttachments(cv.cv_mapBlock, &pamo->amo_moModelObject, pamo, aAttachments);
+
+      } else {
+        ThrowF_t("Expected attachment index for the attachment!");
+      }
+    }
+  }
+};
+
 // [Cecil] Load JSON config
 DJSON_ERROR LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel) {
   HookConfigFunctions();

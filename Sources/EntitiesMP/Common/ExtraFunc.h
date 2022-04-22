@@ -17,6 +17,9 @@ DECL_DLL CEntity *GetFirstPlayer(const CTString &strExecutor = "<unknown>");
 // [Cecil] Parse model config
 DECL_DLL void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment, CAttachList *paAttachments);
 
+// [Cecil] Fill attachment list
+DECL_DLL void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment, CAttachList &aAttachments);
+
 // [Cecil] Load JSON config
 DJSON_ERROR LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel);
 

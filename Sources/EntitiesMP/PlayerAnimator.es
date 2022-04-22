@@ -138,6 +138,10 @@ functions:
   // Read from stream
   void Read_t(CTStream *istr) { 
     CRationalEntity::Read_t(istr);
+
+    // [Cecil] Reset weapon attachments
+    ResetAttachmentList(FALSE);
+    ResetAttachmentList(TRUE);
   };
 
   void Precache(void) {
@@ -304,6 +308,38 @@ functions:
 
     // sync apperances
     SyncWeapon();
+  };
+
+  // [Cecil] Reset weapon attachments
+  void ResetAttachmentList(BOOL bExtra) {
+    // get current weapon
+    INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
+    SPlayerWeapon &pw = GetPlayer()->GetInventory()->m_aWeapons[iWeapon];
+
+    CWeaponModel &wm = pw.pwsWeapon->wmModel3;
+
+    if (wm.cbModel.Count() <= 0) {
+      return;
+    }
+    
+    CPlayer &pl = (CPlayer&)*m_penPlayer;
+    m_pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
+
+    // get weapon attachment
+    INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
+    CAttachmentModelObject *pamoWeapon = m_pmoModel->GetAttachmentModel(iAttach);
+
+    if (pamoWeapon == NULL) {
+      return;
+    }
+
+    // reset attachments
+    try {
+      ParseModelAttachments(wm.cbModel, &pamoWeapon->amo_moModelObject, NULL, (bExtra ? m_aAttachments2 : m_aAttachments1));
+
+    } catch (char *strError) {
+      FatalError("Cannot load third person weapon model config '%s':\n%s", wm.strConfig, strError);
+    }
   };
 
   // set item
