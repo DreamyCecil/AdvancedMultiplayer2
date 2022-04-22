@@ -444,13 +444,17 @@ functions:
   };
 
   // [Cecil] Shared weapon collection
-  BOOL ReceiveWeapon(CEntity *penPlayer, const EWeaponItem &eWeapon) {
-    if (!IsOfClass(penPlayer, "Player")) {
+  BOOL ReceiveWeapon(CEntity *penCollector, const EWeaponItem &eWeapon) {
+    if (!IsOfClass(penCollector, "Player")) {
       return FALSE;
     }
+
+    CPlayer *penPlayer = (CPlayer *)penCollector;
     
+    // shared in SP cutscenes
+    BOOL bShared = (GetSP()->sp_iAMPOptions & AMP_SHAREWEAPONS) || (GlobalCutscenes() && penPlayer->IsActionActive());
+
     // not shared
-    BOOL bShared = (GetSP()->sp_iAMPOptions & AMP_SHAREWEAPONS);
     if (!bShared) {
       return penPlayer->ReceiveItem(eWeapon);
     }
