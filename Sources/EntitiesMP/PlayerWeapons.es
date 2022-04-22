@@ -1039,7 +1039,7 @@ functions:
   void RenderWeaponModel(CPerspectiveProjection3D &prProjection, CDrawPort *pdp,
                          FLOAT3D vViewerLightDirection, COLOR colViewerLight, COLOR colViewerAmbient,
                          BOOL bRender, INDEX iEye) {
-    // [Cecil] Predicted weapon
+    // [Cecil] Non-predicted weapon
     CPlayerWeapons *pen = PredTail();
 
     // [Cecil] Current weapon
@@ -1063,9 +1063,6 @@ functions:
 
     // flare attachment
     pen->ControlFlareAttachment();
-
-    // [Cecil] Player flare attachment
-    //GetAnimator()->ControlFlareAttachment(m_bExtraWeapon);
 
     if (!bRender || GetPlayer()->GetSettings()->ps_ulFlags & PSF_HIDEWEAPON) {
       return;
@@ -1622,7 +1619,7 @@ functions:
   };
 
   // [Cecil] Unified show & hide flare functions
-  void WeaponFlare(FLOAT fSize, BOOL bShow) {
+  void WeaponFlare(const FLOAT &fSize, const BOOL &bShow) {
     CAttachmentModelObject *pamoFlare = GetModel("flare", FALSE);
 
     // no flare
@@ -1630,43 +1627,28 @@ functions:
       return;
     }
 
+    CModelObject *pmo = &pamoFlare->amo_moModelObject;
+
     // random angle
     if (bShow) {
       pamoFlare->amo_plRelative.pl_OrientationAngle(3) = (rand() * 360.0f) / RAND_MAX;
-    }
 
-    // stretch flare
-    CModelObject *pmo = &pamoFlare->amo_moModelObject;
-    pmo->StretchModel(FLOAT3D(fSize, fSize, fSize) * bShow);
+      // stretch flare
+      pmo->StretchModel(FLOAT3D(fSize, fSize, fSize));
+
+    } else {
+      pmo->StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
+    }
   };
 
   void SetFlare(BOOL bSet) {
-    // if not a prediction head
-    if (!IsPredictionHead()) {
-      // do nothing
-      return;
-    }
-
     // [Cecil] Get inventory
     CPlayerInventory *pen = GetInventory()->PredTail();
 
-    // [Cecil] Flare for the extra weapon
-    if (!m_bExtraWeapon) {
-      pen->m_bFlare1 = bSet;
-    } else {
-      pen->m_bFlare2 = bSet;
+    // [Cecil] Set flare time
+    if (bSet) {
+      (&pen->m_tmFlareAdded1)[m_bExtraWeapon] = _pTimer->CurrentTick();
     }
-  }
-
-  // flare attachment
-  void ControlFlareAttachment(void) {
-    CPlayerInventory *pen = GetInventory();
-    INDEX iExtra = (m_bExtraWeapon ? 1 : 0);
-
-    // flare indices
-    BOOL &bFlare = (&pen->m_bFlare1)[iExtra];
-    FLOAT &tmFlare = (&pen->m_tmFlareAdded1)[iExtra];
-    BOOL bTimeOut = (_pTimer->CurrentTick() > tmFlare + _pTimer->TickQuantum);
 
     // [Cecil] TEMP: Fixed flare size
     FLOAT fFlareSize = 1.0f;
@@ -1679,18 +1661,20 @@ functions:
       case WEAPON_MINIGUN:       fFlareSize = 1.25f; break;
     }
 
-    // add flare
-    if (bFlare) {
-      bFlare = FALSE;
-      tmFlare = _pTimer->CurrentTick();
+    WeaponFlare(fFlareSize, bSet);
+    GetAnimator()->WeaponFlare(m_bExtraWeapon, bSet);
+  }
 
-      WeaponFlare(fFlareSize, TRUE);
-      PredTail()->GetAnimator()->WeaponFlare(m_bExtraWeapon, TRUE);
-
-    // remove
-    } else if (!bFlare && bTimeOut) {
-      WeaponFlare(fFlareSize, FALSE);
-      PredTail()->GetAnimator()->WeaponFlare(m_bExtraWeapon, FALSE);
+  // [Cecil] Flare rendering update
+  void ControlFlareAttachment(void) {
+    CPlayerInventory *pen = GetInventory();
+    INDEX iExtra = (m_bExtraWeapon ? 1 : 0);
+    
+    // [Cecil] Remove flare on timeout
+    BOOL bTimeOut = (_pTimer->CurrentTick() > (&pen->m_tmFlareAdded1)[iExtra] + _pTimer->TickQuantum);
+    
+    if (bTimeOut) {
+      WeaponFlare(0.0f, FALSE);
     }
   };
 

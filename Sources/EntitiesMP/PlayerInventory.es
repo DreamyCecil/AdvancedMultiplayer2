@@ -102,8 +102,6 @@ properties:
 
  10 FLOAT m_tmFlareAdded1 = -1.0f, // when main weapon flare was added
  11 FLOAT m_tmFlareAdded2 = -1.0f, // when extra weapon flare was added
- 12 BOOL m_bFlare1 = FALSE, // main flare
- 13 BOOL m_bFlare2 = FALSE, // secondary flare
 
  20 INDEX m_iKeys = 0, // mask for all taken keys
 
