@@ -5,7 +5,7 @@
 #include "WeaponModel.h"
 
 // List of indices
-typedef DSArray<INDEX> CIndexList;
+typedef CStaticArray<INDEX> CIndexList;
 
 // Weapon properties
 class CWeaponStruct : public CWeaponBase {
@@ -58,5 +58,5 @@ class CWeaponStruct : public CWeaponBase {
 };
 
 // Weapon structures and icons
-extern DSList<CWeaponStruct *> _apPlayerWeapons;
+extern CDynamicContainer<CWeaponStruct> _apPlayerWeapons;
 extern CWeaponIcons _aWeaponIcons;

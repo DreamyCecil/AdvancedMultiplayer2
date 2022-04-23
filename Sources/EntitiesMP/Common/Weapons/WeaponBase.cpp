@@ -36,14 +36,14 @@ void CWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
 // World functions
 
 // Ammo pointer
-#define AP(_Ammo) (_Ammo < _apWeaponAmmo.Count() ? _apWeaponAmmo[_Ammo] : NULL)
+#define AP(_Ammo) (_Ammo < _apWeaponAmmo.Count() ? _apWeaponAmmo.Pointer(_Ammo) : NULL)
 
 // Add new ammo to the list
 static void AddAmmo(CWeaponAmmo *pwa) {
-  int iAmmo = _apWeaponAmmo.Add(pwa);
+  // set ammo ID from position
+  pwa->ulID = _apWeaponAmmo.Count();
 
-  // set ID of the added ammo
-  pwa->ulID = iAmmo;
+  _apWeaponAmmo.Add(pwa);
 
   // create the icon
   pwa->AddIcon(pwa->strIcon, _aWeaponIcons);
@@ -51,10 +51,10 @@ static void AddAmmo(CWeaponAmmo *pwa) {
 
 // Add new weapon to the list
 static void AddWeapon(CWeaponStruct *pws) {
-  int iWeapon = _apPlayerWeapons.Add(pws);
+  // set weapon ID from position
+  pws->ulID = _apPlayerWeapons.Count();
 
-  // set ID of the added weapon
-  pws->ulID = iWeapon;
+  _apPlayerWeapons.Add(pws);
 
   // create the icon
   pws->AddIcon(pws->strIcon, _aWeaponIcons);
@@ -346,30 +346,34 @@ extern void LoadWorldWeapons(CWorld *pwo) {
 void ClearWorldWeapons(void) {
   // delete structures
   INDEX iStruct;
-
-  for (iStruct = 0; iStruct < _apWeaponAmmo.Count(); iStruct++) {
-    delete _apWeaponAmmo[iStruct];
-  }
+  
+  {FOREACHINDYNAMICCONTAINER(_apWeaponAmmo, CWeaponAmmo, itwa) {
+    delete &*itwa;
+  }}
   _apWeaponAmmo.Clear();
-
-  for (iStruct = 0; iStruct < _apPlayerWeapons.Count(); iStruct++) {
-    delete _apPlayerWeapons[iStruct];
-  }
+  
+  {FOREACHINDYNAMICCONTAINER(_apPlayerWeapons, CWeaponStruct, itws) {
+    delete &*itws;
+  }}
   _apPlayerWeapons.Clear();
 
   // delete icons
-  INDEX iIcon;
+  {FOREACHINDYNAMICCONTAINER(_aAmmoIcons, CTextureObject, itto) {
+    CTextureObject *pto = itto;
 
-  for (iIcon = 0; iIcon < _aAmmoIcons.Count(); iIcon++) {
-    delete _aAmmoIcons[iIcon];
-    _aAmmoIcons[iIcon] = NULL;
-  }
+    if (pto != NULL) {
+      delete pto;
+    }
+  }}
   _aAmmoIcons.Clear();
+  
+  {FOREACHINDYNAMICCONTAINER(_aWeaponIcons, CTextureObject, itto) {
+    CTextureObject *pto = itto;
 
-  for (iIcon = 0; iIcon < _aWeaponIcons.Count(); iIcon++) {
-    delete _aWeaponIcons[iIcon];
-    _aWeaponIcons[iIcon] = NULL;
-  }
+    if (pto != NULL) {
+      delete pto;
+    }
+  }}
   _aWeaponIcons.Clear();
 
   // mark as unloaded

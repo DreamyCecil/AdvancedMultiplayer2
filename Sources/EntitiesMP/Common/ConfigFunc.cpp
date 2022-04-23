@@ -12,7 +12,7 @@ DJSON_String LoadConfigFile(DJSON_String strFile) {
   strm.Close();
 
   // return config
-  return strConfig;
+  return strConfig.str_String;
 };
 
 // [Cecil] Function hooking

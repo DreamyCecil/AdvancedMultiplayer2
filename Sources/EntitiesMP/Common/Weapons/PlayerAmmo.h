@@ -40,4 +40,4 @@ struct SPlayerAmmo {
 };
 
 // Player's arsenal type
-typedef DSArray<SPlayerAmmo> CAmmunition;
+typedef CStaticArray<SPlayerAmmo> CAmmunition;

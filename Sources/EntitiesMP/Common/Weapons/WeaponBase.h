@@ -9,7 +9,7 @@
 #define DEF_FOV 90.0f
 
 // Icon list
-typedef DSList<CTextureObject *> CWeaponIcons;
+typedef CDynamicContainer<CTextureObject> CWeaponIcons;
 
 // Base structure
 class CWeaponBase {

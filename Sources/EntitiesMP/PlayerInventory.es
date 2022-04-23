@@ -138,7 +138,7 @@ functions:
     m_aAmmo.New(ctAmmo);
 
     for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
-      m_aAmmo[iAmmo].pwaAmmoStruct = _apWeaponAmmo[iAmmo];
+      m_aAmmo[iAmmo].pwaAmmoStruct = _apWeaponAmmo.Pointer(iAmmo);
     }
 
     // copy weapons
@@ -147,7 +147,7 @@ functions:
 
     for (INDEX iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
-      pw.pwsWeapon = _apPlayerWeapons[iWeapon];
+      pw.pwsWeapon = _apPlayerWeapons.Pointer(iWeapon);
 
       // set ammo
       ULONG *pulID = pw.GetAmmoID();
@@ -236,7 +236,7 @@ functions:
     // set new ammo pointers for weapons
     for (INDEX iWeapon = 0; iWeapon < m_aWeapons.Count(); iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
-      pw.pwsWeapon = _apPlayerWeapons[iWeapon];
+      pw.pwsWeapon = _apPlayerWeapons.Pointer(iWeapon);
 
       // set ammo
       ULONG *pulID = pw.GetAmmoID();

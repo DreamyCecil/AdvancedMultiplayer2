@@ -1219,7 +1219,7 @@ functions:
     PlaySound(m_soMessage, SOUND_POWERUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
 
     // list of powerups that player doesn't have
-    DSList<INDEX> aiPowerups;
+    CStaticStackArray<INDEX> aiPowerups;
 
     // a powerup with least active time
     INDEX iLeastTimeType = -1;
@@ -1231,7 +1231,7 @@ functions:
 
       // not activated yet
       if (fPowerup <= 0.0f) {
-        aiPowerups.Add(iType);
+        aiPowerups.Push() = iType;
         continue;
       }
 

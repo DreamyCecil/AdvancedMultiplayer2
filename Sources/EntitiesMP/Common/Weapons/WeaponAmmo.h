@@ -20,5 +20,5 @@ class CWeaponAmmo : public CWeaponBase {
 };
 
 // Ammo structures and icons
-extern DSList<CWeaponAmmo *> _apWeaponAmmo;
+extern CDynamicContainer<CWeaponAmmo> _apWeaponAmmo;
 extern CWeaponIcons _aAmmoIcons;

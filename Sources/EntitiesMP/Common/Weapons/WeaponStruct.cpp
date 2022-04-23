@@ -3,7 +3,7 @@
 #include "WeaponStruct.h"
 
 // Weapon structures and icons
-extern DSList<CWeaponStruct *> _apPlayerWeapons = DSList<CWeaponStruct *>();
+extern CDynamicContainer<CWeaponStruct> _apPlayerWeapons = CDynamicContainer<CWeaponStruct>();
 extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 
 // Constructors
@@ -63,13 +63,13 @@ void CWeaponStruct::Write(CTStream *strm) {
 
   // ammo position in the list
   if (pwaAmmo != NULL) {
-    *strm << _apWeaponAmmo.FindIndex(pwaAmmo);
+    *strm << _apWeaponAmmo.Index(pwaAmmo);
   } else {
     *strm << INDEX(-1);
   }
 
   if (pwaAlt != NULL) {
-    *strm << _apWeaponAmmo.FindIndex(pwaAlt);
+    *strm << _apWeaponAmmo.Index(pwaAlt);
   } else {
     *strm << INDEX(-1);
   }
@@ -109,11 +109,11 @@ void CWeaponStruct::Read(CTStream *strm) {
 
   // set ammo
   if (iAmmo != -1) {
-    pwaAmmo = _apWeaponAmmo[iAmmo];
+    pwaAmmo = _apWeaponAmmo.Pointer(iAmmo);
   }
 
   if (iAlt != -1) {
-    pwaAlt = _apWeaponAmmo[iAlt];
+    pwaAlt = _apWeaponAmmo.Pointer(iAlt);
   }
 
   // read weapon bits

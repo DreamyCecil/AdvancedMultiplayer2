@@ -3,7 +3,7 @@
 #include "WeaponAmmo.h"
 
 // Ammo structures and icons
-extern DSList<CWeaponAmmo *> _apWeaponAmmo = DSList<CWeaponAmmo *>();
+extern CDynamicContainer<CWeaponAmmo> _apWeaponAmmo = CDynamicContainer<CWeaponAmmo>();
 extern CWeaponIcons _aAmmoIcons = CWeaponIcons();
 
 // Write and read
