@@ -129,7 +129,8 @@ event EAutoAction {
 
 // [Cecil] Stop auto actions
 event EStopActions {
-  CEntityPointer pen,
+  FLOAT3D vTeleport,
+  ANGLE3D aTeleport,
 };
 
 %{
@@ -878,9 +879,8 @@ properties:
  203 INDEX m_iTokens = 0,
 
  210 CEntityPointer m_penLastAction,
- 211 BOOL m_bActionLoopBreak = FALSE,
- 212 FLOAT3D m_vSpawnPoint = FLOAT3D(0.0f, 0.0f, 0.0f),
- 213 BOOL m_bPlayerInit = FALSE,
+ 211 FLOAT3D m_vSpawnPoint = FLOAT3D(0.0f, 0.0f, 0.0f),
+ 212 BOOL m_bPlayerInit = FALSE,
 
  220 FLOAT m_fVoiceCommands = -100.0f,
 
@@ -3844,6 +3844,16 @@ functions:
           SetCollisionFlags(GetCollisionFlags() | ((ECBI_PLAYER)<<ECB_PASS));
         }
 
+        // Follow the actor
+        if (!GLOBAL_CONTROLLER->IsActor(this)) {
+          CPlacement3D plActor = GLOBAL_CONTROLLER->m_penActor->GetPlacement();
+          FLOAT3D vDiff = (GetPlacement().pl_PositionVector - plActor.pl_PositionVector);
+
+          if (vDiff.Length() > 0.1f) {
+            Teleport(plActor, FALSE);
+          }
+        }
+
       // [Cecil] Otherwise show
       } else if (GetRenderType() != RT_MODEL) {
         SwitchToModel();
@@ -4617,8 +4627,9 @@ functions:
         (ANGLE)((FLOAT)paAction.pa_aRotation(2) * _pTimer->TickQuantum), 0.0f));
     }
 
+    // [Cecil] Respawn if action is active
     // if death is finished and fire just released again and this is not a predictor
-    if (m_iMayRespawn==2 && (ulReleasedButtons&PLACT_FIRE) && !IsPredictor()) {
+    if (m_iMayRespawn == 2 && (ulReleasedButtons & PLACT_FIRE || IsActionActive()) && !IsPredictor()) {
       // if singleplayer
       if (GetSP()->sp_bSinglePlayer) {
         // load quick savegame
@@ -5382,7 +5393,7 @@ functions:
     //FLOAT3D vOffsetRel = FLOAT3D(0.0f, fOffsetY, 0.0f);
 
     // [Cecil] No offset on singleplayer maps or if ignoring collision
-    if (GetSP()->sp_bSinglePlayer || (SPWorld() && GetSP()->sp_iPlayerCollision != 0)) {
+    if (GetSP()->sp_bSinglePlayer || (SPWorld() && (GetSP()->sp_iPlayerCollision != 0 || GLOBAL_CONTROLLER->IsActor(this)))) {
       return FLOAT3D(0.0f, fOffsetY, 0.0f);
     }
 
@@ -6756,12 +6767,10 @@ procedures:
       SetCollisionFlags(ECF_MODEL | ((ECBI_PLAYER)<<ECB_IS) | ((ECBI_PLAYER)<<ECB_PASS));
     }
 
-    // [Cecil] Reset
+    // [Cecil] Reset last action
     m_penLastAction = NULL;
-    m_bActionLoopBreak = FALSE;
-
     // while there is some marker
-    while (!m_bActionLoopBreak && GetAction() != NULL && IsOfClass(GetAction(), "PlayerActionMarker"))
+    while (GetAction() != NULL && IsOfClass(GetAction(), "PlayerActionMarker"))
     {
       // if should wait
       if (GetAutoAction() == PAA_WAIT) {
@@ -6966,8 +6975,6 @@ procedures:
        || iAction == PAA_APPEARING || iAction == PAA_TRAVELING_IN_BEAM
        || iAction == PAA_LOGO_FIRE_INTROSE || iAction == PAA_LOGO_FIRE_MINIGUN) {
         m_penLastAction = GetAction();
-      } else {
-        m_penLastAction = NULL;
       }
 
       SetAction(GetActionMarker()->m_penTarget);
@@ -6978,20 +6985,19 @@ procedures:
 
     // [Cecil] If global cutscenes
     if (GlobalCutscenes()) {
-      autowait(0.05f);
-
       // [Cecil] Teleport everyone back after the sequence
       if (m_penLastAction != NULL) {
         for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
           CEntity *pen = GetPlayerEntity(iPlayer);
 
-          // ignore the first player
-          if (ASSERT_ENTITY(pen) /*&& pen != this*/) {
+          if (ASSERT_ENTITY(pen)) {
             CPlayer *penPlayer = (CPlayer*)pen;
 
             // bring everyone back out of the dummy state
             EStopActions eStop;
-            eStop.pen = m_penLastAction;
+            eStop.vTeleport = GetPlacement().pl_PositionVector;
+            eStop.aTeleport = GetPlacement().pl_OrientationAngle;
+
             penPlayer->SendEvent(eStop);
           }
         }
@@ -7224,10 +7230,11 @@ procedures:
       on (EStopActions eStop) : {
         ReleasePlayer();
 
-        // teleport if needed
-        if (eStop.pen != NULL) {
-          TeleportToAutoMarker(eStop.pen, FALSE);
-        }
+        // Teleport
+        CPlacement3D pl(eStop.vTeleport, eStop.aTeleport);
+        pl.Translate_OwnSystem(GetTeleportingOffset(TRUE));
+
+        Teleport(pl, FALSE);
         resume;
       }
 
