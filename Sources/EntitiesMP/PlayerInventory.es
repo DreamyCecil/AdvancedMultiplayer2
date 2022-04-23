@@ -1308,8 +1308,6 @@ procedures:
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
 
-    SetPredictable(TRUE);
-
     // spawn weapons
     EWeaponsInit eInitWeapons;
     eInitWeapons.penOwner = m_penPlayer;

@@ -91,16 +91,16 @@ extern void ConvertWorld(CEntity *penWorld) {
   {FOREACHINDYNAMICCONTAINER(penWorld->GetWorld()->wo_cenEntities, CEntity, iten) {
     CEntity *pen = iten;
 
-    // [Cecil] Check for the entities that NEED to be updated rather than the ones that don't
+    // [Cecil] Check for the entities that need to be updated
     if (!IsDerivedFromClass(pen, "Enemy Base") && !IsOfClass(pen, "Enemy Spawner")
-     && !IsOfClass(pen, "Camera")
-     && !IsOfClass(pen, "Trigger") && !IsOfClass(pen, "KeyItem") && !IsOfClass(pen, "Moving Brush")
+     && !IsOfClass(pen, "Camera") && !IsOfClass(pen, "Damager") && !IsOfClass(pen, "Moving Brush") && !IsOfClass(pen, "SoundHolder")
      && !IsOfClass(pen, "Storm controller") && !IsOfClass(pen, "PyramidSpaceShip") && !IsOfClass(pen, "Lightning")
-     && !IsOfClass(pen, "DoorController") && !IsOfClass(pen, "Touch Field")
-     && !IsOfClass(pen, "Player Marker") && !IsOfClass(pen, "Player Weapons")) {
+    // [Cecil] These just need special adjustments, no reinitialization required
+     && !IsOfClass(pen, "DoorController") && !IsOfClass(pen, "KeyItem") && !IsOfClass(pen, "Player Marker")) {
       continue;
     }
-  
+
+    // Adjust weapon masks
     if (IsOfClass(pen, "Player Marker")) {
       CPlayerMarker *penWeapons = (CPlayerMarker *)pen;
       INDEX *piWeapons = &penWeapons->m_iGiveWeapons;
@@ -113,18 +113,20 @@ extern void ConvertWorld(CEntity *penWorld) {
         if (*piWeapons & WeaponFlag(iGetWeapon)) {
           ConvertWeaponTFE(iNewWeapons, iGetWeapon);
         }
-    
+
         if (*piTakeWeapons & WeaponFlag(iGetWeapon)) {
           ConvertWeaponTFE(iNewTakeWeapons, iGetWeapon);
         }
       }
+
       *piWeapons = iNewWeapons;
       *piTakeWeapons = iNewTakeWeapons;
       CPrintF(" - Converted PlayerMarker\n");
-
+      
+    // Adjust keys
     } else if (IsOfClass(pen, "KeyItem")) {
       CKeyItem *penKey = (CKeyItem *)pen;
-      
+
       switch (penKey->m_kitType) {
         // Dummy keys
         case 4: penKey->m_kitType = KIT_JAGUARGOLDDUMMY; break;
@@ -140,13 +142,13 @@ extern void ConvertWorld(CEntity *penWorld) {
         default: penKey->m_kitType = KIT_KINGSTATUE; break;
       }
 
-      penKey->Reinitialize();
       CPrintF(" - Converted KeyItem\n");
       iReinit++;
 
+    // Adjust keys
     } else if (IsOfClass(pen, "DoorController")) {
       CDoorController *penDoor = (CDoorController *)pen;
-      
+
       switch (penDoor->m_kitKey) {
         // Dummy keys
         case 4: penDoor->m_kitKey = KIT_JAGUARGOLDDUMMY; break;
@@ -162,10 +164,10 @@ extern void ConvertWorld(CEntity *penWorld) {
         default: penDoor->m_kitKey = KIT_KINGSTATUE; break;
       }
 
-      penDoor->Reinitialize();
       CPrintF(" - Converted DoorController\n");
       iReinit++;
 
+    // Reinitialize everything else
     } else {
       pen->Reinitialize();
       iReinit++;
