@@ -16,12 +16,11 @@
 
 // Patch config
 extern DJSON_Block _cbConfig;
-extern INDEX _ctConfigEntries;
 
 // Patch the entity class link file
 static void PatchClassLink_t(CTString &strClass) {
   // no replacements
-  if (_ctConfigEntries <= 0) {
+  if (_cbConfig.Count() <= 0) {
     return;
   }
 
@@ -34,15 +33,15 @@ static void PatchClassLink_t(CTString &strClass) {
   fnDLL.ReadFromText_t(strm, "Package: ");
 
   // class name
-  CTString strClassName;
-  strClassName.ReadFromText_t(strm, "Class: ");
+  CTString strEntityName;
+  strEntityName.ReadFromText_t(strm, "Class: ");
 
   strm.Close();
 
   // go through the replacement config
   CTString strLibraryName = fnDLL.FileName().str_String;
 
-  for (INDEX iClass = 0; iClass < _ctConfigEntries; iClass++) {
+  for (INDEX iClass = 0; iClass < _cbConfig.Count(); iClass++) {
     string strReplace = _cbConfig.GetKey(iClass);
     CConfigValue valNewClass = _cbConfig.GetValue(iClass);
 
@@ -51,19 +50,20 @@ static void PatchClassLink_t(CTString &strClass) {
     }
 
     // wrong class
-    if (strClassName != strReplace.c_str()) {
+    if (strEntityName != strReplace.c_str()) {
       continue;
     }
 
-    string strNewClass = valNewClass.cv_strValue;
-
-    // ignore the same classes
-    if (strClassName == strNewClass.c_str() && strLibraryName == "Entities") {
+    // ignore classes from the same library
+    if (strLibraryName == "Entities") {
       continue;
     }
 
     // replace the class file
-    strClass = strNewClass.c_str();
+    strClass = valNewClass.cv_strValue;
+
+    // all done
+    return;
   }
 };
 

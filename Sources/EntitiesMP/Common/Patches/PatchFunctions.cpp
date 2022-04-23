@@ -35,12 +35,10 @@ void UnsetCustomPatches(void) {
 
 // Patch config
 extern DJSON_Block _cbConfig = DJSON_Block();
-extern INDEX _ctConfigEntries = 0;
 
 // Load the config
 void LoadClassPatchConfig(CTString strWorld) {
   _cbConfig.Clear();
-  _ctConfigEntries = 0;
 
   HookConfigFunctions();
 
@@ -73,6 +71,4 @@ void LoadClassPatchConfig(CTString strWorld) {
 
   // add level entries to global entries
   _cbConfig.AddFrom(cbLevel, true);
-
-  _ctConfigEntries = _cbConfig.Count();
 };
