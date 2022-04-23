@@ -76,7 +76,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Extras;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine107;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine107;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Engine107;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)</TargetName>
     <OutDir>vs2013\$(Configuration)\</OutDir>
@@ -86,7 +86,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Extras;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine110;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine110;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Engine110;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
@@ -95,7 +95,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Extras;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine107;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine107;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Engine107;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)D</TargetName>
   </PropertyGroup>
@@ -104,7 +104,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Extras;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine110;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Extras;$(SolutionDir)Engine110;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Engine110;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)D</TargetName>
   </PropertyGroup>
