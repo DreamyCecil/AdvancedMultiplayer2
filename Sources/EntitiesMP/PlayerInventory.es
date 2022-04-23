@@ -100,8 +100,8 @@ properties:
   2 CEntityPointer m_penWeapons1, // player's main weapon
   3 CEntityPointer m_penWeapons2, // player's extra weapon
 
- 10 FLOAT m_tmFlareAdded1 = -1.0f, // when main weapon flare was added
- 11 FLOAT m_tmFlareAdded2 = -1.0f, // when extra weapon flare was added
+ 10 FLOAT m_tmFlare1 = -1.0f, // when main weapon flare will expire
+ 11 FLOAT m_tmFlare2 = -1.0f, // when extra weapon flare will expire
 
  20 INDEX m_iKeys = 0, // mask for all taken keys
 
@@ -1307,6 +1307,8 @@ procedures:
     SetFlags(GetFlags() | ENF_CROSSESLEVELS);
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
+
+    SetPredictable(TRUE);
 
     // spawn weapons
     EWeaponsInit eInitWeapons;

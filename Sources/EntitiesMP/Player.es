@@ -3938,6 +3938,19 @@ functions:
 
       _penGlobalController->SendEvent(eStop);
     }
+
+    // [Cecil] Control weapon flare attachments
+    for (INDEX iWeapon = 0; iWeapon < 2; iWeapon++) {
+      // get weapon timer
+      FLOAT *pfTimer = &GetInventory()->m_tmFlare1;
+      BOOL bTimeOut = (_pTimer->CurrentTick() >= pfTimer[iWeapon]);
+
+      // remove flares on timeout
+      if (bTimeOut) {
+        GetInventory()->GetWeapon(iWeapon)->WeaponFlare(FALSE);
+        GetPlayerAnimator()->WeaponFlare(iWeapon, FALSE);
+      }
+    }
   };
 
   // Called when player is disconnected

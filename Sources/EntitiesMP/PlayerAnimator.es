@@ -990,9 +990,6 @@ functions:
   };
 
   void OnPreRender(void) {
-    ControlFlareAttachment(FALSE);
-    ControlFlareAttachment(TRUE);
-
     // Minigun specific
     for (INDEX iWeapon = 0; iWeapon < 2; iWeapon++) {
       CPlayerWeapons &plw = *GetWeapon(iWeapon);
@@ -1026,8 +1023,8 @@ functions:
 
     CModelObject *pmo = &pamoFlare->amo_moModelObject;
 
-    // [Cecil] Set random angle
     if (bShow) {
+      // random angle
       pamoFlare->amo_plRelative.pl_OrientationAngle(3) = (rand() * 360.0f) / RAND_MAX;
 
       // stretch flare
@@ -1035,19 +1032,6 @@ functions:
 
     } else {
       pmo->StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
-    }
-  };
-  
-  // [Cecil] Flare rendering update
-  void ControlFlareAttachment(BOOL bExtra) {
-    CPlayerInventory *pen = GetPlayer()->GetInventory();
-    INDEX iExtra = (bExtra ? 1 : 0);
-    
-    // [Cecil] Remove flare on timeout
-    BOOL bTimeOut = (_pTimer->CurrentTick() > (&pen->m_tmFlareAdded1)[iExtra] + _pTimer->TickQuantum);
-    
-    if (bTimeOut) {
-      WeaponFlare(bExtra, FALSE);
     }
   };
 

@@ -1061,9 +1061,6 @@ functions:
 
     _mrpModelRenderPrefs.SetRenderType(RT_TEXTURE|RT_SHADING_PHONG);
 
-    // flare attachment
-    pen->ControlFlareAttachment();
-
     if (!bRender || GetPlayer()->GetSettings()->ps_ulFlags & PSF_HIDEWEAPON) {
       return;
     }
@@ -1619,7 +1616,7 @@ functions:
   };
 
   // [Cecil] Unified show & hide flare functions
-  void WeaponFlare(const FLOAT &fSize, const BOOL &bShow) {
+  void WeaponFlare(const BOOL &bShow) {
     CAttachmentModelObject *pamoFlare = GetModel("flare", FALSE);
 
     // no flare
@@ -1629,12 +1626,23 @@ functions:
 
     CModelObject *pmo = &pamoFlare->amo_moModelObject;
 
-    // random angle
     if (bShow) {
+      // random angle
       pamoFlare->amo_plRelative.pl_OrientationAngle(3) = (rand() * 360.0f) / RAND_MAX;
 
+      // [Cecil] TEMP: Fixed flare size
+      FLOAT fFlareSize = 1.0f;
+
+      switch (m_iCurrentWeapon) {
+        case WEAPON_COLT:          fFlareSize = 0.75f; break;
+        case WEAPON_DOUBLESHOTGUN: fFlareSize = 1.75f; break;
+        case WEAPON_TOMMYGUN:      fFlareSize = 0.5f; break;
+        case WEAPON_SNIPER:        fFlareSize = 0.5f; break;
+        case WEAPON_MINIGUN:       fFlareSize = 1.25f; break;
+      }
+
       // stretch flare
-      pmo->StretchModel(FLOAT3D(fSize, fSize, fSize));
+      pmo->StretchModel(FLOAT3D(fFlareSize, fFlareSize, fFlareSize));
 
     } else {
       pmo->StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
@@ -1642,40 +1650,13 @@ functions:
   };
 
   void SetFlare(BOOL bSet) {
-    // [Cecil] Get inventory
-    CPlayerInventory *pen = GetInventory()->PredTail();
-
     // [Cecil] Set flare time
     if (bSet) {
-      (&pen->m_tmFlareAdded1)[m_bExtraWeapon] = _pTimer->CurrentTick();
+      (&GetInventory()->m_tmFlare1)[m_bExtraWeapon] = _pTimer->CurrentTick() + _pTimer->TickQuantum;
     }
 
-    // [Cecil] TEMP: Fixed flare size
-    FLOAT fFlareSize = 1.0f;
-
-    switch (m_iCurrentWeapon) {
-      case WEAPON_COLT:          fFlareSize = 0.75f; break;
-      case WEAPON_DOUBLESHOTGUN: fFlareSize = 1.75f; break;
-      case WEAPON_TOMMYGUN:      fFlareSize = 0.5f; break;
-      case WEAPON_SNIPER:        fFlareSize = 0.5f; break;
-      case WEAPON_MINIGUN:       fFlareSize = 1.25f; break;
-    }
-
-    WeaponFlare(fFlareSize, bSet);
+    WeaponFlare(bSet);
     GetAnimator()->WeaponFlare(m_bExtraWeapon, bSet);
-  }
-
-  // [Cecil] Flare rendering update
-  void ControlFlareAttachment(void) {
-    CPlayerInventory *pen = GetInventory();
-    INDEX iExtra = (m_bExtraWeapon ? 1 : 0);
-    
-    // [Cecil] Remove flare on timeout
-    BOOL bTimeOut = (_pTimer->CurrentTick() > (&pen->m_tmFlareAdded1)[iExtra] + _pTimer->TickQuantum);
-    
-    if (bTimeOut) {
-      WeaponFlare(0.0f, FALSE);
-    }
   };
 
   // play light animation
@@ -1733,7 +1714,7 @@ functions:
     }
 
     // remove flare by default
-    SetFlare(FALSE);
+    WeaponFlare(FALSE);
 
     // mirror the weapon
     ApplyMirroring(MirrorState());
