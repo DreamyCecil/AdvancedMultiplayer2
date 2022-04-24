@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Depends/DreamyJSON/DreamyStructures/DataStructures.h"
-
 // Default positions
 #define DEF_WPOS FLOAT3D(0.0f, 0.0f, 0.0f)
 #define DEF_WROT ANGLE3D(0.0f, 0.0f, 0.0f)

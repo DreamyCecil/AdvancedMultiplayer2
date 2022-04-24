@@ -345,8 +345,6 @@ extern void LoadWorldWeapons(CWorld *pwo) {
 // Weapons and ammo cleanup
 void ClearWorldWeapons(void) {
   // delete structures
-  INDEX iStruct;
-  
   {FOREACHINDYNAMICCONTAINER(_apWeaponAmmo, CWeaponAmmo, itwa) {
     delete &*itwa;
   }}
