@@ -83,10 +83,6 @@ void ResetWeaponPosition(void) {
 #define ENOUGH_ALT  EnoughAmmo(CWeaponStruct::DWA_ALT)
 #define ENOUGH_MAG  EnoughAmmo(CWeaponStruct::DWA_MAG)
 
-// [Cecil] Position shift for dual weapons
-extern FLOAT _fDualWeaponShift;
-extern FLOAT _fLastDualWeaponShift;
-
 // [Cecil] Weapon fire offset X
 #define FIRE_OFFSET_X FirePos(m_iCurrentWeapon)(1) * (m_bExtraWeapon ? -1.0f : 1.0f)
 
@@ -775,7 +771,7 @@ functions:
     SWeaponPos wps = GET_WEAPON(iWeapon).GetPosition();
 
     // weapon position shifting for dual weapons
-    FLOAT fLerp = Lerp(_fLastDualWeaponShift, _fDualWeaponShift, _pTimer->GetLerpFactor());
+    FLOAT fLerp = Lerp(GetInventory()->m_fLastDualShiftRender, GetInventory()->m_fDualShiftRender, _pTimer->GetLerpFactor());
 
     wps.Pos1() = Lerp(wps.Pos1(), wps.Pos2(), fLerp);
     wps.Rot1() = Lerp(wps.Rot1(), wps.Rot2(), fLerp);
@@ -831,7 +827,7 @@ functions:
   // [Cecil] Mirror spawned effect's position (rendering only)
   void MirrorEffect(FLOAT3D &vPos, FLOAT3D &vSpeed) {
     SWeaponPos wps = CURRENT_WEAPON.GetPosition();
-    FLOAT3D vWeaponPos = Lerp(wps.Pos1(), wps.Pos2(), _fDualWeaponShift);
+    FLOAT3D vWeaponPos = Lerp(wps.Pos1(), wps.Pos2(), GetInventory()->m_fDualShiftRender);
     FLOAT3D vRelPos = vWeaponPos - wps.Pos1();
 
     // visual mirroring

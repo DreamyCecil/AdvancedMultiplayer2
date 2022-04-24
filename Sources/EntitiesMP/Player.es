@@ -2903,7 +2903,7 @@ functions:
 
     // [Cecil] Dual weapon position shifting
     if (_pNetwork->IsPlayerLocal(this)) {
-      GetInventory()->DualWeaponShift();
+      GetInventory()->ShiftDualWeapons();
     }
   };
 

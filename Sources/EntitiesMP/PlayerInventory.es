@@ -40,10 +40,6 @@ static const INDEX _aiAmmoSetTypes[] = {
    6, // AIT_SNIPERBULLETS
 };
 
-// Position shift for dual weapons
-extern FLOAT _fDualWeaponShift = 0.0f;
-extern FLOAT _fLastDualWeaponShift = 0.0f;
-
 // Currently selected weapon set
 extern CTString _strCurrentWeaponSet;
 
@@ -120,8 +116,12 @@ properties:
   CWeaponArsenal m_aWeapons;
   CAmmunition m_aAmmo;
 
-  // Weapon position shift ratio
+  // Current weapon position shift ratio
   FLOAT m_fDualWeaponShift;
+
+  // Position shift for rendering
+  FLOAT m_fDualShiftRender;
+  FLOAT m_fLastDualShiftRender;
 
   // Currently selected weapon set (local)
   CTString m_strWeaponSet;
@@ -165,6 +165,8 @@ functions:
     }
 
     m_fDualWeaponShift = 0.0f;
+    m_fDualShiftRender = 0.0f;
+    m_fLastDualShiftRender = 0.0f;
 
     // save current weapon set
     m_strWeaponSet = _strCurrentWeaponSet;
@@ -191,6 +193,11 @@ functions:
     
     // write weapon set
     *ostr << m_strWeaponSet;
+
+    // dual wielding
+    *ostr << m_fDualWeaponShift;
+    *ostr << m_fDualShiftRender;
+    *ostr << m_fLastDualShiftRender;
   };
 
   // Read weapons and ammo
@@ -214,6 +221,11 @@ functions:
     
     // read weapon set
     *istr >> m_strWeaponSet;
+
+    // dual wielding
+    *istr >> m_fDualWeaponShift;
+    *istr >> m_fDualShiftRender;
+    *istr >> m_fLastDualShiftRender;
   };
   
   // Copy constructor
@@ -222,6 +234,8 @@ functions:
     CPlayerInventory *penOther = (CPlayerInventory *)(&enOther);
 
     m_fDualWeaponShift = penOther->m_fDualWeaponShift;
+    m_fDualShiftRender = penOther->m_fDualShiftRender;
+    m_fLastDualShiftRender = penOther->m_fLastDualShiftRender;
 
     // weapon set doesn't match
     if (m_strWeaponSet != penOther->m_strWeaponSet) {
@@ -576,7 +590,7 @@ functions:
   };
 
   // Shift weapon position for dual weapons
-  void DualWeaponShift(void) {
+  void ShiftDualWeapons(void) {
     FLOAT fSpeed = 2.0f * _pTimer->TickQuantum;
 
     if (GetWeapon(1)->GetCurrent() != WEAPON_NONE || GetWeapon(1)->GetWanted() != WEAPON_NONE) {
@@ -585,8 +599,8 @@ functions:
       m_fDualWeaponShift = ClampDn(m_fDualWeaponShift - fSpeed, 0.0f);
     }
     
-    _fLastDualWeaponShift = _fDualWeaponShift;
-    _fDualWeaponShift = (-CosFast(m_fDualWeaponShift * 180.0f) + 1.0f) * 0.5f;
+    m_fLastDualShiftRender = m_fDualShiftRender;
+    m_fDualShiftRender = (-CosFast(m_fDualWeaponShift * 180.0f) + 1.0f) * 0.5f;
   };
 
   // Initialize weapons
@@ -793,6 +807,8 @@ functions:
 
     // reset dual wielding
     m_fDualWeaponShift = 0.0f;
+    m_fDualShiftRender = 0.0f;
+    m_fLastDualShiftRender = 0.0f;
   };
 
   // Receive new weapon
