@@ -45,18 +45,14 @@ static void PatchClassLink_t(CTString &strClass) {
     string strReplace = _cbConfig.GetKey(iClass);
     CConfigValue valNewClass = _cbConfig.GetValue(iClass);
 
-    if (valNewClass.cv_eType != CVT_STRING) {
-      FatalError("Replacement for \"%s\" is not a string!", strReplace.c_str());
-    }
-
     // wrong class
     if (strEntityName != strReplace.c_str()) {
       continue;
     }
 
-    // ignore classes from the same library
-    if (strLibraryName == "Entities") {
-      continue;
+    // not a path to the class file
+    if (valNewClass.cv_eType != CVT_STRING) {
+      FatalError("Replacement for \"%s\" is not a string!", strReplace.c_str());
     }
 
     // replace the class file
