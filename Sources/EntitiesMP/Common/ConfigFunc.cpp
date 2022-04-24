@@ -15,13 +15,6 @@ DJSON_String LoadConfigFile(DJSON_String strFile) {
   return strConfig.str_String;
 };
 
-// [Cecil] Function hooking
-void HookConfigFunctions(void) {
-  DJSON_pErrorFunction = (void (*)(const char *))FatalError;
-  DJSON_pPrintFunction = (void (*)(const char *))CPrintF;
-  DJSON_pLoadConfigFile = (DJSON_String (*)(DJSON_String))LoadConfigFile;
-};
-
 // [Cecil] Get entity patch config
 CTString GetPatchConfig(CEntity *pen, const CTString &strType) {
   CTString strWorld = pen->GetWorld()->wo_fnmFileName.FileName();
@@ -41,11 +34,36 @@ CTString GetPatchConfig(CEntity *pen, const CTString &strType) {
   return strConfigFile;
 };
 
+// [Cecil] Get integer value
+BOOL GetConfigInt(CConfigBlock &cb, DJSON_String strKey, INDEX &iValue) {
+  INDEX iGet;
+  BOOL bGot = cb.GetValue(strKey, (int &)iGet);
+
+  if (bGot) {
+    iValue = iGet;
+    return TRUE;
+  }
+  return FALSE;
+};
+
+// [Cecil] Get float value
+BOOL GetConfigFloat(CConfigBlock &cb, DJSON_String strKey, FLOAT &fValue) {
+  FLOAT fGet;
+  BOOL bGot = cb.GetValue(strKey, (float &)fGet);
+
+  if (bGot) {
+    fValue = fGet;
+    return TRUE;
+  }
+  return FALSE;
+};
+
 // [Cecil] Get CTString value
 BOOL GetConfigString(CConfigBlock &cb, DJSON_String strKey, CTString &strValue) {
   string strGet;
+  BOOL bGot = cb.GetValue(strKey, strGet);
 
-  if (cb.GetValue(strKey, strGet)) {
+  if (bGot) {
     strValue = strGet.c_str();
     return TRUE;
   }
@@ -55,8 +73,9 @@ BOOL GetConfigString(CConfigBlock &cb, DJSON_String strKey, CTString &strValue) 
 // [Cecil] Get CTFileName value
 BOOL GetConfigPath(CConfigBlock &cb, DJSON_String strKey, CTFileName &fnValue) {
   string strGet;
+  BOOL bGot = cb.GetValue(strKey, strGet);
 
-  if (cb.GetValue(strKey, strGet)) {
+  if (bGot) {
     fnValue = CTString(strGet.c_str());
     return TRUE;
   }
@@ -66,8 +85,9 @@ BOOL GetConfigPath(CConfigBlock &cb, DJSON_String strKey, CTFileName &fnValue) {
 // [Cecil] Get 3D vector value
 BOOL GetConfigVector(CConfigBlock &cb, DJSON_String strKey, FLOAT3D &vValue) {
   DJSON_Array aVector;
+  BOOL bGot = cb.GetValue(strKey, aVector);
 
-  if (cb.GetValue(strKey, aVector)) {
+  if (bGot) {
     // copy values
     for (INDEX i = 0; i < Min(aVector.Count(), 3); i++) {
       vValue(i + 1) = aVector[i].GetNumber();
@@ -81,8 +101,9 @@ BOOL GetConfigVector(CConfigBlock &cb, DJSON_String strKey, FLOAT3D &vValue) {
 // [Cecil] Get 3D placement value
 DECL_DLL BOOL GetConfigPlacement(CConfigBlock &cb, DJSON_String strKey, CPlacement3D &plValue) {
   DJSON_Array aPlace;
+  BOOL bGot = cb.GetValue(strKey, aPlace);
 
-  if (cb.GetValue(strKey, aPlace)) {
+  if (bGot) {
     // copy values
     INDEX i;
 

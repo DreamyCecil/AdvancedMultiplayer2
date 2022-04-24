@@ -21,7 +21,7 @@ DECL_DLL void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttach
 DECL_DLL void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModelObject *pamoAttachment, CAttachList &aAttachments);
 
 // [Cecil] Load JSON config
-DJSON_ERROR LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel);
+void LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel);
 
 // [Cecil] Precache some resource
 void PrecacheResource(EntityComponentType eType, const CTFileName &fnFile);

@@ -6,11 +6,13 @@ extern DJSON_String (*DJSON_pLoadConfigFile)(DJSON_String);
 // [Cecil] Config loading function
 DECL_DLL DJSON_String LoadConfigFile(DJSON_String strFile);
 
-// [Cecil] Function hooking
-DECL_DLL void HookConfigFunctions(void);
-
 // [Cecil] Get entity patch config
 DECL_DLL CTString GetPatchConfig(CEntity *pen, const CTString &strType);
+
+// [Cecil] Get integer value
+DECL_DLL BOOL GetConfigInt(CConfigBlock &cb, DJSON_String strKey, INDEX &iValue);
+// [Cecil] Get float value
+DECL_DLL BOOL GetConfigFloat(CConfigBlock &cb, DJSON_String strKey, FLOAT &fValue);
 
 // [Cecil] Get CTString value
 DECL_DLL BOOL GetConfigString(CConfigBlock &cb, DJSON_String strKey, CTString &strValue);

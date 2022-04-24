@@ -34,7 +34,10 @@ BOOL CWeaponModel::SetWeaponModel(const CTString &strConfigFile) {
   cbModel.Clear();
 
   // load config
-  if (LoadJSON(strConfigFile, cbModel) != DJSON_OK) {
+  try {
+    LoadJSON(strConfigFile, cbModel);
+
+  } catch (char *) {
     cbModel.Clear();
     return FALSE;
   }

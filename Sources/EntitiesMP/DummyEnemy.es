@@ -150,21 +150,23 @@ functions:
 
   // [Cecil] Apply dummy patch
   void PatchDummy(CTFileName fnPatch) {
-    // no patch
+    // No patch
     if (!FileExists(fnPatch)) {
       return;
     }
 
     CConfigBlock cbPatch;
-    HookConfigFunctions();
 
-    // couldn't parse
-    if (ParseConfig(fnPatch, cbPatch) != DJSON_OK) {
-      FatalError("Cannot parse dummy patch '%s'!", fnPatch);
+    // Parse patch config
+    try {
+      LoadJSON(fnPatch, cbPatch);
+
+    } catch (char *strError) {
+      FatalError("Cannot parse dummy patch '%s': %s", fnPatch, strError);
       return;
     }
 
-    // appearance
+    // Appearance
     if (!SetConfigTexture(cbPatch, "Legs", GetModelObject()->mo_toTexture)) {
       CPrintF("Invalid legs texture for the dummy!\n");
     }
@@ -177,60 +179,61 @@ functions:
       CPrintF("Invalid head texture for the dummy!\n");
     }
 
-    // custom sounds
+    // Custom sounds
     GetConfigPath(cbPatch, "SightSound", m_fnSight);
     GetConfigPath(cbPatch, "WoundSound", m_fnWound);
     GetConfigPath(cbPatch, "DeathSound", m_fnDeath);
     GetConfigPath(cbPatch, "FireSound",  m_fnFireSound);
     GetConfigPath(cbPatch, "HitSound",   m_fnHitSound);
 
-    // custom projectile
-    ProjectileType ePrt;
+    // Custom projectile
+    INDEX iType;
 
-    if (cbPatch.GetValue("Projectile", (int&)ePrt)) {
-      // check for valid projectiles
-      if (ProjectileType_enum.NameForValue(ePrt) != "") {
-        m_prtProjectile = ePrt;
+    if (GetConfigInt(cbPatch, "Projectile", iType)) {
+      // Check for valid projectiles
+      if (ProjectileType_enum.NameForValue(iType) != "") {
+        m_prtProjectile = (ProjectileType)iType;
+
       } else {
-        CPrintF("Invalid projectile index for the dummy: %d\n", ePrt);
+        CPrintF("Invalid projectile index for the dummy: %d\n", iType);
       }
     }
 
-    // other properties
+    // Other properties
     GetConfigString(cbPatch, "Name", m_strName);
 
-    cbPatch.GetValue("BlowupDamage",  (float&)m_fBlowupDamage);
-    cbPatch.GetValue("WoundDamage",   (float&)m_fWoundDamage);
-    cbPatch.GetValue("ReflexDist",    (float&)m_fSetReflexDist);
-    cbPatch.GetValue("FireRate",      (float&)m_fFireRate);
-    cbPatch.GetValue("FireFrequency", (float&)m_fFireFrequency);
-    cbPatch.GetValue("HitDamage",     (float&)m_fAttackHit);
+    GetConfigFloat(cbPatch, "BlowupDamage",  m_fBlowupDamage);
+    GetConfigFloat(cbPatch, "WoundDamage",   m_fWoundDamage);
+    GetConfigFloat(cbPatch, "ReflexDist",    m_fSetReflexDist);
+    GetConfigFloat(cbPatch, "FireRate",      m_fFireRate);
+    GetConfigFloat(cbPatch, "FireFrequency", m_fFireFrequency);
+    GetConfigFloat(cbPatch, "HitDamage",     m_fAttackHit);
 
-    cbPatch.GetValue("FireCount",     (int&)m_iAttackFire);
-    cbPatch.GetValue("WoundAnim",     (int&)m_bWoundAnim);
+    GetConfigInt(cbPatch, "FireCount", m_iAttackFire);
+    GetConfigInt(cbPatch, "WoundAnim", (INDEX &)m_bWoundAnim);
 
-    // speeds and distances
-    if (cbPatch.GetValue("WalkSpeed", (float&)m_fSetWalkSpeed)) {
+    // Speeds and distances
+    if (GetConfigFloat(cbPatch, "WalkSpeed", m_fSetWalkSpeed)) {
       m_fWalkSpeed = m_fSetWalkSpeed;
     }
 
-    if (cbPatch.GetValue("RunSpeed", (float&)m_fSetRunSpeed)) {
+    if (GetConfigFloat(cbPatch, "RunSpeed", m_fSetRunSpeed)) {
       m_fAttackRunSpeed = m_fSetRunSpeed;
     }
 
-    if (cbPatch.GetValue("CloseSpeed", (float&)m_fSetCloseSpeed)) {
+    if (GetConfigFloat(cbPatch, "CloseSpeed", m_fSetCloseSpeed)) {
       m_fCloseRunSpeed = m_fSetCloseSpeed;
     }
 
-    if (cbPatch.GetValue("StopDist", (float&)m_fSetStopDist)) {
+    if (GetConfigFloat(cbPatch, "StopDist", m_fSetStopDist)) {
       m_fStopDistance = m_fSetStopDist;
     }
 
-    if (cbPatch.GetValue("AttackDist", (float&)m_fSetAttackDist)) {
+    if (GetConfigFloat(cbPatch, "AttackDist", m_fSetAttackDist)) {
       m_fAttackDistance = m_fSetAttackDist;
     }
 
-    if (cbPatch.GetValue("CloseDist", (float&)m_fSetCloseDist)) {
+    if (GetConfigFloat(cbPatch, "CloseDist", m_fSetCloseDist)) {
       m_fCloseDistance = m_fSetCloseDist;
     }
   };

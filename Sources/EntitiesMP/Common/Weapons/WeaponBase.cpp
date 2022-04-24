@@ -7,19 +7,19 @@
 
 // Set icon
 void CWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
-  // empty icon
+  // Empty icon
   if (strSetIcon == "") {
     ptoIcon = NULL;
     aIcons.Add(NULL);
     return;
   }
 
-  // already added
+  // Already added
   if (ptoIcon != NULL) {
     return;
   }
 
-  // add new icon
+  // Add new icon
   try {
     ptoIcon = new CTextureObject;
 
@@ -36,88 +36,93 @@ void CWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
 // World functions
 
 // Ammo pointer
-#define AP(_Ammo) (_Ammo < _apWeaponAmmo.Count() ? _apWeaponAmmo.Pointer(_Ammo) : NULL)
+#define AP(_Ammo) (_Ammo >= 0 && _Ammo < _apWeaponAmmo.Count() ? _apWeaponAmmo.Pointer(_Ammo) : NULL)
 
 // Add new ammo to the list
 static void AddAmmo(CWeaponAmmo *pwa) {
-  // set ammo ID from position
+  // Set ammo ID from position
   pwa->ulID = _apWeaponAmmo.Count();
 
   _apWeaponAmmo.Add(pwa);
 
-  // create the icon
+  // Create the icon
   pwa->AddIcon(pwa->strIcon, _aWeaponIcons);
 };
 
 // Add new weapon to the list
 static void AddWeapon(CWeaponStruct *pws) {
-  // set weapon ID from position
+  // Set weapon ID from position
   pws->ulID = _apPlayerWeapons.Count();
 
   _apPlayerWeapons.Add(pws);
 
-  // create the icon
+  // Create the icon
   pws->AddIcon(pws->strIcon, _aWeaponIcons);
 };
 
 // Parse ammo config
 static BOOL ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfig) {
-  // parse the config
+  // Parse the config
   CConfigBlock cb;
-  if (ParseConfig(strConfig, cb) != DJSON_OK) {
+
+  try {
+    LoadJSON(strConfig, cb);
+
+  } catch (char *) {
     return FALSE;
   }
   
-  // included config
+  // Included config
   if (GetConfigString(cb, "Include", strConfig)) {
     ParseAmmoConfig(pwa, strSet, strConfig);
   }
 
-  // ammo properties
+  // Ammo properties
   GetConfigString(cb, "Name", pwa->strPickup);
   GetConfigString(cb, "Icon", pwa->strIcon);
 
-  int iDisplay = 1;
-  if (cb.GetValue("Display", iDisplay)) {
-    pwa->bDisplay = iDisplay;
+  GetConfigInt(cb, "Display", (INDEX &)pwa->bDisplay);
+
+  // Pickup values
+  INDEX i = 0;
+  FLOAT f = 0.0f;
+
+  if (GetConfigInt(cb, "Ammo", i)) {
+    pwa->SetAmmo(i);
   }
 
-  // pickup values
-  int iAmmo = 0;
-  CConfigValue valMana;
-
-  if (cb.GetValue("Ammo", iAmmo)) {
-    pwa->SetAmmo(iAmmo);
-  }
-  if (cb.GetValue("Mana", valMana)) {
-    pwa->fMana = valMana.GetNumber();
-  }
+  // Whichever type
+  if (GetConfigInt(cb, "Mana", i)) pwa->fMana = i;
+  else if (GetConfigFloat(cb, "Mana", f)) pwa->fMana = f;
 
   return TRUE;
 };
 
 // Parse weapon config
 static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strConfig) {
-  // parse the config
+  // Parse the config
   CConfigBlock cb;
-  if (ParseConfig(strConfig, cb) != DJSON_OK) {
+  
+  try {
+    LoadJSON(strConfig, cb);
+
+  } catch (char *) {
     return FALSE;
   }
 
-  // included config
+  // Included config
   CTString strInclude;
 
   if (GetConfigString(cb, "Include", strInclude)) {
     ParseWeaponConfig(pws, strSet, strSet + strInclude);
   }
 
-  CConfigValue val;
+  INDEX i = 0;
+  FLOAT f = 0.0f;
 
-  // get weapon positions
-  if (cb.FindKeyIndex("Pos1") != -1) {
-    GetConfigPlacement(cb, "Pos1", pws->wpsPos.plPos);
-  
-    // copy first person position in case the dual weapon position doesn't exist
+  // Get weapon positions
+  if (GetConfigPlacement(cb, "Pos1", pws->wpsPos.plPos)) {
+    // Copy first person position in case the dual weapon position doesn't exist
     pws->wpsPos.plPos2 = pws->wpsPos.plPos;
   }
   
@@ -126,88 +131,68 @@ static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
 
   GetConfigVector(cb, "PosFire", pws->wpsPos.vFire);
 
-  if (cb.GetValue("FOV", val)) {
-    pws->wpsPos.fFOV = val.GetNumber();
-  }
-
-  // ammo
-  int iAmmo = -1;
-  int iAlt = -1;
-  int iMag = 0;
-  int iPickupAmmo = -1;
-  int iPickupAlt = -1;
+  // Whichever type
+  if (GetConfigInt(cb, "FOV", i)) pws->wpsPos.fFOV = i;
+  else if (GetConfigFloat(cb, "FOV", f)) pws->wpsPos.fFOV = f;
   
-  // ammo types
-  if (cb.GetValue("Ammo", iAmmo)) {
-    pws->pwaAmmo = (iAmmo != -1 ? AP(iAmmo) : NULL);
+  // Ammo types
+  if (GetConfigInt(cb, "Ammo", i)) {
+    pws->pwaAmmo = AP(i);
   }
 
-  if (cb.GetValue("AltAmmo", iAlt)) {
-    pws->pwaAlt = (iAlt != -1 ? AP(iAlt) : NULL);
+  if (GetConfigInt(cb, "AltAmmo", i)) {
+    pws->pwaAlt = AP(i);
   }
 
-  if (cb.GetValue("Mag", iMag)) {
-    pws->iMaxMag = ceil(iMag * AmmoMul());
+  if (GetConfigInt(cb, "Mag", i)) {
+    pws->iMaxMag = ceil(i * AmmoMul());
   }
 
-  if (cb.GetValue("PickupAmmo", iPickupAmmo)) {
-    pws->iPickup = ceil(iPickupAmmo * AmmoMul());
+  if (GetConfigInt(cb, "PickupAmmo", i)) {
+    pws->iPickup = ceil(i * AmmoMul());
   }
 
-  if (cb.GetValue("PickupAlt", iPickupAlt)) {
-    pws->iPickupAlt = ceil(iPickupAlt * AmmoMul());
+  if (GetConfigInt(cb, "PickupAlt", i)) {
+    pws->iPickupAlt = ceil(i * AmmoMul());
   }
 
-  // decreasing ammo
-  if (cb.GetValue("DecAmmo", iAmmo)) {
-    pws->aiDecAmmo[CWeaponStruct::DWA_AMMO] = iAmmo;
-  }
+  // Decreasing ammo
+  GetConfigInt(cb, "DecAmmo", pws->aiDecAmmo[CWeaponStruct::DWA_AMMO]);
+  GetConfigInt(cb, "DecAlt", pws->aiDecAmmo[CWeaponStruct::DWA_ALT]);
+  GetConfigInt(cb, "DecMag", pws->aiDecAmmo[CWeaponStruct::DWA_MAG]);
 
-  if (cb.GetValue("DecAlt", iAlt)) {
-    pws->aiDecAmmo[CWeaponStruct::DWA_ALT] = iAlt;
-  }
+  // Damage (whichever type)
+  if (GetConfigInt(cb, "Damage", i)) pws->fDamage = i;
+  else if (GetConfigFloat(cb, "Damage", f)) pws->fDamage = f;
 
-  if (cb.GetValue("DecMag", iMag)) {
-    pws->aiDecAmmo[CWeaponStruct::DWA_MAG] = iMag;
-  }
+  if (GetConfigInt(cb, "DamageDM", i)) pws->fDamageDM = i;
+  else if (GetConfigFloat(cb, "DamageDM", f)) pws->fDamageDM = f;
 
-  // damage
-  if (cb.GetValue("Damage", val)) {
-    pws->fDamage = val.GetNumber();
-  }
+  if (GetConfigInt(cb, "DamageAlt", i)) pws->fDamageAlt = i;
+  else if (GetConfigFloat(cb, "DamageAlt", f)) pws->fDamageAlt = f;
 
-  if (cb.GetValue("DamageDM", val)) {
-    pws->fDamageDM = val.GetNumber();
-  }
+  if (GetConfigInt(cb, "DamageAltDM", i)) pws->fDamageAltDM = i;
+  else if (GetConfigFloat(cb, "DamageAltDM", f)) pws->fDamageAltDM = f;
 
-  if (cb.GetValue("DamageAlt", val)) {
-    pws->fDamageAlt = val.GetNumber();
-  }
-
-  if (cb.GetValue("DamageAltDM", val)) {
-    pws->fDamageAltDM = val.GetNumber();
-  }
-
-  // other
+  // Other
   GetConfigString(cb, "Name", pws->strPickup);
   GetConfigString(cb, "Icon", pws->strIcon);
+  
+  // Whichever type
+  if (GetConfigInt(cb, "Mana", i)) pws->fMana = i;
+  else if (GetConfigFloat(cb, "Mana", f)) pws->fMana = f;
 
-  if (cb.GetValue("Mana", val)) {
-    pws->fMana = val.GetNumber();
-  }
-
-  int iBit = -1;
   DJSON_Array aBits;
   
   // single bit
-  if (cb.GetValue("Bit", iBit)) {
+  if (GetConfigInt(cb, "Bit", i)) {
     // no bits
-    if (iBit < 0) {
+    if (i < 0) {
       pws->aiBits.Clear();
 
     } else {
       pws->aiBits.New(1);
-      pws->aiBits[0] = iBit;
+      pws->aiBits[0] = i;
     }
 
   // multiple bits
@@ -220,16 +205,11 @@ static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
     }
   }
 
-  int iGroup = 0;
-  int iDual = 0;
-
-  if (cb.GetValue("Group", iGroup)) {
-    pws->ubGroup = Clamp(iGroup, (int)0, (int)31);
+  if (GetConfigInt(cb, "Group", i)) {
+    pws->ubGroup = Clamp((UBYTE)i, (UBYTE)0, (UBYTE)31);
   }
 
-  if (cb.GetValue("Dual", iDual)) {
-    pws->bDualWeapon = iDual;
-  }
+  GetConfigInt(cb, "Dual", (INDEX &)pws->bDualWeapon);
 
   // weapon priority list
   DJSON_Array aPriority;
@@ -299,7 +279,6 @@ extern void LoadWorldWeapons(CWorld *pwo) {
 
   // load default sets
   CDynamicStackArray<CTFileName> aList;
-  HookConfigFunctions();
 
   // go through ammo configs
   CTString strAmmoSet = "Configs\\AmmoSets\\" + _strCurrentWeaponSet + "\\";

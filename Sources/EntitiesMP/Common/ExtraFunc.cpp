@@ -305,8 +305,11 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
       // load model config
       CConfigBlock cbInclude;
 
-      if (LoadJSON(CTString(cv.cv_strValue), cbInclude) != DJSON_OK) {
-        ThrowF_t("Couldn't parse the included model \"%s\"", cv.cv_strValue);
+      try {
+        LoadJSON(CTString(cv.cv_strValue), cbInclude);
+
+      } catch (char *strError) {
+        ThrowF_t("Couldn't parse the included model \"%s\": %s", cv.cv_strValue, strError);
       }
 
       // set model
@@ -407,8 +410,11 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
       // load model config
       CConfigBlock cbInclude;
 
-      if (LoadJSON(CTString(cv.cv_strValue), cbInclude) != DJSON_OK) {
-        ThrowF_t("Couldn't parse the included model \"%s\"", cv.cv_strValue);
+      try {
+        LoadJSON(CTString(cv.cv_strValue), cbInclude);
+
+      } catch (char *strError) {
+        ThrowF_t("Couldn't parse the included model \"%s\": %s", cv.cv_strValue, strError);
       }
 
       // set attachments
@@ -449,11 +455,26 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
 };
 
 // [Cecil] Load JSON config
-DJSON_ERROR LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel) {
-  HookConfigFunctions();
+void LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel) {
+  // Function hooking
+  static BOOL bConfigFuncHooked = FALSE;
 
-  // load the config
-  return ParseConfig(fnJSON.str_String, mapModel);
+  if (!bConfigFuncHooked) {
+    DJSON_pErrorFunction = (void (*)(const char *))ThrowF_t;
+    DJSON_pPrintFunction = (void (*)(const char *))CPrintF;
+    DJSON_pLoadConfigFile = (DJSON_String (*)(DJSON_String))LoadConfigFile;
+
+    bConfigFuncHooked = TRUE;
+  }
+
+  // No config file
+  if (!FileExists(fnJSON)) {
+    ThrowF_t("Config file does not exist!", fnJSON.str_String);
+    return;
+  }
+
+  // Load the config (throws a string on error)
+  ParseConfig(fnJSON.str_String, mapModel);
 };
 
 // [Cecil] Precache some resource

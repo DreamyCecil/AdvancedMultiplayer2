@@ -40,15 +40,16 @@ extern DJSON_Block _cbConfig = DJSON_Block();
 void LoadClassPatchConfig(CTString strWorld) {
   _cbConfig.Clear();
 
-  HookConfigFunctions();
-
   // get global config
   CTString strConfigFile;
   strConfigFile.PrintF("LevelPatches\\GlobalClasses.json");
 
-  // load if exists
-  if (!FileExists(strConfigFile) || ParseConfig(strConfigFile, _cbConfig) != DJSON_OK) {
-    WarningMessage("Couldn't parse global class patch config \"%s\"!", strConfigFile);
+  // load if possible
+  try {
+    LoadJSON(strConfigFile, _cbConfig);
+
+  } catch (char *strError) {
+    WarningMessage("Couldn't parse global class patch config \"%s\": %s", strConfigFile, strError);
     _cbConfig.Clear();
   }
 
@@ -63,9 +64,12 @@ void LoadClassPatchConfig(CTString strWorld) {
   // load level config
   DJSON_Block cbLevel;
 
-  if (ParseConfig(strConfigFile, cbLevel) != DJSON_OK) {
+  try {
+    LoadJSON(strConfigFile, cbLevel);
+
+  } catch (char *strError) {
     // can't parse the config
-    FatalError("Cannot parse class patch \"%s\"!", strConfigFile);
+    FatalError("Couldn't parse level class patch config \"%s\": %s", strConfigFile, strError);
     return;
   }
 
