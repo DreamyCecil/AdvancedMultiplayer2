@@ -1342,6 +1342,89 @@ functions:
     return GetInventory()->UseKey(ulKey);
   };
 
+  // [Cecil] Play animation for the legs
+  void PlayExtraAnim(INDEX iAnim, ULONG ulFlags) {
+    // Select compatible animations
+    switch (iAnim) {
+      case PLAYER_ANIM_SPAWN_FALLDOWN:
+        iAnim = PLAYER_ANIM_DEATH_BACK;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+
+      case PLAYER_ANIM_SPAWN_GETUP:
+        iAnim = PLAYER_ANIM_STAND;
+        break;
+
+      case PLAYER_ANIM_SPAWNPOSE:
+      case PLAYER_ANIM_ABYSSFALL:
+      case PLAYER_ANIM_ENTERSPACESHIP:
+        iAnim = PLAYER_ANIM_DEATH_SPIKES;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+
+      case PLAYER_ANIM_STATUE_PUT:
+      case PLAYER_ANIM_BRIDGEFALLPOSE:
+      case PLAYER_ANIM_KEYLIFT:
+      case PLAYER_ANIM_INTRO:
+        iAnim = PLAYER_ANIM_DEFAULT_ANIMATION;
+        break;
+    }
+
+    StartModelAnim(iAnim, ulFlags);
+  };
+
+  // [Cecil] Play animation for the body
+  void PlayBodyAnim(INDEX iAnim, ULONG ulFlags) {
+    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
+
+    // Select compatible animation if requested one doesn't exist
+    switch (iAnim) {
+      case BODY_ANIM_COLT_REDRAWSLOW:
+        iAnim = BODY_ANIM_COLT_REDRAW;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+
+      case BODY_ANIM_SHOTGUN_REDRAWSLOW:
+        iAnim = BODY_ANIM_SHOTGUN_REDRAW;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+
+      case BODY_ANIM_MINIGUN_REDRAWSLOW:
+        iAnim = BODY_ANIM_MINIGUN_REDRAW;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+
+      case BODY_ANIM_BRIDGEFALLPOSE:
+        iAnim = BODY_ANIM_DEATH_EASYFALLBACK;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+
+      case BODY_ANIM_STATUE_PULL: case BODY_ANIM_KEYLIFT:
+        iAnim = BODY_ANIM_KNIFE_ATTACK;
+          ulFlags &= ~AOF_LOOPING;
+        break;
+
+      case BODY_ANIM_SPAWN_FALLDOWN:
+        iAnim = BODY_ANIM_DEATH_BACK;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+        
+      case BODY_ANIM_COLT_DEACTIVATETOWALK: case BODY_ANIM_SHOTGUN_DEACTIVATETOWALK:
+      case BODY_ANIM_MINIGUN_DEACTIVATETOWALK: case BODY_ANIM_LOOKAROUNDONCE:
+      case BODY_ANIM_WAIT: case BODY_ANIM_WAITTOLOOKAROUND: case BODY_ANIM_LOOKAROUNDTOWAIT:
+      case BODY_ANIM_LOOKAROUND: case BODY_ANIM_NORMALWALK: case BODY_ANIM_SPAWN_GETUP:
+        iAnim = BODY_ANIM_DEFAULT_ANIMATION;
+        break;
+
+      case BODY_ANIM_SPAWNPOSE: case BODY_ANIM_ABYSSFALL: case BODY_ANIM_ENTERSPACESHIP:
+        iAnim = BODY_ANIM_DEATH_SPIKES;
+        ulFlags &= ~AOF_LOOPING;
+        break;
+    }
+
+    moBody.PlayAnim(iAnim, ulFlags);
+  };
+
   INDEX GenderSound(INDEX iSound) {
     return iSound + m_iGender*GENDEROFFSET;
   };
@@ -2974,9 +3057,8 @@ functions:
 
     StartModelAnim(PLAYER_ANIM_STAND, 0);
 
-    // [Cecil] Default animation instead of walking animation
     GetPlayerAnimator()->BodyAnimationTemplate(
-      BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
+      BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
   };
 
@@ -6270,9 +6352,8 @@ procedures:
 
     // look straight
     StartModelAnim(PLAYER_ANIM_STAND, 0);
-    // [Cecil] Default animation instead of walking animation
     ((CPlayerAnimator&)*m_penAnimator).BodyAnimationTemplate(
-      BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
+      BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
 
     en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
@@ -6439,7 +6520,7 @@ procedures:
     // start pulling the item
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.BodyPullItemAnimation();
-    //StartModelAnim(PLAYER_ANIM_STATUE_PULL, 0);
+    PlayExtraAnim(PLAYER_ANIM_STATUE_PUT, 0);
 
     autowait(0.2f);
 
@@ -6486,8 +6567,7 @@ procedures:
     // start pulling the item
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.BodyPickItemAnimation();
-    // [Cecil] KEYLIFT -> STAND
-    StartModelAnim(PLAYER_ANIM_STAND, 0);
+    PlayExtraAnim(PLAYER_ANIM_KEYLIFT, 0);
 
     autowait(1.2f);
 
@@ -6519,10 +6599,8 @@ procedures:
   }
 
   AutoFallDown(EVoid) {
-    // [Cecil] Default animation instead of bridge falling animation
-    StartModelAnim(PLAYER_ANIM_STAND, 0);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, 0);
+    PlayExtraAnim(PLAYER_ANIM_BRIDGEFALLPOSE, 0);
+    PlayBodyAnim(BODY_ANIM_BRIDGEFALLPOSE, 0);
 
     autowait(GetActionMarker()->m_tmWait);
 
@@ -6531,10 +6609,8 @@ procedures:
   }
 
   AutoFallToAbys(EVoid) {
-    // [Cecil] ABYSSFALL -> DEATH_SPIKES
-    StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_DEATH_SPIKES, AOF_LOOPING);
+    PlayExtraAnim(PLAYER_ANIM_ABYSSFALL, AOF_LOOPING);
+    PlayBodyAnim(BODY_ANIM_ABYSSFALL, AOF_LOOPING);
 
     autowait(GetActionMarker()->m_tmWait);
 
@@ -6546,9 +6622,7 @@ procedures:
   AutoLookAround(EVoid) {
     StartModelAnim(PLAYER_ANIM_BACKPEDAL, 0);
     m_vAutoSpeed = FLOAT3D(0,0,plr_fSpeedForward/4/0.75f);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    // [Cecil] Default animation instead of walking animation
-    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, 0);
+    PlayBodyAnim(BODY_ANIM_NORMALWALK, 0);
 
     autowait(GetModelObject()->GetCurrentAnimLength()/2);
 
@@ -6556,13 +6630,10 @@ procedures:
  
     // start looking around
     StartModelAnim(PLAYER_ANIM_STAND, 0);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    // [Cecil] Default animation instead of looking animation
-    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, 0);
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
+    PlayBodyAnim(BODY_ANIM_LOOKAROUND, 0);
 
     // wait given time
-    autowait(moBody.GetCurrentAnimLength()+0.1f);
+    autowait(GetPlayerAnimator()->GetBody()->GetCurrentAnimLength()+0.1f);
 
     // return to auto-action loop
     return EReturn();
@@ -6589,10 +6660,8 @@ procedures:
 
     SetDesiredRotation(ANGLE3D(60.0f, 0.0f, 0.0f));
 
-    // [Cecil] SPAWNPOSE -> DEATH_SPIKES
-    StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_DEATH_SPIKES, AOF_LOOPING);
+    PlayExtraAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
+    PlayBodyAnim(BODY_ANIM_SPAWNPOSE, AOF_LOOPING);
 
     // start stardust appearing
     m_tmSpiritStart = _pTimer->CurrentTick();
@@ -6613,19 +6682,15 @@ procedures:
     SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
     m_ulFlags&=~PLF_AUTOMOVEMENTS;
 
-    // [Cecil] SPAWN_FALLDOWN -> DEATH_BACK
     // play animation to fall down
-    StartModelAnim(PLAYER_ANIM_DEATH_BACK, 0);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_DEATH_BACK, 0);
+    PlayExtraAnim(PLAYER_ANIM_SPAWN_FALLDOWN, 0);
+    PlayBodyAnim(BODY_ANIM_SPAWN_FALLDOWN, 0);
 
     autowait(GetModelObject()->GetCurrentAnimLength());
     
-    // [Cecil] Default animation instead of getup animation
     // play animation to get up
-    StartModelAnim(PLAYER_ANIM_STAND, AOF_SMOOTHCHANGE);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, AOF_SMOOTHCHANGE);
+    PlayExtraAnim(PLAYER_ANIM_SPAWN_GETUP, AOF_SMOOTHCHANGE);
+    PlayBodyAnim(BODY_ANIM_SPAWN_GETUP, AOF_SMOOTHCHANGE);
 
     autowait(GetModelObject()->GetCurrentAnimLength());
 
@@ -6644,10 +6709,8 @@ procedures:
     SetDesiredRotation(ANGLE3D(60.0f, 0.0f, 0.0f));
     SetDesiredTranslation(ANGLE3D(0.0f, 20.0f, 0.0f));
 
-    // [Cecil] SPAWNPOSE -> DEATH_SPIKES
-    StartModelAnim(PLAYER_ANIM_DEATH_SPIKES, AOF_LOOPING);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_DEATH_SPIKES, AOF_LOOPING);
+    PlayExtraAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
+    PlayBodyAnim(BODY_ANIM_SPAWNPOSE, AOF_LOOPING);
 
     // wait till it appears
     autowait(8.0f);
@@ -6666,9 +6729,8 @@ procedures:
     en_plViewpoint.pl_OrientationAngle(1) = 20.0f;
     en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle;
 
-    // [Cecil] Default animation instead of intro animation
     // stand in pose
-    StartModelAnim(PLAYER_ANIM_DEFAULT_ANIMATION, AOF_LOOPING);
+    PlayExtraAnim(PLAYER_ANIM_INTRO, AOF_LOOPING);
     // remember time for rotating view start
     m_tmMinigunAutoFireStart = _pTimer->CurrentTick();
     // wait some time for fade in and to look from left to right with out firing
@@ -6678,8 +6740,7 @@ procedures:
     GetWeapon(0)->SendEvent(EReleaseWeapon());
 
     // stop minigun shaking
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(BODY_ANIM_MINIGUN_STAND, 0);
+    PlayBodyAnim(BODY_ANIM_MINIGUN_STAND, 0);
 
     autowait(0.5f);
 
@@ -6722,9 +6783,8 @@ procedures:
   AutoStoreWeapon(EVoid) {
     // store current weapon slowly
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    // [Cecil] Default animation instead of wait animation; REDRAWSLOW -> REDRAW
-    plan.BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
-      BODY_ANIM_COLT_REDRAW, BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, 0);
+    plan.BodyAnimationTemplate(BODY_ANIM_WAIT, 
+      BODY_ANIM_COLT_REDRAWSLOW, BODY_ANIM_SHOTGUN_REDRAWSLOW, BODY_ANIM_MINIGUN_REDRAWSLOW, 0);
     autowait(plan.m_fBodyAnimTime);
 
     m_iAutoOrgWeapon = GetWeapon(0)->GetCurrent();  
@@ -6743,9 +6803,8 @@ procedures:
     GetPlayerAnimator()->SyncWeapon();
 
     GetWeapon(0)->m_iCurrentWeapon = m_iAutoOrgWeapon;
-    // [Cecil] Default animation instead of wait animation; DEACTIVATETOWALK -> REDRAW
-    plan.BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, BODY_ANIM_COLT_REDRAW,
-      BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, AOF_SMOOTHCHANGE);
+    plan.BodyAnimationTemplate(BODY_ANIM_WAIT, BODY_ANIM_COLT_DEACTIVATETOWALK,
+      BODY_ANIM_SHOTGUN_DEACTIVATETOWALK, BODY_ANIM_MINIGUN_DEACTIVATETOWALK, AOF_SMOOTHCHANGE);
     GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
 
     autowait(plan.m_fBodyAnimTime);
@@ -6776,18 +6835,14 @@ procedures:
       // if should wait
       if (GetAutoAction() == PAA_WAIT) {
         // play still anim
-        CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-        // [Cecil] Default animation instead of wait animation
-        moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, AOF_NORESTART|AOF_LOOPING);
+        PlayBodyAnim(BODY_ANIM_WAIT, AOF_NORESTART|AOF_LOOPING);
         // wait given time
         autowait(GetActionMarker()->m_tmWait);
 
       } else if (GetAutoAction() == PAA_STOPANDWAIT) {
         // play still anim
         StartModelAnim(PLAYER_ANIM_STAND, 0);
-        CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-        // [Cecil] Default animation instead of wait animation
-        moBody.PlayAnim(BODY_ANIM_DEFAULT_ANIMATION, AOF_NORESTART|AOF_LOOPING);
+        PlayBodyAnim(BODY_ANIM_WAIT, AOF_NORESTART|AOF_LOOPING);
         // wait given time
         autowait(GetActionMarker()->m_tmWait);
 

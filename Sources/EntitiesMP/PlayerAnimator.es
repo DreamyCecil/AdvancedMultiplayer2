@@ -368,9 +368,8 @@ functions:
     if (m_bAttacking) { return; }
     // play body anim
     CPlayer &pl = (CPlayer&)*m_penPlayer;
-    CModelObject &moBody = pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(iAnimation, ulFlags);
-    m_fBodyAnimTime = moBody.GetAnimLength(iAnimation);     // anim length
+    pl.PlayBodyAnim(iAnimation, ulFlags);
+    m_fBodyAnimTime = GetBody()->GetAnimLength(iAnimation); // anim length
   };
 
   void Initialize(void) {
@@ -871,16 +870,14 @@ functions:
 
   // walk
   void BodyWalkAnimation() {
-    // [Cecil] Default animation instead of walking animation
-    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
+    BodyAnimationTemplate(BODY_ANIM_NORMALWALK, 
       BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
   };
 
   // stand
   void BodyStillAnimation() {
-    // [Cecil] Default animation instead of wait animation
-    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
+    BodyAnimationTemplate(BODY_ANIM_WAIT, 
       BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
   };
@@ -889,8 +886,7 @@ functions:
   void BodyPushAnimation() {
     m_bAttacking = FALSE;
     m_bChangeWeapon = FALSE;
-    // [Cecil] Default animation instead of wait animation
-    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
+    BodyAnimationTemplate(BODY_ANIM_WAIT, 
       BODY_ANIM_COLT_REDRAW, BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, 0);
     m_bChangeWeapon = TRUE;
   };
@@ -923,8 +919,7 @@ functions:
     // pull weapon
     m_bChangeWeapon = FALSE;
 
-    // [Cecil] Default animation instead of wait animation
-    BodyAnimationTemplate(BODY_ANIM_DEFAULT_ANIMATION, 
+    BodyAnimationTemplate(BODY_ANIM_WAIT, 
       BODY_ANIM_COLT_DRAW, BODY_ANIM_SHOTGUN_DRAW, BODY_ANIM_MINIGUN_DRAW, 0);
 
     INDEX iWeapon = GetWeapon(0)->GetCurrent();
@@ -947,8 +942,7 @@ functions:
     // pull item
     m_bChangeWeapon = FALSE;
 
-    // [Cecil] STATUE_PULL -> KNIFE_ATTACK
-    SetBodyAnimation(BODY_ANIM_KNIFE_ATTACK, 0);
+    SetBodyAnimation(BODY_ANIM_STATUE_PULL, 0);
 
     m_bChangeWeapon = TRUE;
 
@@ -967,8 +961,7 @@ functions:
     // pick item
     m_bChangeWeapon = FALSE;
 
-    // [Cecil] KEYLIFT -> KNIFE_ATTACK
-    SetBodyAnimation(BODY_ANIM_KNIFE_ATTACK, 0);
+    SetBodyAnimation(BODY_ANIM_KEYLIFT, 0);
 
     m_bChangeWeapon = TRUE;
 
