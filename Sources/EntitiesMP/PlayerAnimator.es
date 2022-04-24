@@ -273,8 +273,7 @@ functions:
       return;
     }
 
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    m_pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
+    m_pmoModel = GetBody();
 
     // set custom model
     CWeaponModel &wm = pw.pwsWeapon->wmModel3;
@@ -322,8 +321,7 @@ functions:
       return;
     }
     
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    m_pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
+    m_pmoModel = GetBody();
 
     // get weapon attachment
     INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
@@ -344,7 +342,7 @@ functions:
 
   // set item
   void SetItem(CModelObject *pmo) {
-    m_pmoModel = &(GetPlayer()->GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
+    m_pmoModel = GetBody();
     AddModel(m_pmoModel, BODY_ATTACHMENT_ITEM, MODEL_GOLDAMON, TEXTURE_GOLDAMON, TEX_REFL_GOLD01, TEX_SPEC_MEDIUM, 0);
 
     if (pmo != NULL) {
@@ -537,11 +535,10 @@ functions:
 
   // body and head animation
   void BodyAndHeadOrientation(CPlacement3D &plView) {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    CAttachmentModelObject *pamoBody = pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
+    CAttachmentModelObject *pamoBody = GetPlayer()->GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
     ANGLE3D a = plView.pl_OrientationAngle;
 
-    if (!(pl.GetFlags() & ENF_ALIVE)) {
+    if (!IsAlive(m_penPlayer)) {
       a = ANGLE3D(0.0f, 0.0f, 0.0f);
     }
 
@@ -893,8 +890,7 @@ functions:
 
   // [Cecil] Remove current weapon model
   void RemoveWeapon(BOOL bExtra) {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    m_pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
+    m_pmoModel = GetBody();
 
     // [Cecil] Remove specific weapon
     INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
@@ -973,9 +969,7 @@ functions:
 
   // remove item
   void BodyRemoveItem() {
-    CPlayer &pl = (CPlayer&)*m_penPlayer;
-    m_pmoModel = &(pl.GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject);
-
+    m_pmoModel = GetBody();
     m_pmoModel->RemoveAttachmentModel(BODY_ATTACHMENT_ITEM);
 
     // sync apperances
@@ -991,10 +985,9 @@ functions:
         ANGLE aAngle = Lerp(plw.m_aMiniGunLast, plw.m_aMiniGun, _pTimer->GetLerpFactor());
 
         // rotate minigun barrels
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
         INDEX iAttach (plw.m_bExtraWeapon ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
 
-        CAttachmentModelObject *pamo = pl.GetModelObject()->GetAttachmentModelList(
+        CAttachmentModelObject *pamo = GetPlayer()->GetModelObject()->GetAttachmentModelList(
           PLAYER_ATTACHMENT_TORSO, iAttach, MINIGUNITEM_ATTACHMENT_BARRELS, -1);
 
         if (pamo != NULL) {
