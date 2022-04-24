@@ -550,6 +550,18 @@ functions:
 
     m_bLastWeaponMirrored = penOther->m_bLastWeaponMirrored;
   };
+  
+  // [Cecil] Read weapons
+  void Read_t(CTStream *istr) {
+    CRationalEntity::Read_t(istr);
+
+    // [Cecil] Reset weapon model on load
+    m_bLastWeaponMirrored = MirrorState();
+    SetCurrentWeaponModel();
+
+    // [Cecil] Reset sound owner
+    SetSoundOwner(m_penPlayer->GetPredictionTail());
+  };
 
   // [Cecil] Destroy ghostbuster ray
   void DestroyRay(void) {
