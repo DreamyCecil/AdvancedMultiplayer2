@@ -60,8 +60,8 @@ procedures:
 
   RotateToEnemy() {
     // if the enemy not alive or deleted
-    if (!(m_penEnemy->GetFlags()&ENF_ALIVE) || m_penEnemy->GetFlags()&ENF_DELETED) {
-        SetTargetNone();
+    if (!IsAlive(m_penEnemy) || m_penEnemy->GetFlags()&ENF_DELETED) {
+      SetTargetNone();
       return EReturn();
     }
 
@@ -162,7 +162,7 @@ procedures:
 
   RunIntoEnemy() {
     // if the enemy not alive or deleted
-    if (!(m_penEnemy->GetFlags()&ENF_ALIVE) || m_penEnemy->GetFlags()&ENF_DELETED) {
+    if (!IsAlive(m_penEnemy) || m_penEnemy->GetFlags()&ENF_DELETED) {
       SetTargetNone();
       return EReturn();
     }
@@ -196,7 +196,7 @@ procedures:
         // if touch another
         on (ETouch etouch) : {
           // if the entity is live
-          if (etouch.penOther->GetFlags()&ENF_ALIVE) {
+          if (IsAlive(etouch.penOther)) {
             // react to hitting it
             LiveEntityTouched(etouch);
             // if hit something bigger than us
@@ -230,7 +230,7 @@ procedures:
 
   RunAwayFromEnemy() {
     // if the enemy not alive or deleted
-    if (!(m_penEnemy->GetFlags()&ENF_ALIVE) || m_penEnemy->GetFlags()&ENF_DELETED) {
+    if (!IsAlive(m_penEnemy) || m_penEnemy->GetFlags()&ENF_DELETED) {
       SetTargetNone();
       return EReturn();
     }
@@ -241,7 +241,7 @@ procedures:
       on (EBegin) : { resume; }
       on (ETouch etouch) : {
         // live entity touched
-        if (etouch.penOther->GetFlags()&ENF_ALIVE) {
+        if (IsAlive(etouch.penOther)) {
           LiveEntityTouched(etouch);
           // stop moving on higher mass
           if (HigherMass()) {

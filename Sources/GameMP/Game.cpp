@@ -2698,7 +2698,7 @@ INDEX CGame::GetLivePlayersCount(void) {
   for (INDEX ipl = 0; ipl < NET_MAXGAMEPLAYERS; ipl++) {
     CEntity *penpl = CEntity::GetPlayerEntity(ipl);
 
-    if (penpl != NULL && (penpl->GetFlags() & ENF_ALIVE)) {
+    if (penpl != NULL && IsAlive(penpl)) {
       ctLive++;
     }
   }

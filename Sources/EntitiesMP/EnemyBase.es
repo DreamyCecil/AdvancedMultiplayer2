@@ -970,7 +970,7 @@ functions:
     return 
       penPlayer!=NULL && 
       IsDerivedFromClass(penPlayer, "Player") &&
-      penPlayer->GetFlags()&ENF_ALIVE;
+      IsAlive(penPlayer);
   }
   
   // unset target

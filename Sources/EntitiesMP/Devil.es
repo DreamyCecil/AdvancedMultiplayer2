@@ -2375,8 +2375,7 @@ procedures:
       }
       // if dead
       on (EDeath eDeath) : {
-        if( !(GetFlags()&ENF_ALIVE))
-        {
+        if (!IsAlive(this)) {
           resume;
         }
 

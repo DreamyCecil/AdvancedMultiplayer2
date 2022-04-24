@@ -218,7 +218,7 @@ functions:
     
     // if we have a valid enemy, return
     if (m_penEnemy!=NULL) {
-      if (m_penEnemy->GetFlags()&ENF_ALIVE && !(m_penEnemy->GetFlags()&ENF_DELETED)) {
+      if (IsAlive(m_penEnemy) && !(m_penEnemy->GetFlags()&ENF_DELETED)) {
         return;  
       }
     }
@@ -231,7 +231,7 @@ functions:
       penPlayer=GetPlayerEntity(i);
       if (penPlayer!=NULL && DistanceTo(this, penPlayer)<200.0f) {
         // if there is no valid enemy
-        if (penPlayer!=NULL && (penPlayer->GetFlags()&ENF_ALIVE) && 
+        if (penPlayer!=NULL && IsAlive(penPlayer) && 
           !(penPlayer->GetFlags()&ENF_DELETED)) {
           m_penEnemy = penPlayer;
         }      
@@ -250,7 +250,7 @@ functions:
     for(INDEX i=0; i<ctMaxPlayers; i++) {
       penPlayer=GetPlayerEntity(i);
       if (penPlayer!=NULL) {
-        if ((penPlayer->GetFlags()&ENF_ALIVE) && 
+        if (IsAlive(penPlayer) && 
             !(penPlayer->GetFlags()&ENF_DELETED) &&
             DistanceTo(this, penPlayer)<fDistance)
         {
