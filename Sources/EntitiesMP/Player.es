@@ -1515,12 +1515,12 @@ functions:
   };
 
   class CPlayerAnimator *GetPlayerAnimator(void) {
-    return (CPlayerAnimator*)&*m_penAnimator;
+    return (CPlayerAnimator *)&*m_penAnimator;
   };
 
   // [Cecil] Get inventory entity
   class CPlayerInventory *GetInventory(void) const {
-    return (CPlayerInventory*)&*m_penInventory;
+    return (CPlayerInventory *)&*m_penInventory;
   };
 
   // [Cecil] Get some weapon
@@ -2284,8 +2284,8 @@ functions:
     plView.Lerp(en_plLastViewpoint, en_plViewpoint, _pTimer->GetLerpFactor());
 
     // body and head attachment animation
-    ((CPlayerAnimator&)*m_penAnimator).BodyAndHeadOrientation(plView);
-    ((CPlayerAnimator&)*m_penAnimator).OnPreRender();
+    GetPlayerAnimator()->BodyAndHeadOrientation(plView);
+    GetPlayerAnimator()->OnPreRender();
 
     // synchronize your appearance with the default model
     m_moRender.Synchronize(*GetModelObject());
@@ -2967,14 +2967,14 @@ functions:
 
   // Premoving for soft player up-down movement
   void PreMoving(void) {
-    ((CPlayerAnimator&)*m_penAnimator).StoreLast();
+    GetPlayerAnimator()->StoreLast();
     CPlayerEntity::PreMoving();
   };
 
   // Do moving
   void DoMoving(void) {
     CPlayerEntity::DoMoving();
-    ((CPlayerAnimator&)*m_penAnimator).AnimateBanking();
+    GetPlayerAnimator()->AnimateBanking();
 
     if (m_penView != NULL) {
       ((CPlayerView&)*m_penView).DoMoving();
@@ -2997,7 +2997,7 @@ functions:
     // never allow a player to be removed from the list of movers
     en_ulFlags &= ~ENF_INRENDERING;
 
-    ((CPlayerAnimator&)*m_penAnimator).AnimateSoftEyes();
+    GetPlayerAnimator()->AnimateSoftEyes();
 
     // slowly increase mana with time, faster if player is not moving; (only if alive)
     if (IsAlive(this)) {
@@ -4372,9 +4372,9 @@ functions:
           if (ChangeCollisionBoxIndexNow(PLAYER_COLLISION_BOX_STAND)) {
             en_plViewpoint.pl_PositionVector(2) = plr_fViewHeightStand;
             if (m_pstState==PST_CROUCH) {
-              ((CPlayerAnimator&)*m_penAnimator).Rise();
+              GetPlayerAnimator()->Rise();
             } else {
-              ((CPlayerAnimator&)*m_penAnimator).Stand();
+              GetPlayerAnimator()->Stand();
             }
             m_pstState = PST_STAND;
           }
@@ -4385,7 +4385,7 @@ functions:
           if (ChangeCollisionBoxIndexNow(PLAYER_COLLISION_BOX_CROUCH)) {
             m_pstState = PST_CROUCH;
             en_plViewpoint.pl_PositionVector(2) = plr_fViewHeightCrouch;
-            ((CPlayerAnimator&)*m_penAnimator).Crouch();
+            GetPlayerAnimator()->Crouch();
           }
                         } break;
         // if wanting to swim
@@ -4395,7 +4395,7 @@ functions:
             ChangeCollisionBoxIndexWhenPossible(PLAYER_COLLISION_BOX_SWIM);
             m_pstState = PST_SWIM;
             en_plViewpoint.pl_PositionVector(2) = plr_fViewHeightSwim;
-            ((CPlayerAnimator&)*m_penAnimator).Swim();                   
+            GetPlayerAnimator()->Swim();
             m_fSwimTime = _pTimer->CurrentTick();
           }
                         } break;
@@ -4406,7 +4406,7 @@ functions:
             ChangeCollisionBoxIndexWhenPossible(PLAYER_COLLISION_BOX_SWIM);
             m_pstState = PST_DIVE;
             en_plViewpoint.pl_PositionVector(2) = plr_fViewHeightDive;
-            ((CPlayerAnimator&)*m_penAnimator).Swim();
+            GetPlayerAnimator()->Swim();
           }
                         } break;
         // if wanting to fall
@@ -4415,7 +4415,7 @@ functions:
           if (ChangeCollisionBoxIndexNow(PLAYER_COLLISION_BOX_STAND)) {
             m_pstState = PST_FALL;
             en_plViewpoint.pl_PositionVector(2) = plr_fViewHeightStand;
-            ((CPlayerAnimator&)*m_penAnimator).Fall();
+            GetPlayerAnimator()->Fall();
           }
                         } break;
         }
@@ -4682,7 +4682,7 @@ functions:
       }
 
       // animate player
-      ((CPlayerAnimator&)*m_penAnimator).AnimatePlayer();
+      GetPlayerAnimator()->AnimatePlayer();
     }
   };
 
@@ -5108,9 +5108,9 @@ functions:
     plView.Lerp(en_plLastViewpoint, en_plViewpoint, fLerpFactor);
 
     // moving banking and soft eyes
-    ((CPlayerAnimator&)*m_penAnimator).ChangeView(plView);
+    GetPlayerAnimator()->ChangeView(plView);
     // body and head attachment animation
-    ((CPlayerAnimator&)*m_penAnimator).BodyAndHeadOrientation(plView);
+    GetPlayerAnimator()->BodyAndHeadOrientation(plView);
 
     // return player eyes view
     if (m_iViewState == PVT_PLAYEREYES || _bDiscard3rdView) {
@@ -5441,7 +5441,7 @@ functions:
     m_soLocalAmbientLoop.Stop();
 
     // initialize animator
-    ((CPlayerAnimator&)*m_penAnimator).Initialize();
+    GetPlayerAnimator()->Initialize();
     // restart weapons if needed
     GetWeapon(0)->SendEvent(EStart());
     GetWeapon(1)->SendEvent(EStart());
@@ -5570,8 +5570,8 @@ functions:
     // force yourself to standing state
     ForceCollisionBoxIndexChange(PLAYER_COLLISION_BOX_STAND);
     en_plViewpoint.pl_PositionVector(2) = plr_fViewHeightStand;
-    ((CPlayerAnimator&)*m_penAnimator).m_bDisableAnimating = FALSE;
-    ((CPlayerAnimator&)*m_penAnimator).Stand();
+    GetPlayerAnimator()->m_bDisableAnimating = FALSE;
+    GetPlayerAnimator()->Stand();
     m_pstState = PST_STAND;
 
     // create offset from marker
@@ -6159,8 +6159,8 @@ procedures:
     SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
 
     // remove weapon from hand
-    ((CPlayerAnimator&)*m_penAnimator).RemoveWeapon(FALSE);
-    ((CPlayerAnimator&)*m_penAnimator).RemoveWeapon(TRUE);
+    GetPlayerAnimator()->RemoveWeapon(FALSE);
+    GetPlayerAnimator()->RemoveWeapon(TRUE);
 
     // kill weapon animations
     GetWeapon(0)->SendEvent(EStop());
@@ -6352,7 +6352,7 @@ procedures:
 
     // look straight
     StartModelAnim(PLAYER_ANIM_STAND, 0);
-    ((CPlayerAnimator&)*m_penAnimator).BodyAnimationTemplate(
+    GetPlayerAnimator()->BodyAnimationTemplate(
       BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
 
@@ -6460,9 +6460,9 @@ procedures:
       ulFlags |= AOF_SMOOTHCHANGE;
     }
 
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.m_bAttacking = FALSE;
-    plan.BodyWalkAnimation();
+    GetPlayerAnimator()->m_bAttacking = FALSE;
+    GetPlayerAnimator()->BodyWalkAnimation();
+
     if (m_fAutoSpeed>plr_fSpeedForward/2) {
       StartModelAnim(PLAYER_ANIM_RUN, ulFlags);
     } else {
@@ -6488,8 +6488,8 @@ procedures:
       ulFlags |= AOF_SMOOTHCHANGE;
     }
 
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyWalkAnimation();
+    GetPlayerAnimator()->BodyWalkAnimation();
+
     if (m_fAutoSpeed>plr_fSpeedForward/2) {
       StartModelAnim(PLAYER_ANIM_RUN, ulFlags);
     } else {
@@ -6504,8 +6504,7 @@ procedures:
     // disable auto speed
     m_fAutoSpeed = 0.0f;
 
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyStillAnimation();
+    GetPlayerAnimator()->BodyStillAnimation();
     StartModelAnim(PLAYER_ANIM_STAND, AOF_LOOPING|AOF_NORESTART);
 
     // stop moving
@@ -6518,8 +6517,7 @@ procedures:
   // auto action - use an item
   AutoUseItem(EVoid) {
     // start pulling the item
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyPullItemAnimation();
+    GetPlayerAnimator()->BodyPullItemAnimation();
     PlayExtraAnim(PLAYER_ANIM_STATUE_PUT, 0);
 
     autowait(0.2f);
@@ -6535,8 +6533,7 @@ procedures:
     autowait(2.0f);
 
     // the item is in place
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyRemoveItem();
+    GetPlayerAnimator()->BodyRemoveItem();
 
     CPlayerActionMarker *ppam = GetActionMarker();
 
@@ -6555,8 +6552,7 @@ procedures:
     
     autowait(1.05f);
 
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyRemoveItem();
+    GetPlayerAnimator()->BodyRemoveItem();
 
     // return to auto-action loop
     return EReturn();
@@ -6565,8 +6561,7 @@ procedures:
   // auto action - pick an item
   AutoPickItem(EVoid) {
     // start pulling the item
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyPickItemAnimation();
+    GetPlayerAnimator()->BodyPickItemAnimation();
     PlayExtraAnim(PLAYER_ANIM_KEYLIFT, 0);
 
     autowait(1.2f);
@@ -6591,8 +6586,7 @@ procedures:
 
     autowait(2.4f + GetActionMarker()->m_tmWait);
 
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyRemoveItem();
+    GetPlayerAnimator()->BodyRemoveItem();
 
     // return to auto-action loop
     return EReturn();
@@ -6782,10 +6776,10 @@ procedures:
 
   AutoStoreWeapon(EVoid) {
     // store current weapon slowly
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.BodyAnimationTemplate(BODY_ANIM_WAIT, 
+    GetPlayerAnimator()->BodyAnimationTemplate(BODY_ANIM_WAIT, 
       BODY_ANIM_COLT_REDRAWSLOW, BODY_ANIM_SHOTGUN_REDRAWSLOW, BODY_ANIM_MINIGUN_REDRAWSLOW, 0);
-    autowait(plan.m_fBodyAnimTime);
+
+    autowait(GetPlayerAnimator()->m_fBodyAnimTime);
 
     m_iAutoOrgWeapon = GetWeapon(0)->GetCurrent();  
     GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
@@ -6796,18 +6790,19 @@ procedures:
     GetPlayerAnimator()->SyncWeapon();
 
     // remove weapon attachment
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.RemoveWeapon(FALSE);
-    plan.RemoveWeapon(TRUE);
+    GetPlayerAnimator()->RemoveWeapon(FALSE);
+    GetPlayerAnimator()->RemoveWeapon(TRUE);
 
     GetPlayerAnimator()->SyncWeapon();
 
     GetWeapon(0)->m_iCurrentWeapon = m_iAutoOrgWeapon;
-    plan.BodyAnimationTemplate(BODY_ANIM_WAIT, BODY_ANIM_COLT_DEACTIVATETOWALK,
+
+    GetPlayerAnimator()->BodyAnimationTemplate(BODY_ANIM_WAIT, BODY_ANIM_COLT_DEACTIVATETOWALK,
       BODY_ANIM_SHOTGUN_DEACTIVATETOWALK, BODY_ANIM_MINIGUN_DEACTIVATETOWALK, AOF_SMOOTHCHANGE);
+
     GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
 
-    autowait(plan.m_fBodyAnimTime);
+    autowait(GetPlayerAnimator()->m_fBodyAnimTime);
 
     // return to auto-action loop
     return EReturn();
@@ -6819,8 +6814,7 @@ procedures:
     en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
 
     // disable playeranimator animating
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.m_bDisableAnimating = TRUE;
+    GetPlayerAnimator()->m_bDisableAnimating = TRUE;
 
     // [Cecil] Disable collision
     if (GlobalCutscenes() && GetSP()->sp_iPlayerCollision != 2) {
@@ -6829,6 +6823,7 @@ procedures:
 
     // [Cecil] Reset last action
     m_penLastAction = NULL;
+
     // while there is some marker
     while (GetAction() != NULL && IsOfClass(GetAction(), "PlayerActionMarker"))
     {
@@ -7085,8 +7080,7 @@ procedures:
     SetAction(NULL);
 
     // enable playeranimator animating
-    CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
-    plan.m_bDisableAnimating = FALSE;
+    GetPlayerAnimator()->m_bDisableAnimating = FALSE;
 
     // [Cecil] Enable collision
     if (GlobalCutscenes() && GetSP()->sp_iPlayerCollision != 2) {
