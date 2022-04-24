@@ -1369,7 +1369,7 @@ FLOAT GetGameDamageMultiplier(void)
 
 // get entity's serious damage multiplier
 FLOAT GetSeriousDamageMultiplier(CEntity *pen) {
-  if (!IsOfClass(pen,"Player")) {
+  if (!ASSERT_ENTITY(pen) || !IsOfClass(pen,"Player")) {
     return 1.0f;
   }
 

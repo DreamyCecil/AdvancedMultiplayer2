@@ -6486,7 +6486,8 @@ procedures:
     // start pulling the item
     CPlayerAnimator &plan = (CPlayerAnimator&)*m_penAnimator;
     plan.BodyPickItemAnimation();
-    StartModelAnim(PLAYER_ANIM_KEYLIFT, 0);
+    // [Cecil] KEYLIFT -> STAND
+    StartModelAnim(PLAYER_ANIM_STAND, 0);
 
     autowait(1.2f);
 
