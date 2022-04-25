@@ -3917,7 +3917,7 @@ functions:
     BOOL bGlobalCutscenes = (GlobalCutscenes() && !IsPredictor());
     
     // [Cecil] In singleplayer cutscenes for other players
-    if (bGlobalCutscenes && !GLOBAL_CONTROLLER->IsActor(this)) {
+    if (bGlobalCutscenes && !GLOBAL_CONTROLLER->IsActor(this) && IsAlive(this)) {
       // [Cecil] Hide players during actions
       if (IsActionActive()) {
         if (GetRenderType() != RT_EDITORMODEL) {
