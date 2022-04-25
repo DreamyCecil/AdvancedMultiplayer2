@@ -6781,9 +6781,13 @@ procedures:
 
     autowait(GetPlayerAnimator()->m_fBodyAnimTime);
 
-    m_iAutoOrgWeapon = GetWeapon(0)->GetCurrent();  
+    m_iAutoOrgWeapon = GetWeapon(0)->GetCurrent();
+
     GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
     GetWeapon(0)->m_iWantedWeapon = WEAPON_NONE;
+    GetWeapon(1)->m_iCurrentWeapon = WEAPON_NONE;
+    GetWeapon(1)->m_iWantedWeapon = WEAPON_NONE;
+
     GetInventory()->MuteWeaponAmbient();
 
     // sync apperances
@@ -6883,6 +6887,10 @@ procedures:
         eSelect.iWeapon = -4;
         GetWeapon(0)->SendEvent(eSelect);
 
+        // [Cecil] Store the extra weapon
+        eSelect.iWeapon = 0;
+        GetWeapon(1)->SendEvent(eSelect);
+
       // if should wait
       } else if (GetAutoAction() == PAA_LOOKAROUND) {
         autocall AutoLookAround() EReturn;
@@ -6918,6 +6926,7 @@ procedures:
           eSelect.iWeapon = -4;
           GetWeapon(0)->SendEvent(eSelect);
         }
+
         // sync weapon, just in case
         m_ulFlags |= PLF_SYNCWEAPON;
         m_tmSpiritStart = 0;
