@@ -1015,19 +1015,14 @@ functions:
     return GetPlayer()->GetInventory();
   };
 
+  // [Cecil] Get chainsaw teeth attachment
   CModelObject *GetChainSawTeeth(void) {
-    CPlayer *ppl=GetPlayer();
-    if(ppl==NULL) { return NULL;}
-    CModelObject *pmoPlayer = ppl->GetModelObject();
-    if(pmoPlayer==NULL) { return NULL;}
-    CAttachmentModelObject *pamoTorso = pmoPlayer->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
-    if(pamoTorso==NULL) { return NULL;}
-    CAttachmentModelObject *pamoChainSaw = pamoTorso->amo_moModelObject.GetAttachmentModel(BODY_ATTACHMENT_MINIGUN);
-    if(pamoChainSaw==NULL) { return NULL;}
-    CAttachmentModelObject *pamoBlade = pamoChainSaw->amo_moModelObject.GetAttachmentModel(CHAINSAWFORPLAYER_ATTACHMENT_BLADE);
-    if(pamoBlade==NULL) { return NULL;}
-    CAttachmentModelObject *pamoTeeth = pamoBlade->amo_moModelObject.GetAttachmentModel(BLADE_ATTACHMENT_TEETH);
-    if(pamoTeeth==NULL) { return NULL;}
+    CAttachmentModelObject *pamoTeeth = GetAnimator()->GetModel("teeth", m_bExtraWeapon);
+
+    if (pamoTeeth == NULL) {
+      return NULL;
+    }
+
     return &pamoTeeth->amo_moModelObject;
   };
 
@@ -1738,7 +1733,7 @@ functions:
     ANGLE aAngle = Lerp(m_aMiniGunLast, m_aMiniGun, _pTimer->GetLerpFactor());
 
     // rotate minigun barrels
-    CAttachmentModelObject *pamo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
+    CAttachmentModelObject *pamo = GetModel("rotate", FALSE);
 
     if (pamo != NULL) {
       pamo->amo_plRelative.pl_OrientationAngle(3) = aAngle * fMirror;
@@ -3053,8 +3048,8 @@ procedures:
         break;
 
       case WEAPON_MINIGUN: {
-        CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
-        m_aMiniGunLast = m_aMiniGun = amo->amo_plRelative.pl_OrientationAngle(3);
+        CAttachmentModelObject *pamo = GetModel("rotate", FALSE);
+        m_aMiniGunLast = m_aMiniGun = pamo->amo_plRelative.pl_OrientationAngle(3);
 
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
       } break;
