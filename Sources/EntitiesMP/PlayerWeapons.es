@@ -3054,7 +3054,10 @@ procedures:
 
       case WEAPON_MINIGUN: {
         CAttachmentModelObject *pamo = GetModel("rotate", FALSE);
-        m_aMiniGunLast = m_aMiniGun = pamo->amo_plRelative.pl_OrientationAngle(3);
+
+        if (pamo != NULL) {
+          m_aMiniGunLast = m_aMiniGun = pamo->amo_plRelative.pl_OrientationAngle(3);
+        }
 
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
       } break;
