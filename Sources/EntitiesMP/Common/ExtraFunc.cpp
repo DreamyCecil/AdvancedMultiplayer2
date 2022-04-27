@@ -259,12 +259,12 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
     string strName = mapBlock.GetKey(iValue);
     CConfigValue &cv = mapBlock.GetValue(iValue);
 
-    // load model
+    // Load model
     if (strName == "Model") {
       ASSERT_VALUE_TYPE(cv, STRING);
       pmo->SetData_t(CTString(cv.cv_strValue));
 
-    // load textures
+    // Load textures
     } else if (strName == "Texture") {
       ASSERT_VALUE_TYPE(cv, STRING);
       pmo->mo_toTexture.SetData_t(CTString(cv.cv_strValue));
@@ -281,7 +281,29 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
       ASSERT_VALUE_TYPE(cv, STRING);
       pmo->mo_toBump.SetData_t(CTString(cv.cv_strValue));
 
-    // flagged element
+    // Resize model
+    } else if (strName == "Scale") {
+      ASSERT_VALUE_TYPE(cv, ARRAY);
+
+      DJSON_Array &aScale = cv.cv_aArray;
+
+      if (aScale.Count() < 3) {
+        ThrowF_t("Not enough scale dimensions!");
+      }
+
+      // Check the values
+      for (INDEX iCheck = 0; iCheck < 3; iCheck++) {
+        CConfigValue &cvPos = aScale[iCheck];
+
+        if (cvPos.cv_eType != CVT_FLOAT && cvPos.cv_eType != CVT_INDEX) {
+          ThrowF_t("One of the scale values isn't a float number!");
+        }
+      }
+
+      FLOAT3D vScale(aScale[0].GetNumber(), aScale[1].GetNumber(), aScale[2].GetNumber());
+      pmo->StretchModel(vScale);
+
+    // Flagged element
     } else if (strName == "Flag") {
       if (paAttachments == NULL) {
         continue;
@@ -308,19 +330,19 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
         ASSERT_VALUE_TYPE(cv, STRING);
       }
 
-    // apply animation
+    // Apply animation
     } else if (strName == "Animation") {
       ASSERT_VALUE_TYPE(cv, INDEX);
 
-      // get animation number
+      // Get animation number
       INDEX iAnim = Clamp(INDEX(cv.cv_iValue), INDEX(0), INDEX(pmo->GetAnimsCt() - 1));
       pmo->PlayAnim(iAnim, AOF_LOOPING);
 
-    // include another model
+    // Include another model
     } else if (strName == "Include") {
       ASSERT_VALUE_TYPE(cv, STRING);
       
-      // load model config
+      // Load model config
       CConfigBlock cbInclude;
 
       try {
@@ -330,10 +352,10 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
         ThrowF_t("Couldn't parse the included model \"%s\": %s", cv.cv_strValue, strError);
       }
 
-      // set model
+      // Set model
       ParseModelConfig(cbInclude, pmo, NULL, paAttachments);
 
-    // attachment position
+    // Attachment position
     } else if (strName == "Pos" || strName == "PosAdd") {
       if (pamoAttachment == NULL) {
         continue;
@@ -346,7 +368,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
           ThrowF_t("Not enough attachment positions!");
         }
 
-        // check the values
+        // Check the values
         for (INDEX iCheck = 0; iCheck < 6; iCheck++) {
           CConfigValue &cvPos = aPos[iCheck];
 
@@ -355,10 +377,10 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
           }
         }
 
-        FLOAT3D vPos = FLOAT3D(aPos[0].GetNumber(), aPos[1].GetNumber(), aPos[2].GetNumber());
-        ANGLE3D aRot = ANGLE3D(aPos[3].GetNumber(), aPos[4].GetNumber(), aPos[5].GetNumber());
+        FLOAT3D vPos(aPos[0].GetNumber(), aPos[1].GetNumber(), aPos[2].GetNumber());
+        ANGLE3D aRot(aPos[3].GetNumber(), aPos[4].GetNumber(), aPos[5].GetNumber());
 
-        // set or add
+        // Set or add
         if (strName == "PosAdd") {
           pamoAttachment->amo_plRelative.pl_PositionVector += vPos;
           pamoAttachment->amo_plRelative.pl_OrientationAngle += aRot;
@@ -367,7 +389,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
         }
       }
 
-    // attachments
+    // Attachments
     } else if (CTString(strName.c_str()).HasPrefix("Attachment")) {
       INDEX iAttach;
 
@@ -398,7 +420,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
         ThrowF_t("Expected attachment index for the attachment!");
       }
 
-    // invalid argument
+    // Invalid argument
     } else {
       ThrowF_t("Invalid model argument '%s'!", strName.c_str());
     }
@@ -410,11 +432,11 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
   INDEX ctValues = mapBlock.Count();
 
   for (INDEX iValue = 0; iValue < ctValues; iValue++) {
-    // get config value
+    // Get config value
     string strName = mapBlock.GetKey(iValue);
     CConfigValue &cv = mapBlock.GetValue(iValue);
 
-    // flagged element
+    // Flagged element
     if (strName == "Flag") {
       // Single flag as a string
       if (cv.cv_eType == CVT_STRING) {
@@ -437,11 +459,11 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
         ASSERT_VALUE_TYPE(cv, STRING);
       }
 
-    // include another model
+    // Include another model
     } else if (strName == "Include") {
       ASSERT_VALUE_TYPE(cv, STRING);
       
-      // load model config
+      // Load model config
       CConfigBlock cbInclude;
 
       try {
@@ -451,10 +473,10 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
         ThrowF_t("Couldn't parse the included model \"%s\": %s", cv.cv_strValue, strError);
       }
 
-      // set attachments
+      // Parse attachments
       ParseModelAttachments(cbInclude, pmo, NULL, aAttachments);
 
-    // attachments
+    // Attachments
     } else if (CTString(strName.c_str()).HasPrefix("Attachment")) {
       INDEX iAttach;
 
