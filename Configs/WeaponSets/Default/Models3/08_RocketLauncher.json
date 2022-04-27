@@ -21,13 +21,16 @@
   // Rockets
   "Attachment 2" : {
     "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+    "Flag" : "rocket1",
   },
   
   "Attachment 3" : {
     "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+    "Flag" : "rocket2",
   },
   
   "Attachment 4" : {
     "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+    "Flag" : "rocket3",
   },
 }

@@ -643,34 +643,45 @@ functions:
 
   // [Cecil] Stretch rocket model
   void StretchRocket(FLOAT3D vSize) {
-    CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(ROCKETLAUNCHER_ATTACHMENT_ROCKET1)->amo_moModelObject);
-    FLOAT fScale = (m_bChainLauncher ? 0.5f : 1.0f);
+    // Get first rocket attachment
+    CAttachmentModelObject *pamoRocket = GetModel("rocket1", FALSE);
 
-    if (pmo != NULL) {
-      pmo->StretchModel(vSize * fScale);
+    if (pamoRocket == NULL) {
+      return;
     }
+
+    CModelObject &mo = pamoRocket->amo_moModelObject;
+
+    FLOAT fScale = (m_bChainLauncher ? 0.5f : 1.0f);
+    mo.StretchModel(vSize * fScale);
   };
 
   // [Cecil] Stretch all rocket models
   void StretchAllRockets(FLOAT3D vSize) {
-    for (INDEX i = 0; i < 3; i++) {
-      CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(ROCKETLAUNCHER_ATTACHMENT_ROCKET1 + i)->amo_moModelObject);
-      FLOAT fScale = (m_bChainLauncher ? 0.5f : 1.0f);
+    FLOAT fScale = (m_bChainLauncher ? 0.5f : 1.0f);
 
-      if (pmo != NULL) {
-        pmo->StretchModel(vSize * fScale);
+    for (INDEX i = 1; i <= 3; i++) {
+      // Get rocket attachment under a certain index
+      CAttachmentModelObject *pamoRocket = GetModel(CTString(0, "rocket%d", i), FALSE);
+
+      if (pamoRocket == NULL) {
+        continue;
       }
+
+      CModelObject &mo = pamoRocket->amo_moModelObject;
+      mo.StretchModel(vSize * fScale);
     }
   };
 
   // [Cecil] Rotate all rocket models
   void RotateAllRockets(FLOAT fAngle) {
-    for (INDEX i = 0; i < 3; i++) {
-      CAttachmentModelObject *pamo = m_moWeapon.GetAttachmentModel(ROCKETLAUNCHER_ATTACHMENT_ROCKET1 + i);
+    for (INDEX i = 1; i <= 3; i++) {
+      // Get rocket attachment under a certain index
+      CAttachmentModelObject *pamoRocket = GetModel(CTString(0, "rocket%d", i), FALSE);
 
-      if (pamo != NULL) {
-        pamo->amo_plRelative.pl_OrientationAngle(3) += fAngle;
-        pamo->amo_plRelative.pl_PositionVector(3) += 0.1f;
+      if (pamoRocket != NULL) {
+        pamoRocket->amo_plRelative.pl_OrientationAngle(3) += fAngle;
+        pamoRocket->amo_plRelative.pl_PositionVector(3) += 0.1f;
       }
     }
   };
@@ -1015,17 +1026,6 @@ functions:
     return GetPlayer()->GetInventory();
   };
 
-  // [Cecil] Get chainsaw teeth attachment
-  CModelObject *GetChainSawTeeth(void) {
-    CAttachmentModelObject *pamoTeeth = GetAnimator()->GetModel("teeth", m_bExtraWeapon);
-
-    if (pamoTeeth == NULL) {
-      return NULL;
-    }
-
-    return &pamoTeeth->amo_moModelObject;
-  };
-
   // recoil
   void DoRecoil(void) {};
 
@@ -1262,9 +1262,14 @@ functions:
       // apply grenade launcher pumping
       case WEAPON_GRENADELAUNCHER: {
         // obtain moving part attachment
-        CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(GRENADELAUNCHER_ATTACHMENT_MOVING_PART);
+        CAttachmentModelObject *pamoMove = GetModel("move", FALSE);
+        
         FLOAT fLerpedMovement = Lerp(m_fWeaponDrawPowerOld, m_fWeaponDrawPower, _pTimer->GetLerpFactor());
-        amo->amo_plRelative.pl_PositionVector(3) = fLerpedMovement;
+
+        if (pamoMove != NULL) {
+          pamoMove->amo_plRelative.pl_PositionVector(3) = fLerpedMovement;
+        }
+
         plPos(3) += fLerpedMovement/2.0f;
 
         if (m_tmDrawStartTime != 0.0f) {
@@ -1608,11 +1613,11 @@ functions:
   };
 
   // [Cecil] Get attachment model under a certain flag
-  CAttachmentModelObject *GetModel(const string &strFlag, const BOOL &bSecond) {
+  CAttachmentModelObject *GetModel(const CTString &strFlag, const BOOL &bSecond) {
     CAttachList &aList = (&m_aAttachments1)[bSecond];
 
-    if (aList.FindKeyIndex(strFlag) != -1) {
-      return aList[strFlag].pamo;
+    if (aList.FindKeyIndex(strFlag.str_String) != -1) {
+      return aList[strFlag.str_String].pamo;
     }
 
     return NULL;
@@ -4396,13 +4401,7 @@ procedures:
     m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT2FIRE, 0);
     autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_WAIT2FIRE)-0.05f);
 
-    CPlayerAnimator &pa = *GetAnimator();
-    pa.FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
-    
-    CModelObject *pmoTeeth = GetChainSawTeeth();
-    if (pmoTeeth != NULL) {
-      pmoTeeth->PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING|AOF_NORESTART);
-    }
+    GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
     // mute the chainsaw engine sound
     m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 0.5f, 1.0f);        
@@ -4414,9 +4413,17 @@ procedures:
     m_moWeapon.PlayAnim(CHAINSAW_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);  
 
     // start teeth rotation
-    CModelObject *pmo1 = &(m_moWeapon.GetAttachmentModel(CHAINSAW_ATTACHMENT_BLADE)->amo_moModelObject);
-    CModelObject *pmo2 = &(pmo1->GetAttachmentModel(BLADE_ATTACHMENT_TEETH)->amo_moModelObject);
-    pmo2->PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING);
+    CAttachmentModelObject *pamoTeeth = GetModel("teeth", FALSE);
+
+    if (pamoTeeth != NULL) {
+      pamoTeeth->amo_moModelObject.PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING);
+    }
+    
+    pamoTeeth = GetAnimator()->GetModel("teeth", m_bExtraWeapon);
+
+    if (pamoTeeth != NULL) {
+      pamoTeeth->amo_moModelObject.PlayAnim(TEETH_ANIM_ROTATE, AOF_LOOPING|AOF_NORESTART);
+    }
 
     while (HoldingFire()) {
       autowait(CHAINSAW_UPDATETIME);
@@ -4438,13 +4445,16 @@ procedures:
     autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_FIRE2WAIT));
 
     // stop teeth rotation
-    CModelObject *pmo1 = &(m_moWeapon.GetAttachmentModel(CHAINSAW_ATTACHMENT_BLADE)->amo_moModelObject);
-    CModelObject *pmo2 = &(pmo1->GetAttachmentModel(BLADE_ATTACHMENT_TEETH)->amo_moModelObject);
-    pmo2->PlayAnim(TEETH_ANIM_DEFAULT, 0);
+    CAttachmentModelObject *pamoTeeth = GetModel("teeth", FALSE);
 
-    CModelObject *pmoTeeth = GetChainSawTeeth();
-    if (pmoTeeth != NULL) {
-      pmoTeeth->PlayAnim(TEETH_ANIM_DEFAULT, 0);
+    if (pamoTeeth != NULL) {
+      pamoTeeth->amo_moModelObject.PlayAnim(TEETH_ANIM_DEFAULT, 0);
+    }
+
+    pamoTeeth = GetAnimator()->GetModel("teeth", m_bExtraWeapon);
+
+    if (pamoTeeth != NULL) {
+      pamoTeeth->amo_moModelObject.PlayAnim(TEETH_ANIM_DEFAULT, 0);
     }
 
     jump Idle();
@@ -4474,35 +4484,19 @@ procedures:
       // sound
       SpawnRangeSound(20.0f);
 
-      // activate barrel anim
-      switch (m_iLaserBarrel) {
-        case 0: { // barrel lu
-          CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_LEFTUP)->amo_moModelObject);
-          pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(m_soWeapon0, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
-          break; }
+      // [Cecil] Get laser barrel attachment under a certain index
+      CAttachmentModelObject *pamoBarrel = GetModel(CTString(0, "laser%d", m_iLaserBarrel + 1), FALSE);
 
-        case 3: { // barrel rd
-          CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_RIGHTDOWN)->amo_moModelObject);
-          pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(m_soWeapon1, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
-          break; }
-
-        case 1: { // barrel ld
-          CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_LEFTDOWN)->amo_moModelObject);
-          pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(m_soWeapon2, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
-          break; }
-
-        case 2: { // barrel ru
-          CModelObject *pmo = &(m_moWeapon.GetAttachmentModel(LASER_ATTACHMENT_RIGHTUP)->amo_moModelObject);
-          pmo->PlayAnim(BARREL_ANIM_FIRE, 0);
-          PlaySound(m_soWeapon3, SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
-          break; }
+      // Play barrel animation
+      if (pamoBarrel != NULL) {
+        pamoBarrel->amo_moModelObject.PlayAnim(BARREL_ANIM_FIRE, 0);
       }
 
+      // Play sound on the appropriate channel
+      PlaySound((&m_soWeapon0)[m_iLaserBarrel], SOUND_LASER_FIRE, SOF_3D|SOF_VOLUMETRIC);
+
       // next barrel
-      m_iLaserBarrel = (m_iLaserBarrel+1)&3;
+      m_iLaserBarrel = (m_iLaserBarrel + 1) & 3;
 
       // no electricity -> change weapon
       if (!ENOUGH_AMMO) {

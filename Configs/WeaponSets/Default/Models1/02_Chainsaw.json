@@ -20,6 +20,8 @@
     "Attachment 0" : {
       "Model"   : "ModelsMP\Weapons\Chainsaw\Teeth.mdl",
       "Texture" : "ModelsMP\Weapons\Chainsaw\Teeth.tex",
+      
+      "Flag" : "teeth",
     },
   },
 }

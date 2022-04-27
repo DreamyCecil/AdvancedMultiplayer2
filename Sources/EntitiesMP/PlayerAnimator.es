@@ -250,11 +250,11 @@ functions:
   };
 
   // [Cecil] Get attachment model under a certain flag
-  CAttachmentModelObject *GetModel(const string &strFlag, const BOOL &bSecond) {
+  CAttachmentModelObject *GetModel(const CTString &strFlag, const BOOL &bSecond) {
     CAttachList &aList = (&m_aAttachments1)[bSecond];
 
-    if (aList.FindKeyIndex(strFlag) != -1) {
-      return aList[strFlag].pamo;
+    if (aList.FindKeyIndex(strFlag.str_String) != -1) {
+      return aList[strFlag.str_String].pamo;
     }
 
     return NULL;
