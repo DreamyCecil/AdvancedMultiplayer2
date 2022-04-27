@@ -309,10 +309,12 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
         continue;
       }
 
+      CAttachList &aAttachments = *paAttachments;
+
       // Single flag as a string
       if (cv.cv_eType == CVT_STRING) {
         // Add to the attachment list
-        paAttachments->Add(cv.cv_strValue, SListModel(pamoAttachment, pmo));
+        aAttachments[cv.cv_strValue] = SListModel(pamoAttachment, pmo);
 
       // Multiple flags as an array
       } else if (cv.cv_eType == CVT_ARRAY) {
@@ -322,7 +324,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
           ASSERT_VALUE_TYPE(aArray[i], STRING);
 
           // Add to the attachment list
-          paAttachments->Add(aArray[i].cv_strValue, SListModel(pamoAttachment, pmo));
+          aAttachments[aArray[i].cv_strValue] = SListModel(pamoAttachment, pmo);
         }
 
       // Invalid type
@@ -441,7 +443,7 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
       // Single flag as a string
       if (cv.cv_eType == CVT_STRING) {
         // Add to the attachment list
-        aAttachments.Add(cv.cv_strValue, SListModel(pamoAttachment, pmo));
+        aAttachments[cv.cv_strValue] = SListModel(pamoAttachment, pmo);
 
       // Multiple flags as an array
       } else if (cv.cv_eType == CVT_ARRAY) {
@@ -451,7 +453,7 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
           ASSERT_VALUE_TYPE(aArray[i], STRING);
 
           // Add to the attachment list
-          aAttachments.Add(aArray[i].cv_strValue, SListModel(pamoAttachment, pmo));
+          aAttachments[aArray[i].cv_strValue] = SListModel(pamoAttachment, pmo);
         }
 
       // Invalid type

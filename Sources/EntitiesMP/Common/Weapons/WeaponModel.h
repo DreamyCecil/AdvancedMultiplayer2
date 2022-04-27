@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #define WM_NOCONFIG  -1
 #define WM_MODELERROR 0
 #define WM_MODELSET   1
@@ -20,7 +22,7 @@ struct SListModel {
 };
 
 // Important attachments list
-typedef DSMap<string, SListModel> CAttachList;
+typedef std::map<string, SListModel> CAttachList;
 
 // Custom weapon model
 class CWeaponModel {

@@ -1615,9 +1615,10 @@ functions:
   // [Cecil] Get attachment model under a certain flag
   CAttachmentModelObject *GetModel(const CTString &strFlag, const BOOL &bSecond) {
     CAttachList &aList = (&m_aAttachments1)[bSecond];
+    CAttachList::const_iterator it = aList.find(strFlag.str_String);
 
-    if (aList.FindKeyIndex(strFlag.str_String) != -1) {
-      return aList[strFlag.str_String].pamo;
+    if (it != aList.end()) {
+      return it->second.pamo;
     }
 
     return NULL;
@@ -1684,8 +1685,8 @@ functions:
     m_bModelSet1 = FALSE;
     m_bModelSet2 = FALSE;
 
-    m_aAttachments1.Clear();
-    m_aAttachments2.Clear();
+    m_aAttachments1.clear();
+    m_aAttachments2.clear();
 
     if (m_iCurrentWeapon == WEAPON_NONE) {
       return;
