@@ -283,11 +283,29 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
 
     // flagged element
     } else if (strName == "Flag") {
-      ASSERT_VALUE_TYPE(cv, STRING);
+      if (paAttachments == NULL) {
+        continue;
+      }
 
-      // add to the attachment list
-      if (paAttachments != NULL) {
+      // Single flag as a string
+      if (cv.cv_eType == CVT_STRING) {
+        // Add to the attachment list
         paAttachments->Add(cv.cv_strValue, SListModel(pamoAttachment, pmo));
+
+      // Multiple flags as an array
+      } else if (cv.cv_eType == CVT_ARRAY) {
+        DJSON_Array &aArray = cv.cv_aArray;
+
+        for (INDEX i = 0; i < aArray.Count(); i++) {
+          ASSERT_VALUE_TYPE(aArray[i], STRING);
+
+          // Add to the attachment list
+          paAttachments->Add(aArray[i].cv_strValue, SListModel(pamoAttachment, pmo));
+        }
+
+      // Invalid type
+      } else {
+        ASSERT_VALUE_TYPE(cv, STRING);
       }
 
     // apply animation
@@ -398,10 +416,26 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
 
     // flagged element
     if (strName == "Flag") {
-      ASSERT_VALUE_TYPE(cv, STRING);
+      // Single flag as a string
+      if (cv.cv_eType == CVT_STRING) {
+        // Add to the attachment list
+        aAttachments.Add(cv.cv_strValue, SListModel(pamoAttachment, pmo));
 
-      // add to the attachment list
-      aAttachments.Add(cv.cv_strValue, SListModel(pamoAttachment, pmo));
+      // Multiple flags as an array
+      } else if (cv.cv_eType == CVT_ARRAY) {
+        DJSON_Array &aArray = cv.cv_aArray;
+
+        for (INDEX i = 0; i < aArray.Count(); i++) {
+          ASSERT_VALUE_TYPE(aArray[i], STRING);
+
+          // Add to the attachment list
+          aAttachments.Add(aArray[i].cv_strValue, SListModel(pamoAttachment, pmo));
+        }
+
+      // Invalid type
+      } else {
+        ASSERT_VALUE_TYPE(cv, STRING);
+      }
 
     // include another model
     } else if (strName == "Include") {
