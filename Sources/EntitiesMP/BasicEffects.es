@@ -1170,8 +1170,8 @@ functions:
   // bullet hitpoint wound
   void BloodExplode(void) {
     // readout blood type
-    const INDEX iBloodType = GetBloodType();
-    if (iBloodType <= 0) {
+    const EBloodType eBloodType = GetBloodType();
+    if (eBloodType <= BLD_NONE) {
       return;
     }
 
@@ -1179,7 +1179,7 @@ functions:
     Stretch();
     SetModel(MODEL_BLOOD_EXPLODE);
 
-    if (iBloodType == 3) {
+    if (eBloodType == BLD_HIPPIE) {
       SetModelColor(0xFFFFFFFF);
       // [Cecil] IRnd() -> rand()
       SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
@@ -1188,17 +1188,12 @@ functions:
       SetModelMainTexture(TEXTURE_BLOOD_EXPLODE);
 
       // [Cecil] New types
-      switch (iBloodType) {
-        // Green
-        case 2: SetModelColor(0x00FA00FF); break;
-        // Valentine
-        case 4: SetModelColor(0xFF00AAFF); break;
-        // Halloween
-        case 5: SetModelColor(0xFF7F00FF); break;
-        // Christmas
-        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
-        // Red
-        default: SetModelColor(0xFA1414FF);
+      switch (eBloodType) {
+        case BLD_GREEN: SetModelColor(0x00FA00FF); break;
+        case BLD_VALENTINE: SetModelColor(0xFF00AAFF); break;
+        case BLD_HALLOWEEN: SetModelColor(0xFF7F00FF); break;
+        case BLD_CHRISTMAS: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
+        default: SetModelColor(0xFA1414FF); // Red
       }
     }
 
@@ -1213,39 +1208,34 @@ functions:
   // blood stain on wall/floor
   void BloodStain(void) {
     // readout blood type
-    const INDEX iBloodType = GetBloodType();
-    if (iBloodType <= 0) {
+    const EBloodType eBloodType = GetBloodType();
+    if (eBloodType <= BLD_NONE) {
       return;
     }
 
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
 
-    if (iBloodType == 3) {
+    if (eBloodType == BLD_HIPPIE) {
       SetModelColor(0xFFFFFFFF);
       // [Cecil] IRnd() -> rand()
       SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
 
     } else {
       // [Cecil] New textures
-      switch (iBloodType) {
+      switch (eBloodType) {
         // [Cecil] IRnd() -> rand()
-        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_STAIN1 + rand() % 4); break;
+        case BLD_RED: case BLD_GREEN: SetModelMainTexture(TEXTURE_BLOOD_STAIN1 + rand() % 4); break;
         default: SetModelMainTexture(TEX_BLOOD_STAIN1 + rand() % 4);
       }
 
       // [Cecil] New types
-      switch (iBloodType) {
-        // Green
-        case 2: SetModelColor(0x00FA00FF); break;
-        // Valentine
-        case 4: SetModelColor(0xFF00AAFF); break;
-        // Halloween
-        case 5: SetModelColor(0xFF7F00FF); break;
-        // Christmas
-        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
-        // Red
-        default: SetModelColor(0xFA1414FF);
+      switch (eBloodType) {
+        case BLD_GREEN: SetModelColor(0x00FA00FF); break;
+        case BLD_VALENTINE: SetModelColor(0xFF00AAFF); break;
+        case BLD_HALLOWEEN: SetModelColor(0xFF7F00FF); break;
+        case BLD_CHRISTMAS: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
+        default: SetModelColor(0xFA1414FF); // Red
       }
     }
 
@@ -1261,8 +1251,8 @@ functions:
   // blood stain on wall/floor that grows
   void BloodStainGrow(void) {
     // readout blood type
-    const INDEX iBloodType = GetBloodType();
-    if (iBloodType <= 0) {
+    const EBloodType eBloodType = GetBloodType();
+    if (eBloodType <= BLD_NONE) {
       return;
     }
 
@@ -1270,30 +1260,25 @@ functions:
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
 
-    if (iBloodType == 3) {
+    if (eBloodType == BLD_HIPPIE) {
       SetModelColor(0xFFFFFFFF);
       // [Cecil] IRnd() -> rand()
       SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
 
     } else {
       // [Cecil] New textures
-      switch (iBloodType) {
-        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_STAIN4); break;
+      switch (eBloodType) {
+        case BLD_RED: case BLD_GREEN: SetModelMainTexture(TEXTURE_BLOOD_STAIN4); break;
         default: SetModelMainTexture(TEX_BLOOD_STAIN4);
       }
 
       // [Cecil] New types
-      switch (iBloodType) {
-        // Green
-        case 2: SetModelColor(0x00FA00FF); break;
-        // Valentine
-        case 4: SetModelColor(0xFF00AAFF); break;
-        // Halloween
-        case 5: SetModelColor(0xFF7F00FF); break;
-        // Christmas
-        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
-        // Red
-        default: SetModelColor(0xFA1414FF);
+      switch (eBloodType) {
+        case BLD_GREEN: SetModelColor(0x00FA00FF); break;
+        case BLD_VALENTINE: SetModelColor(0xFF00AAFF); break;
+        case BLD_HALLOWEEN: SetModelColor(0xFF7F00FF); break;
+        case BLD_CHRISTMAS: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
+        default: SetModelColor(0xFA1414FF); // Red
       }
     }
 
@@ -1313,37 +1298,33 @@ functions:
   // gizmo stain on wall/floor
   void GizmoStain(void) {
     // readout blood type
-    const INDEX iBloodType = GetBloodType();
-    if (iBloodType <= 0) {
+    const EBloodType eBloodType = GetBloodType();
+    if (eBloodType <= BLD_NONE) {
       return;
     }
 
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
 
-    if (iBloodType == 3) {
+    if (eBloodType == BLD_HIPPIE) {
       SetModelColor(RGBAToColor(255, 255, 255, 255));
       // [Cecil] IRnd() -> rand()
       SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
 
     } else {
       // [Cecil] New textures
-      switch (iBloodType) {
+      switch (eBloodType) {
         // [Cecil] IRnd() -> rand()
-        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_STAIN1 + rand() % 4); break;
+        case BLD_RED: case BLD_GREEN: SetModelMainTexture(TEXTURE_BLOOD_STAIN1 + rand() % 4); break;
         default: SetModelMainTexture(TEX_BLOOD_STAIN1 + rand() % 4);
       }
 
       // [Cecil] New types
-      switch (iBloodType) {
-        // Valentine
-        case 4: SetModelColor(0xFF00AAFF); break;
-        // Halloween
-        case 5: SetModelColor(0xFF7F00FF); break;
-        // Christmas
-        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
-        // Green
-        default: SetModelColor(0x00FA00FF);
+      switch (eBloodType) {
+        case BLD_VALENTINE: SetModelColor(0xFF00AAFF); break;
+        case BLD_HALLOWEEN: SetModelColor(0xFF7F00FF); break;
+        case BLD_CHRISTMAS: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
+        default: SetModelColor(0x00FA00FF); // Green
       }
     }
     SetNormalAndDirection();
@@ -1358,39 +1339,34 @@ functions:
   // bullet exit wound blood on wall/floor
   void BloodSpill(COLOR colBloodSpillColor) {
     // readout blood type
-    const INDEX iBloodType = GetBloodType();
-    if (iBloodType <= 0) {
+    const EBloodType eBloodType = GetBloodType();
+    if (eBloodType <= BLD_NONE) {
       return;
     }
 
     Stretch();
     SetModel(MODEL_BLOOD_STAIN);
 
-    if (iBloodType == 3) {
+    if (eBloodType == BLD_HIPPIE) {
       SetModelColor(0xFFFFFFFF);
       // [Cecil] IRnd() -> rand()
       SetModelMainTexture(TEXTURE_BLOOD_FLOWER1 + rand() % 3);
 
     } else {
       // [Cecil] New textures
-      switch (iBloodType) {
+      switch (eBloodType) {
         // [Cecil] IRnd() -> rand()
-        case 1: case 2: SetModelMainTexture(TEXTURE_BLOOD_SPILL1 + rand() % 3); break;
+        case BLD_RED: case BLD_GREEN: SetModelMainTexture(TEXTURE_BLOOD_SPILL1 + rand() % 3); break;
         default: SetModelMainTexture(TEX_BLOOD_SPILL1 + rand() % 3);
       }
 
       // [Cecil] New types
-      switch (iBloodType) {
-        // Green
-        case 2: SetModelColor(0x00FA00FF); break;
-        // Valentine
-        case 4: SetModelColor(0xFF00AAFF); break;
-        // Halloween
-        case 5: SetModelColor(0xFF7F00FF); break;
-        // Christmas
-        case 6: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
-        // Red or other
-        default: SetModelColor(colBloodSpillColor);
+      switch (eBloodType) {
+        case BLD_GREEN: SetModelColor(0x00FA00FF); break;
+        case BLD_VALENTINE: SetModelColor(0xFF00AAFF); break;
+        case BLD_HALLOWEEN: SetModelColor(0xFF7F00FF); break;
+        case BLD_CHRISTMAS: SetModelColor(ChristmasColor(rand(), 0xFF, 0xFF)); break;
+        default: SetModelColor(colBloodSpillColor); // Red or other
       }
     }
     SetNormalAndDirection();

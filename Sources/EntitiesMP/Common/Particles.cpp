@@ -1437,14 +1437,14 @@ void DECL_DLL Particles_Waterfall(CEntity *pen, INDEX ctCount, FLOAT fStretchAll
 #define BLOOD01_TRAIL_POSITIONS 15
 void Particles_BloodTrail(CEntity *pen) {
   // get blood type
-  const INDEX iBloodType = GetBloodType();
-  if (iBloodType <= 0) {
+  const EBloodType eBloodType = GetBloodType();
+  if (eBloodType <= BLD_NONE) {
     return;
   }
 
   COLOR col;
 
-  if (iBloodType == 3) {
+  if (eBloodType == BLD_HIPPIE) {
     Particle_PrepareTexture(&_toFlowerSprayTexture, PBT_BLEND);
   } else {
     Particle_PrepareTexture(&_toBloodSprayTexture, PBT_BLEND);
@@ -1465,22 +1465,17 @@ void Particles_BloodTrail(CEntity *pen) {
     FLOAT fSize = 0.2f-iPos*0.15f/BLOOD01_TRAIL_POSITIONS;
     UBYTE ub = 255-iPos*255/BLOOD01_TRAIL_POSITIONS;
 
-    if (iBloodType == 3) {
+    if (eBloodType == BLD_HIPPIE) {
       col = C_WHITE|ub;
 
     } else {
       // [Cecil] New types
-      switch (iBloodType) {
-        // Green
-        case 2: col = RGBAToColor(0, ub, 0, ub); break;
-        // Valentine
-        case 4: col = RGBAToColor(ub, 0, FLOAT(ub) / 1.5f, ub); break;
-        // Halloween
-        case 5: col = RGBAToColor(ub, FLOAT(ub) * 0.5f, 0, ub); break;
-        // Christmas
-        case 6: col = ChristmasColor(pen->en_ulID, ub, ub); break;
-        // Red
-        default: col = RGBAToColor(ub, 20, 20, ub);
+      switch (eBloodType) {
+        case BLD_GREEN: col = RGBAToColor(0, ub, 0, ub); break;
+        case BLD_VALENTINE: col = RGBAToColor(ub, 0, FLOAT(ub) / 1.5f, ub); break;
+        case BLD_HALLOWEEN: col = RGBAToColor(ub, FLOAT(ub) * 0.5f, 0, ub); break;
+        case BLD_CHRISTMAS: col = ChristmasColor(pen->en_ulID, ub, ub); break;
+        default: col = RGBAToColor(ub, 20, 20, ub); // Red
       }
     }
 
@@ -4073,7 +4068,7 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
   FLOAT fRotation = 0.0f;
 
   // readout blood type
-  const INDEX iBloodType = GetBloodType();
+  const EBloodType eBloodType = GetBloodType();
 
   // determine time difference
   FLOAT fNow = _pTimer->GetLerpedCurrentTick();
@@ -4085,11 +4080,11 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
     case SPT_BLOOD:
     case SPT_SLIME:
     case SPT_GOO:
-      if (iBloodType <= 0) {
+      if (eBloodType <= BLD_NONE) {
         return;
       }
 
-      if (iBloodType == 3) {
+      if (eBloodType == BLD_HIPPIE) {
         Particle_PrepareTexture(&_toFlowerSprayTexture, PBT_BLEND);
       } else {
         Particle_PrepareTexture(&_toBloodSprayTexture,  PBT_BLEND);
@@ -4173,7 +4168,7 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
     {
       Particle_Flush();
 
-      if (iBloodType == 3) {
+      if (eBloodType == BLD_HIPPIE) {
         Particle_PrepareTexture(&_toFlowerSprayTexture, PBT_BLEND);
       } else {
         Particle_PrepareTexture(&_toBloodSprayTexture,  PBT_BLEND);
@@ -4234,19 +4229,13 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
       UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
 
       // [Cecil] New types
-      switch (iBloodType) {
-        // Green
-        case 2: col = RGBAToColor(0, ubRndCol, 0, ubAlpha); break;
-        // Hippie
-        case 3: col = RGBAToColor(ubRndCol, ubRndCol, ubRndCol, ubAlpha); break;
-        // Valentine
-        case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
-        // Halloween
-        case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
-        // Christmas
-        case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
-        // Red
-        default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha);
+      switch (eBloodType) {
+        case BLD_GREEN: col = RGBAToColor(0, ubRndCol, 0, ubAlpha); break;
+        case BLD_HIPPIE: col = RGBAToColor(ubRndCol, ubRndCol, ubRndCol, ubAlpha); break;
+        case BLD_VALENTINE: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+        case BLD_HALLOWEEN: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+        case BLD_CHRISTMAS: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+        default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha); // Red
       }
       break;
     }
@@ -4254,17 +4243,13 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
     case SPT_SLIME: {
       UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
 
-      if (iBloodType != 3) {
+      if (eBloodType != BLD_HIPPIE) {
         // [Cecil] New types
-        switch (iBloodType) {
-          // Valentine
-          case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
-          // Halloween
-          case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
-          // Christmas
-          case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
-          // Green
-          default: col = RGBAToColor(0, ubRndCol, 0, ubAlpha);
+        switch (eBloodType) {
+          case BLD_VALENTINE: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+          case BLD_HALLOWEEN: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+          case BLD_CHRISTMAS: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          default: col = RGBAToColor(0, ubRndCol, 0, ubAlpha); // Green
         }
       }
       break;
@@ -4273,17 +4258,13 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
     case SPT_GOO: {
       UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
 
-      if (iBloodType != 3) {
+      if (eBloodType != BLD_HIPPIE) {
         // [Cecil] New types
-        switch (iBloodType) {
-          // Valentine
-          case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
-          // Halloween
-          case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
-          // Christmas
-          case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
-          // Goo
-          default: col = RGBAToColor(ubRndCol, 128, 12, ubAlpha);
+        switch (eBloodType) {
+          case BLD_VALENTINE: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+          case BLD_HALLOWEEN: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+          case BLD_CHRISTMAS: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          default: col = RGBAToColor(ubRndCol, 128, 12, ubAlpha); // Goo
         }
       }
       break;
@@ -4303,19 +4284,13 @@ void Particles_BloodSpray(enum SprayParticlesType sptType, FLOAT3D vSource, FLOA
         UBYTE ubRndCol = UBYTE( 128+afStarsPositions[ int(iSpray+tmStarted*10)%CT_MAX_PARTICLES_TABLE][0]*64);
 
         // [Cecil] New types
-        switch (iBloodType) {
-          // Green
-          case 2: col = RGBAToColor(0, ubRndCol, 0, ubAlpha); break;
-          // Hippie
-          case 3: col = RGBAToColor(ubRndCol, ubRndCol, ubRndCol, ubAlpha); break;
-          // Valentine
-          case 4: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
-          // Halloween
-          case 5: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
-          // Christmas
-          case 6: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
-          // Red
-          default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha);
+        switch (eBloodType) {
+          case BLD_GREEN: col = RGBAToColor(0, ubRndCol, 0, ubAlpha); break;
+          case BLD_HIPPIE: col = RGBAToColor(ubRndCol, ubRndCol, ubRndCol, ubAlpha); break;
+          case BLD_VALENTINE: col = RGBAToColor(ubRndCol, 0, FLOAT(ubRndCol) / 1.5f, ubAlpha); break;
+          case BLD_HALLOWEEN: col = RGBAToColor(ubRndCol, FLOAT(ubRndCol) * 0.5f, 0, ubAlpha); break;
+          case BLD_CHRISTMAS: col = ChristmasColor(iSpray + tmStarted / _pTimer->TickQuantum, ubRndCol, ubAlpha); break;
+          default: col = RGBAToColor(ubRndCol, 0, 0, ubAlpha); // Red
         }
 
       } else {

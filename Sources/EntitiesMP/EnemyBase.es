@@ -1772,19 +1772,19 @@ functions:
     // if allowed and fleshy
     if (bGibs && !m_bRobotBlowup) {
       // readout blood type
-      const INDEX iBloodType = GetBloodType();
+      const EBloodType eBloodType = GetBloodType();
       
       // [Cecil] Switch red and green textures around
       // determine debris texture (color)
       ULONG ulFleshTexture = TEXTURE_FLESH_RED;
       ULONG ulFleshModel = MODEL_FLESH;
 
-      if (iBloodType == 2) {
+      if (eBloodType == BLD_GREEN) {
         ulFleshTexture = TEXTURE_FLESH_GREEN;
       }
 
       // [Cecil] Colorful type
-      if (iBloodType > 3) {
+      if (eBloodType > BLD_HIPPIE) {
         ulFleshTexture = TEXTURE_FLESH;
       }
 
@@ -1793,7 +1793,7 @@ functions:
 
       for (INDEX iDebris = 0; iDebris < m_fBodyParts; iDebris++) {
         // flowerpower mode?
-        if (iBloodType == 3) {
+        if (eBloodType == BLD_HIPPIE) {
           // [Cecil] IRnd() -> rand()
           switch (rand() % 5) {
             case 1:  ulFleshModel = MODEL_FLESH_APPLE;  ulFleshTexture = TEXTURE_FLESH_APPLE;  break;
@@ -1807,13 +1807,10 @@ functions:
         // [Cecil] Debris color
         COLOR colDebris = 0xFFFFFFFF;
 
-        switch (iBloodType) {
-          // Valentine
-          case 4: colDebris = 0xFF00AAFF; break;
-          // Halloween
-          case 5: colDebris = 0xFF7F00FF; break;
-          // Christmas
-          case 6: colDebris = ChristmasColor(rand(), 0xFF, 0xFF); break;
+        switch (eBloodType) {
+          case BLD_VALENTINE: colDebris = 0xFF00AAFF; break;
+          case BLD_HALLOWEEN: colDebris = 0xFF7F00FF; break;
+          case BLD_CHRISTMAS: colDebris = ChristmasColor(rand(), 0xFF, 0xFF); break;
         }
 
         // [Cecil] Moved from above for random colors

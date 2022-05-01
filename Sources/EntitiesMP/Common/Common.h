@@ -449,5 +449,16 @@ inline COLOR ChristmasColor(INDEX iRandom, UBYTE ubFactor, UBYTE ubAlpha) {
   return colWhite;
 };
 
+// [Cecil] Available blood types
+enum EBloodType {
+  BLD_NONE      = 0,
+  BLD_RED       = 1,
+  BLD_GREEN     = 2,
+  BLD_HIPPIE    = 3,
+  BLD_VALENTINE = 4,
+  BLD_HALLOWEEN = 5,
+  BLD_CHRISTMAS = 6,
+};
+
 // [Cecil] Get blood type
-DECL_DLL INDEX GetBloodType(void);
+DECL_DLL EBloodType GetBloodType(void);

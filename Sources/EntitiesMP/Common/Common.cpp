@@ -1396,14 +1396,14 @@ class CWorldSettingsController *GetWSC(CEntity *pen)
 }
 
 // [Cecil] Get blood type
-DECL_DLL INDEX GetBloodType(void) {
+DECL_DLL EBloodType GetBloodType(void) {
   // base off the current event
   switch (GetSP()->sp_eEvent) {
-    case ESE_VALENTINE: return 4;
-    case ESE_BIRTHDAY: return 0; // [Cecil] TEMP
-    case ESE_HALLOWEEN: return 5;
-    case ESE_CHRISTMAS: return 6;
+    case ESE_VALENTINE: return BLD_VALENTINE;
+    case ESE_BIRTHDAY:  return BLD_NONE; // [Cecil] TEMP
+    case ESE_HALLOWEEN: return BLD_HALLOWEEN;
+    case ESE_CHRISTMAS: return BLD_CHRISTMAS;
   }
 
-  return _pShell->GetINDEX("amp_iBloodType");
+  return (EBloodType)_pShell->GetINDEX("amp_iBloodType");
 };
