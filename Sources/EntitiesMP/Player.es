@@ -2985,9 +2985,7 @@ functions:
     }
 
     // [Cecil] Dual weapon position shifting
-    if (_pNetwork->IsPlayerLocal(this)) {
-      GetInventory()->ShiftDualWeapons();
-    }
+    GetInventory()->ShiftDualWeapons();
   };
 
   // Postmoving for soft player up-down movement
