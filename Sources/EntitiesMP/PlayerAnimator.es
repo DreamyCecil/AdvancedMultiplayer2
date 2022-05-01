@@ -135,13 +135,27 @@ components:
  13 texture TEX_REFL_GOLD01  "Models\\ReflectionTextures\\Gold01.tex",
 
 functions:
+  // Write to stream
+  void Write_t(CTStream *ostr) {
+    CRationalEntity::Write_t(ostr);
+
+    // [Cecil] Write current weapons
+    *ostr << GetWeapon(FALSE)->GetCurrent();
+    *ostr << GetWeapon(TRUE)->GetCurrent();
+  };
+
   // Read from stream
   void Read_t(CTStream *istr) { 
     CRationalEntity::Read_t(istr);
 
     // [Cecil] Reset weapon attachments
-    ResetAttachmentList(FALSE);
-    ResetAttachmentList(TRUE);
+    INDEX iWeapon = 0;
+
+    *istr >> iWeapon;
+    ResetAttachmentList(iWeapon, FALSE);
+
+    *istr >> iWeapon;
+    ResetAttachmentList(iWeapon, TRUE);
   };
 
   void Precache(void) {
@@ -268,7 +282,6 @@ functions:
     
     // get third person model
     INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
-    SPlayerWeapon &pw = GetPlayer()->GetInventory()->m_aWeapons[iWeapon];
 
     if (iWeapon == WEAPON_NONE) {
       return;
@@ -277,7 +290,7 @@ functions:
     m_pmoModel = GetBody();
 
     // set custom model
-    CWeaponModel &wm = pw.pwsWeapon->wmModel3;
+    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmModel3;
 
     if (wm.cbModel.Count() > 0) {
       // add weapon attachment
@@ -294,7 +307,7 @@ functions:
 
       // apply third person offset
       if (pamoWeapon != NULL) {
-        SWeaponPos wps = pw.GetPosition();
+        SWeaponPos &wps = _apPlayerWeapons[iWeapon].wpsPos;
 
         // add weapon position
         pamoWeapon->amo_plRelative.pl_PositionVector += (wps.Pos3() - COLT_LEFT_POS);
@@ -311,12 +324,9 @@ functions:
   };
 
   // [Cecil] Reset weapon attachments
-  void ResetAttachmentList(BOOL bExtra) {
-    // get current weapon
-    INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
-    SPlayerWeapon &pw = GetPlayer()->GetInventory()->m_aWeapons[iWeapon];
-
-    CWeaponModel &wm = pw.pwsWeapon->wmModel3;
+  void ResetAttachmentList(INDEX iWeapon, BOOL bExtra) {
+    // Get weapon model
+    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmModel3;
 
     if (wm.cbModel.Count() <= 0) {
       return;
@@ -324,7 +334,7 @@ functions:
     
     m_pmoModel = GetBody();
 
-    // get weapon attachment
+    // Get weapon attachment
     INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
     CAttachmentModelObject *pamoWeapon = m_pmoModel->GetAttachmentModel(iAttach);
 
@@ -332,7 +342,7 @@ functions:
       return;
     }
 
-    // reset attachments
+    // Reset attachments
     try {
       ParseModelAttachments(wm.cbModel, &pamoWeapon->amo_moModelObject, NULL, (bExtra ? m_aAttachments2 : m_aAttachments1));
 

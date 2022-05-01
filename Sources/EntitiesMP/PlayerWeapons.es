@@ -1697,8 +1697,8 @@ functions:
     m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
 
     // weapon models
-    CWeaponModel &wm1 = GET_WEAPON(m_iCurrentWeapon).pwsWeapon->wmModel1;
-    CWeaponModel &wm2 = GET_WEAPON(m_iCurrentWeapon).pwsWeapon->wmModel2;
+    CWeaponModel &wm1 = _apPlayerWeapons[m_iCurrentWeapon].wmModel1;
+    CWeaponModel &wm2 = _apPlayerWeapons[m_iCurrentWeapon].wmModel2;
 
     // set main model
     if (wm1.cbModel.Count() > 0) {
