@@ -6060,11 +6060,12 @@ procedures:
     GetInventory()->MuteWeaponAmbient();
 
     // stop rotating minigun
-    CPlayerWeapons *penWeapon = GetWeapon(0);
-    penWeapon->m_aMiniGunLast = penWeapon->m_aMiniGun;
+    GetWeapon(0)->m_aMiniGunLast = GetWeapon(0)->m_aMiniGun;
+    GetWeapon(1)->m_aMiniGunLast = GetWeapon(1)->m_aMiniGun;
 
     // [Cecil] Destroy death ray
-    penWeapon->DestroyRay();
+    GetWeapon(0)->DestroyRay();
+    GetWeapon(1)->DestroyRay();
     
     // if in single player, or if this is a predictor entity
     if (GetSP()->sp_bSinglePlayer || IsPredictor()) {

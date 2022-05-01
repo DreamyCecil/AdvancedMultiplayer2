@@ -199,11 +199,6 @@ functions:
     ((CBullet&)*penBullet).DestroyBullet();
   };
 
-  // destroy yourself
-  void DestroyGhostBusterRay(void) {
-    Destroy();
-  };
-
 procedures:
   // --->>> MAIN
   Main(EGhostBusterRay egbr) {

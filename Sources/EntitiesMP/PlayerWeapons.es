@@ -565,8 +565,8 @@ functions:
 
   // [Cecil] Destroy ghostbuster ray
   void DestroyRay(void) {
-    if (m_penGhostBusterRay!=NULL) {
-      ((CGhostBusterRay*)&*m_penGhostBusterRay)->DestroyGhostBusterRay();
+    if (m_penGhostBusterRay != NULL) {
+      m_penGhostBusterRay->Destroy();
       m_penGhostBusterRay = NULL;
     }
   };
