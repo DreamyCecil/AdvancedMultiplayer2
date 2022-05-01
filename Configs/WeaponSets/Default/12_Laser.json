@@ -3,6 +3,7 @@
   
   "Name" : "XL2 Lasergun",
   "Icon" : "TexturesMP\Interface\WLaser.tex",
+  "Message" : "Data\Messages\Weapons\Laser.txt",
   
   "Bit" : 11,
   "Group" : 7,

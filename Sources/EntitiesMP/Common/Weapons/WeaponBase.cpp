@@ -78,7 +78,11 @@ static BOOL ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfi
   }
 
   // Ammo properties
-  GetConfigString(cb, "Name", pwa->strPickup);
+  if (GetConfigString(cb, "Name", pwa->strPickup)) {
+    // Translate immediately
+    pwa->strPickup = Translate(pwa->strPickup.str_String, 0);
+  }
+
   GetConfigString(cb, "Icon", pwa->strIcon);
 
   GetConfigInt(cb, "Display", (INDEX &)pwa->bDisplay);
@@ -175,8 +179,13 @@ static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
   else if (GetConfigFloat(cb, "DamageAltDM", f)) pws->fDamageAltDM = f;
 
   // Other
-  GetConfigString(cb, "Name", pws->strPickup);
+  if (GetConfigString(cb, "Name", pws->strPickup)) {
+    // Translate immediately
+    pws->strPickup = Translate(pws->strPickup.str_String, 0);
+  }
+
   GetConfigString(cb, "Icon", pws->strIcon);
+  GetConfigString(cb, "Message", pws->strMessage);
   
   // Whichever type
   if (GetConfigInt(cb, "Mana", i)) pws->fMana = i;

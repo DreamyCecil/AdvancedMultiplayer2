@@ -3,6 +3,7 @@
   
   "Name" : "XOP Flamethrower",
   "Icon" : "TexturesMP\Interface\WFlamer.tex",
+  "Message" : "DataMP\Messages\Weapons\Flamer.txt",
   
   "Bit" : 10,
   "Group" : 6,

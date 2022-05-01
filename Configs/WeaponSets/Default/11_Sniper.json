@@ -3,6 +3,7 @@
   
   "Name" : "RAPTOR 16mm Sniper",
   "Icon" : "TexturesMP\Interface\WSniper.tex",
+  "Message" : "DataMP\Messages\Weapons\Sniper.txt",
   
   "Bit" : 12,
   "Group" : 6,

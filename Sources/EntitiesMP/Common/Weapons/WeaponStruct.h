@@ -12,35 +12,37 @@ class CWeaponStruct : public CWeaponBase {
   public:
     SWeaponPos wpsPos; // weapon position
 
-    CWeaponModel wmModel1; // first person model
-    CWeaponModel wmModel2; // first person model (other hand)
-    CWeaponModel wmModel3; // third person model
+    CWeaponModel wmModel1; // First person model
+    CWeaponModel wmModel2; // First person model (other hand)
+    CWeaponModel wmModel3; // Third person model
 
-    CWeaponAmmo *pwaAmmo; // ammo
-    CWeaponAmmo *pwaAlt; // alt ammo
-    INDEX iMaxMag; // magazine size
+    CWeaponAmmo *pwaAmmo; // Ammo
+    CWeaponAmmo *pwaAlt; // Alt ammo
+    INDEX iMaxMag; // Magazine size
 
-    CIndexList aiBits; // special bits of the weapon (for compatibility with PlayerMarker)
-    UBYTE ubGroup;      // weapon group (0 - 31)
-    BOOL bDualWeapon;  // can be selected as an extra weapon
+    CIndexList aiBits; // Special bits of the weapon (for compatibility with PlayerMarker)
+    UBYTE ubGroup;     // Weapon group (0 - 31)
+    BOOL bDualWeapon;  // Can be selected as an extra weapon
 
-    CIndexList aiWeaponPriority; // weapons to switch to if needed (if no more ammo etc.)
+    CIndexList aiWeaponPriority; // Weapons to switch to if needed (if no more ammo etc.)
 
     enum EDecWeaponAmmo {
-      DWA_AMMO = 0, // main ammo
-      DWA_ALT  = 1, // alt ammo
-      DWA_MAG  = 2, // magazine ammo
+      DWA_AMMO = 0, // Main ammo
+      DWA_ALT  = 1, // Alt ammo
+      DWA_MAG  = 2, // Magazine ammo
     };
 
-    INDEX aiDecAmmo[3]; // amount of ammo to decrease in some category
+    INDEX aiDecAmmo[3]; // Amount of ammo to decrease in some category
 
-    INDEX iPickup; // ammo in a weapon pickup
-    INDEX iPickupAlt; // alt ammo in a weapon pickup
+    INDEX iPickup; // Ammo in a weapon pickup
+    INDEX iPickupAlt; // Alt ammo in a weapon pickup
 
-    FLOAT fDamage;   // weapon damage
-    FLOAT fDamageDM; // weapon damage in deathmatch
-    FLOAT fDamageAlt;   // weapon alt damage
-    FLOAT fDamageAltDM; // weapon alt damage in deathmatch
+    FLOAT fDamage;      // Weapon damage
+    FLOAT fDamageDM;    // Weapon damage in deathmatch
+    FLOAT fDamageAlt;   // Weapon alt damage
+    FLOAT fDamageAltDM; // Weapon alt damage in deathmatch
+
+    CTString strMessage; // Computer message about the weapon
 
     // Constructors
     CWeaponStruct(void);

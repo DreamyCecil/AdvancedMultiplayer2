@@ -3,6 +3,7 @@
   
   "Name" : "XPML21 Rocket Launcher",
   "Icon" : "TexturesMP\Interface\WRocketLauncher.tex",
+  "Message" : "Data\Messages\Weapons\RocketLauncher.txt",
   
   "Bit" : 7,
   "Group" : 5,

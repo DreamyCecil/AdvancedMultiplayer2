@@ -3,6 +3,7 @@
   
   "Name" : "SBC Cannon",
   "Icon" : "TexturesMP\Interface\WCannon.tex",
+  "Message" : "Data\Messages\Weapons\Cannon.txt",
   
   "Bit" : 13,
   "Group" : 8,

@@ -3,6 +3,7 @@
   
   "Name" : "M1-A2 Tommygun",
   "Icon" : "TexturesMP\Interface\WTommygun.tex",
+  "Message" : "Data\Messages\Weapons\Tommygun.txt",
   
   "Bit" : 5,
   "Group" : 4,

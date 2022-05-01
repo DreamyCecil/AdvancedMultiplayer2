@@ -3,6 +3,7 @@
   
   "Name" : "MKIII Grenade Launcher",
   "Icon" : "TexturesMP\Interface\WGrenadeLauncher.tex",
+  "Message" : "Data\Messages\Weapons\GrenadeLauncher.txt",
   
   "Bit" : 8,
   "Group" : 5,

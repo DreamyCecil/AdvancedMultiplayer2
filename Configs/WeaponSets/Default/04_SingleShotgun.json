@@ -3,6 +3,7 @@
   
   "Name" : "12 Gauge Pump Action Shotgun",
   "Icon" : "TexturesMP\Interface\WSingleShotgun.tex",
+  "Message" : "Data\Messages\Weapons\SingleShotgun.txt",
   
   "Bit" : 3,
   "Group" : 3,

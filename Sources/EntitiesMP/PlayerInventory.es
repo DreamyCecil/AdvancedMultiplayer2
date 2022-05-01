@@ -862,99 +862,34 @@ functions:
       case WIT_CANNON:          iReceiveType = WEAPON_IRONCANNON; break;
       default: ASSERTALWAYS("Uknown weapon type");
     }
-    
-    // hasn't been picked up yet
-    BOOL bNewWeapon = (m_aWeapons[iReceiveType].iPicked <= 0);
-    
-    // add weapon
-    m_aWeapons[iReceiveType].iPicked++;
 
-    // precache eventual new weapons
+    // Get weapon
+    SPlayerWeapon &pw = m_aWeapons[iReceiveType];
+    CWeaponStruct &ws = *pw.pwsWeapon;
+    
+    // Hasn't been picked up yet
+    BOOL bNewWeapon = (pw.iPicked <= 0);
+    
+    // Add weapon
+    pw.iPicked++;
+
+    // Precache eventual new weapons
     GetWeapon(0)->Precache();
 
-    CTFileName fnmMsg;
+    GetPlayer()->ItemPicked(ws.strPickup, 0);
 
-    switch (wit) {
-      // [Cecil] Knife item
-      case WIT_KNIFE:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Military Knife"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\knife.txt");
-        break;
-
-      case WIT_COLT:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Shofield .45 w/ TMAR"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\colt.txt");
-        break;
-
-      case WIT_SINGLESHOTGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("12 Gauge Pump Action Shotgun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\singleshotgun.txt");
-        break;
-
-      case WIT_DOUBLESHOTGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("Double Barrel Coach Gun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\doubleshotgun.txt");
-        break;
-
-      case WIT_TOMMYGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("M1-A2 Tommygun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\tommygun.txt");
-        break;
-
-      case WIT_SNIPER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("RAPTOR 16mm Sniper"), 0);
-        fnmMsg = CTFILENAME("DataMP\\Messages\\Weapons\\sniper.txt");
-        break;
-
-      case WIT_MINIGUN:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XM214-A Minigun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\minigun.txt");
-        break;
-
-      case WIT_ROCKETLAUNCHER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XPML21 Rocket Launcher"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\rocketlauncher.txt");
-        break;
-
-      case WIT_GRENADELAUNCHER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("MKIII Grenade Launcher"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\grenadelauncher.txt");
-        break;
-
-      case WIT_FLAMER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XOP Flamethrower"), 0);
-        fnmMsg = CTFILENAME("DataMP\\Messages\\Weapons\\flamer.txt");
-        break;
-
-      case WIT_CHAINSAW:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("'Bonecracker' P-LAH Chainsaw"), 0);
-        fnmMsg = CTFILENAME("DataMP\\Messages\\Weapons\\chainsaw.txt");
-        break;
-
-      case WIT_LASER:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("XL2 Lasergun"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\laser.txt");
-        break;
-
-      case WIT_CANNON:
-        ((CPlayer&)*m_penPlayer).ItemPicked(TRANS("SBC Cannon"), 0);
-        fnmMsg = CTFILENAME("Data\\Messages\\Weapons\\cannon.txt");
-        break;
-
-      default: ASSERTALWAYS("Uknown weapon type");
-    }
-
-    // send computer message
-    if (GetSP()->sp_bCooperative) {
+    // Send computer message if there's any
+    if (GetSP()->sp_bCooperative && ws.strMessage != "") {
       EComputerMessage eMsg;
-      eMsg.fnmMessage = fnmMsg;
+      eMsg.fnmMessage = ws.strMessage;
+
       m_penPlayer->SendEvent(eMsg);
     }
 
-    // add the ammunition
+    // Add the ammunition
     AddDefaultAmmoForWeapon(iReceiveType, 0);
 
-    // if this weapon should be auto selected
+    // If this weapon should be auto selected
     BOOL bAutoSelect = FALSE;
     INDEX iSelectionSetting = GetPlayer()->GetSettings()->ps_iWeaponAutoSelect;
 
@@ -973,7 +908,7 @@ functions:
     }
 
     if (bAutoSelect) {
-      // select it
+      // Select it
       if (GetWeapon(0)->WeaponSelectOk(iReceiveType)) {
         GetWeapon(0)->SendEvent(EBegin());
       }
@@ -1045,9 +980,7 @@ functions:
     // add ammo
     paAmmo.iAmount += iAmmo;
 
-    CTString &strPick = paAmmo.pwaAmmoStruct->strPickup;
-    GetPlayer()->ItemPicked(Translate(strPick.str_String), iAmmo);
-
+    GetPlayer()->ItemPicked(paAmmo.pwaAmmoStruct->strPickup, iAmmo);
     AddManaToPlayer(iAmmo * paAmmo.pwaAmmoStruct->fMana * MANA_AMMO);
 
     // make sure we don't have more ammo than maximum
@@ -1123,7 +1056,7 @@ functions:
 
           // [Cecil] Print the type
           CTString &strPick = m_aAmmo[i].pwaAmmoStruct->strPickup;
-          strMessage.PrintF("%s%s %d", strMessage, Translate(strPick.str_String), aiSet[i-1]);
+          strMessage.PrintF("%s%s %d", strMessage, strPick, aiSet[i-1]);
         }
       }
 

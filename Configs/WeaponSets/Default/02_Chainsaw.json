@@ -3,6 +3,7 @@
   
   "Name" : "'Bonecracker' P-LAH Chainsaw",
   "Icon" : "TexturesMP\Interface\WChainsaw.tex",
+  "Message" : "DataMP\Messages\Weapons\Chainsaw.txt",
   
   "Bit" : 9,
   "Group" : 1,

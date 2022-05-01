@@ -10,7 +10,7 @@ extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 CWeaponStruct::CWeaponStruct(void) :
   CWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(NULL), pwaAlt(NULL), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
-  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
+  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f), strMessage("")
 {
   aiDecAmmo[DWA_AMMO] = 1;
   aiDecAmmo[DWA_ALT]  = 1;
@@ -20,7 +20,7 @@ CWeaponStruct::CWeaponStruct(void) :
 CWeaponStruct::CWeaponStruct(CWeaponAmmo *pSetAmmo, CWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
   CWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
   pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
-  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f)
+  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f), strMessage("")
 {
   aiDecAmmo[DWA_AMMO] = 1;
   aiDecAmmo[DWA_ALT]  = 1;

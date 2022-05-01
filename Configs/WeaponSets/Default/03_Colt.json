@@ -3,6 +3,7 @@
   
   "Name" : "Shofield .45 w/ TMAR",
   "Icon" : "TexturesMP\Interface\WColt.tex",
+  "Message" : "Data\Messages\Weapons\Colt.txt",
   
   "Bit" : [1, 2], // Colt + Double Colt
   "Group" : 2,

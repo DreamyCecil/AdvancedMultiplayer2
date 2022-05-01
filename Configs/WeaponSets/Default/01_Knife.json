@@ -3,6 +3,7 @@
   
   "Name" : "Military Knife",
   "Icon" : "TexturesMP\Interface\WKnife.tex",
+  "Message" : "Data\Messages\Weapons\Knife.txt",
   
   "Bit" : 0,
   "Group" : 1,

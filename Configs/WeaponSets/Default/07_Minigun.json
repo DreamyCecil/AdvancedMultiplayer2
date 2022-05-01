@@ -3,6 +3,7 @@
   
   "Name" : "XM214-A Minigun",
   "Icon" : "TexturesMP\Interface\WMinigun.tex",
+  "Message" : "Data\Messages\Weapons\Minigun.txt",
   
   "Bit" : 6,
   "Group" : 4,

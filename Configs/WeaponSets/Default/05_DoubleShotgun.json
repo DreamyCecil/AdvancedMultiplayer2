@@ -3,6 +3,7 @@
   
   "Name" : "Double Barrel Coach Gun",
   "Icon" : "TexturesMP\Interface\WDoubleShotgun.tex",
+  "Message" : "Data\Messages\Weapons\DoubleShotgun.txt",
   
   "Bit" : 4,
   "Group" : 3,
