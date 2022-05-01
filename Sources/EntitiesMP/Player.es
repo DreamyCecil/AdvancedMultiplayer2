@@ -1343,7 +1343,7 @@ functions:
   };
 
   // [Cecil] Play animation for the legs
-  void PlayExtraAnim(INDEX iAnim, ULONG ulFlags) {
+  void PlayLegsAnim(INDEX iAnim, ULONG ulFlags) {
     // Select compatible animations
     switch (iAnim) {
       case PLAYER_ANIM_SPAWN_FALLDOWN:
@@ -3053,7 +3053,7 @@ functions:
     SetCollisionFlags(GetCollisionFlags() & ~((ECBI_BRUSH|ECBI_MODEL) << ECB_TEST));
     en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
 
-    StartModelAnim(PLAYER_ANIM_STAND, 0);
+    PlayLegsAnim(PLAYER_ANIM_STAND, 0);
 
     GetPlayerAnimator()->BodyAnimationTemplate(
       BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
@@ -4351,8 +4351,9 @@ functions:
     // flying mode - rotate whole player
     if (!(GetPhysicsFlags()&EPF_TRANSLATEDBYGRAVITY)) {
       SetDesiredRotation(paAction.pa_aRotation);
-      StartModelAnim(PLAYER_ANIM_STAND, AOF_LOOPING|AOF_NORESTART);
+      PlayLegsAnim(PLAYER_ANIM_STAND, AOF_LOOPING|AOF_NORESTART);
       SetDesiredTranslation(vTranslation);
+
     // normal mode
     } else {
       PlayerState pstOld = m_pstState; 
@@ -5456,7 +5457,7 @@ functions:
 
     SetFlags(GetFlags() | ENF_ALIVE);
     // animation
-    StartModelAnim(PLAYER_ANIM_STAND, AOF_LOOPING);
+    PlayLegsAnim(PLAYER_ANIM_STAND, AOF_LOOPING);
     TeleportPlayer(WLT_FIXED);
   };
 
@@ -6180,9 +6181,8 @@ procedures:
       iAnim2 = BODY_ANIM_DEATH_SPIKES;
 
     } else if (eDeath.eLastDamage.dmtType==DMT_ABYSS) {
-      // [Cecil] Spikes animation for multplayer skins
-      iAnim1 = PLAYER_ANIM_DEATH_SPIKES; //PLAYER_ANIM_ABYSSFALL;
-      iAnim2 = BODY_ANIM_DEATH_SPIKES; //BODY_ANIM_ABYSSFALL;
+      iAnim1 = PLAYER_ANIM_ABYSSFALL;
+      iAnim2 = BODY_ANIM_ABYSSFALL;
 
     } else {
       FLOAT3D vFront;
@@ -6207,9 +6207,9 @@ procedures:
       }
     }
     en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
-    StartModelAnim(iAnim1, 0);
-    CModelObject &moBody = GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO)->amo_moModelObject;
-    moBody.PlayAnim(iAnim2, 0);
+
+    PlayLegsAnim(iAnim1, 0);
+    PlayBodyAnim(iAnim2, 0);
 
     // set physic flags
     SetPhysicsFlags(EPF_MODEL_CORPSE);
@@ -6347,7 +6347,7 @@ procedures:
     SetDesiredRotation(ANGLE3D(0.0f, 0.0f, 0.0f));
 
     // look straight
-    StartModelAnim(PLAYER_ANIM_STAND, 0);
+    PlayLegsAnim(PLAYER_ANIM_STAND, 0);
     GetPlayerAnimator()->BodyAnimationTemplate(
       BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
       AOF_LOOPING|AOF_NORESTART);
@@ -6460,9 +6460,9 @@ procedures:
     GetPlayerAnimator()->BodyWalkAnimation();
 
     if (m_fAutoSpeed>plr_fSpeedForward/2) {
-      StartModelAnim(PLAYER_ANIM_RUN, ulFlags);
+      PlayLegsAnim(PLAYER_ANIM_RUN, ulFlags);
     } else {
-      StartModelAnim(PLAYER_ANIM_NORMALWALK, ulFlags);
+      PlayLegsAnim(PLAYER_ANIM_NORMALWALK, ulFlags);
     }
 
     // wait a bit while not at the marker
@@ -6487,9 +6487,9 @@ procedures:
     GetPlayerAnimator()->BodyWalkAnimation();
 
     if (m_fAutoSpeed>plr_fSpeedForward/2) {
-      StartModelAnim(PLAYER_ANIM_RUN, ulFlags);
+      PlayLegsAnim(PLAYER_ANIM_RUN, ulFlags);
     } else {
-      StartModelAnim(PLAYER_ANIM_NORMALWALK, ulFlags);
+      PlayLegsAnim(PLAYER_ANIM_NORMALWALK, ulFlags);
     }
 
     // wait a bit while not at the marker
@@ -6501,7 +6501,7 @@ procedures:
     m_fAutoSpeed = 0.0f;
 
     GetPlayerAnimator()->BodyStillAnimation();
-    StartModelAnim(PLAYER_ANIM_STAND, AOF_LOOPING|AOF_NORESTART);
+    PlayLegsAnim(PLAYER_ANIM_STAND, AOF_LOOPING|AOF_NORESTART);
 
     // stop moving
     ForceFullStop();
@@ -6514,7 +6514,7 @@ procedures:
   AutoUseItem(EVoid) {
     // start pulling the item
     GetPlayerAnimator()->BodyPullItemAnimation();
-    PlayExtraAnim(PLAYER_ANIM_STATUE_PUT, 0);
+    PlayLegsAnim(PLAYER_ANIM_STATUE_PUT, 0);
 
     autowait(0.2f);
 
@@ -6558,7 +6558,7 @@ procedures:
   AutoPickItem(EVoid) {
     // start pulling the item
     GetPlayerAnimator()->BodyPickItemAnimation();
-    PlayExtraAnim(PLAYER_ANIM_KEYLIFT, 0);
+    PlayLegsAnim(PLAYER_ANIM_KEYLIFT, 0);
 
     autowait(1.2f);
 
@@ -6589,7 +6589,7 @@ procedures:
   }
 
   AutoFallDown(EVoid) {
-    PlayExtraAnim(PLAYER_ANIM_BRIDGEFALLPOSE, 0);
+    PlayLegsAnim(PLAYER_ANIM_BRIDGEFALLPOSE, 0);
     PlayBodyAnim(BODY_ANIM_BRIDGEFALLPOSE, 0);
 
     autowait(GetActionMarker()->m_tmWait);
@@ -6599,7 +6599,7 @@ procedures:
   }
 
   AutoFallToAbys(EVoid) {
-    PlayExtraAnim(PLAYER_ANIM_ABYSSFALL, AOF_LOOPING);
+    PlayLegsAnim(PLAYER_ANIM_ABYSSFALL, AOF_LOOPING);
     PlayBodyAnim(BODY_ANIM_ABYSSFALL, AOF_LOOPING);
 
     autowait(GetActionMarker()->m_tmWait);
@@ -6610,7 +6610,7 @@ procedures:
 
   // auto action - look around
   AutoLookAround(EVoid) {
-    StartModelAnim(PLAYER_ANIM_BACKPEDAL, 0);
+    PlayLegsAnim(PLAYER_ANIM_BACKPEDAL, 0);
     m_vAutoSpeed = FLOAT3D(0,0,plr_fSpeedForward/4/0.75f);
     PlayBodyAnim(BODY_ANIM_NORMALWALK, 0);
 
@@ -6619,7 +6619,7 @@ procedures:
     m_vAutoSpeed = FLOAT3D(0.0f, 0.0f, 0.0f);
  
     // start looking around
-    StartModelAnim(PLAYER_ANIM_STAND, 0);
+    PlayLegsAnim(PLAYER_ANIM_STAND, 0);
     PlayBodyAnim(BODY_ANIM_LOOKAROUND, 0);
 
     // wait given time
@@ -6650,7 +6650,7 @@ procedures:
 
     SetDesiredRotation(ANGLE3D(60.0f, 0.0f, 0.0f));
 
-    PlayExtraAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
+    PlayLegsAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
     PlayBodyAnim(BODY_ANIM_SPAWNPOSE, AOF_LOOPING);
 
     // start stardust appearing
@@ -6673,13 +6673,13 @@ procedures:
     m_ulFlags&=~PLF_AUTOMOVEMENTS;
 
     // play animation to fall down
-    PlayExtraAnim(PLAYER_ANIM_SPAWN_FALLDOWN, 0);
+    PlayLegsAnim(PLAYER_ANIM_SPAWN_FALLDOWN, 0);
     PlayBodyAnim(BODY_ANIM_SPAWN_FALLDOWN, 0);
 
     autowait(GetModelObject()->GetCurrentAnimLength());
     
     // play animation to get up
-    PlayExtraAnim(PLAYER_ANIM_SPAWN_GETUP, AOF_SMOOTHCHANGE);
+    PlayLegsAnim(PLAYER_ANIM_SPAWN_GETUP, AOF_SMOOTHCHANGE);
     PlayBodyAnim(BODY_ANIM_SPAWN_GETUP, AOF_SMOOTHCHANGE);
 
     autowait(GetModelObject()->GetCurrentAnimLength());
@@ -6699,7 +6699,7 @@ procedures:
     SetDesiredRotation(ANGLE3D(60.0f, 0.0f, 0.0f));
     SetDesiredTranslation(ANGLE3D(0.0f, 20.0f, 0.0f));
 
-    PlayExtraAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
+    PlayLegsAnim(PLAYER_ANIM_SPAWNPOSE, AOF_LOOPING);
     PlayBodyAnim(BODY_ANIM_SPAWNPOSE, AOF_LOOPING);
 
     // wait till it appears
@@ -6720,7 +6720,7 @@ procedures:
     en_plLastViewpoint.pl_OrientationAngle = en_plViewpoint.pl_OrientationAngle;
 
     // stand in pose
-    PlayExtraAnim(PLAYER_ANIM_INTRO, AOF_LOOPING);
+    PlayLegsAnim(PLAYER_ANIM_INTRO, AOF_LOOPING);
     // remember time for rotating view start
     m_tmMinigunAutoFireStart = _pTimer->CurrentTick();
     // wait some time for fade in and to look from left to right with out firing
@@ -6836,7 +6836,7 @@ procedures:
 
       } else if (GetAutoAction() == PAA_STOPANDWAIT) {
         // play still anim
-        StartModelAnim(PLAYER_ANIM_STAND, 0);
+        PlayLegsAnim(PLAYER_ANIM_STAND, 0);
         PlayBodyAnim(BODY_ANIM_WAIT, AOF_NORESTART|AOF_LOOPING);
         // wait given time
         autowait(GetActionMarker()->m_tmWait);
