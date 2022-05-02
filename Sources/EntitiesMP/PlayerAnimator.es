@@ -135,29 +135,6 @@ components:
  13 texture TEX_REFL_GOLD01  "Models\\ReflectionTextures\\Gold01.tex",
 
 functions:
-  // Write to stream
-  void Write_t(CTStream *ostr) {
-    CRationalEntity::Write_t(ostr);
-
-    // [Cecil] Write current weapons
-    *ostr << GetWeapon(FALSE)->GetCurrent();
-    *ostr << GetWeapon(TRUE)->GetCurrent();
-  };
-
-  // Read from stream
-  void Read_t(CTStream *istr) { 
-    CRationalEntity::Read_t(istr);
-
-    // [Cecil] Reset weapon attachments
-    INDEX iWeapon = 0;
-
-    *istr >> iWeapon;
-    ResetAttachmentList(iWeapon, FALSE);
-
-    *istr >> iWeapon;
-    ResetAttachmentList(iWeapon, TRUE);
-  };
-
   void Precache(void) {
     CPlayerAnimator_Precache();
   };
