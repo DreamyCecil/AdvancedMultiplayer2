@@ -2487,7 +2487,7 @@ void Particles_Ghostbuster(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRay
 }
 
 // [Cecil] Ghost Buster replacement particles
-void Particles_Ghostbuster2(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRays, FLOAT fSize, FLOAT fPower) {
+void Particles_Ghostbuster2(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRays, FLOAT fSize, FLOAT fPower, const COLOR colEnd) {
   Particle_PrepareTexture(&_toGhostbusterBeam, PBT_ADD);
   Particle_SetTexturePart(512, 512, 0, 0);
 
@@ -2519,19 +2519,28 @@ void Particles_Ghostbuster2(const FLOAT3D &vSrc, const FLOAT3D &vDst, INDEX ctRa
       continue;
     }
 
-    UBYTE ubFade = NormFloatToByte(fFade*fPower);
-    COLOR colFade = RGBToColor(ubFade, ubFade, ubFade);
+    const UBYTE ubFade = NormFloatToByte(fFade * fPower);
+    const COLOR colFade = RGBToColor(ubFade, ubFade, ubFade);
 
     // [Cecil] Don't go over the length
-    for (FLOAT fPos = fStep; fPos < fLen + fStep/2.0f; fPos = ClampUp(fPos + fStep, fLen + fStep/2.0f)) {
-      INDEX iOffset = ULONG(fPos * 1234.5678f + iRay*103) % 32;
-      FLOAT3D v1 = vSrc+(vZ*fPos + vX*(0.5f*afStarsPositions[iOffset][0]*fSize) +
-                                   vY*(0.5f*afStarsPositions[iOffset][1]*fSize));
+    for (FLOAT fPos = fStep; fPos < fLen + fStep / 2.0f; fPos = ClampUp(fPos + fStep, fLen + fStep / 2.0f)) {
+      INDEX iOffset = ULONG(fPos * 1234.5678f + iRay * 103) % 32;
+      FLOAT3D v1 = vSrc + (vZ * fPos + vX * (0.5f * afStarsPositions[iOffset][0] * fSize) +
+                                       vY * (0.5f * afStarsPositions[iOffset][1] * fSize));
+      
+      COLOR colRay = colFade;
+      
+      // [Cecil] Change ray color towards the other end
+      if (colEnd != 0xFFFFFFFF) {
+        FLOAT fRatio = Sin((fPos - fStep) / fLen * 90.0f);
+        colRay = LerpColor(colFade, MulColors(colFade, colEnd), fRatio);
+      }
 
-      Particle_RenderLine(v0, v1, 0.125f*fSize * 3.0f, colFade|0xFF);
+      Particle_RenderLine(v0, v1, 0.125f*fSize * 3.0f, colRay|0xFF);
       v0 = v1;
     }
   }
+
   // all done
   Particle_Flush();
 };

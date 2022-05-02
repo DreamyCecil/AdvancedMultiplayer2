@@ -69,7 +69,7 @@ functions:
     FLOAT3D vLerpedDst = Lerp(m_vDstOld, m_vDst, _pTimer->GetLerpFactor());
 
     // [Cecil] New particles
-    Particles_Ghostbuster2(vLerpedSrc, vLerpedDst, 32, 0.25f, 1.0f);
+    Particles_Ghostbuster2(vLerpedSrc, vLerpedDst, 32, 0.25f, 1.0f, 0x00000000);
   };
 
   // Read from stream
