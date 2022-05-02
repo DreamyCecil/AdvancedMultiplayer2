@@ -5755,9 +5755,9 @@ functions:
         Teleport(CPlacement3D(vOffsetRel, ANGLE3D(0.0f, 0.0f, 0.0f)), FALSE);
       }
 
-      // if there is a start trigger target
-      if (penStart.m_penTarget != NULL) {
-        SendToTarget(penStart.m_penTarget, EET_TRIGGER, this);
+      // [Cecil] Trigger the start target
+      if (!IsPredictor()) {
+        penStart.TriggerTarget(this);
       }
 
     // default start position

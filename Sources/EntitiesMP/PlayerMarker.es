@@ -29,6 +29,9 @@ properties:
  11 INDEX m_iTakeAmmo        "Take Ammo"  = 0x0,
  12 BOOL m_bNoRespawnInPlace "No Respawn In Place" 'R'  = FALSE,
 
+ // [Cecil] Target has been triggered
+ 20 BOOL m_bTargetTriggered = FALSE,
+
 components:
   1 model   MODEL_MARKER     "Models\\Editor\\PlayerStart.mdl",
   2 texture TEXTURE_MARKER   "Models\\Editor\\PlayerStart.tex",
@@ -62,6 +65,21 @@ functions:
     }
 
     return FALSE;
+  };
+  
+  // [Cecil] Trigger the start target
+  void TriggerTarget(CEntity *penCaused) {
+    // [Cecil] Already has been triggered on a singleplayer map
+    if (SPWorld() && m_bTargetTriggered) {
+      return;
+    }
+
+    if (m_penTarget != NULL) {
+      SendToTarget(m_penTarget, EET_TRIGGER, penCaused);
+
+      // [Cecil] Mark as triggered
+      m_bTargetTriggered = TRUE;
+    }
   };
 
 procedures:
