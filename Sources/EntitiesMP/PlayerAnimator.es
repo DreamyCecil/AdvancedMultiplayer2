@@ -975,7 +975,8 @@ functions:
         // rotate minigun barrels
         INDEX iAttach (plw.m_bExtraWeapon ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
 
-        CAttachmentModelObject *pamo = GetModel("rotate", iWeapon);
+        CPlayerAnimator *penOriginal = (CPlayerAnimator *)GetPredictionTail();
+        CAttachmentModelObject *pamo = penOriginal->GetModel("rotate", iWeapon);
 
         if (pamo != NULL) {
           // [Cecil] Mirror for the extra weapon
