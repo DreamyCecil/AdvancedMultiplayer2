@@ -11,6 +11,9 @@ DECL_DLL void ConvertWeaponTSE(INDEX &iFlags, const INDEX &iWeapon);
 // [Cecil] Properly remove decorations from the string
 DECL_DLL void ProperUndecorate(CTString &str);
 
+// [Cecil] Find proper character position in a decorated string
+DECL_DLL INDEX PosInDecoratedString(const CTString &str, INDEX iChar);
+
 // [Cecil] Get first alive player
 DECL_DLL CEntity *GetFirstPlayer(const CTString &strExecutor = "<unknown>");
 

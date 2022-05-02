@@ -65,7 +65,8 @@ extern INDEX _iAliveEnemies;
 // [Cecil] Player visibility
 static CTextureObject _toPlayerMarker;
 static INDEX amp_iPlayerTags = 2; // 0 - no tag, 1 - only marker, 2 - with name, 3 - with distance
-static FLOAT amp_fPlayerBrightness = 0.1f; // player model brightness
+static INDEX amp_bDecoratedPlayerNames = TRUE; // Color and animation tags in player names
+static FLOAT amp_fPlayerBrightness = 0.1f; // Player model brightness
 
 // [Cecil] Global controller
 #include "EntitiesMP/GlobalController.h"
@@ -554,6 +555,7 @@ void CPlayer_OnInitClass(void) {
   _pShell->DeclareSymbol("persistent user INDEX amp_bEnemyCounter;", &amp_bEnemyCounter);
   _pShell->DeclareSymbol("persistent user INDEX amp_iComboText;", &amp_iComboText);
   _pShell->DeclareSymbol("persistent user INDEX amp_iPlayerTags;", &amp_iPlayerTags);
+  _pShell->DeclareSymbol("persistent user INDEX amp_bDecoratedPlayerNames;", &amp_bDecoratedPlayerNames);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fPlayerBrightness;", &amp_fPlayerBrightness);
 
   // cheats
@@ -1124,7 +1126,7 @@ functions:
     pdp->SetFont(_pfdDisplayFont);
     pdp->SetTextScaling(fTextScaling);
 
-    // render player tags
+    // Render player tags
     if (amp_iPlayerTags > 0) {
       for (INDEX iPlayer = 0; iPlayer < GetMaxPlayers(); iPlayer++) {
         if (iPlayer == GetMyPlayerIndex()) {
@@ -1133,31 +1135,31 @@ functions:
         
         CEntity *pen = GetPlayerEntity(iPlayer);
         
-        // invalid or invisible player
+        // Invalid or invisible player
         if (!ASSERT_ENTITY(pen) || pen->GetRenderType() != RT_MODEL) {
           continue;
         }
         
         CPlayer *penPlayer = (CPlayer*)pen;
         
-        // tag color
+        // Tag color
         COLOR colTag = (IsAlive(penPlayer) ? 0x6097CC00 : 0xFF000000);
         
         FLOAT3D vSource = GetLerpedPlacement().pl_PositionVector;
         FLOAT3D vTarget = penPlayer->GetLerpedPlacement().pl_PositionVector;
 
-        // player render position
+        // Player render position
         FLOAT3D vRenderPos = vTarget + FLOAT3D(0.0f, 0.5f, 0.0f) * penPlayer->GetRotationMatrix();
         FLOAT3D vRelativeToScreen(0.0f, 0.0f, 0.0f);
 
         const FLOAT fDist = (vTarget - vSource).Length();
         UBYTE ubAlpha = 127 + UBYTE(Clamp((16.0f - fDist) * 8.0f, 0.0f, 128.0f));
 
-        // player body position
+        // Player body position
         if (IsAlive(penPlayer)) {
           EntityInfo *peiPlayer = (EntityInfo*)penPlayer->GetEntityInfo();
 
-          // top of the body
+          // Top of the body
           FLOAT3D vBody = FLOAT3D(peiPlayer->vTargetCenter[0], peiPlayer->vTargetCenter[1]*2.0f + 0.25f, peiPlayer->vTargetCenter[2]) * penPlayer->GetRotationMatrix();
 
           vRenderPos = vTarget + vBody;
@@ -1169,7 +1171,7 @@ functions:
           continue;
         }
 
-        // position on screen and marker size
+        // Position on screen and marker size
         FLOAT2D vOnScreen(vRelativeToScreen(1), -vRelativeToScreen(2) + pdp->GetHeight());
         const FLOAT fSize = 6.0f;
         const FLOAT fMarkerSize = fSize * fTextScaling;
@@ -1178,22 +1180,34 @@ functions:
         pdp->AddTexture(vOnScreen(1) - fMarkerSize, vOnScreen(2) - fMarkerSize*2.0f, vOnScreen(1) + fMarkerSize, vOnScreen(2), colTag|ubAlpha);
         pdp->FlushRenderingQueue();
 
-        // player name
+        // Player name
         CTString strPlayerName = penPlayer->GetName();
-        ProperUndecorate(strPlayerName);
 
-        // limit the length
-        if (strPlayerName.Length() > 25) {
-          strPlayerName.TrimRight(25);
-          strPlayerName += "...";
+        INDEX iMaxChars = 30;
+        INDEX iMaxAllow = 32; // Allow two extra characters after the limit
+
+        // Names with colors and animations
+        if (amp_bDecoratedPlayerNames) {
+          iMaxChars = PosInDecoratedString(strPlayerName, 30);
+          iMaxAllow = PosInDecoratedString(strPlayerName, 32);
+
+        // Undecorated names
+        } else {
+          ProperUndecorate(strPlayerName);
         }
 
-        // distance to the player
+        // Limit length
+        if (strPlayerName.Length() > iMaxAllow) {
+          strPlayerName.TrimRight(iMaxChars);
+          strPlayerName += "^r...";
+        }
+
+        // Distance to the player
         if (amp_iPlayerTags >= 3) {
-          strPlayerName.PrintF("%s (%dm)", strPlayerName, (INDEX)fDist);
+          strPlayerName.PrintF("%s^r (%dm)", strPlayerName, (INDEX)fDist);
         }
 
-        // render player name with the distance
+        // Render player name with the distance
         if (amp_iPlayerTags >= 2) {
           pdp->PutTextC(strPlayerName, vOnScreen(1), vOnScreen(2) - fMarkerSize*4.0f, colTag|ubAlpha);
         }

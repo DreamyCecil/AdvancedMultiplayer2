@@ -179,28 +179,28 @@ extern void ConvertWorld(CEntity *penWorld) {
 
 // [Cecil] Properly remove decorations from the string
 void ProperUndecorate(CTString &str) {
-  // make a copy of the string to hold the result - we will rewrite it without the codes
+  // Make a copy of the string to hold the result - we will rewrite it without the codes
   CTString strResult = str;
 
-  // start at the beginning of both strings
+  // Start at the beginning of both strings
   const char *pchSrc = str.str_String;
   char *pchDst = strResult.str_String;
 
-  // while the source is not finished
+  // While the source is not finished
   while (pchSrc[0] != 0) {
-    // if the source char is not escape char
+    // If the source char is not escape char
     if (pchSrc[0] != '^') {
-      // copy it over
+      // Copy it over
       *pchDst++ = *pchSrc++;
       continue;
     }
     
-    // check the next char
+    // Check the next char
     switch (pchSrc[1]) {
-      // if one of the control codes, skip corresponding number of characters
-      case 'c': pchSrc += 2 + FindZero((UBYTE*)pchSrc+2, 6); break;
-      case 'a': pchSrc += 2 + FindZero((UBYTE*)pchSrc+2, 2); break;
-      case 'f': pchSrc += 2 + FindZero((UBYTE*)pchSrc+2, 1); break;
+      // If one of the control codes, skip corresponding number of characters
+      case 'c': pchSrc += 2 + FindZero((UBYTE *)pchSrc + 2, 6); break;
+      case 'a': pchSrc += 2 + FindZero((UBYTE *)pchSrc + 2, 2); break;
+      case 'f': pchSrc += 2 + FindZero((UBYTE *)pchSrc + 2, 1); break;
       
       case 'b': case 'i': case 'r': case 'o':
       case 'C': case 'A': case 'F': case 'B': case 'I':
@@ -212,7 +212,7 @@ void ProperUndecorate(CTString &str) {
         *pchDst++ = *pchSrc++;
         break;
 
-      // something else
+      // Something else
       default:
         *pchDst++ = *pchSrc++;
         break;
@@ -221,6 +221,46 @@ void ProperUndecorate(CTString &str) {
   
   *pchDst++ = 0;
   str = strResult;
+};
+
+// [Cecil] Find proper character position in a decorated string
+INDEX PosInDecoratedString(const CTString &str, INDEX iChar) {
+  // Start at the beginning of a string
+  const char *pchSrc = str.str_String;
+  INDEX ctTags = 0;
+
+  // Until the desired character index
+  while (--iChar >= 0) {
+    // String end
+    if (pchSrc[0] == 0) {
+      break;
+    }
+
+    // If the source char is not escape char
+    if (pchSrc[0] != '^') {
+      // Count it normally
+      pchSrc++;
+      continue;
+    }
+    
+    // Skip however many tag characters there are
+    switch (pchSrc[1]) {
+      case 'c': pchSrc += 2 + FindZero((UBYTE *)pchSrc + 2, 6); break;
+      case 'a': pchSrc += 2 + FindZero((UBYTE *)pchSrc + 2, 2); break;
+      case 'f': pchSrc += 2 + FindZero((UBYTE *)pchSrc + 2, 1); break;
+      
+      case '^': case 'b': case 'i': case 'r': case 'o':
+      case 'C': case 'A': case 'F': case 'B': case 'I':
+        pchSrc += 2;
+        break;
+    }
+
+    // Skipped one full tag
+    ctTags++;
+  }
+
+  // Difference between the string beginning and where we stopped
+  return INDEX(pchSrc - str.str_String) + ctTags;
 };
 
 // [Cecil] Get first alive player
