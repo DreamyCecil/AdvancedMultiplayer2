@@ -208,8 +208,8 @@ extern void ClearPlayerControls(void) {
 };
 
 // Define address and size of player controls structure
-DECL_DLL extern void *ctl_pvPlayerControls = &pctlCurrent;
-DECL_DLL extern const SLONG ctl_slPlayerControlsSize = sizeof(pctlCurrent);
+DECL_DLL extern void *ctl_pvPlayerControls = _aiPlayerControls;
+DECL_DLL extern const SLONG ctl_slPlayerControlsSize = sizeof(_aiPlayerControls);
 
 // Compose action packet from current controls
 DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction &paAction, BOOL bPreScan) {
