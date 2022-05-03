@@ -146,7 +146,7 @@ functions:
 
     // [Cecil] Remove Napalm and Sniper Bullets in TFE
     extern BOOL _bCurrentMapIsTFE;
-    if (/*GetSP()->sp_iAMPOptions & AMP_CONVERSION*/ _bCurrentMapIsTFE) {
+    if (_bCurrentMapIsTFE) {
       m_iNapalm = 0;
       m_iSniperBullets = 0;
     }

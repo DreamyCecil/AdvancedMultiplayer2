@@ -2,7 +2,6 @@
 
 // World Options
 static INDEX amp_bEnableOptions = TRUE;
-static INDEX amp_bConversion = FALSE;
 
 static FLOAT amp_fSpeedMultiplier = 1.0f;
 static FLOAT amp_fJumpMultiplier = 1.0f;
@@ -97,7 +96,6 @@ static INDEX amp_bSpeedItem = TRUE;
 static void RestoreDefaultOptions(void) {
   // World Options
   amp_bEnableOptions = TRUE;
-  amp_bConversion = FALSE;
 
   amp_fSpeedMultiplier = 1.0f;
   amp_fJumpMultiplier = 1.0f;
@@ -193,7 +191,6 @@ static void RestoreDefaultOptions(void) {
 extern void DeclareExtraSymbols(void) {
   // World Options
   _pShell->DeclareSymbol("persistent user INDEX amp_bEnableOptions;", &amp_bEnableOptions);
-  _pShell->DeclareSymbol("persistent user INDEX amp_bConversion;", &amp_bConversion);
 
   _pShell->DeclareSymbol("persistent user FLOAT amp_fSpeedMultiplier;", &amp_fSpeedMultiplier);
   _pShell->DeclareSymbol("persistent user FLOAT amp_fJumpMultiplier;", &amp_fJumpMultiplier);
@@ -366,7 +363,6 @@ extern void SetAdvancedParameters(CSessionProperties &sp) {
 
   // main options
   sp.sp_iAMPOptions = (amp_bEnableOptions ? AMP_ENABLE : 0)
-                    | (amp_bConversion    ? AMP_CONVERSION : 0)
                     | ((bOpt && amp_bHeatDamage)      ? AMP_HEAT : 0)
                     | ((bOpt && amp_bImpactDamage)    ? AMP_IMPACT : 0)
                     | ((bOpt && amp_bBalancedEnemies) ? AMP_BALANCED : 0)

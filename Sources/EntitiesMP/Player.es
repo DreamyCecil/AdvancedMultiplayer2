@@ -7153,7 +7153,7 @@ procedures:
     }
 
     // [Cecil] Convert world
-    if (/*GetSP()->sp_iAMPOptions & AMP_CONVERSION*/ _bCurrentMapIsTFE) {
+    if (_bCurrentMapIsTFE) {
       ConvertWorld(this);
     }
 
@@ -7232,7 +7232,7 @@ procedures:
 
       on (EPostLevelChange) : {
         // [Cecil] Convert world
-        if (/*GetSP()->sp_iAMPOptions & AMP_CONVERSION*/ _bCurrentMapIsTFE) {
+        if (_bCurrentMapIsTFE) {
           ConvertWorld(this);
         }
 
