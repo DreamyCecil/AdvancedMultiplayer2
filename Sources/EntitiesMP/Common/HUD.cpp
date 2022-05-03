@@ -106,8 +106,6 @@ static CTextureObject _toASeriousBomb;
 // powerup textures (ORDER IS THE SAME AS IN PLAYER.ES!)
 #define MAX_POWERUPS 4
 static CTextureObject _atoPowerups[MAX_POWERUPS];
-// tile texture (one has corners, edges and center)
-static CTextureObject _toTile;
 // sniper mask texture
 static CTextureObject _toSniperMask;
 static CTextureObject _toSniperWheel;
@@ -339,39 +337,23 @@ extern INDEX SetAllPlayersStats( INDEX iSortKey)
 // ----------------------- drawing functions
 
 // draw border with filter
-static void HUD_DrawBorder( FLOAT fCenterX, FLOAT fCenterY, FLOAT fSizeX, FLOAT fSizeY, COLOR colTiles)
+static void HUD_DrawBorder(FLOAT fCenterX, FLOAT fCenterY, FLOAT fSizeX, FLOAT fSizeY, COLOR colTiles)
 {
-  // determine location
-  const FLOAT fCenterI  = fCenterX*_pixDPWidth  / 640.0f;
-  const FLOAT fCenterJ  = fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment);
-  const FLOAT fSizeI    = _fScalingX*fSizeX;
-  const FLOAT fSizeJ    = _fScalingX*fSizeY;
-  const FLOAT fTileSize = 8*_fScalingX*_fCustomScaling;
-  // determine exact positions
-  const FLOAT fLeft  = fCenterI  - fSizeI/2 -1; 
-  const FLOAT fRight = fCenterI  + fSizeI/2 +1; 
-  const FLOAT fUp    = fCenterJ  - fSizeJ/2 -1; 
-  const FLOAT fDown  = fCenterJ  + fSizeJ/2 +1;
-  const FLOAT fLeftEnd  = fLeft  + fTileSize;
-  const FLOAT fRightBeg = fRight - fTileSize; 
-  const FLOAT fUpEnd    = fUp    + fTileSize; 
-  const FLOAT fDownBeg  = fDown  - fTileSize; 
-  // prepare texture                 
+  // Determine location
+  const PIX iCenterX = fCenterX * _pixDPWidth  / 640.0f;
+  const PIX iCenterY = fCenterY * _pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment);
+  const PIX iSizeX = (fSizeX + 1) * _fScalingX;
+  const PIX iSizeY = (fSizeY + 1) * _fScalingX;
+
+  const PIX2D vPos(iCenterX - (iSizeX >> 1),
+                   iCenterY - (iSizeY >> 1));
+
+  // Border colors
   colTiles |= _ulAlphaHUD;
-  // put corners
-  _pDP->InitTexture( &_toTile, TRUE); // clamping on!
-  _pDP->AddTexture( fLeft, fUp,   fLeftEnd, fUpEnd,   colTiles);
-  _pDP->AddTexture( fRight,fUp,   fRightBeg,fUpEnd,   colTiles);
-  _pDP->AddTexture( fRight,fDown, fRightBeg,fDownBeg, colTiles);
-  _pDP->AddTexture( fLeft, fDown, fLeftEnd, fDownBeg, colTiles);
-  // put edges
-  _pDP->AddTexture( fLeftEnd,fUp,    fRightBeg,fUpEnd,   0.4f,0.0f, 0.6f,1.0f, colTiles);
-  _pDP->AddTexture( fLeftEnd,fDown,  fRightBeg,fDownBeg, 0.4f,0.0f, 0.6f,1.0f, colTiles);
-  _pDP->AddTexture( fLeft,   fUpEnd, fLeftEnd, fDownBeg, 0.0f,0.4f, 1.0f,0.6f, colTiles);
-  _pDP->AddTexture( fRight,  fUpEnd, fRightBeg,fDownBeg, 0.0f,0.4f, 1.0f,0.6f, colTiles);
-  // put center
-  _pDP->AddTexture( fLeftEnd, fUpEnd, fRightBeg, fDownBeg, 0.4f,0.4f, 0.6f,0.6f, colTiles);
-  _pDP->FlushRenderingQueue();
+  COLOR colHalfTransparent = (_ulAlphaHUD & 0xFF) >> 1;
+  
+  _pDP->Fill      (vPos(1), vPos(2), iSizeX, iSizeY, colHalfTransparent);
+  _pDP->DrawBorder(vPos(1), vPos(2), iSizeX, iSizeY, colTiles);
 }
 
 
@@ -404,8 +386,8 @@ static void HUD_DrawIcon(FLOAT fCenterX, FLOAT fCenterY, CTextureObject &toIcon,
   CTextureData *ptd = (CTextureData*)toIcon.GetData();
 
   // [Cecil] Replaced texture size with constant size (16), added extra scaling
-  const FLOAT fHalfSizeI = _fScalingX*_fCustomScaling * 16 * fScale;
-  const FLOAT fHalfSizeJ = _fScalingX*_fCustomScaling * 16 * fScale;
+  const FLOAT fHalfSizeI = _fScalingX * _fCustomScaling * 16 * fScale;
+  const FLOAT fHalfSizeJ = _fScalingX * _fCustomScaling * 16 * fScale;
 
   // done
   _pDP->InitTexture( &toIcon);
@@ -1569,9 +1551,6 @@ extern void InitHUD(void) {
     _toSniperArrow.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperArrow.tex"));
     _toSniperEye.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperEye.tex"));
     _toSniperLed.SetData_t(CTFILENAME("TexturesMP\\Interface\\SniperLed.tex"));
-
-    // initialize tile texture
-    _toTile.SetData_t(CTFILENAME("Textures\\Interface\\Tile.tex"));
     
     // set all textures as constant
     ((CTextureData*)_toHealth .GetData())->Force(TEX_CONSTANT);
@@ -1592,7 +1571,6 @@ extern void InitHUD(void) {
     ((CTextureData*)_atoPowerups[2].GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_atoPowerups[3].GetData())->Force(TEX_CONSTANT);
 
-    ((CTextureData*)_toTile      .GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toSniperMask.GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toSniperWheel.GetData())->Force(TEX_CONSTANT);
     ((CTextureData*)_toSniperArrow.GetData())->Force(TEX_CONSTANT);
