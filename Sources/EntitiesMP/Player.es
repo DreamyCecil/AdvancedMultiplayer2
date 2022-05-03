@@ -57,6 +57,7 @@ static const FLOAT _afSniperZoom[] = {
 static CFontData _fdComboFont;
 
 // [Cecil] World conversion
+extern BOOL _bCurrentMapIsTFE;
 extern void ConvertWorld(CEntity *);
 
 // [Cecil] Enemy counter
@@ -7152,7 +7153,7 @@ procedures:
     }
 
     // [Cecil] Convert world
-    if (GetSP()->sp_iAMPOptions & AMP_CONVERSION) {
+    if (/*GetSP()->sp_iAMPOptions & AMP_CONVERSION*/ _bCurrentMapIsTFE) {
       ConvertWorld(this);
     }
 
@@ -7231,7 +7232,7 @@ procedures:
 
       on (EPostLevelChange) : {
         // [Cecil] Convert world
-        if (GetSP()->sp_iAMPOptions & AMP_CONVERSION) {
+        if (/*GetSP()->sp_iAMPOptions & AMP_CONVERSION*/ _bCurrentMapIsTFE) {
           ConvertWorld(this);
         }
 

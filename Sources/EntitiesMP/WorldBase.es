@@ -11,6 +11,9 @@
 
 // [Cecil] Custom weapons and ammo
 extern void LoadWorldWeapons(CWorld *pwo);
+
+// [Cecil] The current map is from The First Encounter
+extern BOOL _bCurrentMapIsTFE = FALSE;
 %}
 
 uses "EntitiesMP\FogMarker";
@@ -702,6 +705,9 @@ void CWorldBase_OnWorldInit(CWorld *pwo) {
 
   // [Cecil] Load patch config for classes
   LoadClassPatchConfig(pwo->wo_fnmFileName.FileName().str_String);
+
+  // [Cecil] Prepare for TFE patching
+  _bCurrentMapIsTFE = FALSE;
 };
 
 // [Cecil] Individual world cleanup

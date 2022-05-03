@@ -126,6 +126,10 @@ functions:
 
     if (en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x0261002E) {
       en_stslStateStack[0] = 0x0261002E;
+
+      // Mark as TFE map
+      extern BOOL _bCurrentMapIsTFE;
+      _bCurrentMapIsTFE = TRUE;
     }
   };
 

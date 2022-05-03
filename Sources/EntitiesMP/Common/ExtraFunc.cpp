@@ -25,8 +25,8 @@ void ConvertWeaponTFE(INDEX &iFlags, const INDEX &iWeapon) {
     // Laser
     case 14: iFlags |= WeaponFlag(WEAPON_LASER); break;
 
-    // Cannon
-    case 16: iFlags |= WeaponFlag(WEAPON_IRONCANNON); break;
+    // Cannon (offsetted by 1 due to removal of WEAPON_DOUBLECOLT)
+    case 16: iFlags |= WeaponFlag(WEAPON_IRONCANNON + 1); break;
 
     // non-existent weapons
     case 10: case 11: case 12: case 13: case 15: case 17: break;
@@ -58,7 +58,7 @@ void ConvertWeaponTSE(INDEX &iFlags, const INDEX &iWeapon) {
 
 // [Cecil] Convert world if needed
 extern void ConvertWorld(CEntity *penWorld) {
-  // get first world base
+  // Get first world base
   CWorldBase *penBase = NULL;
 
   {FOREACHINDYNAMICCONTAINER(penWorld->GetWorld()->wo_cenEntities, CEntity, iten) {
@@ -68,35 +68,32 @@ extern void ConvertWorld(CEntity *penWorld) {
       continue;
     }
 
-    penBase = (CWorldBase*)pen;
+    penBase = (CWorldBase *)pen;
     break;
   }}
 
-  // no world base
+  // No world base
   if (penBase == NULL) {
-    CPrintF(" World conversion failed:\n - Unable to find the first WorldBase!\n");
+    CPrintF("World conversion failed:\n- Unable to find the first WorldBase!\n");
     return;
   }
 
-  // mark as reinitialized
+  // Mark as reinitialized
   if (penBase->m_bReinit) {
     return;
+
   } else {
     penBase->m_bReinit = TRUE;
   }
 
-  INDEX iReinit = 0;
-  CPrintF(" Converting TFE level into TSE level...\n");
+  INDEX ctPatched = 0;
+  CPrintF("- Converting TFE level into TSE level -\n");
 
   {FOREACHINDYNAMICCONTAINER(penWorld->GetWorld()->wo_cenEntities, CEntity, iten) {
     CEntity *pen = iten;
 
-    // [Cecil] Check for the entities that need to be updated
-    if (!IsDerivedFromClass(pen, "Enemy Base") && !IsOfClass(pen, "Enemy Spawner")
-     && !IsOfClass(pen, "Camera") && !IsOfClass(pen, "Damager") && !IsOfClass(pen, "Moving Brush") && !IsOfClass(pen, "SoundHolder")
-     && !IsOfClass(pen, "Storm controller") && !IsOfClass(pen, "PyramidSpaceShip") && !IsOfClass(pen, "Lightning")
-    // [Cecil] These just need special adjustments, no reinitialization required
-     && !IsOfClass(pen, "DoorController") && !IsOfClass(pen, "KeyItem") && !IsOfClass(pen, "Player Marker")) {
+    // [Cecil] Check for the entities that need to be patched
+    if (!IsOfClass(pen, "DoorController") && !IsOfClass(pen, "KeyItem") && !IsOfClass(pen, "Player Marker")) {
       continue;
     }
 
@@ -119,62 +116,70 @@ extern void ConvertWorld(CEntity *penWorld) {
         }
       }
 
+      CPrintF("[%u] Converted PlayerMarker (%d -> %d)\n", pen->en_ulID, *piWeapons, iNewWeapons);
+
       *piWeapons = iNewWeapons;
       *piTakeWeapons = iNewTakeWeapons;
-      CPrintF(" - Converted PlayerMarker\n");
       
     // Adjust keys
     } else if (IsOfClass(pen, "KeyItem")) {
       CKeyItem *penKey = (CKeyItem *)pen;
+      KeyItemType eKey = penKey->m_kitType;
 
-      switch (penKey->m_kitType) {
+      switch (eKey) {
         // Dummy keys
-        case 4: penKey->m_kitType = KIT_JAGUARGOLDDUMMY; break;
-        case 15: penKey->m_kitType = KIT_TABLESDUMMY; break;
+        case 4:  eKey = KIT_JAGUARGOLDDUMMY; break;
+        case 15: eKey = KIT_TABLESDUMMY; break;
 
         // Element keys
-        case 5: penKey->m_kitType = KIT_CROSSWOODEN; break;
-        case 6: penKey->m_kitType = KIT_CROSSMETAL; break;
-        case 7: penKey->m_kitType = KIT_CRYSTALSKULL; break;
-        case 8: penKey->m_kitType = KIT_CROSSGOLD; break;
+        case 5: eKey = KIT_CROSSWOODEN; break;
+        case 6: eKey = KIT_CROSSMETAL; break;
+        case 7: eKey = KIT_CRYSTALSKULL; break;
+        case 8: eKey = KIT_CROSSGOLD; break;
 
         // Other keys
-        default: penKey->m_kitType = KIT_KINGSTATUE; break;
+        default: eKey = KIT_KINGSTATUE; break;
       }
 
-      CPrintF(" - Converted KeyItem\n");
-      iReinit++;
+      CPrintF("[%u] Converted KeyItem (%d -> %d)\n", pen->en_ulID, penKey->m_kitType, eKey);
+
+      penKey->m_kitType = eKey;
 
     // Adjust keys
     } else if (IsOfClass(pen, "DoorController")) {
       CDoorController *penDoor = (CDoorController *)pen;
 
-      switch (penDoor->m_kitKey) {
-        // Dummy keys
-        case 4: penDoor->m_kitKey = KIT_JAGUARGOLDDUMMY; break;
-        case 15: penDoor->m_kitKey = KIT_TABLESDUMMY; break;
-
-        // Element keys
-        case 5: penDoor->m_kitKey = KIT_CROSSWOODEN; break;
-        case 6: penDoor->m_kitKey = KIT_CROSSMETAL; break;
-        case 7: penDoor->m_kitKey = KIT_CRYSTALSKULL; break;
-        case 8: penDoor->m_kitKey = KIT_CROSSGOLD; break;
-
-        // Other keys
-        default: penDoor->m_kitKey = KIT_KINGSTATUE; break;
+      // Only for locked doors
+      if (penDoor->m_dtType != DT_LOCKED) {
+        continue;
       }
 
-      CPrintF(" - Converted DoorController\n");
-      iReinit++;
+      KeyItemType eKey = penDoor->m_kitKey;
 
-    // Reinitialize everything else
-    } else {
-      pen->Reinitialize();
-      iReinit++;
+      switch (eKey) {
+        // Dummy keys
+        case 4:  eKey = KIT_JAGUARGOLDDUMMY; break;
+        case 15: eKey = KIT_TABLESDUMMY; break;
+
+        // Element keys
+        case 5: eKey = KIT_CROSSWOODEN; break;
+        case 6: eKey = KIT_CROSSMETAL; break;
+        case 7: eKey = KIT_CRYSTALSKULL; break;
+        case 8: eKey = KIT_CROSSGOLD; break;
+
+        // Other keys
+        default: eKey = KIT_KINGSTATUE; break;
+      }
+
+      CPrintF("[%u] Converted DoorController (%d -> %d)\n", pen->en_ulID, penDoor->m_kitKey, eKey);
+
+      penDoor->m_kitKey = eKey;
     }
+
+    ctPatched++;
   }}
 
-  CPrintF(" - Reinitialized %i entities. Conversion end -\n", iReinit);
+  CPrintF("- Patched %d entities. Conversion end -\n", ctPatched);
 };
 
 // [Cecil] Properly remove decorations from the string

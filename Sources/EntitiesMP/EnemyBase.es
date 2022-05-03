@@ -613,14 +613,25 @@ functions:
     // [Cecil] TFE -> TSE state patch
     if (en_stslStateStack.Count() > 0)
     {
+      BOOL bPatchTFE = FALSE;
+
       if (IsOfClass(this, "Devil") && en_stslStateStack[0] != 0x014C013B) {
         en_stslStateStack[0] = 0x014C013B;
+        bPatchTFE = TRUE;
 
       } else if (IsOfClass(this, "Woman") && en_stslStateStack[0] != 0x0140001B) {
         en_stslStateStack[0] = 0x0140001B;
+        bPatchTFE = TRUE;
 
       } else if (en_stslStateStack[0] != 0x01360070) {
         en_stslStateStack[0] = 0x01360070;
+        bPatchTFE = TRUE;
+      }
+
+      // Mark as TFE map
+      if (bPatchTFE) {
+        extern BOOL _bCurrentMapIsTFE;
+        _bCurrentMapIsTFE = TRUE;
       }
     }
   };
