@@ -47,6 +47,15 @@ components:
   5 sound   SOUND_THUNDER3       "Sounds\\Environment\\Thunders\\Thunder3.wav",
 
 functions:
+  // [Cecil] TFE -> TSE state patch
+  void Read_t(CTStream *istr) {
+    CMovableModelEntity::Read_t(istr);
+
+    if (en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x025F0009) {
+      en_stslStateStack[0] = 0x025F0009;
+    }
+  };
+
   void Precache(void) 
   {
     CMovableModelEntity::Precache();

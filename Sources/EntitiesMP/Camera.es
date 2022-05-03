@@ -77,6 +77,14 @@ components:
 
 
 functions:
+  // [Cecil] TFE -> TSE state patch
+  void Read_t(CTStream *istr) {
+    CMovableModelEntity::Read_t(istr);
+
+    if (en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x00DC000D) {
+      en_stslStateStack[0] = 0x00DC000D;
+    }
+  };
 
   // render particles
   void RenderParticles(void)

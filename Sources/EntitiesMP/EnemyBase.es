@@ -609,6 +609,20 @@ functions:
     if (m_penMainMusicHolder!=NULL) {
       ((CMusicHolder&)*m_penMainMusicHolder).m_cenFussMakers.Add(this);
     }
+
+    // [Cecil] TFE -> TSE state patch
+    if (en_stslStateStack.Count() > 0)
+    {
+      if (IsOfClass(this, "Devil") && en_stslStateStack[0] != 0x014C013B) {
+        en_stslStateStack[0] = 0x014C013B;
+
+      } else if (IsOfClass(this, "Woman") && en_stslStateStack[0] != 0x0140001B) {
+        en_stslStateStack[0] = 0x0140001B;
+
+      } else if (en_stslStateStack[0] != 0x01360070) {
+        en_stslStateStack[0] = 0x01360070;
+      }
+    }
   };
 
   /* Fill in entity statistics - for AI purposes only */
