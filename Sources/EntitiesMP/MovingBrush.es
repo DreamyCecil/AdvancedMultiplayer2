@@ -142,6 +142,7 @@ functions:
     CMovableBrushEntity::Read_t(istr);
 
     if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x00650014) {
+      ENTITY_STATE_OUTPUT(this);
       en_stslStateStack[0] = 0x00650014;
 
       // Mark as TFE map

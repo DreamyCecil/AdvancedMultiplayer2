@@ -125,6 +125,7 @@ functions:
     CMovableModelEntity::Read_t(istr);
 
     if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x0261002E) {
+      ENTITY_STATE_OUTPUT(this);
       en_stslStateStack[0] = 0x0261002E;
 
       // Mark as TFE map

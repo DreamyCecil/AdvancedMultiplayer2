@@ -615,17 +615,34 @@ functions:
     {
       BOOL bPatchTFE = FALSE;
 
-      if (IsOfClass(this, "Devil") && en_stslStateStack[0] != 0x014C013B) {
-        en_stslStateStack[0] = 0x014C013B;
-        bPatchTFE = TRUE;
+      // TFE Ugh-zan
+      if (IsOfClass(this, "Devil")) {
+        if (en_stslStateStack[0] != 0x014C013B) {
+          ENTITY_STATE_OUTPUT(this);
+          en_stslStateStack[0] = 0x014C013B;
 
-      } else if (IsOfClass(this, "Woman") && en_stslStateStack[0] != 0x0140001B) {
-        en_stslStateStack[0] = 0x0140001B;
-        bPatchTFE = TRUE;
+          bPatchTFE = TRUE;
+        }
 
-      } else if (en_stslStateStack[0] != 0x01360070) {
-        en_stslStateStack[0] = 0x01360070;
-        bPatchTFE = TRUE;
+      // TFE harpy
+      } else if (IsOfClass(this, "Woman")) {
+        if (en_stslStateStack[0] != 0x0140001B) {
+          ENTITY_STATE_OUTPUT(this);
+          en_stslStateStack[0] = 0x0140001B;
+
+          bPatchTFE = TRUE;
+        }
+
+      // Other TFE enemies
+      } else if (!IsOfClass(this, "AirElemental") && !IsOfClass(this, "CannonRotating") && !IsOfClass(this, "CannonStatic")
+              && !IsOfClass(this, "ChainsawFreak") && !IsOfClass(this, "Demon") && !IsOfClass(this, "ExotechLarva")
+              && !IsOfClass(this, "Grunt") && !IsOfClass(this, "Guffy") && !IsOfClass(this, "Santa") && !IsOfClass(this, "Summoner")) {
+        if (en_stslStateStack[0] != 0x01360070) {
+          ENTITY_STATE_OUTPUT(this);
+          en_stslStateStack[0] = 0x01360070;
+
+          bPatchTFE = TRUE;
+        }
       }
 
       // Mark as TFE map

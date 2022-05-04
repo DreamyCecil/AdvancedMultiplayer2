@@ -28,3 +28,13 @@ void LoadJSON(const CTFileName &fnJSON, DJSON_Block &mapModel);
 
 // [Cecil] Precache some resource
 void PrecacheResource(EntityComponentType eType, const CTFileName &fnFile);
+
+// [Cecil] Check entity states for debugging
+#define CHECK_ENTITY_STATES 0
+
+#if CHECK_ENTITY_STATES
+  #define ENTITY_STATE_OUTPUT(Entity) CPrintF("%s (%s / %d states) : 0x%08X\n", \
+    Entity->GetName(), Entity->en_pecClass->ec_pdecDLLClass->dec_strName, Entity->en_stslStateStack.Count(), Entity->en_stslStateStack[0])
+#else
+  #define ENTITY_STATE_OUTPUT(Entity) (void)Entity
+#endif

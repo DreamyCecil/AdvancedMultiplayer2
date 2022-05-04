@@ -81,6 +81,9 @@ functions:
     PrecacheSound(SOUND_KICK );
     PrecacheSound(SOUND_DEATH);
     PrecacheClass(CLASS_PROJECTILE, PRT_WOMAN_FIRE);
+
+    // [Cecil] Precache new model for TFE maps
+    PrecacheModel(MODEL_WOMAN);
   };
 
   /* Entity info */

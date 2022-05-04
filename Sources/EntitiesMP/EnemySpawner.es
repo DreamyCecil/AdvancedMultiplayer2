@@ -65,6 +65,7 @@ functions:
     CRationalEntity::Read_t(istr);
 
     if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x01300043) {
+      ENTITY_STATE_OUTPUT(this);
       en_stslStateStack[0] = 0x01300043;
 
       // Mark as TFE map
