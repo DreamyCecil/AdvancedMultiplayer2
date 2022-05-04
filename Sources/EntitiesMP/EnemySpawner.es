@@ -64,7 +64,7 @@ functions:
   void Read_t(CTStream *istr) {
     CRationalEntity::Read_t(istr);
 
-    if (en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x01300043) {
+    if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x01300043) {
       en_stslStateStack[0] = 0x01300043;
 
       // Mark as TFE map

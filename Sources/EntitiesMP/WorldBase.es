@@ -14,6 +14,9 @@ extern void LoadWorldWeapons(CWorld *pwo);
 
 // [Cecil] The current map is from The First Encounter
 extern BOOL _bCurrentMapIsTFE = FALSE;
+
+// [Cecil] First WorldBase
+extern CEntity *_penFirstWorldBase;
 %}
 
 uses "EntitiesMP\FogMarker";
@@ -706,6 +709,9 @@ void CWorldBase_OnWorldInit(CWorld *pwo) {
   // [Cecil] Load patch config for classes
   LoadClassPatchConfig(pwo->wo_fnmFileName.FileName().str_String);
 
+  // [Cecil] Reset first WorldBase
+  _penFirstWorldBase = NULL;
+
   // [Cecil] Prepare for TFE patching
   _bCurrentMapIsTFE = FALSE;
 };
@@ -1019,11 +1025,21 @@ properties:
   99 FLOAT m_fOpacity "Opacity" = 1.0f,
 
  // [Cecil] TFE -> TSE conversion (only for the first brush)
- 100 BOOL m_bReinit = FALSE,
+ 100 BOOL m_bTFEMap = FALSE,
 
 components:
 
 functions:
+  // [Cecil] Mark as TFE map on load
+  void Read_t(CTStream *istr) {
+    CEntity::Read_t(istr);
+
+    if (m_bTFEMap) {
+      _penFirstWorldBase = this;
+      _bCurrentMapIsTFE = TRUE;
+    }
+  };
+
   // get visibility tweaking bits
   ULONG GetVisTweaks(void)
   {

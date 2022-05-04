@@ -124,7 +124,7 @@ functions:
   void Read_t(CTStream *istr) {
     CMovableModelEntity::Read_t(istr);
 
-    if (en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x0261002E) {
+    if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x0261002E) {
       en_stslStateStack[0] = 0x0261002E;
 
       // Mark as TFE map

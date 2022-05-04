@@ -611,7 +611,7 @@ functions:
     }
 
     // [Cecil] TFE -> TSE state patch
-    if (en_stslStateStack.Count() > 0)
+    if (!IsTFEMap() && en_stslStateStack.Count() > 0)
     {
       BOOL bPatchTFE = FALSE;
 

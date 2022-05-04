@@ -59,31 +59,35 @@ void ConvertWeaponTSE(INDEX &iFlags, const INDEX &iWeapon) {
 // [Cecil] Convert world if needed
 extern void ConvertWorld(CEntity *penWorld) {
   // Get first world base
-  CWorldBase *penBase = NULL;
+  extern CEntity *_penFirstWorldBase;
 
-  {FOREACHINDYNAMICCONTAINER(penWorld->GetWorld()->wo_cenEntities, CEntity, iten) {
-    CEntity *pen = iten;
+  if (_penFirstWorldBase == NULL) {
+    FOREACHINDYNAMICCONTAINER(penWorld->GetWorld()->wo_cenEntities, CEntity, iten) {
+      CEntity *pen = iten;
 
-    if (!IsOfClass(pen, "WorldBase")) {
-      continue;
+      if (!IsOfClass(pen, "WorldBase")) {
+        continue;
+      }
+
+      _penFirstWorldBase = pen;
+      break;
     }
-
-    penBase = (CWorldBase *)pen;
-    break;
-  }}
+  }
 
   // No world base
-  if (penBase == NULL) {
+  if (_penFirstWorldBase == NULL) {
     CPrintF("World conversion failed:\n- Unable to find the first WorldBase!\n");
     return;
   }
 
-  // Mark as reinitialized
-  if (penBase->m_bReinit) {
+  CWorldBase *penBase = (CWorldBase *)_penFirstWorldBase;
+
+  // Mark as TFE map
+  if (penBase->m_bTFEMap) {
     return;
 
   } else {
-    penBase->m_bReinit = TRUE;
+    penBase->m_bTFEMap = TRUE;
   }
 
   INDEX ctPatched = 0;

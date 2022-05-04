@@ -14,6 +14,7 @@ extern INDEX ent_bReportBrokenChains;
 
 // [Cecil] Extra dependencies
 #include "EntitiesMP/PlayerInventory.h"
+#include "EntitiesMP/WorldBase.h"
 
 // [Cecil] Global controller
 #include "EntitiesMP/GlobalController.h"
@@ -1406,4 +1407,15 @@ DECL_DLL EBloodType GetBloodType(void) {
   }
 
   return (EBloodType)_pShell->GetINDEX("amp_iBloodType");
+};
+
+// [Cecil] Check if playing a TFE map
+extern CEntity *_penFirstWorldBase = NULL;
+
+BOOL IsTFEMap(void) {
+  if (_penFirstWorldBase == NULL) {
+    return FALSE;
+  }
+
+  return ((CWorldBase *)_penFirstWorldBase)->m_bTFEMap;
 };

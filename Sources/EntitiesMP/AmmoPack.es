@@ -145,8 +145,7 @@ functions:
     //m_fValue = ceil(m_fValue*GetSP()->sp_fAmmoQuantity);
 
     // [Cecil] Remove Napalm and Sniper Bullets in TFE
-    extern BOOL _bCurrentMapIsTFE;
-    if (_bCurrentMapIsTFE) {
+    if (IsTFEMap()) {
       m_iNapalm = 0;
       m_iSniperBullets = 0;
     }
