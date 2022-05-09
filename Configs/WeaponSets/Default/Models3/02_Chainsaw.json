@@ -2,26 +2,30 @@
   "Model"   : "ModelsMP\Weapons\Chainsaw\ChainsawForPlayer.mdl",
   "Texture" : "ModelsMP\Weapons\Chainsaw\Body.tex",
   
-  "Attachment 0" : {
-    "Model"   : "ModelsMP\Weapons\Chainsaw\BodyForPlayer.mdl",
-    "Texture" : "ModelsMP\Weapons\Chainsaw\Body.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 1" : {
-    "Model"   : "ModelsMP\Weapons\Chainsaw\Blade.mdl",
-    "Texture" : "ModelsMP\Weapons\Chainsaw\Blade.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  
-    "Attachment 0" : {
-      "Model"   : "ModelsMP\Weapons\Chainsaw\Teeth.mdl",
-      "Texture" : "ModelsMP\Weapons\Chainsaw\Teeth.tex",
+  "Attachments" : {
+    "0" : {
+      "Model"   : "ModelsMP\Weapons\Chainsaw\BodyForPlayer.mdl",
+      "Texture" : "ModelsMP\Weapons\Chainsaw\Body.tex",
       
-      "Flag" : "teeth",
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
+    
+    "1" : {
+      "Model"   : "ModelsMP\Weapons\Chainsaw\Blade.mdl",
+      "Texture" : "ModelsMP\Weapons\Chainsaw\Blade.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    
+      "Attachments" : {
+        "0" : {
+          "Model"   : "ModelsMP\Weapons\Chainsaw\Teeth.mdl",
+          "Texture" : "ModelsMP\Weapons\Chainsaw\Teeth.tex",
+          
+          "Flag" : "teeth",
+        },
+      },
     },
   },
 }

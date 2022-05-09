@@ -2,24 +2,26 @@
   "Model"   : "ModelsMP\Weapons\Flamer\FlamerItem.mdl",
   "Texture" : "ModelsMP\Weapons\Flamer\Body.tex",
   
-  "Attachment 0" : {
-    "Model"   : "ModelsMP\Weapons\Flamer\Body.mdl",
-    "Texture" : "ModelsMP\Weapons\Flamer\Body.tex",
+  "Attachments" : {
+    "0" : {
+      "Model"   : "ModelsMP\Weapons\Flamer\Body.mdl",
+      "Texture" : "ModelsMP\Weapons\Flamer\Body.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 1" : {
-    "Model"   : "ModelsMP\Weapons\Flamer\FuelReservoir.mdl",
-    "Texture" : "ModelsMP\Weapons\Flamer\FuelReservoir.tex",
+    "1" : {
+      "Model"   : "ModelsMP\Weapons\Flamer\FuelReservoir.mdl",
+      "Texture" : "ModelsMP\Weapons\Flamer\FuelReservoir.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 2" : {
-    "Model"   : "ModelsMP\Weapons\Flamer\Flame.mdl",
-    "Texture" : "ModelsMP\Effects\Flame\Flame.tex",
+    "2" : {
+      "Model"   : "ModelsMP\Weapons\Flamer\Flame.mdl",
+      "Texture" : "ModelsMP\Effects\Flame\Flame.tex",
+    },
   },
 }

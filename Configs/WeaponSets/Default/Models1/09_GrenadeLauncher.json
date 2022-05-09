@@ -2,29 +2,31 @@
   "Model"   : "Models\Weapons\GrenadeLauncher\GrenadeLauncher.mdl",
   "Texture" : "Models\Weapons\Hand.tex",
   
-  "Attachment 1" : {
-    "Model"   : "Models\Weapons\GrenadeLauncher\Body.mdl",
-    "Texture" : "Models\Weapons\GrenadeLauncher\Body.tex",
+  "Attachments" : {
+    "1" : {
+      "Model"   : "Models\Weapons\GrenadeLauncher\Body.mdl",
+      "Texture" : "Models\Weapons\GrenadeLauncher\Body.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 2" : {
-    "Model"   : "Models\Weapons\GrenadeLauncher\MovingPipe.mdl",
-    "Texture" : "Models\Weapons\GrenadeLauncher\MovingPipe.tex",
+    "2" : {
+      "Model"   : "Models\Weapons\GrenadeLauncher\MovingPipe.mdl",
+      "Texture" : "Models\Weapons\GrenadeLauncher\MovingPipe.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+      
+      "Flag" : "move",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-    
-    "Flag" : "move",
-  },
-  
-  "Attachment 0" : {
-    "Model"   : "Models\Weapons\GrenadeLauncher\GrenadeBack.mdl",
-    "Texture" : "Models\Weapons\GrenadeLauncher\MovingPipe.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
+    "0" : {
+      "Model"   : "Models\Weapons\GrenadeLauncher\GrenadeBack.mdl",
+      "Texture" : "Models\Weapons\GrenadeLauncher\MovingPipe.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
   },
 }

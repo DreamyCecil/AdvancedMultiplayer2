@@ -2,35 +2,37 @@
   "Model"   : "Models\Weapons\RocketLauncher\RocketLauncher.mdl",
   "Texture" : "Models\Weapons\Hand.tex",
   
-  "Attachment 0" : {
-    "Model"   : "Models\Weapons\RocketLauncher\Body.mdl",
-    "Texture" : "Models\Weapons\RocketLauncher\Body.tex",
+  "Attachments" : {
+    "0" : {
+      "Model"   : "Models\Weapons\RocketLauncher\Body.mdl",
+      "Texture" : "Models\Weapons\RocketLauncher\Body.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 1" : {
-    "Model"   : "Models\Weapons\RocketLauncher\RotatingPart.mdl",
-    "Texture" : "Models\Weapons\RocketLauncher\RotatingPart.tex",
+    "1" : {
+      "Model"   : "Models\Weapons\RocketLauncher\RotatingPart.mdl",
+      "Texture" : "Models\Weapons\RocketLauncher\RotatingPart.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  // Rockets
-  "Attachment 2" : {
-    "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
-    "Flag" : "rocket1",
-  },
-  
-  "Attachment 3" : {
-    "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
-    "Flag" : "rocket2",
-  },
-  
-  "Attachment 4" : {
-    "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
-    "Flag" : "rocket3",
+    // Rockets
+    "2" : {
+      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+      "Flag" : "rocket1",
+    },
+    
+    "3" : {
+      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+      "Flag" : "rocket2",
+    },
+    
+    "4" : {
+      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+      "Flag" : "rocket3",
+    },
   },
 }

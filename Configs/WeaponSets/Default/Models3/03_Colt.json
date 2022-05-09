@@ -2,30 +2,32 @@
   "Model"   : "Models\Weapons\Colt\ColtItem.mdl",
   "Texture" : "Models\Weapons\Colt\ColtMain.tex",
   
-  "Attachment 1" : {
-    "Model"   : "Models\Weapons\Colt\ColtBullets.mdl",
-    "Texture" : "Models\Weapons\Colt\ColtBullets.tex",
+  "Attachments" : {
+    "1" : {
+      "Model"   : "Models\Weapons\Colt\ColtBullets.mdl",
+      "Texture" : "Models\Weapons\Colt\ColtBullets.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 2" : {
-    "Model"   : "Models\Weapons\Colt\ColtCock.mdl",
-    "Texture" : "Models\Weapons\Colt\ColtCock.tex",
+    "2" : {
+      "Model"   : "Models\Weapons\Colt\ColtCock.mdl",
+      "Texture" : "Models\Weapons\Colt\ColtCock.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 0" : {
-    "Model"   : "Models\Weapons\Colt\ColtMain.mdl",
-    "Texture" : "Models\Weapons\Colt\ColtMain.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-    
-    // Flare attachment
-    "Include" : "Configs\WeaponFlare3.json",
+    "0" : {
+      "Model"   : "Models\Weapons\Colt\ColtMain.mdl",
+      "Texture" : "Models\Weapons\Colt\ColtMain.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+      
+      // Flare attachment
+      "Include" : "Configs\WeaponFlare3.json",
+    },
   },
 }

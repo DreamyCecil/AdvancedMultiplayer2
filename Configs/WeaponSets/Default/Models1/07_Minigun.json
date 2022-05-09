@@ -2,32 +2,34 @@
   "Model"   : "Models\Weapons\Minigun\Minigun.mdl",
   "Texture" : "Models\Weapons\Hand.tex",
   
-  "Attachment 0" : {
-    "Model"   : "Models\Weapons\Minigun\Body.mdl",
-    "Texture" : "Models\Weapons\Minigun\Body.tex",
+  "Attachments" : {
+    "0" : {
+      "Model"   : "Models\Weapons\Minigun\Body.mdl",
+      "Texture" : "Models\Weapons\Minigun\Body.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+      
+      // Flare attachment
+      "Include" : "Configs\WeaponFlare1.json",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
+    "1" : {
+      "Model"   : "Models\Weapons\Minigun\Barrels.mdl",
+      "Texture" : "Models\Weapons\Minigun\Barrels.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+      
+      "Flag" : "rotate",
+    },
     
-    // Flare attachment
-    "Include" : "Configs\WeaponFlare1.json",
-  },
-  
-  "Attachment 1" : {
-    "Model"   : "Models\Weapons\Minigun\Barrels.mdl",
-    "Texture" : "Models\Weapons\Minigun\Barrels.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-    
-    "Flag" : "rotate",
-  },
-  
-  "Attachment 2" : {
-    "Model"   : "Models\Weapons\Minigun\Engine.mdl",
-    "Texture" : "Models\Weapons\Minigun\Barrels.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
+    "2" : {
+      "Model"   : "Models\Weapons\Minigun\Engine.mdl",
+      "Texture" : "Models\Weapons\Minigun\Barrels.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightBlueMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
   },
 }

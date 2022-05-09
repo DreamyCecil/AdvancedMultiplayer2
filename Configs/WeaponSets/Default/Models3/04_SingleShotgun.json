@@ -2,30 +2,32 @@
   "Model"   : "Models\Weapons\SingleShotgun\SingleShotgunItem.mdl",
   "Texture" : "Models\Weapons\SingleShotgun\Handle.tex",
   
-  "Attachment 1" : {
-    "Model"   : "Models\Weapons\SingleShotgun\Barrels.mdl",
-    "Texture" : "Models\Weapons\SingleShotgun\Barrels.tex",
+  "Attachments" : {
+    "1" : {
+      "Model"   : "Models\Weapons\SingleShotgun\Barrels.mdl",
+      "Texture" : "Models\Weapons\SingleShotgun\Barrels.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\DarkMetal.tex",
+      "Specular"   : "Models\SpecularTextures\Weak.tex",
+      
+      // Flare attachment
+      "Include" : "Configs\WeaponFlare3.json",
+    },
     
-    "Reflection" : "Models\ReflectionTextures\DarkMetal.tex",
-    "Specular"   : "Models\SpecularTextures\Weak.tex",
+    "0" : {
+      "Model"   : "Models\Weapons\SingleShotgun\Handle.mdl",
+      "Texture" : "Models\Weapons\SingleShotgun\Handle.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\DarkMetal.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
     
-    // Flare attachment
-    "Include" : "Configs\WeaponFlare3.json",
-  },
-  
-  "Attachment 0" : {
-    "Model"   : "Models\Weapons\SingleShotgun\Handle.mdl",
-    "Texture" : "Models\Weapons\SingleShotgun\Handle.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\DarkMetal.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
-  },
-  
-  "Attachment 2" : {
-    "Model"   : "Models\Weapons\SingleShotgun\Slider.mdl",
-    "Texture" : "Models\Weapons\SingleShotgun\Barrels.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\DarkMetal.tex",
-    "Specular"   : "Models\SpecularTextures\Medium.tex",
+    "2" : {
+      "Model"   : "Models\Weapons\SingleShotgun\Slider.mdl",
+      "Texture" : "Models\Weapons\SingleShotgun\Barrels.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\DarkMetal.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
   },
 }

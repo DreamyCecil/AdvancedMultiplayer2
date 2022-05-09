@@ -2,11 +2,13 @@
   "Model"   : "Models\Weapons\Knife\Knife.mdl",
   "Texture" : "Models\Weapons\Hand.tex",
   
-  "Attachment 0" : {
-    "Model"   : "Models\Weapons\Knife\KnifeItem.mdl",
-    "Texture" : "Models\Weapons\Knife\KnifeItem.tex",
-    
-    "Reflection" : "Models\ReflectionTextures\BWRiples02.tex",
-    "Specular"   : "Models\SpecularTextures\Weak.tex",
+  "Attachments" : {
+    "0" : {
+      "Model"   : "Models\Weapons\Knife\KnifeItem.mdl",
+      "Texture" : "Models\Weapons\Knife\KnifeItem.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\BWRiples02.tex",
+      "Specular"   : "Models\SpecularTextures\Weak.tex",
+    },
   },
 }
