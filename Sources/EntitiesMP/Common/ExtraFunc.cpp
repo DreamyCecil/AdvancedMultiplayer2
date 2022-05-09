@@ -511,34 +511,45 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
       ParseModelAttachments(cbInclude, pmo, NULL, aAttachments);
 
     // Attachments
-    } else if (CTString(strName.c_str()).HasPrefix("Attachment")) {
-      INDEX iAttach;
+    } else if (strName == "Attachments") {
+      ASSERT_VALUE_TYPE(cv, BLOCK);
 
-      if (CTString(strName.c_str()).ScanF("Attachment %i", &iAttach) > 0) {
-        ASSERT_VALUE_TYPE(cv, BLOCK);
+      INDEX ctAttachments = cv.cv_mapBlock.Count();
+
+      for (INDEX iAttach = 0; iAttach < ctAttachments; iAttach++) {
+        // Get one attachment
+        CTString strAttachIndex = cv.cv_mapBlock.GetKey(iAttach).c_str();
+        CConfigValue &cvAttach = cv.cv_mapBlock.GetValue(iAttach);
+
+        // Get attachment index
+        INDEX iAttachIndex;
+
+        // [Cecil] TODO: Support for attachment names
+        if (strAttachIndex.ScanF("%d", &iAttachIndex) <= 0) {
+          ThrowF_t("Expected attachment number in the key!");
+        }
+
+        ASSERT_VALUE_TYPE(cvAttach, BLOCK);
 
         // Invalid index
-        if (iAttach < 0) {
+        if (iAttachIndex < 0) {
           ThrowF_t("Invalid attachment number!");
         }
 
         CModelData *pmd = (CModelData*)pmo->GetData();
 
         // Too many attachments
-        if (iAttach >= pmd->md_aampAttachedPosition.Count()) {
-          ThrowF_t("Attachment %d does not exist!", iAttach);
+        if (iAttachIndex >= pmd->md_aampAttachedPosition.Count()) {
+          ThrowF_t("Attachment %d does not exist!", iAttachIndex);
         }
 
         // Attach the model
-        CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttach);
+        CAttachmentModelObject *pamo = pmo->GetAttachmentModel(iAttachIndex);
         if (pamo == NULL) {
-          pamo = pmo->AddAttachmentModel(iAttach);
+          pamo = pmo->AddAttachmentModel(iAttachIndex);
         }
 
-        ParseModelAttachments(cv.cv_mapBlock, &pamo->amo_moModelObject, pamo, aAttachments);
-
-      } else {
-        ThrowF_t("Expected attachment index for the attachment!");
+        ParseModelAttachments(cvAttach.cv_mapBlock, &pamo->amo_moModelObject, pamo, aAttachments);
       }
     }
   }
