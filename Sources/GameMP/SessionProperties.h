@@ -11,7 +11,7 @@
 #define AMP_BALANCED     (1 << 9)
 #define AMP_TAKEWEAPONS  (1 << 10)
 #define AMP_NOROCKETJUMP (1 << 11)
-#define AMP_SHAREWEAPONS (1 << 12)
+#define AMP_SHAREWEAPONS (1 << 13)
 
 // [Cecil] Weapon Giver & Item Removal Flags
 #define IRF_KNIFE     (1 << 0)
