@@ -462,6 +462,3 @@ enum EBloodType {
 
 // [Cecil] Get blood type
 DECL_DLL EBloodType GetBloodType(void);
-
-// [Cecil] Check if playing a TFE map
-DECL_DLL BOOL IsTFEMap(void);

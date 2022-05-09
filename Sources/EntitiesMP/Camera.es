@@ -81,13 +81,11 @@ functions:
   void Read_t(CTStream *istr) {
     CMovableModelEntity::Read_t(istr);
 
-    if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x00DC000A && en_stslStateStack[0] != 0x00DC000D) {
-      ENTITY_STATE_OUTPUT(this);
-      en_stslStateStack[0] = 0x00DC000D;
+    if (CanPatchStates() && !CheckEntityState(this, 0x00DC000A) && !CheckEntityState(this, 0x00DC000D)) {
+      PatchEntityState(this, 0x00DC000D);
 
       // Mark as TFE map
-      extern BOOL _bCurrentMapIsTFE;
-      _bCurrentMapIsTFE = TRUE;
+      SetFirstEncounterMap();
     }
   };
 

@@ -64,13 +64,9 @@ functions:
   void Read_t(CTStream *istr) {
     CRationalEntity::Read_t(istr);
 
-    if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x01300043) {
-      ENTITY_STATE_OUTPUT(this);
-      en_stslStateStack[0] = 0x01300043;
-
+    if (CanPatchStates() && PatchEntityState(this, 0x01300043)) {
       // Mark as TFE map
-      extern BOOL _bCurrentMapIsTFE;
-      _bCurrentMapIsTFE = TRUE;
+      SetFirstEncounterMap();
     }
   };
 

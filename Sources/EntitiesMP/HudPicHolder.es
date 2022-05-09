@@ -36,6 +36,14 @@ components:
   2 texture TEXTURE_MARKER   "Models\\Editor\\MessageHolder.tex"
 
 functions:
+  // [Cecil] Check for TSE maps on load
+  void Read_t(CTStream *istr) {
+    CRationalEntity::Read_t(istr);
+
+    // Definitely a TSE map
+    SetSecondEncounterMap(this);
+  };
+
   const CTString &GetDescription(void) const {
     ((CTString&)m_strDescription).PrintF("%s", m_fnmPicture.FileName());
     return m_strDescription;

@@ -145,7 +145,7 @@ functions:
     //m_fValue = ceil(m_fValue*GetSP()->sp_fAmmoQuantity);
 
     // [Cecil] Remove Napalm and Sniper Bullets in TFE
-    if (IsTFEMap()) {
+    if (IsFirstEncounter()) {
       m_iNapalm = 0;
       m_iSniperBullets = 0;
     }

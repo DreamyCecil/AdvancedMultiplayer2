@@ -5,6 +5,8 @@
 
 // Pointer to this entity
 extern CEntity *_penGlobalController = NULL;
+
+extern void ConvertWorld(CWorld *pwo);
 %}
 
 // Remove certain player from the stop mask
@@ -25,15 +27,17 @@ features  "IsImportant";
 
 properties:
 // Cutscenes
- 1 CEntityPointer m_penActor, // player who started the cutscene
- 2 CEntityPointer m_penCamera, // current cutscene camera
- 3 CEntityPointer m_penAction, // current cutscene action
+ 1 CEntityPointer m_penActor, // Player who started the cutscene
+ 2 CEntityPointer m_penCamera, // Current cutscene camera
+ 3 CEntityPointer m_penAction, // Current cutscene action
  4 INDEX m_iStopMask = 0,
 
 // Center messages
-10 CTString m_strMessage = "", // current center message
-11 FLOAT m_tmMessage = -100.0f, // center message time
-12 CSoundObject m_soMessage, // global center message sound
+10 CTString m_strMessage = "", // Current center message
+11 FLOAT m_tmMessage = -100.0f, // Center message time
+12 CSoundObject m_soMessage, // Global center message sound
+
+20 BOOL m_bFirstEncounter = FALSE, // Playing a First Encounter map
 
 components:
  1 sound SOUND_INFO "Sounds\\Player\\Info.wav",
@@ -43,6 +47,22 @@ functions:
   void CGlobalController(void) {
     // set pointer to this entity
     _penGlobalController = this;
+  };
+
+  // Initialization
+  void OnInitialize(const CEntityEvent &eeInput) {
+    CRationalEntity::OnInitialize(eeInput);
+    
+    // Convert TFE map
+    ConvertTFE();
+  };
+
+  // Read the controller
+  void Read_t(CTStream *istr) {
+    CRationalEntity::Read_t(istr);
+
+    // Don't patch states after loading in
+    ResetWorldPatching(TRUE);
   };
 
   // Count memory used by this object
@@ -65,6 +85,27 @@ functions:
   // Check if it's the the cutscene actor
   BOOL IsActor(CEntity *pen) {
     return (m_penActor == pen->GetPredictionTail());
+  };
+
+  // Convert TFE maps if needed
+  void ConvertTFE(void) {
+    // Definitely a TSE map, so no patching
+    if (_ulWorldPatching & WLDPF_TSE) {
+      m_bFirstEncounter = FALSE;
+
+      // Set constant flags
+      SetSecondEncounterMap(NULL);
+      return;
+    }
+
+    // Mark as a TFE map
+    m_bFirstEncounter = (_ulWorldPatching & WLDPF_PATCHED);
+
+    // Convert from TFE to TSE
+    if (m_bFirstEncounter) {
+      _ulWorldPatching |= WLDPF_IGNORE;
+      ConvertWorld(GetWorld());
+    }
   };
 
 procedures:
@@ -135,10 +176,14 @@ procedures:
       }
 
       on (EPreLevelChange) : {
+        // Reset world patching
+        ResetWorldPatching(FALSE);
         resume;
       }
 
       on (EPostLevelChange) : {
+        // Convert TFE map
+        ConvertTFE();
         resume;
       }
 

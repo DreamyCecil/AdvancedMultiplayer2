@@ -141,13 +141,9 @@ functions:
   void Read_t(CTStream *istr) {
     CMovableBrushEntity::Read_t(istr);
 
-    if (!IsTFEMap() && en_stslStateStack.Count() > 0 && en_stslStateStack[0] != 0x00650014) {
-      ENTITY_STATE_OUTPUT(this);
-      en_stslStateStack[0] = 0x00650014;
-
+    if (CanPatchStates() && PatchEntityState(this, 0x00650014)) {
       // Mark as TFE map
-      extern BOOL _bCurrentMapIsTFE;
-      _bCurrentMapIsTFE = TRUE;
+      SetFirstEncounterMap();
     }
   };
 

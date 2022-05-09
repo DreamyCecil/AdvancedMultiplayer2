@@ -611,44 +611,32 @@ functions:
     }
 
     // [Cecil] TFE -> TSE state patch
-    if (!IsTFEMap() && en_stslStateStack.Count() > 0)
+    if (CanPatchStates() && en_stslStateStack.Count() > 0)
     {
       BOOL bPatchTFE = FALSE;
 
       // TFE Ugh-zan
       if (IsOfClass(this, "Devil")) {
-        if (en_stslStateStack[0] != 0x014C013B) {
-          ENTITY_STATE_OUTPUT(this);
-          en_stslStateStack[0] = 0x014C013B;
-
-          bPatchTFE = TRUE;
-        }
+        bPatchTFE = PatchEntityState(this, 0x014C013B);
 
       // TFE harpy
       } else if (IsOfClass(this, "Woman")) {
-        if (en_stslStateStack[0] != 0x0140001B) {
-          ENTITY_STATE_OUTPUT(this);
-          en_stslStateStack[0] = 0x0140001B;
-
-          bPatchTFE = TRUE;
-        }
+        bPatchTFE = PatchEntityState(this, 0x0140001B);
 
       // Other TFE enemies
       } else if (!IsOfClass(this, "AirElemental") && !IsOfClass(this, "CannonRotating") && !IsOfClass(this, "CannonStatic")
               && !IsOfClass(this, "ChainsawFreak") && !IsOfClass(this, "Demon") && !IsOfClass(this, "ExotechLarva")
               && !IsOfClass(this, "Grunt") && !IsOfClass(this, "Guffy") && !IsOfClass(this, "Santa") && !IsOfClass(this, "Summoner")) {
-        if (en_stslStateStack[0] != 0x01360070) {
-          ENTITY_STATE_OUTPUT(this);
-          en_stslStateStack[0] = 0x01360070;
+        bPatchTFE = PatchEntityState(this, 0x01360070);
 
-          bPatchTFE = TRUE;
-        }
+      // No more patching if discovered TSE entities
+      } else {
+        SetSecondEncounterMap(this);
       }
 
       // Mark as TFE map
       if (bPatchTFE) {
-        extern BOOL _bCurrentMapIsTFE;
-        _bCurrentMapIsTFE = TRUE;
+        SetFirstEncounterMap();
       }
     }
   };

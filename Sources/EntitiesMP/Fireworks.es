@@ -37,7 +37,10 @@ functions:
   { 
     CRationalEntity::Read_t(istr);
     m_emEmiter.Read_t(*istr);
-  }
+
+    // [Cecil] Definitely a TSE map
+    SetSecondEncounterMap(this);
+  };
   
   void Write_t( CTStream *istr) // throw char *
   { 

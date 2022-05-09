@@ -1182,6 +1182,9 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, C
       _pNetwork->StartDemoPlay_t(fnmDemo);
 
     } else {
+      // [Cecil] Initialize world patching for the server
+      ResetWorldPatching(FALSE);
+
       BOOL bWaitAllPlayers = sp.sp_bWaitAllPlayers && _pNetwork->IsNetworkEnabled();
       _pNetwork->StartPeerToPeer_t(strSessionName, fnWorld, sp.sp_ulSpawnFlags, sp.sp_ctMaxPlayers, bWaitAllPlayers, &sp);
 
@@ -1439,6 +1442,9 @@ BOOL CGame::SaveGame(const CTFileName &fnGame) {
 void CGame::StopGame(void) {
   // disable computer quickly
   ComputerForceOff();
+
+  // [Cecil] Reset world patching for loading into a game
+  ResetWorldPatching(TRUE);
 
   // if no game is currently running
   if (!gm_bGameOn) {

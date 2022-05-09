@@ -52,7 +52,14 @@ components:
   2 class CLASS_BLOOD_SPRAY   "Classes\\BloodSpray.ecl",
   3 class CLASS_CANNONBALL    "Classes\\CannonBall.ecl",
 
-functions:                                        
+functions:
+  // [Cecil] Check for TSE maps on load
+  void Read_t(CTStream *istr) {
+    CModelHolder2::Read_t(istr);
+
+    // Definitely a TSE map
+    SetSecondEncounterMap(this);
+  };
   
   void Precache(void) {
     CModelHolder2::Precache();

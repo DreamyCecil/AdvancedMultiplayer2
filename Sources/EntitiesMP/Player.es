@@ -56,10 +56,6 @@ static const FLOAT _afSniperZoom[] = {
 // [Cecil] Combo font
 static CFontData _fdComboFont;
 
-// [Cecil] World conversion
-extern BOOL _bCurrentMapIsTFE;
-extern void ConvertWorld(CEntity *);
-
 // [Cecil] Enemy counter
 extern INDEX _iAliveEnemies;
 
@@ -7152,11 +7148,6 @@ procedures:
       _iAliveEnemies = 0;
     }
 
-    // [Cecil] Convert world
-    if (_bCurrentMapIsTFE) {
-      ConvertWorld(this);
-    }
-
     // wait a bit to allow other entities to start
     wait (0.2f) { // this is 4 ticks, it has to be at least more than musicchanger for enemy counting
       on (EBegin) : { resume; }
@@ -7231,11 +7222,6 @@ procedures:
       }
 
       on (EPostLevelChange) : {
-        // [Cecil] Convert world
-        if (_bCurrentMapIsTFE) {
-          ConvertWorld(this);
-        }
-
         if (GetSP()->sp_bSinglePlayer || IsAlive(this)) {
           call WorldChange(); 
         } else {

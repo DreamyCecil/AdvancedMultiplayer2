@@ -37,6 +37,14 @@ components:
   50 sound   SOUND_PAGE            "ModelsMP\\CutSequences\\Book\\Sounds\\PageFlip.wav",
   
 functions:
+  // [Cecil] Check for TSE maps on load
+  void Read_t(CTStream *istr) {
+    CRationalEntity::Read_t(istr);
+
+    // Definitely a TSE map
+    SetSecondEncounterMap(this);
+  };
+
   void Precache(void) {
     PrecacheTexture(TEXTURE_PAGE01);
     PrecacheTexture(TEXTURE_PAGE02);

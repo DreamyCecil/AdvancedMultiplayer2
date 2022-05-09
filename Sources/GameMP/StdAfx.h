@@ -22,4 +22,7 @@
 // [Cecil] Function patching
 #include "EntitiesMP/Common/Patches/PatchFunctions.h"
 
+// [Cecil] For initializing world patching
+DECL_DLL void ResetWorldPatching(BOOL bJoining);
+
 #undef DECL_DLL

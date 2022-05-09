@@ -26,6 +26,14 @@ components:
   2 texture TEXTURE_MANAGER   "ModelsMP\\Editor\\TacticsChanger.tex"
 
 functions:
+  // [Cecil] Check for TSE maps on load
+  void Read_t(CTStream *istr) {
+    CRationalEntity::Read_t(istr);
+
+    // Definitely a TSE map
+    SetSecondEncounterMap(this);
+  };
+
   const CTString &GetDescription(void) const {
     return m_strDescription;
   }
