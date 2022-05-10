@@ -20,7 +20,7 @@ static void AddAmmo(CWeaponAmmo *pwa) {
 };
 
 // Parse ammo config
-static BOOL ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfig) {
+static void ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfig) {
   // Parse the config
   CConfigBlock cb;
 
@@ -28,7 +28,7 @@ static BOOL ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfi
     LoadJSON(strConfig, cb);
 
   } catch (char *) {
-    return FALSE;
+    return;
   }
   
   // Included configs
@@ -69,8 +69,6 @@ static BOOL ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfi
   // Whichever type
   if (GetConfigInt(cb, "Mana", i)) pwa->fMana = i;
   else if (GetConfigFloat(cb, "Mana", f)) pwa->fMana = f;
-
-  return TRUE;
 };
 
 // Load all ammo from a set
