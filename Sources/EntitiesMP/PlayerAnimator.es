@@ -254,10 +254,10 @@ functions:
 
   // [Cecil] Set third person model
   void SetWeapon(BOOL bExtra) {
-    // remove old weapon
+    // Remove old weapon
     RemoveWeapon(bExtra);
     
-    // get third person model
+    // Get third person model
     INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
 
     if (iWeapon == WEAPON_NONE) {
@@ -266,37 +266,41 @@ functions:
 
     m_pmoModel = GetBody();
 
-    // set custom model
+    // Set custom model
     CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmModel3;
 
-    if (wm.cbModel.Count() > 0) {
-      // add weapon attachment
+    if (wm.moModel.GetData() != NULL) {
+      // Add weapon attachment
       INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
       CAttachmentModelObject *pamoWeapon = m_pmoModel->AddAttachmentModel(iAttach);
 
       try {
-        ParseModelConfig(wm.cbModel, &pamoWeapon->amo_moModelObject, NULL, (bExtra ? &m_aAttachments2 : &m_aAttachments1));
+        // Copy loaded model
+        pamoWeapon->amo_moModelObject.Copy(wm.moModel);
         ModelChangeNotify();
 
       } catch (char *strError) {
-        FatalError("Cannot load third person weapon model config '%s':\n%s", wm.strConfig, strError);
+        FatalError("Cannot setup third person weapon model:\n%s", wm.strConfig, strError);
       }
 
-      // apply third person offset
+      // Apply third person offset
       if (pamoWeapon != NULL) {
         SWeaponPos &wps = _apPlayerWeapons[iWeapon].wpsPos;
 
-        // add weapon position
+        // Add weapon position
         pamoWeapon->amo_plRelative.pl_PositionVector += (wps.Pos3() - COLT_LEFT_POS);
         pamoWeapon->amo_plRelative.pl_OrientationAngle += (wps.Rot3() - COLT_LEFT_ROT);
       }
     }
 
-    // remove flares
+    // Gather attachments
+    ResetAttachmentList(iWeapon, bExtra);
+
+    // Remove flares
     WeaponFlare(FALSE, FALSE);
     WeaponFlare(TRUE, FALSE);
 
-    // sync apperances
+    // Sync apperances
     SyncWeapon();
   };
 

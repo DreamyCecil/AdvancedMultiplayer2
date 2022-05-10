@@ -23,22 +23,29 @@ CWeaponModel &CWeaponModel::operator=(CWeaponModel &wmOther) {
 
   strConfig = wmOther.strConfig;
   cbModel.CopyMap(wmOther.cbModel);
+  moModel.Copy(wmOther.moModel);
 
   return *this;
 };
 
 // Set model from a config
 BOOL CWeaponModel::SetWeaponModel(const CTString &strConfigFile) {
-  // remember config file
+  // Remember config file
   strConfig = strConfigFile;
-  cbModel.Clear();
 
-  // load config
+  cbModel.Clear();
+  moModel.SetData(NULL);
+
+  // Load model
   try {
     LoadJSON(strConfigFile, cbModel);
-
+    ParseModelConfig(cbModel, &moModel, NULL, NULL);
+    
+  // An error occrured
   } catch (char *) {
     cbModel.Clear();
+    moModel.SetData(NULL);
+
     return FALSE;
   }
 

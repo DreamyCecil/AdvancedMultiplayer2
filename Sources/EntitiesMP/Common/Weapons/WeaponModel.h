@@ -27,8 +27,9 @@ typedef std::map<string, SListModel> CAttachList;
 // Custom weapon model
 class CWeaponModel {
   public:
-    CTString strConfig; // path to the model config
-    CConfigBlock cbModel; // loaded model config
+    CTString strConfig; // Path to the model config
+    CConfigBlock cbModel; // Loaded model config
+    CModelObject moModel; // Precached and constructed model
 
     // Constructor
     CWeaponModel(void);

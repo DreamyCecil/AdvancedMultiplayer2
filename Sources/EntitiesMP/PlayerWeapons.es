@@ -1678,7 +1678,7 @@ functions:
 
   // [Cecil] Set weapon model for the current weapon
   void SetCurrentWeaponModel(void) {
-    // reset weapon models
+    // Reset weapon models
     m_moWeapon.SetData(NULL);
     m_moWeaponSecond.SetData(NULL);
 
@@ -1692,18 +1692,20 @@ functions:
       return;
     }
 
-    // reset mirroring
+    // Reset mirroring
     m_moWeapon.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
     m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
 
-    // weapon models
+    // Weapon models
     CWeaponModel &wm1 = _apPlayerWeapons[m_iCurrentWeapon].wmModel1;
     CWeaponModel &wm2 = _apPlayerWeapons[m_iCurrentWeapon].wmModel2;
 
-    // set main model
-    if (wm1.cbModel.Count() > 0) {
+    // Set main model
+    if (wm1.moModel.GetData() != NULL) {
       try {
-        ParseModelConfig(wm1.cbModel, &m_moWeapon, NULL, &m_aAttachments1);
+        m_moWeapon.Copy(wm1.moModel);
+        ParseModelAttachments(wm1.cbModel, &m_moWeapon, NULL, m_aAttachments1);
+
         m_bModelSet1 = TRUE;
 
       } catch (char *strError) {
@@ -1711,10 +1713,12 @@ functions:
       }
     }
 
-    // set second model
-    if (wm2.cbModel.Count() > 0) {
+    // Set second model
+    if (wm2.moModel.GetData() != NULL) {
       try {
-        ParseModelConfig(wm2.cbModel, &m_moWeaponSecond, NULL, &m_aAttachments2);
+        m_moWeaponSecond.Copy(wm2.moModel);
+        ParseModelAttachments(wm2.cbModel, &m_moWeaponSecond, NULL, m_aAttachments2);
+
         m_bModelSet2 = TRUE;
 
       } catch (char *strError) {
@@ -1722,13 +1726,13 @@ functions:
       }
     }
 
-    // remove flare by default
+    // Remove flare by default
     WeaponFlare(FALSE);
 
-    // mirror the weapon
+    // Mirror the weapon
     ApplyMirroring(MirrorState());
 
-    // play default animation
+    // Play default animation
     PlayDefaultAnim(TRUE);
   };
 
