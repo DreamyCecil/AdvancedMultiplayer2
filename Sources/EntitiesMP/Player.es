@@ -4840,7 +4840,7 @@ functions:
     }
 
     // [Cecil] Extra weapon is selected
-    BOOL bExtraWeapon = (GetWeapon(1)->GetCurrent() != WEAPON_NONE || GetWeapon(1)->GetWanted() != WEAPON_NONE);
+    BOOL bExtraWeapon = GetInventory()->UsingDualWeapons();
 
     // if fire is pressed
     if (ulNewButtons & PLACT_FIRE) {

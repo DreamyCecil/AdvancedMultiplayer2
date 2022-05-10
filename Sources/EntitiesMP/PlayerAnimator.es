@@ -149,6 +149,11 @@ functions:
     return GetPlayer()->GetWeapon(iExtra);
   };
 
+  // [Cecil] Check if extra weapon is active
+  BOOL IsExtraWeaponActive(void) {
+    return GetPlayer()->GetInventory()->IsExtraWeaponActive();
+  };
+
   CModelObject *GetBody(void) {
     CAttachmentModelObject *pamoBody = GetPlayer()->GetModelObject()->GetAttachmentModel(PLAYER_ATTACHMENT_TORSO);
 
@@ -676,7 +681,7 @@ functions:
       // [Cecil] Vary between both weapons
       INDEX iBoringWeapon = 0;
 
-      if (GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+      if (IsExtraWeaponActive()) {
         iBoringWeapon = IRnd() % 2;
       }
 
@@ -771,7 +776,7 @@ functions:
   // fire/attack
   void FireAnimation(INDEX iAnim, ULONG ulFlags, BOOL bExtra) {
     // [Cecil] Force Colt animations for dual weapons
-    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+    if (IsExtraWeaponActive()) {
       iAnim = BODY_ANIM_COLT_STAND; //(bExtra ? BODY_ANIM_COLT_FIRELEFT : BODY_ANIM_COLT_FIRERIGHT);
 
       if (m_bSwim) {
@@ -820,7 +825,7 @@ functions:
   // body animation template
   void BodyAnimationTemplate(INDEX iNone, INDEX iColt, INDEX iShotgun, INDEX iMinigun, ULONG ulFlags) {
     // [Cecil] Force Colt animations for dual weapons
-    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE) {
+    if (IsExtraWeaponActive()) {
       if (m_bSwim) {
         iColt += BODY_ANIM_COLT_SWIM_STAND - BODY_ANIM_COLT_STAND;
       }

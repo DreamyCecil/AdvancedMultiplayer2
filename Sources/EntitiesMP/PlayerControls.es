@@ -4,6 +4,7 @@
 
 #include "EntitiesMP/Player.h"
 #include "EntitiesMP/PlayerWeapons.h"
+#include "EntitiesMP/PlayerInventory.h"
 %}
 
 // Individual player controls with console commands
@@ -414,7 +415,7 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   BOOL bDualWeapons = FALSE;
 
   if (penThis->m_bPlayerInit) {
-    bDualWeapons = (penThis->GetWeapon(1)->GetCurrent() != WEAPON_NONE);
+    bDualWeapons = (penThis->GetInventory()->IsExtraWeaponActive());
   }
 
   if (bDualWeapons) {

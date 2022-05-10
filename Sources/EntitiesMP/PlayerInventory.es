@@ -589,11 +589,21 @@ functions:
     return GetWeapon(0)->GetCurrent() == GetWeapon(1)->GetCurrent();
   };
 
+  // Check if extra weapon is active
+  BOOL IsExtraWeaponActive(void) {
+    return (GetWeapon(1)->GetCurrent() != WEAPON_NONE);
+  };
+
+  // Using dual weapons
+  BOOL UsingDualWeapons(void) {
+    return (IsExtraWeaponActive() || GetWeapon(1)->GetWanted() != WEAPON_NONE);
+  };
+
   // Shift weapon position for dual weapons
   void ShiftDualWeapons(void) {
     FLOAT fSpeed = 2.0f * _pTimer->TickQuantum;
 
-    if (GetWeapon(1)->GetCurrent() != WEAPON_NONE || GetWeapon(1)->GetWanted() != WEAPON_NONE) {
+    if (UsingDualWeapons()) {
       m_fDualWeaponShift = ClampUp(m_fDualWeaponShift + fSpeed, 1.0f);
     } else {
       m_fDualWeaponShift = ClampDn(m_fDualWeaponShift - fSpeed, 0.0f);
@@ -716,7 +726,7 @@ functions:
     INDEX iCurrent = GetWeapon(0)->GetCurrent();
 
     // pick the same weapon
-    if (GetWeapon(1)->GetCurrent() == WEAPON_NONE || GetWeapon(1)->GetWanted() == WEAPON_NONE) {
+    if (!IsExtraWeaponActive() || GetWeapon(1)->GetWanted() == WEAPON_NONE) {
       SPlayerWeapon &pw = m_aWeapons[iCurrent];
 
       // can't be dual
