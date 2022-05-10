@@ -8,16 +8,27 @@
   "Bit" : 10,
   "Group" : 6,
   
-  "Model1" : "Models1\10_Flamer.json",
-  "Model3" : "Models3\10_Flamer.json",
-  
   "Ammo" : 5,
   "AltAmmo": 5,
   
   "DecAlt" : 10,
   
-  "Pos1" : [0.204, -0.306, -0.57, 4.6, 2.8, 0.0],
-  "Pos3" : [0.0, -0.008, -0.1, 0.0, 0.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\10_Flamer.json",
+      "Offset" : [0.204, -0.306, -0.57, 4.6, 2.8, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\10_Flamer.json",
+      "Offset" : [0.204, -0.306, -0.57, 4.6, 2.8, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\10_Flamer.json",
+      "Offset" : [0.0, -0.008, -0.1, 0.0, 0.0, 0.0],
+    },
+  },
   
   "FOV" : 50.0,
   "PosFire" : [0.05, 0.05],

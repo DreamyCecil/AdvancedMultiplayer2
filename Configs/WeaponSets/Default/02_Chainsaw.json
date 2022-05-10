@@ -8,17 +8,27 @@
   "Bit" : 9,
   "Group" : 1,
   
-  "Model1" : "Models1\02_Chainsaw.json",
-  "Model3" : "Models3\02_Chainsaw.json",
-  
   "Damage" : 250.0,
   
   "Ammo" : -1,
   "AltAmmo": -1,
   
-  "Pos1" : [0.125, -0.29, -0.405, 5.0, 6.0, 0.0],
-  "Pos2" : [0.17, -0.29, -0.405, 3.0, 6.0, 0.0],
-  "Pos3" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\02_Chainsaw.json",
+      "Offset" : [0.125, -0.29, -0.405, 5.0, 6.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\02_Chainsaw.json",
+      "Offset" : [0.17, -0.29, -0.405, 3.0, 6.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\02_Chainsaw.json",
+      "Offset" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
+    },
+  },
   
   "FOV" : 73.5,
   "PosFire" : [0.0, 0.0],

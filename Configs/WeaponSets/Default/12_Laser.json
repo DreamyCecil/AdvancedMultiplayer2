@@ -8,15 +8,25 @@
   "Bit" : 11,
   "Group" : 7,
   
-  "Model1" : "Models1\12_Laser.json",
-  "Model3" : "Models3\12_Laser.json",
-  
   "Ammo" : 7,
   "AltAmmo": -1,
   
-  "Pos1" : [0.141, -0.174, -0.175, 1.0, 3.0, 0.0],
-  "Pos2" : [0.241, -0.174, -0.175, 1.0, 3.0, 0.0],
-  "Pos3" : [0.0, -0.03, -0.49, 0.0, 0.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\12_Laser.json",
+      "Offset" : [0.141, -0.174, -0.175, 1.0, 3.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\12_Laser.json",
+      "Offset" : [0.241, -0.174, -0.175, 1.0, 3.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\12_Laser.json",
+      "Offset" : [0.0, -0.03, -0.49, 0.0, 0.0, 0.0],
+    },
+  },
   
   "FOV" : 70.5,
   "PosFire" : [0.2, -0.55],

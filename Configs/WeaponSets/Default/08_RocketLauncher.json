@@ -8,15 +8,28 @@
   "Bit" : 7,
   "Group" : 5,
   
-  "Model1" : "Models1\08_RocketLauncher.json",
-  "Model3" : "Models3\08_RocketLauncher.json",
-  
   "Ammo" : 3,
   "AltAmmo": -1,
   
-  "Pos1" : [0.17, -0.325, -0.24, 2.0, 1.0, 0.0],
-  "Pos2" : [0.27, -0.325, -0.24, 0.0, 1.0, 0.0],
-  "Pos3" : [0.0, -0.25, -0.5, 0.0, 5.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\08_RocketLauncher.json",
+      "Alt1"  : "Models1\08_RocketLauncher.json",
+      "Offset" : [0.17, -0.325, -0.24, 2.0, 1.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\08_RocketLauncher.json",
+      "Alt1"  : "Models1\08_RocketLauncher.json",
+      "Offset" : [0.27, -0.325, -0.24, 0.0, 1.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\08_RocketLauncher.json",
+      "Alt"  : "Models3\08_RocketLauncher.json",
+      "Offset" : [0.0, -0.25, -0.5, 0.0, 5.0, 0.0],
+    },
+  },
   
   "FOV" : 66.0,
   "PosFire" : [-0.1, 0.11],

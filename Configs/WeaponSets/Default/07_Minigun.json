@@ -17,9 +17,25 @@
   "Ammo" : 2,
   "AltAmmo": -1,
   
-  "Pos1" : [0.137, -0.24, -0.328, 2.0, 0.0, 0.0],
-  "Pos2" : [0.25, -0.24, -0.328, 2.0, 0.0, 0.0],
-  "Pos3" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\07_Minigun.json",
+      "Alt1"  : "Models1\07_Minigun.json",
+      "Offset" : [0.137, -0.24, -0.328, 2.0, 0.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\07_Minigun.json",
+      "Alt1"  : "Models1\07_Minigun.json",
+      "Offset" : [0.25, -0.24, -0.328, 2.0, 0.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\07_Minigun.json",
+      "Alt"  : "Models3\07_Minigun.json",
+      "Offset" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
+    },
+  },
   
   "FOV" : 66.9,
   "PosFire" : [0.0, 0.0],

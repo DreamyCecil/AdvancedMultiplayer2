@@ -12,9 +12,21 @@ class CWeaponStruct : public CWeaponBase {
   public:
     SWeaponPos wpsPos; // weapon position
 
-    CWeaponModel wmModel1; // First person model
-    CWeaponModel wmModel2; // First person model (other hand)
-    CWeaponModel wmModel3; // Third person model
+    // Viewmodel
+    CWeaponModel wmMain1; // Main model
+    CWeaponModel wmMain2; // Second model
+    CWeaponModel wmAlt1; // Alt fire main model
+    CWeaponModel wmAlt2; // Alt fire second model
+
+    // Viewmodel for dual wielding
+    CWeaponModel wmDualMain1; // Main model
+    CWeaponModel wmDualMain2; // Second model
+    CWeaponModel wmDualAlt1; // Alt fire main model
+    CWeaponModel wmDualAlt2; // Alt fire second model
+
+    // Item for the player model
+    CWeaponModel wmItemMain; // Main model
+    CWeaponModel wmItemAlt; // Alt fire model
 
     CWeaponAmmo *pwaAmmo; // Ammo
     CWeaponAmmo *pwaAlt; // Alt ammo

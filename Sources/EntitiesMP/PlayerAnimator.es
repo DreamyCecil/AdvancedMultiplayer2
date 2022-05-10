@@ -267,7 +267,7 @@ functions:
     m_pmoModel = GetBody();
 
     // Set custom model
-    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmModel3;
+    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmItemMain;
 
     if (wm.moModel.GetData() != NULL) {
       // Add weapon attachment
@@ -307,7 +307,7 @@ functions:
   // [Cecil] Reset weapon attachments
   void ResetAttachmentList(INDEX iWeapon, BOOL bExtra) {
     // Get weapon model
-    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmModel3;
+    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmItemMain;
 
     if (wm.cbModel.Count() <= 0) {
       return;

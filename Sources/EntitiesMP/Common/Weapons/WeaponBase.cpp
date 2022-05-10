@@ -102,6 +102,40 @@ static BOOL ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfi
   return TRUE;
 };
 
+// Set weapon models from certain keys
+static void SetWeaponModels(CConfigBlock &cbModelType, CTString strSet, string *astrKeys, CStaticArray<CWeaponModel *> &awmModels) {
+  CTString strModelConfig;
+
+  // Go through models of a certain type
+  for (INDEX iModel = 0; iModel < awmModels.Count(); iModel++)
+  {
+    // Get model config path
+    if (!GetConfigString(cbModelType, astrKeys[iModel], strModelConfig)) {
+      // No key or path string, doesn't matter
+      continue;
+    }
+
+    // Absolute path
+    if (!FileExists(strModelConfig)) {
+      // Relative to the weapon set
+      strModelConfig = strSet + strModelConfig;
+
+      if (!FileExists(strModelConfig)) {
+        // No model config
+        continue;
+      }
+    }
+
+    // Set model from the config
+    CWeaponModel &wm = *awmModels[iModel];
+
+    if (!wm.SetWeaponModel(strModelConfig)) {
+      // Couldn't set the model
+      ThrowF_t("Couldn't set model \"%s\"!", astrKeys[iModel].c_str());
+    }
+  }
+};
+
 // Parse weapon config
 static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strConfig) {
   // Parse the config
@@ -232,40 +266,74 @@ static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
     }
   }
 
-  // models
-  #define WEAPON_MODELS 3
-  CTString strModelConfig;
+  // Models
+  CConfigBlock cbModels;
 
-  // weapon models
-  CWeaponModel *apModels = &pws->wmModel1;
+  if (cb.GetValue("Models", cbModels)) {
+    // First person view models
+    static const string astrTypes[2] = {
+      "View", "ViewDual",
+    };
 
-  // model types in the config
-  CTString strType[WEAPON_MODELS] = {
-    "Model1",
-    "Model2",
-    "Model3",
-  };
+    CWeaponModel *apWeaponModels[2] = {
+      &pws->wmMain1, &pws->wmDualMain1,
+    };
 
-  for (INDEX iModel = 0; iModel < WEAPON_MODELS; iModel++) {
-    // get model config path
-    if (!GetConfigString(cb, strType[iModel].str_String, strModelConfig)) {
-      // no key or path string, doesn't matter
-      continue;
+    CPlacement3D *aOffsets[2] = {
+      &pws->wpsPos.plPos, &pws->wpsPos.plPos2,
+    };
+
+    for (INDEX iType = 0; iType < 2; iType++) {
+      CConfigBlock cbViewModel;
+      
+      // Get model type
+      if (!cbModels.GetValue(astrTypes[iType], cbViewModel)) {
+        // No key, doesn't matter
+        continue;
+      }
+
+      // Different models
+      static string astrTypeModels[4] = {
+        "Main1", "Main2", "Alt1", "Alt2",
+      };
+
+      // Different structures
+      CStaticArray<CWeaponModel *> awmModels;
+      awmModels.New(4);
+
+      for (INDEX iWeaponModel = 0; iWeaponModel < 4; iWeaponModel++) {
+        awmModels[iWeaponModel] = apWeaponModels[iType] + iWeaponModel;
+      }
+
+      SetWeaponModels(cbViewModel, strSet, astrTypeModels, awmModels);
+
+      // Get weapon offset
+      GetConfigPlacement(cbViewModel, "Offset", *aOffsets[iType]);
     }
 
-    // weapon set path
-    strModelConfig = strSet + strModelConfig;
+    // Third person view models
+    {
+      CConfigBlock cbItemModel;
 
-    // skip if no config
-    if (!FileExists(strModelConfig)) {
-      continue;
-    }
+      // Get model type
+      if (cbModels.GetValue("Item", cbItemModel)) {
+        // Different models
+        static string astrTypeModels[2] = {
+          "Main", "Alt",
+        };
 
-    // set model from the config
-    if (!apModels[iModel].SetWeaponModel(strModelConfig)) {
-      // couldn't set the model
-      FatalError("Couldn't set model \"%s\" for the weapon in \"%s\"!", strType[iModel], strConfig);
-      return FALSE;
+        // Different structures
+        CStaticArray<CWeaponModel *> awmModels;
+        awmModels.New(2);
+
+        awmModels[0] = &pws->wmItemMain;
+        awmModels[1] = &pws->wmItemAlt;
+
+        SetWeaponModels(cbItemModel, strSet, astrTypeModels, awmModels);
+
+        // Get weapon offset
+        GetConfigPlacement(cbItemModel, "Offset", pws->wpsPos.plThird);
+      }
     }
   }
 
@@ -307,7 +375,7 @@ extern void LoadWorldWeapons(CWorld *pwo) {
   // add empty weapon
   AddWeapon(new CWeaponStruct(NULL, NULL, "", ""));
   
-  // go through weapon configs
+  // Go through weapon configs
   CTString strWeaponSet = "Configs\\WeaponSets\\" + _strCurrentWeaponSet + "\\";
   MakeDirList(aList, CTFileName(strWeaponSet), "*.json", 0);
 
@@ -316,17 +384,22 @@ extern void LoadWorldWeapons(CWorld *pwo) {
 
     CWeaponStruct *pwsStruct = new CWeaponStruct();
 
-    // assign group automatically in case it's not present
+    // Assign group automatically in case it's not present
     pwsStruct->ubGroup = (_apPlayerWeapons.Count() % 31) + 1;
 
-    // parse the config
-    ParseWeaponConfig(pwsStruct, strWeaponSet, strFile);
+    // Parse the config
+    try {
+      ParseWeaponConfig(pwsStruct, strWeaponSet, strFile);
 
-    // add the weapon
+    } catch (char *strError) {
+      FatalError("Couldn't load the weapon from \"%s\":\n%s", strFile, strError);
+    }
+
+    // Add the weapon
     AddWeapon(pwsStruct);
   }
   
-  // weapons have been loaded
+  // Weapons have been loaded
   _bWeaponsLoaded = TRUE;
 };
 

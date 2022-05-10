@@ -9,17 +9,28 @@
   "Group" : 1,
   "Dual" : false,
   
-  "Model1" : "Models1\01_Knife.json",
-  "Model3" : "Models3\01_Knife.json",
-  
   "Damage" : 100.0,
   "DamageDM" : 50.0,
   
   "Ammo" : -1,
   "AltAmmo": -1,
   
-  "Pos1" : [0.23, -0.28, -0.44, -1.0, 10.0, 6.0],
-  "Pos3" : [0.0, -0.035, -0.065, 0.0, 15.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\01_Knife.json",
+      "Offset" : [0.23, -0.28, -0.44, -1.0, 10.0, 6.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\01_Knife.json",
+      "Offset" : [0.23, -0.28, -0.44, -1.0, 10.0, 6.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\01_Knife.json",
+      "Offset" : [0.0, -0.035, -0.065, 0.0, 15.0, 0.0],
+    },
+  },
   
   "FOV" : 41.5,
   "PosFire" : [0.0, 0.0],

@@ -8,17 +8,27 @@
   "Bit" : 3,
   "Group" : 3,
   
-  "Model1" : "Models1\04_SingleShotgun.json",
-  "Model3" : "Models3\04_SingleShotgun.json",
-  
   "Damage" : 10.0,
   
   "Ammo" : 1,
   "AltAmmo": 4,
   
-  "Pos1" : [0.12, -0.22, -0.34, 2.0, 2.0, 0.0],
-  "Pos2" : [0.16, -0.22, -0.34, 2.0, 2.0, 0.0],
-  "Pos3" : [-0.01, -0.03, -0.47, 0.0, 0.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\04_SingleShotgun.json",
+      "Offset" : [0.12, -0.22, -0.34, 2.0, 2.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\04_SingleShotgun.json",
+      "Offset" : [0.16, -0.22, -0.34, 2.0, 2.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\04_SingleShotgun.json",
+      "Offset" : [-0.01, -0.03, -0.47, 0.0, 0.0, 0.0],
+    },
+  },
   
   "FOV" : 41.0,
   "PosFire" : [0.0, 0.0],

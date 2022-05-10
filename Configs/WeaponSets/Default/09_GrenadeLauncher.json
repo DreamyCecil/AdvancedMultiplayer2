@@ -8,15 +8,25 @@
   "Bit" : 8,
   "Group" : 5,
   
-  "Model1" : "Models1\09_GrenadeLauncher.json",
-  "Model3" : "Models3\09_GrenadeLauncher.json",
-  
   "Ammo" : 4,
   "AltAmmo": 4,
   
-  "Pos1" : [0.14, -0.41, -0.335, 2.0, 6.0, 0.0],
-  "Pos2" : [0.24, -0.41, -0.335, 2.0, 6.0, 0.0],
-  "Pos3" : [0.0, -0.14, -0.61, 0.0, 2.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\09_GrenadeLauncher.json",
+      "Offset" : [0.14, -0.41, -0.335, 2.0, 6.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\09_GrenadeLauncher.json",
+      "Offset" : [0.24, -0.41, -0.335, 2.0, 6.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\09_GrenadeLauncher.json",
+      "Offset" : [0.0, -0.14, -0.61, 0.0, 2.0, 0.0],
+    },
+  },
   
   "FOV" : 44.5,
   "PosFire" : [0.0, 0.0],

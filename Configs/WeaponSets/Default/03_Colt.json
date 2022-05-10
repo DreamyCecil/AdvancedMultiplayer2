@@ -8,9 +8,6 @@
   "Bit" : [1, 2], // Colt + Double Colt
   "Group" : 2,
   
-  "Model1" : "Models1\03_Colt.json",
-  "Model3" : "Models3\03_Colt.json",
-  
   "Damage" : 10.0,
   "DamageDM" : 15.0,
   
@@ -18,8 +15,22 @@
   "AltAmmo": -1,
   "Mag" : 6,
   
-  "Pos1" : [0.19, -0.21, -0.1, -1.0, 0.0, 0.0],
-  "Pos3" : [0.0, -0.02, -0.2, 0.0, 5.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\03_Colt.json",
+      "Offset" : [0.19, -0.21, -0.1, -1.0, 0.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\03_Colt.json",
+      "Offset" : [0.19, -0.21, -0.1, -1.0, 0.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\03_Colt.json",
+      "Offset" : [0.0, -0.02, -0.2, 0.0, 5.0, 0.0],
+    },
+  },
   
   "FOV" : 57.0,
   "PosFire" : [0.0, 0.0],

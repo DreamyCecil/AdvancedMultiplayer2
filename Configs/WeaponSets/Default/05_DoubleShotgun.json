@@ -8,10 +8,6 @@
   "Bit" : 4,
   "Group" : 3,
   
-  "Model1" : "Models1\05_DoubleShotgun.json",
-  "Model2" : "Models1\05_DoubleShotgun_2.json",
-  "Model3" : "Models3\05_DoubleShotgun.json",
-  
   "Damage" : 10.0,
   "DamageAlt" : 3.0,
   
@@ -21,8 +17,26 @@
   "DecAmmo" : 2,
   "DecAlt"  : 2,
   
-  "Pos1" : [0.13, -0.21, -0.364, 2.0, 1.0, 0.0],
-  "Pos3" : [0.0, -0.12, -0.3, 0.0, 0.0, 0.0],
+  "Models" : {
+    "View" : {
+      "Main1" : "Models1\05_DoubleShotgun.json",
+      "Main2" : "Models1\05_DoubleShotgun_2.json",
+      "Alt1"  : "Models1\05_DoubleShotgun.json",
+      "Alt2"  : "Models1\05_DoubleShotgun_2.json",
+      "Offset" : [0.13, -0.21, -0.364, 2.0, 1.0, 0.0],
+    },
+    
+    "ViewDual" : {
+      "Main1" : "Models1\05_DoubleShotgun.json",
+      "Alt1"  : "Models1\05_DoubleShotgun.json",
+      "Offset" : [0.13, -0.21, -0.364, 2.0, 1.0, 0.0],
+    },
+  
+    "Item" : {
+      "Main" : "Models3\05_DoubleShotgun.json",
+      "Offset" : [0.0, -0.12, -0.3, 0.0, 0.0, 0.0],
+    },
+  },
   
   "FOV" : 52.5,
   "PosFire" : [0.0, 0.0],
