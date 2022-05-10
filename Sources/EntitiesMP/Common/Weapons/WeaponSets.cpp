@@ -68,11 +68,21 @@ static BOOL ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
     return FALSE;
   }
 
-  // Included config
-  CTString strInclude;
+  // Included configs
+  {
+    DJSON_Block &mapBlock = cb;
 
-  if (GetConfigString(cb, "Include", strInclude)) {
-    ParseWeaponConfig(pws, strSet, strSet + strInclude);
+    // Go through each entry
+    for (INDEX iValue = 0; iValue < mapBlock.size(); iValue++)
+    {
+      string strName = mapBlock.GetKey(iValue);
+      CConfigValue &cv = mapBlock.GetValue(iValue);
+
+      // Parse files with extras
+      if (strName == "Include" && cv.cv_eType == CVT_STRING) {
+        ParseWeaponConfig(pws, strSet, strSet + cv.cv_strValue);
+      }
+    }
   }
 
   INDEX i = 0;

@@ -49,10 +49,10 @@ void LoadWorldWeapons(CWorld *pwo) {
   _strCurrentWeaponSet = "Default";
 
   // Load weapons and ammo
-  extern void LoadWeaponSet(void);
   extern void LoadAmmoSet(void);
-  LoadWeaponSet();
+  extern void LoadWeaponSet(void);
   LoadAmmoSet();
+  LoadWeaponSet();
   
   // Weapons have been loaded
   _bWeaponsLoaded = TRUE;

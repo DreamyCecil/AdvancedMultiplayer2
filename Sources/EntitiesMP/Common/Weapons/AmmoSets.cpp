@@ -31,9 +31,21 @@ static BOOL ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfi
     return FALSE;
   }
   
-  // Included config
-  if (GetConfigString(cb, "Include", strConfig)) {
-    ParseAmmoConfig(pwa, strSet, strConfig);
+  // Included configs
+  {
+    DJSON_Block &mapBlock = cb;
+
+    // Go through each entry
+    for (INDEX iValue = 0; iValue < mapBlock.size(); iValue++)
+    {
+      string strName = mapBlock.GetKey(iValue);
+      CConfigValue &cv = mapBlock.GetValue(iValue);
+
+      // Parse files with extras
+      if (strName == "Include" && cv.cv_eType == CVT_STRING) {
+        ParseAmmoConfig(pwa, strSet, strSet + cv.cv_strValue);
+      }
+    }
   }
 
   // Ammo properties
