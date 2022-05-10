@@ -2809,7 +2809,9 @@ procedures:
     GetWatcher()->SendEvent(EEnd());
 
     // [Cecil] Remove from the counter
-    _iAliveEnemies = ClampDn(INDEX(_iAliveEnemies-1), (INDEX)0);
+    if (!IsPredictor()) {
+      _iAliveEnemies = ClampDn(INDEX(_iAliveEnemies - 1), (INDEX)0);
+    }
 
     // send event to death target
     SendToTarget(m_penDeathTarget, m_eetDeathType, penKiller);
@@ -2818,7 +2820,6 @@ procedures:
     if (m_penSpawnerTarget) {
       SendToTarget(m_penSpawnerTarget, EET_TRIGGER, this);
     }
-    
 
     // wait
     wait() {
@@ -3199,7 +3200,9 @@ procedures:
     GetWatcher()->Initialize(eInitWatcher);
 
     // [Cecil] Count the enemy
-    _iAliveEnemies++;
+    if (!IsPredictor()) {
+      _iAliveEnemies++;
+    }
 
     // switch to next marker (enemies usually point to the marker they stand on)
     if (m_penMarker!=NULL && IsOfClass(m_penMarker, "Enemy Marker")) {

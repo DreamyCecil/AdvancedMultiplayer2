@@ -1080,6 +1080,11 @@ functions:
     return iPayout;
   };
 
+  // [Cecil] Token payout
+  INDEX GetTokenPayout(void) {
+    return floor(GetComboPayout() / 400.0f * GetSP()->sp_fTokenPayout);
+  };
+
   // [Cecil] Count alive enemies
   INDEX CountAliveEnemies(void) {
     INDEX iEnemies = 0;
@@ -1101,6 +1106,7 @@ functions:
       
       iEnemies++;
     }}
+
     return iEnemies;
   };
 
@@ -1222,12 +1228,12 @@ functions:
 
   // [Cecil] Purchase a random powerup with tokens
   void PurchasePowerup(void) {
-    if (m_iTokens < 10) {
+    if (m_iTokens < 50) {
       PrintCenterMessage(this, this, TRANS("Not enough tokens!"), 3.0f, MSS_INFO, TRUE);
       return;
     }
 
-    m_iTokens -= 10;
+    m_iTokens -= 50;
     PlaySound(m_soMessage, SOUND_POWERUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
 
     // list of powerups that player doesn't have
@@ -2392,6 +2398,11 @@ functions:
     if (m_penMainMusicHolder == NULL) {
       m_penMainMusicHolder = _pNetwork->GetEntityWithName("MusicHolder", 0);
     }
+
+    // [Cecil] Recount enemies
+    if (_pNetwork->IsPlayerLocal(this) || _pNetwork->IsPlayingDemo()) {
+      _iAliveEnemies = CountAliveEnemies();
+    }
   };
 
   // Update per-level stats
@@ -2818,7 +2829,7 @@ functions:
         strCombo = CTString(0, "Payout: ^cee9c00%d", GetComboPayout());
 
         if (amp_iComboText > 1 && GetSP()->sp_fTokenPayout > 0.0f) {
-          strCombo += CTString(0, "  ^rTokens: ^cee9c00%u", ULONG(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout));
+          strCombo += CTString(0, "  ^rTokens: ^cee9c00%d", GetTokenPayout());
         }
 
         pdp->PutTextCXY(strCombo, pixDPWidth*0.5f, pixDPHeight*0.2f + fHeight*1.5f, 0xCCCCCCFF);
@@ -4012,7 +4023,7 @@ functions:
           SendEvent(eScore);
         
           if (GetSP()->sp_fTokenPayout > 0.0f) {
-            INDEX iAddTokens = floor(GetComboPayout() / 2000.0f * GetSP()->sp_fTokenPayout);
+            INDEX iAddTokens = GetTokenPayout();
         
             if (iAddTokens > 0) {
               m_iTokens += iAddTokens;
@@ -7142,11 +7153,6 @@ procedures:
     //const FLOAT fSize = 2.1f/1.85f;
     //GetModelObject()->StretchModel(FLOAT3D(fSize, fSize, fSize));
     ModelChangeNotify();
-    
-    // [Cecil] Clear enemy counter
-    if (_pNetwork->IsPlayerLocal(this)) {
-      _iAliveEnemies = 0;
-    }
 
     // wait a bit to allow other entities to start
     wait (0.2f) { // this is 4 ticks, it has to be at least more than musicchanger for enemy counting
@@ -7215,9 +7221,6 @@ procedures:
         m_ulFlags &= ~PLF_INITIALIZED; 
         m_ulFlags |= PLF_CHANGINGLEVEL;
         m_ulFlags &= ~PLF_LEVELSTARTED;
-
-        // [Cecil] Clear enemy counter
-        _iAliveEnemies = 0;
         resume; 
       }
 
