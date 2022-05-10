@@ -85,9 +85,11 @@ Sources/EntitiesMP/*.cpp
 Controls/01-*
 Demos/*
 !Demos/empty
+Levels/*
 LevelPatches/*
 !LevelPatches/GlobalClasses.json
 Models/*
+ModelsMP/*
 Players/*
 !Players/empty
 Sounds/*
