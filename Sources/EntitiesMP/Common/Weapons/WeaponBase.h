@@ -32,5 +32,8 @@ class CWeaponBase {
     void AddIcon(CTString strSetIcon, CWeaponIcons &aIcons);
 };
 
+// Load weapons and ammo for this world
+DECL_DLL void LoadWorldWeapons(CWorld *pwo);
+
 // Weapons and ammo cleanup
 DECL_DLL void ClearWorldWeapons(void);

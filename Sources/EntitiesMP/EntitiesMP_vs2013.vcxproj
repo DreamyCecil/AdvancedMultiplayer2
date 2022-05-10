@@ -341,11 +341,13 @@ copy vs2013\Debug_110\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Com
     <ClCompile Include="Common\Patches\StockFuncPatcher.cpp" />
     <ClCompile Include="Common\Patches\StockPatch.cpp" />
     <ClCompile Include="Common\PathFinding.cpp" />
+    <ClCompile Include="Common\Weapons\AmmoSets.cpp" />
     <ClCompile Include="Common\Weapons\PlayerAmmo.cpp" />
     <ClCompile Include="Common\Weapons\PlayerWeapon.cpp" />
     <ClCompile Include="Common\Weapons\WeaponAmmo.cpp" />
     <ClCompile Include="Common\Weapons\WeaponBase.cpp" />
     <ClCompile Include="Common\Weapons\WeaponModel.cpp" />
+    <ClCompile Include="Common\Weapons\WeaponSets.cpp" />
     <ClCompile Include="Common\Weapons\WeaponStruct.cpp" />
     <ClCompile Include="DummyEnemy.cpp" />
     <ClCompile Include="GlobalController.cpp" />

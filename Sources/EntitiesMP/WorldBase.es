@@ -8,9 +8,6 @@
 
 // [Cecil] Class patching
 #include "EntitiesMP/Common/Patches/PatchFunctions.h"
-
-// [Cecil] Custom weapons and ammo
-extern void LoadWorldWeapons(CWorld *pwo);
 %}
 
 uses "EntitiesMP\FogMarker";

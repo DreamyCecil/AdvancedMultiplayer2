@@ -639,6 +639,12 @@
     <ClCompile Include="TeslaLightning.cpp">
       <Filter>Source Files\Entity sources</Filter>
     </ClCompile>
+    <ClCompile Include="Common\Weapons\AmmoSets.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Weapons\WeaponSets.cpp">
+      <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Common.h">
