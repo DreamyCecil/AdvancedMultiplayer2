@@ -100,6 +100,15 @@ void ResetWeaponPosition(void) {
 #define WPC_RESETY (1 << 3) // reset Y position
 #define WPC_RESETZ (1 << 4) // reset Z position
 #define WPC_DUAL   (1 << 5) // mirror position based on dual weapons
+
+// [Cecil] Flags of set weapon models
+#define SMF_WEAPON_1      (1 << 0)
+#define SMF_DUAL_WEAPON_1 (1 << 1)
+#define SMF_WEAPON_2      (1 << 4)
+#define SMF_DUAL_WEAPON_2 (1 << 5)
+
+#define SMF_MASK_1 (SMF_WEAPON_1 | SMF_DUAL_WEAPON_1)
+#define SMF_MASK_2 (SMF_WEAPON_2 | SMF_DUAL_WEAPON_2)
 %}
 
 uses "EntitiesMP/Player";
@@ -454,8 +463,7 @@ properties:
   INDEX m_bLastWeaponMirrored;
 
   // [Cecil] Weapon models has been set
-  BOOL m_bModelSet1;
-  BOOL m_bModelSet2;
+  UBYTE m_ubModelsSet;
 
   // [Cecil] Weapon attachments lists
   CAttachList m_aAttachments1;
@@ -541,12 +549,11 @@ components:
 functions:
   // [Cecil] Constructor
   void CPlayerWeapons(void) {
-    // weapon mirroring
+    // Weapon mirroring
     m_bLastWeaponMirrored = FALSE;
 
-    // models has been set
-    m_bModelSet1 = FALSE;
-    m_bModelSet2 = FALSE;
+    // Models have been set
+    m_ubModelsSet = 0;
   };
 
   // [Cecil] Copy constructor
@@ -560,10 +567,6 @@ functions:
   // [Cecil] Read weapons
   void Read_t(CTStream *istr) {
     CRationalEntity::Read_t(istr);
-
-    // [Cecil] Reset weapon model on load
-    m_bLastWeaponMirrored = MirrorState();
-    SetCurrentWeaponModel();
 
     // [Cecil] Reset sound owner
     SetSoundOwner(m_penPlayer->GetPredictionTail());
@@ -1135,7 +1138,7 @@ functions:
     }
     
     // [Cecil] Draw second weapon model
-    if (pen->m_bModelSet2) {
+    if (pen->m_ubModelsSet & SMF_WEAPON_2) {
       // prepare render model structure and projection
       CRenderModel rmMain;
 
@@ -1184,7 +1187,7 @@ functions:
     }
     
     // [Cecil] Draw main weapon model
-    if (pen->m_bModelSet1) {
+    if (pen->m_ubModelsSet & SMF_WEAPON_1) {
       // minigun specific (update rotation)
       if (iWeapon == WEAPON_MINIGUN) {
         pen->RotateMinigun();
@@ -1683,18 +1686,14 @@ functions:
   };
 
   // [Cecil] Set weapon model for the current weapon
-  void SetCurrentWeaponModel(void) {
-    // Reset weapon models
-    m_moWeapon.SetData(NULL);
-    m_moWeaponSecond.SetData(NULL);
-
-    m_bModelSet1 = FALSE;
-    m_bModelSet2 = FALSE;
-
-    m_aAttachments1.clear();
-    m_aAttachments2.clear();
-
+  void SetCurrentWeaponModel(BOOL bDualVariant) {
+    // No weapon
     if (m_iCurrentWeapon == WEAPON_NONE) {
+      m_moWeapon.SetData(NULL);
+      m_moWeaponSecond.SetData(NULL);
+
+      m_aAttachments1.clear();
+      m_aAttachments2.clear();
       return;
     }
 
@@ -1702,35 +1701,87 @@ functions:
     m_moWeapon.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
     m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
 
+    BOOL bNewAnimation = FALSE;
+
     // Weapon models
-    CWeaponModel &wm1 = _apPlayerWeapons[m_iCurrentWeapon].wmMain1;
-    CWeaponModel &wm2 = _apPlayerWeapons[m_iCurrentWeapon].wmMain2;
+    CWeaponStruct &ws = _apPlayerWeapons[m_iCurrentWeapon];
+    CWeaponModel *pwm;
 
-    // Set main model
-    if (wm1.moModel.GetData() != NULL) {
-      try {
-        m_moWeapon.Copy(wm1.moModel);
-        ParseModelAttachments(wm1.cbModel, &m_moWeapon, NULL, m_aAttachments1);
+    // Set all model flags
+    UBYTE ubSetModels = (SMF_MASK_1 | SMF_MASK_2);
+    
+    pwm = &ws.wmDualMain1;
 
-        m_bModelSet1 = TRUE;
-
-      } catch (char *strError) {
-        FatalError("Cannot load first weapon model config '%s':\n%s", wm1.strConfig, strError);
-      }
+    // Not dual or it doesn't exist
+    if (!bDualVariant || pwm->moModel.GetData() == NULL) {
+      pwm = &ws.wmMain1;
+      ubSetModels &= ~SMF_DUAL_WEAPON_1;
     }
 
-    // Set second model
-    if (wm2.moModel.GetData() != NULL) {
-      try {
-        m_moWeaponSecond.Copy(wm2.moModel);
-        ParseModelAttachments(wm2.cbModel, &m_moWeaponSecond, NULL, m_aAttachments2);
+    // Set main model if it differs
+    if (pwm->moModel.GetData() != NULL) {
+      if ((m_ubModelsSet & SMF_MASK_1) != (ubSetModels & SMF_MASK_1)) {
+        // Remove previous model
+        m_moWeapon.SetData(NULL);
+        m_aAttachments1.clear();
 
-        m_bModelSet2 = TRUE;
+        try {
+          m_moWeapon.Copy(pwm->moModel);
+          ParseModelAttachments(pwm->cbModel, &m_moWeapon, NULL, m_aAttachments1);
 
-      } catch (char *strError) {
-        FatalError("Cannot load second weapon model config '%s':\n%s", wm2.strConfig, strError);
+        } catch (char *strError) {
+          FatalError("Cannot load first weapon model config '%s':\n%s", pwm->strConfig, strError);
+        }
+
+        // Start new animation
+        bNewAnimation = TRUE;
       }
+      
+    // Remove main model
+    } else {
+      ubSetModels &= ~SMF_WEAPON_1;
+
+      m_moWeapon.SetData(NULL);
+      m_aAttachments1.clear();
     }
+
+    pwm = &ws.wmDualMain2;
+
+    // Not dual or it doesn't exist
+    if (!bDualVariant || pwm->moModel.GetData() == NULL) {
+      pwm = &ws.wmMain2;
+      ubSetModels &= ~SMF_DUAL_WEAPON_2;
+    }
+
+    // Set second model if it differs
+    if (pwm->moModel.GetData() != NULL) {
+      if ((m_ubModelsSet & SMF_MASK_2) != (ubSetModels & SMF_MASK_2)) {
+        // Remove previous model
+        m_moWeaponSecond.SetData(NULL);
+        m_aAttachments2.clear();
+
+        try {
+          m_moWeaponSecond.Copy(pwm->moModel);
+          ParseModelAttachments(pwm->cbModel, &m_moWeaponSecond, NULL, m_aAttachments2);
+
+        } catch (char *strError) {
+          FatalError("Cannot load second weapon model config '%s':\n%s", pwm->strConfig, strError);
+        }
+
+        // Start new animation
+        bNewAnimation = TRUE;
+      }
+
+    // Remove second model
+    } else {
+      ubSetModels &= ~SMF_WEAPON_2;
+
+      m_moWeaponSecond.SetData(NULL);
+      m_aAttachments2.clear();
+    }
+
+    // Set model flags
+    m_ubModelsSet = ubSetModels;
 
     // Remove flare by default
     WeaponFlare(FALSE);
@@ -1739,7 +1790,9 @@ functions:
     ApplyMirroring(MirrorState());
 
     // Play default animation
-    PlayDefaultAnim(TRUE);
+    if (bNewAnimation) {
+      PlayDefaultAnim(TRUE);
+    }
   };
 
   void RotateMinigun(void) {
@@ -3031,8 +3084,11 @@ procedures:
     // reset weapon draw offset
     ResetWeaponMovingOffset();
 
-    // set weapon model for current weapon
-    SetCurrentWeaponModel();
+    // Reset model flags
+    m_ubModelsSet = 0;
+
+    // Set weapon model for current weapon
+    SetCurrentWeaponModel(m_bExtraWeapon || GetInventory()->UsingDualWeapons());
 
     // start current weapon bring up animation
     switch (m_iCurrentWeapon) {
@@ -4105,13 +4161,13 @@ procedures:
   
   // [Cecil] Normal Rocket Launcher
   FireRocketLauncher() {
-    // turn off chainsaw launcher
+    // Turn off chainsaw launcher
     if (m_bChainLauncher) {
       m_bChainLauncher = FALSE;
       PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
 
-      // reset model
-      SetCurrentWeaponModel();
+      // Reset model
+      SetCurrentWeaponModel(FALSE);
     }
 
     jump RocketLauncherFire();
@@ -4119,13 +4175,13 @@ procedures:
 
   // [Cecil] Chainsaw Launcher
   FireChainsawLauncher() {
-    // turn on chainsaw launcher
+    // Turn on chainsaw launcher
     if (!m_bChainLauncher) {
       m_bChainLauncher = TRUE;
       PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
 
-      // reset model
-      SetCurrentWeaponModel();
+      // Reset model
+      SetCurrentWeaponModel(FALSE);
     }
 
     jump RocketLauncherFire();
@@ -4926,8 +4982,8 @@ procedures:
     // [Cecil] Remember last mirrored state
     m_bLastWeaponMirrored = MirrorState();
 
-    // set weapon model for current weapon
-    SetCurrentWeaponModel();
+    // Set weapon model for current weapon
+    SetCurrentWeaponModel(FALSE);
 
     wait() {
       on (EBegin) : {

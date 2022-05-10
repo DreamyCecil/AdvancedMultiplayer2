@@ -657,7 +657,7 @@ functions:
     PrepareWeapons(ulNewWeapons, iTakeAmmo, fAmmoRatio);
     
     // [Cecil] Weapon specific
-    for (int iWeapons = 0; iWeapons < 2; iWeapons++) {
+    for (INDEX iWeapons = 0; iWeapons < 2; iWeapons++) {
       CPlayerWeapons &plw = *GetWeapon(iWeapons);
 
       // clear temp variables for some weapons
@@ -679,7 +679,7 @@ functions:
       }
 
       // set weapon model for current weapon
-      plw.SetCurrentWeaponModel();
+      plw.SetCurrentWeaponModel(FALSE);
 
       // add weapon attachment
       GetAnimator()->SetWeapon(plw.m_bExtraWeapon);
@@ -725,11 +725,11 @@ functions:
   void WeaponSelectionModifier(void) {
     INDEX iCurrent = GetWeapon(0)->GetCurrent();
 
-    // pick the same weapon
+    // Pick the same weapon
     if (!IsExtraWeaponActive() || GetWeapon(1)->GetWanted() == WEAPON_NONE) {
       SPlayerWeapon &pw = m_aWeapons[iCurrent];
 
-      // can't be dual
+      // Can't be dual
       if (!pw.ExtraWeapon()) {
         return;
       }
@@ -739,16 +739,22 @@ functions:
       eSelect.bAbsolute = TRUE;
 
       GetWeapon(1)->SendEvent(eSelect);
+
+      // Refresh main weapon
+      GetWeapon(0)->SetCurrentWeaponModel(TRUE);
       
-    // put away the weapon
+    // Put away the weapon
     } else {
       PutAwayExtraWeapon();
+
+      // Refresh main weapon
+      GetWeapon(0)->SetCurrentWeaponModel(FALSE);
     }
   };
 
   // Put away extra weapon
   void PutAwayExtraWeapon(void) {
-    // stop the weapon
+    // Stop the weapon
     GetWeapon(1)->SendEvent(EReleaseWeapon());
 
     ESelectWeapon eSelect;

@@ -280,7 +280,7 @@ static void KillAllEnemies(CEntity *penKiller) {
 #define PLF_LEVELSTARTED        (1UL<<9)  // marks that level start time was recorded
 #define PLF_ISZOOMING           (1UL<<10) // marks that player is zoomed in with the sniper
 #define PLF_RESPAWNINPLACE      (1UL<<11) // don't move to marker when respawning (for current death only)
-#define PLF_RESETATTACHMENTS    (1UL<<12) // [Cecil] Schedule attachment list resetting
+#define PLF_RESETMODELS         (1UL<<12) // [Cecil] Schedule resetting of various models
 
 // How long the pickup message stays on screen
 #define PICKEDREPORT_TIME 2.0f
@@ -1722,8 +1722,8 @@ functions:
     SetPlayerAppearance(&m_moRender, &en_pcCharacter, strDummy, FALSE);
     ParseGender(strDummy);
 
-    // [Cecil] Schedule animator to sync the weapon and reset attachment lists
-    m_ulFlags |= PLF_SYNCWEAPON | PLF_RESETATTACHMENTS;
+    // [Cecil] Schedule animator to sync the weapon and reset various models
+    m_ulFlags |= PLF_SYNCWEAPON | PLF_RESETMODELS;
 
     // setup light source
     SetupLightSource();
@@ -2314,12 +2314,20 @@ functions:
       GetPlayerAnimator()->SyncWeapon();
     }
 
-    // [Cecil] Reset attachment lists for the animator
-    if (m_ulFlags & PLF_RESETATTACHMENTS) {
-      m_ulFlags &= ~PLF_RESETATTACHMENTS;
+    // [Cecil] Reset various models
+    if (m_ulFlags & PLF_RESETMODELS) {
+      m_ulFlags &= ~PLF_RESETMODELS;
+      
+      for (INDEX iWeapon = 0; iWeapon < 2; iWeapon++) {
+        // Attachment lists
+        GetPlayerAnimator()->ResetAttachmentList(GetWeapon(iWeapon)->GetCurrent(), iWeapon);
 
-      GetPlayerAnimator()->ResetAttachmentList(GetWeapon(FALSE)->GetCurrent(), FALSE);
-      GetPlayerAnimator()->ResetAttachmentList(GetWeapon(TRUE)->GetCurrent(), TRUE);
+        // Weapon mirroring
+        GetWeapon(iWeapon)->m_bLastWeaponMirrored = GetWeapon(iWeapon)->MirrorState();
+
+        // Weapon models
+        GetWeapon(iWeapon)->SetCurrentWeaponModel(GetInventory()->UsingDualWeapons());
+      }
     }
 
     FLOAT tmNow = _pTimer->GetLerpedCurrentTick();
