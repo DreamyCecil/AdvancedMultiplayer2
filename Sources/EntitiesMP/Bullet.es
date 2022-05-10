@@ -139,57 +139,70 @@ functions:
       }
       ctCasts++;
 
+      // [Cecil] Hit target
+      CEntity *penHit = crRay.cr_penHit;
+
       // stop casting if nothing hit
-      if (crRay.cr_penHit==NULL)
-      {
+      if (penHit == NULL) {
         break;
       }
+      
+      // [Cecil] Target entity info
+      EntityInfo *peiHit = (EntityInfo *)penHit->GetEntityInfo();
 
       // apply damage
       const FLOAT fDamageMul = GetSeriousDamageMultiplier(m_penOwner);
-      InflictDirectDamage(crRay.cr_penHit, m_penOwner, m_EdtDamage, m_fDamage*fDamageMul, crRay.cr_vHit, vHitDirection);
+      InflictDirectDamage(penHit, m_penOwner, m_EdtDamage, m_fDamage*fDamageMul, crRay.cr_vHit, vHitDirection);
 
       // [Cecil] Apply bullet punch
       if (m_fPunch != 0.0f) {
-        KickEntity(crRay.cr_penHit, vHitDirection * m_fPunch);
+        // Punch force depending on distance
+        FLOAT fForce = ClampUp(4.0f / (crRay.cr_fHitDistance * 0.5f), 1.0f);
 
-        // stun enemies
-        if (IsDerivedFromClass(crRay.cr_penHit, "Enemy Base")) {
+        // Multipy force by each 100 kg
+        if (peiHit != NULL) {
+          fForce *= peiHit->fMass * 0.01f;
+        }
+
+        KickEntity(penHit, vHitDirection * fForce * m_fPunch);
+
+        // Stun enemies
+        if (IsDerivedFromClass(penHit, "Enemy Base")) {
           EForceWound eWound;
           eWound.bPlayer = TRUE;
-          crRay.cr_penHit->SendEvent(eWound);
+          penHit->SendEvent(eWound);
         }
       }
 
       m_vHitPoint = crRay.cr_vHit;
 
       // if brush hitted
-      if (crRay.cr_penHit->GetRenderType()==RT_BRUSH && crRay.cr_pbpoBrushPolygon!=NULL)
+      if (penHit->GetRenderType() == RT_BRUSH && crRay.cr_pbpoBrushPolygon != NULL)
       {
         CBrushPolygon *pbpo = crRay.cr_pbpoBrushPolygon;
         FLOAT3D vHitNormal = FLOAT3D(pbpo->bpo_pbplPlane->bpl_plAbsolute);
+
         // obtain surface type
         INDEX iSurfaceType = pbpo->bpo_bppProperties.bpp_ubSurfaceType;
         BulletHitType bhtType = BHT_BRUSH_STONE;
+
         // get content type
         INDEX iContent = pbpo->bpo_pbscSector->GetContentType();
         CContentType &ct = GetWorld()->wo_actContentTypes[iContent];
         
-        bhtType=(BulletHitType) GetBulletHitTypeForSurface(iSurfaceType);
+        bhtType = (BulletHitType)GetBulletHitTypeForSurface(iSurfaceType);
+
         // if this is under water polygon
-        if( ct.ct_ulFlags&CTF_BREATHABLE_GILLS)
-        {
+        if (ct.ct_ulFlags & CTF_BREATHABLE_GILLS) {
           // if we hit water surface
-          if( iSurfaceType==SURFACE_WATER) 
-          {
+          if (iSurfaceType == SURFACE_WATER) {
             vHitNormal = -vHitNormal;
 
-            bhtType=BHT_BRUSH_WATER;
-          }   
+            bhtType = BHT_BRUSH_WATER;
+
           // if we hit stone under water
-          else
-          {
-            bhtType=BHT_BRUSH_UNDER_WATER;
+          } else {
+            bhtType = BHT_BRUSH_UNDER_WATER;
           }
         }
         // spawn hit effect
@@ -200,49 +213,41 @@ functions:
           SpawnHitTypeEffect(this, bhtType, bSound, vHitNormal, crRay.cr_vHit, vHitDirection, FLOAT3D(0.0f, 0.0f, 0.0f));
         }
 
-        if(!bPassable) {
+        if (!bPassable) {
           break;
         }
 
       // if not brush
       } else {
-
         // if flesh entity
-        if (crRay.cr_penHit->GetEntityInfo()!=NULL) {
-          if( ((EntityInfo*)crRay.cr_penHit->GetEntityInfo())->Eeibt == EIBT_FLESH)
-          {
-            CEntity *penOfFlesh = crRay.cr_penHit;
-            FLOAT3D vHitNormal = (GetPlacement().pl_PositionVector-m_vTarget).Normalize();
-            FLOAT3D vOldHitPos = crRay.cr_vHit;
-            FLOAT3D vDistance;
+        if (peiHit != NULL && peiHit->Eeibt == EIBT_FLESH) {
+          CEntity *penOfFlesh = penHit;
+          FLOAT3D vHitNormal = (GetPlacement().pl_PositionVector-m_vTarget).Normalize();
+          FLOAT3D vOldHitPos = crRay.cr_vHit;
+          FLOAT3D vDistance;
 
-            // look behind the entity (for back-stains)
-            GetWorld()->ContinueCast(crRay);
-            if( crRay.cr_penHit!=NULL && crRay.cr_pbpoBrushPolygon!=NULL && 
-                crRay.cr_penHit->GetRenderType()==RT_BRUSH)
-            {
-              vDistance = crRay.cr_vHit-vOldHitPos;
-              vHitNormal = FLOAT3D(crRay.cr_pbpoBrushPolygon->bpo_pbplPlane->bpl_plAbsolute);
-            }
-            else
-            {
-              vDistance = FLOAT3D(0.0f, 0.0f, 0.0f);
-              vHitNormal = FLOAT3D(0.0f, 0.0f, 0.0f);
-            }
+          // look behind the entity (for back-stains)
+          GetWorld()->ContinueCast(crRay);
 
-            if(IsOfClass(penOfFlesh, "Gizmo") ||
-               IsOfClass(penOfFlesh, "Beast"))
-            {
-              // spawn green blood hit spill effect
-              SpawnHitTypeEffect(this, BHT_ACID, bSound, vHitNormal, crRay.cr_vHit, vHitDirection, vDistance);
-            }
-            else
-            {
-              // spawn red blood hit spill effect
-              SpawnHitTypeEffect(this, BHT_FLESH, bSound, vHitNormal, crRay.cr_vHit, vHitDirection, vDistance);
-            }
-            break;
+          if (penHit != NULL && crRay.cr_pbpoBrushPolygon != NULL && penHit->GetRenderType() == RT_BRUSH) {
+            vDistance = crRay.cr_vHit-vOldHitPos;
+            vHitNormal = FLOAT3D(crRay.cr_pbpoBrushPolygon->bpo_pbplPlane->bpl_plAbsolute);
+
+          } else {
+            vDistance = FLOAT3D(0.0f, 0.0f, 0.0f);
+            vHitNormal = FLOAT3D(0.0f, 0.0f, 0.0f);
           }
+
+          if (IsOfClass(penOfFlesh, "Gizmo") || IsOfClass(penOfFlesh, "Beast")) {
+            // spawn green blood hit spill effect
+            SpawnHitTypeEffect(this, BHT_ACID, bSound, vHitNormal, crRay.cr_vHit, vHitDirection, vDistance);
+
+          } else {
+            // spawn red blood hit spill effect
+            SpawnHitTypeEffect(this, BHT_FLESH, bSound, vHitNormal, crRay.cr_vHit, vHitDirection, vDistance);
+          }
+
+          break;
         }
 
         // stop casting ray if not brush

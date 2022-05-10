@@ -299,6 +299,9 @@ void CPlayerWeapons_Precache(void) {
   // [Cecil] Tommygun burst
   pdec->PrecacheSound(SOUND_TOMMYGUN_BURST);
 
+  // [Cecil] Double shotgun punch bullets
+  pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_PUNCH);
+
   // precache animator too
   extern void CPlayerAnimator_Precache(void);
   CPlayerAnimator_Precache();
@@ -531,6 +534,9 @@ components:
 
 // [Cecil] Tommygun burst sound
 175 sound SOUND_TOMMYGUN_BURST "Sounds\\Weapons\\TommygunBurst.wav",
+
+// [Cecil] Double shotgun punch bullets
+180 sound SOUND_DOUBLESHOTGUN_PUNCH "Sounds\\Weapons\\PunchBullets.wav",
 
 functions:
   // [Cecil] Constructor
@@ -3576,7 +3582,7 @@ procedures:
 
       // sound
       m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
-      PlaySound(m_soWeapon0, SOUND_DOUBLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
+      PlaySound(m_soWeapon0, SOUND_DOUBLESHOTGUN_PUNCH, SOF_3D|SOF_VOLUMETRIC);
 
       // [Cecil] Pipe effects
       SpawnPipeEffect(FLOAT3D(-0.11f, 0.1f, -0.3f), _vDoubleShotgunPipe, FLOAT3D(-0.1f, 0.0f, 0.01f), FLOAT3D(-1, 0.0f, -12.5f), ESL_SHOTGUN_SMOKE);
