@@ -20,7 +20,6 @@
     },
     
     "ViewDual" : {
-      "Main1" : "Models1\10_Flamer.json",
       "Offset" : [0.204, -0.306, -0.57, 4.6, 2.8, 0.0],
     },
   
@@ -28,6 +27,11 @@
       "Main" : "Models3\10_Flamer.json",
       "Offset" : [0.0, -0.008, -0.1, 0.0, 0.0, 0.0],
     },
+  },
+  
+  "AnimSets" : {
+    "Main" : "AnimSets\10_Flamer.json",
+    "Player" : "AnimSets\10_Flamer_Player.json",
   },
   
   "FOV" : 50.0,

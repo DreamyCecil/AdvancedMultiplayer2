@@ -34,5 +34,10 @@
       "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
       "Flag" : "rocket3",
     },
+    
+    "5" : {
+      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+      "Flag" : "rocket4",
+    },
   },
 }

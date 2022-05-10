@@ -30,6 +30,12 @@
     },
   },
   
+  "AnimSets" : {
+    "Main" : "AnimSets\04_SingleShotgun.json",
+    "Dual" : "AnimSets\04_SingleShotgun.json",
+    "Player" : "AnimSets\04_SingleShotgun_Player.json",
+  },
+  
   "FOV" : 41.0,
   "PosFire" : [0.0, 0.0],
   

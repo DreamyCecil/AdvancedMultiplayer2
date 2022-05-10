@@ -25,8 +25,6 @@
     },
     
     "ViewDual" : {
-      "Main1" : "Models1\07_Minigun.json",
-      "Alt1"  : "Models1\07_Minigun.json",
       "Offset" : [0.25, -0.24, -0.328, 2.0, 0.0, 0.0],
     },
   
@@ -35,6 +33,12 @@
       "Alt"  : "Models3\07_Minigun.json",
       "Offset" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
     },
+  },
+  
+  "AnimSets" : {
+    "Main"    : "AnimSets\07_Minigun.json",
+    "MainAlt" : "AnimSets\07_Minigun.json",
+    "Player" : "AnimSets\07_Minigun_Player.json",
   },
   
   "FOV" : 66.9,

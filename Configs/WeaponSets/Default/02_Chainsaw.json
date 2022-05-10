@@ -20,7 +20,6 @@
     },
     
     "ViewDual" : {
-      "Main1" : "Models1\02_Chainsaw.json",
       "Offset" : [0.17, -0.29, -0.405, 3.0, 6.0, 0.0],
     },
   
@@ -28,6 +27,11 @@
       "Main" : "Models3\02_Chainsaw.json",
       "Offset" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
     },
+  },
+  
+  "AnimSets" : {
+    "Main" : "AnimSets\02_Chainsaw.json",
+    "Player" : "AnimSets\02_Chainsaw_Player.json",
   },
   
   "FOV" : 73.5,

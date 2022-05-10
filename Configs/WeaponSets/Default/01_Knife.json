@@ -22,7 +22,6 @@
     },
     
     "ViewDual" : {
-      "Main1" : "Models1\01_Knife.json",
       "Offset" : [0.23, -0.28, -0.44, -1.0, 10.0, 6.0],
     },
   
@@ -30,6 +29,11 @@
       "Main" : "Models3\01_Knife.json",
       "Offset" : [0.0, -0.035, -0.065, 0.0, 15.0, 0.0],
     },
+  },
+  
+  "AnimSets" : {
+    "Main" : "AnimSets\01_Knife.json",
+    "Player" : "AnimSets\01_Knife_Player.json",
   },
   
   "FOV" : 41.5,
