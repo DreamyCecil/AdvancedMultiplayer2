@@ -4,14 +4,14 @@
 
 // Constructors
 SPlayerAmmo::SPlayerAmmo(void) :
-  pwaAmmoStruct(NULL), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
+  pasAmmoStruct(NULL), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
 
-SPlayerAmmo::SPlayerAmmo(CWeaponAmmo *pSetAmmo) :
-  pwaAmmoStruct(pSetAmmo), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
+SPlayerAmmo::SPlayerAmmo(CAmmoStruct *pSetAmmo) :
+  pasAmmoStruct(pSetAmmo), iAmount(0), bWeapon(FALSE), iLastAmount(0), tmChanged(0.0f) {};
 
 // Assignment
 SPlayerAmmo &SPlayerAmmo::operator=(const SPlayerAmmo &paOther) {
-  this->pwaAmmoStruct = paOther.pwaAmmoStruct;
+  this->pasAmmoStruct = paOther.pasAmmoStruct;
   this->iAmount = paOther.iAmount;
 
   this->bWeapon = paOther.bWeapon;

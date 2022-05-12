@@ -1,10 +1,10 @@
 #pragma once
 
-#include "WeaponAmmo.h"
+#include "AmmoStruct.h"
 
 // Player's ammo
 struct SPlayerAmmo {
-  CWeaponAmmo *pwaAmmoStruct; // ammo reference
+  CAmmoStruct *pasAmmoStruct; // ammo reference
   INDEX iAmount; // current amount
   
   // Local variables for the HUD
@@ -14,7 +14,7 @@ struct SPlayerAmmo {
 
   // Constructors
   SPlayerAmmo(void);
-  SPlayerAmmo(CWeaponAmmo *pSetAmmo);
+  SPlayerAmmo(CAmmoStruct *pSetAmmo);
 
   // Assignment
   SPlayerAmmo &operator=(const SPlayerAmmo &paOther);
@@ -25,12 +25,12 @@ struct SPlayerAmmo {
 
   // Get max ammo
   inline INDEX &Max(void) {
-    return pwaAmmoStruct->iMaxAmount;
+    return pasAmmoStruct->iMaxAmount;
   };
   
   // Check max ammo
   inline BOOL Full(void) {
-    return (iAmount >= pwaAmmoStruct->iMaxAmount);
+    return (iAmount >= pasAmmoStruct->iMaxAmount);
   };
   
   // Set max ammo

@@ -1,26 +1,26 @@
 #include "StdH.h"
 
-#include "WeaponAmmo.h"
+#include "AmmoStruct.h"
 
 // Ammo structures and icons
-extern CDynamicContainer<CWeaponAmmo> _apWeaponAmmo = CDynamicContainer<CWeaponAmmo>();
+extern CDynamicContainer<CAmmoStruct> _apAmmoStructs = CDynamicContainer<CAmmoStruct>();
 extern CWeaponIcons _aAmmoIcons = CWeaponIcons();
 
 // Write and read
-void CWeaponAmmo::Write(CTStream *strm) {
+void CAmmoStruct::Write(CTStream *strm) {
   *strm << strIcon;
   *strm << iMaxAmount;
   *strm << bDisplay;
 };
 
-void CWeaponAmmo::Read(CTStream *strm) {
+void CAmmoStruct::Read(CTStream *strm) {
   *strm >> strIcon;
   *strm >> iMaxAmount;
   *strm >> bDisplay;
 };
 
 // Set max ammo
-void CWeaponAmmo::SetAmmo(INDEX iSet) {
+void CAmmoStruct::SetAmmo(INDEX iSet) {
   // ammo multiplier
   FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f) * AmmoMul();
   INDEX iTopAmmo = floor(1000.0f * AmmoMul());

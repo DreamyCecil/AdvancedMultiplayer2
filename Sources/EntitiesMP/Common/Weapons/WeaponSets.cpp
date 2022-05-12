@@ -9,14 +9,14 @@
 extern CTString _strCurrentWeaponSet;
 
 // Ammo pointer
-#define AP(_Ammo) (_Ammo >= 0 && _Ammo < _apWeaponAmmo.Count() ? _apWeaponAmmo.Pointer(_Ammo) : NULL)
+#define AP(_Ammo) (_Ammo >= 0 && _Ammo < _apAmmoStructs.Count() ? _apAmmoStructs.Pointer(_Ammo) : NULL)
 
 // Add new weapon to the list
 static void AddWeapon(CWeaponStruct *pws) {
   // Set weapon ID from position
-  pws->ulID = _apPlayerWeapons.Count();
+  pws->ulID = _apWeaponStructs.Count();
 
-  _apPlayerWeapons.Add(pws);
+  _apWeaponStructs.Add(pws);
 
   // Create the icon
   pws->AddIcon(pws->strIcon, _aWeaponIcons);
@@ -109,8 +109,8 @@ static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
   // Ammo
   {
     // Types
-    if (GetConfigInt(cb, "Ammo", i))       pws->pwaAmmo = AP(i);
-    if (GetConfigInt(cb, "AltAmmo", i))    pws->pwaAlt = AP(i);
+    if (GetConfigInt(cb, "Ammo", i))       pws->pasAmmo = AP(i);
+    if (GetConfigInt(cb, "AltAmmo", i))    pws->pasAlt = AP(i);
     if (GetConfigInt(cb, "Mag", i))        pws->iMaxMag = ceil(i * AmmoMul());
     if (GetConfigInt(cb, "PickupAmmo", i)) pws->iPickup = ceil(i * AmmoMul());
     if (GetConfigInt(cb, "PickupAlt", i))  pws->iPickupAlt = ceil(i * AmmoMul());
@@ -282,7 +282,7 @@ extern void LoadWeaponSet(void) {
     CWeaponStruct *pwsStruct = new CWeaponStruct();
 
     // Assign group automatically in case it's not present
-    pwsStruct->ubGroup = (_apPlayerWeapons.Count() % 31) + 1;
+    pwsStruct->ubGroup = (_apWeaponStructs.Count() % 31) + 1;
 
     // Parse the config
     try {

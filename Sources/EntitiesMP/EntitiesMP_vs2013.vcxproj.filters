@@ -579,7 +579,7 @@
     <ClCompile Include="Common\Weapons\PlayerWeapon.cpp">
       <Filter>Source Files\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="Common\Weapons\WeaponAmmo.cpp">
+    <ClCompile Include="Common\Weapons\AmmoStruct.cpp">
       <Filter>Source Files\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="Common\Weapons\WeaponBase.cpp">
@@ -1646,7 +1646,7 @@
     <ClInclude Include="Common\Weapons\StructHeader.h">
       <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Weapons\WeaponAmmo.h">
+    <ClInclude Include="Common\Weapons\AmmoStruct.h">
       <Filter>Header Files\Weapons headers</Filter>
     </ClInclude>
     <ClInclude Include="Common\Weapons\WeaponBase.h">

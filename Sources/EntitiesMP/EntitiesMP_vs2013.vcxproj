@@ -344,7 +344,7 @@ copy vs2013\Debug_110\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Com
     <ClCompile Include="Common\Weapons\AmmoSets.cpp" />
     <ClCompile Include="Common\Weapons\PlayerAmmo.cpp" />
     <ClCompile Include="Common\Weapons\PlayerWeapon.cpp" />
-    <ClCompile Include="Common\Weapons\WeaponAmmo.cpp" />
+    <ClCompile Include="Common\Weapons\AmmoStruct.cpp" />
     <ClCompile Include="Common\Weapons\WeaponBase.cpp" />
     <ClCompile Include="Common\Weapons\WeaponModel.cpp" />
     <ClCompile Include="Common\Weapons\WeaponSets.cpp" />
@@ -630,7 +630,7 @@ copy vs2013\Debug_110\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Com
     <ClInclude Include="Common\Weapons\PlayerAmmo.h" />
     <ClInclude Include="Common\Weapons\PlayerWeapon.h" />
     <ClInclude Include="Common\Weapons\StructHeader.h" />
-    <ClInclude Include="Common\Weapons\WeaponAmmo.h" />
+    <ClInclude Include="Common\Weapons\AmmoStruct.h" />
     <ClInclude Include="Common\Weapons\WeaponAnimSet.h" />
     <ClInclude Include="Common\Weapons\WeaponBase.h" />
     <ClInclude Include="Common\Weapons\WeaponModel.h" />

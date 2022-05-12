@@ -2,7 +2,7 @@
 
 #include "WeaponBase.h"
 #include "WeaponStruct.h"
-#include "WeaponAmmo.h"
+#include "AmmoStruct.h"
 
 // Set icon
 void CWeaponBase::AddIcon(CTString strSetIcon, CWeaponIcons &aIcons) {
@@ -61,15 +61,15 @@ void LoadWorldWeapons(CWorld *pwo) {
 // Weapons and ammo cleanup
 void ClearWorldWeapons(void) {
   // Delete structures
-  {FOREACHINDYNAMICCONTAINER(_apWeaponAmmo, CWeaponAmmo, itwa) {
+  {FOREACHINDYNAMICCONTAINER(_apAmmoStructs, CAmmoStruct, itwa) {
     delete &*itwa;
   }}
-  _apWeaponAmmo.Clear();
+  _apAmmoStructs.Clear();
   
-  {FOREACHINDYNAMICCONTAINER(_apPlayerWeapons, CWeaponStruct, itws) {
+  {FOREACHINDYNAMICCONTAINER(_apWeaponStructs, CWeaponStruct, itws) {
     delete &*itws;
   }}
-  _apPlayerWeapons.Clear();
+  _apWeaponStructs.Clear();
 
   // Delete icons
   {FOREACHINDYNAMICCONTAINER(_aAmmoIcons, CTextureObject, itto) {

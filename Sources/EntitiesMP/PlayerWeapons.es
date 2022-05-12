@@ -1704,7 +1704,7 @@ functions:
     BOOL bNewAnimation = FALSE;
 
     // Weapon models
-    CWeaponStruct &ws = _apPlayerWeapons[m_iCurrentWeapon];
+    CWeaponStruct &ws = _apWeaponStructs[m_iCurrentWeapon];
     CWeaponModel *pwm;
 
     // Set all model flags

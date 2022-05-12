@@ -272,7 +272,7 @@ functions:
     m_pmoModel = GetBody();
 
     // Set custom model
-    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmItemMain;
+    CWeaponModel &wm = _apWeaponStructs[iWeapon].wmItemMain;
 
     if (wm.moModel.GetData() != NULL) {
       // Add weapon attachment
@@ -290,7 +290,7 @@ functions:
 
       // Apply third person offset
       if (pamoWeapon != NULL) {
-        SWeaponPos &wps = _apPlayerWeapons[iWeapon].wpsPos;
+        SWeaponPos &wps = _apWeaponStructs[iWeapon].wpsPos;
 
         // Add weapon position
         pamoWeapon->amo_plRelative.pl_PositionVector += (wps.Pos3() - COLT_LEFT_POS);
@@ -312,7 +312,7 @@ functions:
   // [Cecil] Reset weapon attachments
   void ResetAttachmentList(INDEX iWeapon, BOOL bExtra) {
     // Get weapon model
-    CWeaponModel &wm = _apPlayerWeapons[iWeapon].wmItemMain;
+    CWeaponModel &wm = _apWeaponStructs[iWeapon].wmItemMain;
 
     if (wm.cbModel.Count() <= 0) {
       return;

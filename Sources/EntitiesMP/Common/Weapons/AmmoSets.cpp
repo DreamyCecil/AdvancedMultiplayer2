@@ -1,6 +1,6 @@
 #include "StdH.h"
 
-#include "WeaponAmmo.h"
+#include "AmmoStruct.h"
 
 // Config parser
 #include "EntitiesMP/Common/ConfigFunc.h"
@@ -9,18 +9,18 @@
 extern CTString _strCurrentWeaponSet;
 
 // Add new ammo to the list
-static void AddAmmo(CWeaponAmmo *pwa) {
+static void AddAmmo(CAmmoStruct *pas) {
   // Set ammo ID from position
-  pwa->ulID = _apWeaponAmmo.Count();
+  pas->ulID = _apAmmoStructs.Count();
 
-  _apWeaponAmmo.Add(pwa);
+  _apAmmoStructs.Add(pas);
 
   // Create the icon
-  pwa->AddIcon(pwa->strIcon, _aWeaponIcons);
+  pas->AddIcon(pas->strIcon, _aWeaponIcons);
 };
 
 // Parse ammo config
-static void ParseAmmoConfig(CWeaponAmmo *pwa, CTString strSet, CTString strConfig) {
+static void ParseAmmoConfig(CAmmoStruct *pwa, CTString strSet, CTString strConfig) {
   // Parse the config
   CConfigBlock cb;
 
@@ -84,10 +84,10 @@ extern void LoadAmmoSet(void) {
     CTString strFile = aList[iAmmo].str_String;
 
     // Parse the config
-    CWeaponAmmo *pwaAmmo = new CWeaponAmmo();
-    ParseAmmoConfig(pwaAmmo, strAmmoSet, strFile);
+    CAmmoStruct *pasAmmo = new CAmmoStruct();
+    ParseAmmoConfig(pasAmmo, strAmmoSet, strFile);
 
     // Add the ammo
-    AddAmmo(pwaAmmo);
+    AddAmmo(pasAmmo);
   }
 };

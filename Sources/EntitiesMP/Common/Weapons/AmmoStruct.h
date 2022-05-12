@@ -2,14 +2,14 @@
 
 #include "WeaponBase.h"
 
-// Weapon ammo
-class CWeaponAmmo : public CWeaponBase {
+// Weapon ammo properties
+class CAmmoStruct : public CWeaponBase {
   public:
     INDEX iMaxAmount; // maximum ammo amount
     BOOL bDisplay; // display in the ammo list
 
     // Constructors
-    CWeaponAmmo(void) : CWeaponBase(0, "", 0.0f, ""), iMaxAmount(0), bDisplay(TRUE) {};
+    CAmmoStruct(void) : CWeaponBase(0, "", 0.0f, ""), iMaxAmount(0), bDisplay(TRUE) {};
 
     // Write and read
     void Write(CTStream *strm);
@@ -20,5 +20,5 @@ class CWeaponAmmo : public CWeaponBase {
 };
 
 // Ammo structures and icons
-extern CDynamicContainer<CWeaponAmmo> _apWeaponAmmo;
+extern CDynamicContainer<CAmmoStruct> _apAmmoStructs;
 extern CWeaponIcons _aAmmoIcons;

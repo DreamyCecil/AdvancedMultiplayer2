@@ -36,8 +36,8 @@ class CWeaponStruct : public CWeaponBase {
     CWeaponAnimSet asDualAlt;  // Animations for alt fire while dual wielding
     CWeaponAnimSet asItem;     // Player body animations
 
-    CWeaponAmmo *pwaAmmo; // Ammo
-    CWeaponAmmo *pwaAlt; // Alt ammo
+    CAmmoStruct *pasAmmo; // Ammo
+    CAmmoStruct *pasAlt; // Alt ammo
     INDEX iMaxMag; // Magazine size
 
     CIndexList aiBits; // Special bits of the weapon (for compatibility with PlayerMarker)
@@ -66,7 +66,7 @@ class CWeaponStruct : public CWeaponBase {
 
     // Constructors
     CWeaponStruct(void);
-    CWeaponStruct(CWeaponAmmo *pSetAmmo, CWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup);
+    CWeaponStruct(CAmmoStruct *pSetAmmo, CAmmoStruct *pSetAlt, CTString strSetIcon, CTString strSetPickup);
 
     // Get main weapon bit
     INDEX GetBit(void);
@@ -80,5 +80,5 @@ class CWeaponStruct : public CWeaponBase {
 };
 
 // Weapon structures and icons
-extern CDynamicContainer<CWeaponStruct> _apPlayerWeapons;
+extern CDynamicContainer<CWeaponStruct> _apWeaponStructs;
 extern CWeaponIcons _aWeaponIcons;

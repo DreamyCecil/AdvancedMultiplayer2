@@ -3,13 +3,13 @@
 #include "WeaponStruct.h"
 
 // Weapon structures and icons
-extern CDynamicContainer<CWeaponStruct> _apPlayerWeapons = CDynamicContainer<CWeaponStruct>();
+extern CDynamicContainer<CWeaponStruct> _apWeaponStructs = CDynamicContainer<CWeaponStruct>();
 extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 
 // Constructors
 CWeaponStruct::CWeaponStruct(void) :
   CWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pwaAmmo(NULL), pwaAlt(NULL), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
+  pasAmmo(NULL), pasAlt(NULL), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f), strMessage("")
 {
   aiDecAmmo[DWA_AMMO] = 1;
@@ -17,9 +17,9 @@ CWeaponStruct::CWeaponStruct(void) :
   aiDecAmmo[DWA_MAG]  = 1;
 };
 
-CWeaponStruct::CWeaponStruct(CWeaponAmmo *pSetAmmo, CWeaponAmmo *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
+CWeaponStruct::CWeaponStruct(CAmmoStruct *pSetAmmo, CAmmoStruct *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
   CWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pwaAmmo(pSetAmmo), pwaAlt(pSetAlt), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
+  pasAmmo(pSetAmmo), pasAlt(pSetAlt), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f), strMessage("")
 {
   aiDecAmmo[DWA_AMMO] = 1;
@@ -62,14 +62,14 @@ void CWeaponStruct::Write(CTStream *strm) {
   *strm << strPickup;
 
   // ammo position in the list
-  if (pwaAmmo != NULL) {
-    *strm << _apWeaponAmmo.Index(pwaAmmo);
+  if (pasAmmo != NULL) {
+    *strm << _apAmmoStructs.Index(pasAmmo);
   } else {
     *strm << INDEX(-1);
   }
 
-  if (pwaAlt != NULL) {
-    *strm << _apWeaponAmmo.Index(pwaAlt);
+  if (pasAlt != NULL) {
+    *strm << _apAmmoStructs.Index(pasAlt);
   } else {
     *strm << INDEX(-1);
   }
@@ -109,11 +109,11 @@ void CWeaponStruct::Read(CTStream *strm) {
 
   // set ammo
   if (iAmmo != -1) {
-    pwaAmmo = _apWeaponAmmo.Pointer(iAmmo);
+    pasAmmo = _apAmmoStructs.Pointer(iAmmo);
   }
 
   if (iAlt != -1) {
-    pwaAlt = _apWeaponAmmo.Pointer(iAlt);
+    pasAlt = _apAmmoStructs.Pointer(iAlt);
   }
 
   // read weapon bits

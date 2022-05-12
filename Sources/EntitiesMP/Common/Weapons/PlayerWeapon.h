@@ -24,12 +24,12 @@ struct SPlayerWeapon {
   void Read(CTStream *strm);
 
   // Get ammo structures
-  inline CWeaponAmmo *GetAmmo(void) {
-    return pwsWeapon->pwaAmmo;
+  inline CAmmoStruct *GetAmmo(void) {
+    return pwsWeapon->pasAmmo;
   };
 
-  inline CWeaponAmmo *GetAlt(void) {
-    return pwsWeapon->pwaAlt;
+  inline CAmmoStruct *GetAlt(void) {
+    return pwsWeapon->pasAlt;
   };
 
   // Get ammo ID

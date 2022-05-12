@@ -134,20 +134,20 @@ functions:
   // Constructor
   void CPlayerInventory(void) {
     // copy ammo
-    INDEX ctAmmo = _apWeaponAmmo.Count();
+    INDEX ctAmmo = _apAmmoStructs.Count();
     m_aAmmo.New(ctAmmo);
 
     for (INDEX iAmmo = 0; iAmmo < ctAmmo; iAmmo++) {
-      m_aAmmo[iAmmo].pwaAmmoStruct = _apWeaponAmmo.Pointer(iAmmo);
+      m_aAmmo[iAmmo].pasAmmoStruct = _apAmmoStructs.Pointer(iAmmo);
     }
 
     // copy weapons
-    INDEX ctWeapons = _apPlayerWeapons.Count();
+    INDEX ctWeapons = _apWeaponStructs.Count();
     m_aWeapons.New(ctWeapons);
 
     for (INDEX iWeapon = 0; iWeapon < ctWeapons; iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
-      pw.pwsWeapon = _apPlayerWeapons.Pointer(iWeapon);
+      pw.pwsWeapon = _apWeaponStructs.Pointer(iWeapon);
 
       // set ammo
       ULONG *pulID = pw.GetAmmoID();
@@ -250,7 +250,7 @@ functions:
     // set new ammo pointers for weapons
     for (INDEX iWeapon = 0; iWeapon < m_aWeapons.Count(); iWeapon++) {
       SPlayerWeapon &pw = m_aWeapons[iWeapon];
-      pw.pwsWeapon = _apPlayerWeapons.Pointer(iWeapon);
+      pw.pwsWeapon = _apWeaponStructs.Pointer(iWeapon);
 
       // set ammo
       ULONG *pulID = pw.GetAmmoID();
@@ -996,8 +996,8 @@ functions:
     // add ammo
     paAmmo.iAmount += iAmmo;
 
-    GetPlayer()->ItemPicked(paAmmo.pwaAmmoStruct->strPickup, iAmmo);
-    AddManaToPlayer(iAmmo * paAmmo.pwaAmmoStruct->fMana * MANA_AMMO);
+    GetPlayer()->ItemPicked(paAmmo.pasAmmoStruct->strPickup, iAmmo);
+    AddManaToPlayer(iAmmo * paAmmo.pasAmmoStruct->fMana * MANA_AMMO);
 
     // make sure we don't have more ammo than maximum
     ClampAllAmmo();
@@ -1071,7 +1071,7 @@ functions:
           }
 
           // [Cecil] Print the type
-          CTString &strPick = m_aAmmo[i].pwaAmmoStruct->strPickup;
+          CTString &strPick = m_aAmmo[i].pasAmmoStruct->strPickup;
           strMessage.PrintF("%s%s %d", strMessage, strPick, aiSet[i-1]);
         }
       }
