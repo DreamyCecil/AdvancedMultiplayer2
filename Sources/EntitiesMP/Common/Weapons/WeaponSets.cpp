@@ -82,6 +82,13 @@ static void LoadAnimSet(SWeaponAnimSet &ansAnimSet, DJSON_Block &mapAnims, const
     // Get animation indices
     if (cvIndex.cv_eType == CVT_ARRAY) {
       ctAnims = cvIndex.cv_aArray.size();
+
+      // No animations
+      if (ctAnims <= 0) {
+        CPrintF("'%s': '%s' animation has no animation indices specified!\n", fnFile.str_String, strAnim.c_str());
+        continue;
+      }
+
       aiAnims.New(cvIndex.cv_aArray.size());
 
       // Copy animation indices
@@ -98,6 +105,12 @@ static void LoadAnimSet(SWeaponAnimSet &ansAnimSet, DJSON_Block &mapAnims, const
     atmTimes.New(ctAnims);
 
     if (cvTime.cv_eType == CVT_ARRAY) {
+      // Not enough times
+      if (cvTime.cv_aArray.size() < ctAnims) {
+        CPrintF("'%s': '%s' animation has less lengths than animation indices!\n", fnFile.str_String, strAnim.c_str());
+        continue;
+      }
+
       // Copy times for each animation
       for (INDEX iTime = 0; iTime < ctAnims; iTime++) {
         atmTimes[iTime] = cvTime.cv_aArray[iTime].cv_dValue;

@@ -695,6 +695,35 @@ functions:
     }
   };
 
+  // [Cecil] Get specific weapon animation
+  SWeaponAnim *GetWeaponAnim(const char *strAnim, BOOL bAlt) {
+    CWeaponStruct &ws = _apWeaponStructs[m_iCurrentWeapon];
+    BOOL bDual = GetInventory()->UsingDualWeapons();
+
+    // Start with alt
+    SWeaponAnimSet *pans = (bDual ? &ws.ansDualAlt : &ws.ansAlt);
+
+    // Select main set if no anims or not alt
+    if (pans->mapAnims.size() <= 0 || !bAlt) {
+      pans--;
+
+      // Select just singular main set if still nothing
+      if (bDual && pans->mapAnims.size() <= 0) {
+        pans = &ws.ansMain;
+      }
+    }
+
+    CWeaponAnims::iterator itAnim = pans->mapAnims.find(strAnim);
+
+    // No animation
+    if (itAnim == pans->mapAnims.end()) {
+      CPrintF("Weapon %d does not have a '%s' animation in the '%s' anim set!\n", ws.ulID, strAnim, pans->strName.c_str());
+      return NULL;
+    }
+
+    return &itAnim->second;
+  };
+
   // [Cecil] Get predicted weapons
   CPlayerWeapons *PredTail(void) {
     return (CPlayerWeapons*)GetPredictionTail();
@@ -2611,6 +2640,10 @@ functions:
 
   // [Cecil] Forced animation flag
   void PlayDefaultAnim(BOOL bForced) {
+    if (m_iCurrentWeapon == WEAPON_NONE) {
+      return;
+    }
+
     ULONG ulFlags = AOF_LOOPING|AOF_NORESTART;
 
     // [Cecil] Smooth animation if not forcing
@@ -2618,196 +2651,21 @@ functions:
       ulFlags |= AOF_SMOOTHCHANGE;
     }
 
-    switch (m_iCurrentWeapon) {
-      case WEAPON_NONE: break;
-
-      case WEAPON_KNIFE:
-        m_moWeapon.PlayAnim(KNIFE_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_COLT:
-        m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_SINGLESHOTGUN:
-        m_moWeapon.PlayAnim(SINGLESHOTGUN_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_DOUBLESHOTGUN:
-        m_moWeapon.PlayAnim(DOUBLESHOTGUN_ANIM_WAIT1, ulFlags);
-        // [Cecil] Hide the hand
-        m_moWeaponSecond.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
-        break;
-
-      case WEAPON_TOMMYGUN:
-        m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_SNIPER:
-        m_moWeapon.PlayAnim(SNIPER_ANIM_WAIT01, ulFlags);
-        break;
-
-      case WEAPON_MINIGUN:
-        m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_ROCKETLAUNCHER:
-        m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_GRENADELAUNCHER:
-        m_moWeapon.PlayAnim(GRENADELAUNCHER_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_FLAMER:
-        m_moWeapon.PlayAnim(FLAMER_ANIM_WAIT01, ulFlags);
-        break;
-
-      case WEAPON_CHAINSAW:
-        m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT1, ulFlags);
-        break;
-
-      case WEAPON_LASER:
-        m_moWeapon.PlayAnim(LASER_ANIM_WAIT01, ulFlags);
-        break;
-
-      case WEAPON_IRONCANNON:
-        m_moWeapon.PlayAnim(CANNON_ANIM_WAIT01, ulFlags);
-        break;
-
-      default: ASSERTALWAYS("Unknown weapon.");
-    }
-  };
-
-  // Boring animations
-  FLOAT KnifeBoring(void) {
-    // play boring anim
-    INDEX iAnim = KNIFE_ANIM_WAIT1;
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT ColtBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%2) {
-      case 0: iAnim = COLT_ANIM_WAIT3; break;
-      case 1: iAnim = COLT_ANIM_WAIT4; break;
-    }
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT SingleShotgunBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%2) {
-      case 0: iAnim = SINGLESHOTGUN_ANIM_WAIT2; break;
-      case 1: iAnim = SINGLESHOTGUN_ANIM_WAIT3; break;
-    }
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT DoubleShotgunBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%3) {
-      case 0: iAnim = DOUBLESHOTGUN_ANIM_WAIT2; break;
-      case 1: iAnim = DOUBLESHOTGUN_ANIM_WAIT3; break;
-      case 2: iAnim = DOUBLESHOTGUN_ANIM_WAIT4; break;
-    }
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT TommyGunBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%2) {
-      case 0: iAnim = TOMMYGUN_ANIM_WAIT2; break;
-      case 1: iAnim = TOMMYGUN_ANIM_WAIT3; break;
-    }
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT SniperBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    iAnim = SNIPER_ANIM_WAIT01;
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT MiniGunBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%3) {
-      case 0: iAnim = MINIGUN_ANIM_WAIT2; break;
-      case 1: iAnim = MINIGUN_ANIM_WAIT3; break;
-      case 2: iAnim = MINIGUN_ANIM_WAIT4; break;
+    // [Cecil] TEMP: Hide the hand
+    if (m_iCurrentWeapon == WEAPON_DOUBLESHOTGUN) {
+      m_moWeaponSecond.StretchModel(FLOAT3D(0.0f, 0.0f, 0.0f));
     }
 
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
+    // [Cecil] Get idle animations
+    SWeaponAnim *pan = GetWeaponAnim("Idle", FALSE);
 
-  FLOAT RocketLauncherBoring(void) {
-    // play boring anim
-    m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_WAIT2, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(ROCKETLAUNCHER_ANIM_WAIT2);
-  };
+    if (pan != NULL) {
+      // Pick random animation
+      INDEX iRandomAnim = IRnd() % pan->aiAnims.Count();
 
-  FLOAT GrenadeLauncherBoring(void) {
-    // play boring anim
-    m_moWeapon.PlayAnim(GRENADELAUNCHER_ANIM_WAIT2, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(GRENADELAUNCHER_ANIM_WAIT2);
-  };
-
-  FLOAT FlamerBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%4) {
-      case 0: iAnim = FLAMER_ANIM_WAIT02; break;
-      case 1: iAnim = FLAMER_ANIM_WAIT03; break;
-      case 2: iAnim = FLAMER_ANIM_WAIT04; break;
-      case 3: iAnim = FLAMER_ANIM_WAIT05; break;
+      INDEX iAnim = pan->aiAnims[iRandomAnim];
+      m_moWeapon.PlayAnim(iAnim, ulFlags);
     }
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-  
-  FLOAT ChainsawBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%3) {
-      case 0: iAnim = CHAINSAW_ANIM_WAIT2; break;
-      case 1: iAnim = CHAINSAW_ANIM_WAIT3; break;
-      case 2: iAnim = CHAINSAW_ANIM_WAIT4; break;
-    }
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT LaserBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    iAnim = LASER_ANIM_WAIT02;
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
-  };
-
-  FLOAT CannonBoring(void) {
-    // play boring anim
-    INDEX iAnim;
-    switch (IRnd()%3) {
-      case 0: iAnim = CANNON_ANIM_WAIT02; break;
-      case 1: iAnim = CANNON_ANIM_WAIT03; break;
-      case 2: iAnim = CANNON_ANIM_WAIT04; break;
-    }
-    m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
-    return m_moWeapon.GetAnimLength(iAnim);
   };
 
   // find first possible weapon in given direction
@@ -3005,79 +2863,39 @@ procedures:
 
   // put weapon down
   PutDown() {
-    // start weapon put down animation
-    switch (m_iCurrentWeapon) {
-      case WEAPON_NONE:
-        break;
+    // [Cecil] TEMP: Stop chainsaw sound
+    if (m_iCurrentWeapon == WEAPON_CHAINSAW) {
+      PlaySound(m_soWeaponAmbient, SOUND_CS_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
 
-      case WEAPON_KNIFE: 
-        m_iAnim = KNIFE_ANIM_PULLOUT;
-        break;
-
-      case WEAPON_COLT:
-        m_iAnim = COLT_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_SINGLESHOTGUN:
-        m_iAnim = SINGLESHOTGUN_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_DOUBLESHOTGUN:
-        m_iAnim = DOUBLESHOTGUN_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_TOMMYGUN:
-        m_iAnim = TOMMYGUN_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_SNIPER:
-        m_iAnim = SNIPER_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_MINIGUN:
-        m_iAnim = MINIGUN_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_ROCKETLAUNCHER:
-        m_iAnim = ROCKETLAUNCHER_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_GRENADELAUNCHER:
-        m_iAnim = GRENADELAUNCHER_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_FLAMER:
-        m_iAnim = FLAMER_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_CHAINSAW: {
-        PlaySound(m_soWeaponAmbient, SOUND_CS_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
-
-        if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("ChainsawIdle");}
-        m_iAnim = CHAINSAW_ANIM_DEACTIVATE;
-      } break;
-
-      case WEAPON_LASER:
-        m_iAnim = LASER_ANIM_DEACTIVATE;
-        break;
-
-      case WEAPON_IRONCANNON:
-        m_iAnim = CANNON_ANIM_DEACTIVATE;
-        break;
-
-      default: ASSERTALWAYS("Unknown weapon.");
+      if (_pNetwork->IsPlayerLocal(m_penPlayer)) {
+        IFeel_StopEffect("ChainsawIdle");
+      }
     }
 
-    // start animator
-    CPlayerAnimator &plan = (CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator;
-    plan.BodyPushAnimation();
+    // Start animator
+    GetAnimator()->BodyPushAnimation();
 
     if (m_iCurrentWeapon == WEAPON_NONE) {
       return EEnd();
     }
 
-    m_moWeapon.PlayAnim(m_iAnim, 0);
-    autowait(m_moWeapon.GetAnimLength(m_iAnim));
+    // [Cecil] Get holster animations
+    SWeaponAnim *pan = GetWeaponAnim("Holster", FALSE);
+
+    if (pan != NULL) {
+      // Pick random animation
+      INDEX iRandomAnim = IRnd() % pan->aiAnims.Count();
+
+      INDEX iAnim = pan->aiAnims[iRandomAnim];
+      FLOAT fWait = pan->atmLengths[iRandomAnim];
+
+      // Play animation if there's enough time for it
+      if (fWait >= _pTimer->TickQuantum) {
+        m_moWeapon.PlayAnim(iAnim, 0);
+        autowait(fWait);
+      }
+    }
+
     return EEnd();
   };
 
@@ -3092,78 +2910,24 @@ procedures:
     // Set weapon model for current weapon
     SetCurrentWeaponModel(m_bExtraWeapon || GetInventory()->UsingDualWeapons());
 
-    // start current weapon bring up animation
+    // [Cecil] TEMP: Special resets
     switch (m_iCurrentWeapon) {
-      case WEAPON_NONE:
-        break;
-
-      case WEAPON_KNIFE: 
-        m_iAnim = KNIFE_ANIM_PULL;
-        break;
-
-      case WEAPON_COLT:
-        m_iAnim = COLT_ANIM_ACTIVATE;
-        break;
-
-      case WEAPON_SINGLESHOTGUN:
-        m_iAnim = SINGLESHOTGUN_ANIM_ACTIVATE;
-        break;
-
-      case WEAPON_DOUBLESHOTGUN:
-        m_iAnim = DOUBLESHOTGUN_ANIM_ACTIVATE;
-        break;
-
-      case WEAPON_TOMMYGUN:
-        m_iAnim = TOMMYGUN_ANIM_ACTIVATE;
-        break;
-
-      case WEAPON_SNIPER:
-        m_iAnim = SNIPER_ANIM_ACTIVATE;
-        break;
-
       case WEAPON_MINIGUN: {
         CAttachmentModelObject *pamo = GetModel("rotate", FALSE);
 
         if (pamo != NULL) {
           m_aMiniGunLast = m_aMiniGun = pamo->amo_plRelative.pl_OrientationAngle(3);
         }
-
-        m_iAnim = MINIGUN_ANIM_ACTIVATE;
       } break;
 
-      case WEAPON_ROCKETLAUNCHER:
-        m_iAnim = ROCKETLAUNCHER_ANIM_ACTIVATE;
-        break;
-
-      case WEAPON_GRENADELAUNCHER:
-        m_iAnim = GRENADELAUNCHER_ANIM_ACTIVATE;
-        break;
-
-      case WEAPON_FLAMER:
-        m_iAnim = FLAMER_ANIM_ACTIVATE;
-        break;
-
-      case WEAPON_CHAINSAW: {
-        m_iAnim = CHAINSAW_ANIM_ACTIVATE;
-
+      case WEAPON_CHAINSAW:
         m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
         PlaySound(m_soWeaponAmbient, SOUND_CS_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);        
-        break; }
-
-      case WEAPON_LASER:
-        m_iAnim = LASER_ANIM_ACTIVATE;
         break;
-
-      case WEAPON_IRONCANNON:
-        m_iAnim = CANNON_ANIM_ACTIVATE;
-        break;
-
-      default: ASSERTALWAYS("Unknown weapon.");
     }
 
-    // start animator
-    CPlayerAnimator &plan = (CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator;
-    plan.BodyPullAnimation(m_bExtraWeapon);
+    // Start animator
+    GetAnimator()->BodyPullAnimation(m_bExtraWeapon);
 
     if (m_iCurrentWeapon == WEAPON_NONE) {
       return EEnd();
@@ -3178,8 +2942,22 @@ procedures:
       GET_WEAPON(WEAPON_COLT).Reload(m_bExtraWeapon, TRUE);
     }
 
-    m_moWeapon.PlayAnim(m_iAnim, 0);
-    autowait(m_moWeapon.GetAnimLength(m_iAnim));
+    // [Cecil] Get draw animations
+    SWeaponAnim *pan = GetWeaponAnim("Draw", FALSE);
+
+    if (pan != NULL) {
+      // Pick random animation
+      INDEX iRandomAnim = IRnd() % pan->aiAnims.Count();
+
+      INDEX iAnim = pan->aiAnims[iRandomAnim];
+      FLOAT fWait = pan->atmLengths[iRandomAnim];
+
+      // Play animation if there's enough time for it
+      if (fWait >= _pTimer->TickQuantum) {
+        m_moWeapon.PlayAnim(iAnim, 0);
+        autowait(fWait);
+      }
+    }
 
     // mark that weapon change has ended
     m_tmWeaponChangeRequired -= hud_tmWeaponsOnScreen/2;
@@ -4832,28 +4610,25 @@ procedures:
 
   // Play boring animation
   BoringWeaponAnimation() {
-    // select new mode change animation
-    FLOAT fWait = 0.0f;
-
-    switch (m_iCurrentWeapon) {
-      case WEAPON_KNIFE: fWait = KnifeBoring(); break;
-      case WEAPON_COLT: fWait = ColtBoring(); break;
-      case WEAPON_SINGLESHOTGUN: fWait = SingleShotgunBoring(); break;
-      case WEAPON_DOUBLESHOTGUN: fWait = DoubleShotgunBoring(); break;
-      case WEAPON_TOMMYGUN: fWait = TommyGunBoring(); break;
-      case WEAPON_SNIPER: fWait = SniperBoring(); break;
-      case WEAPON_MINIGUN: fWait = MiniGunBoring(); break;
-      case WEAPON_ROCKETLAUNCHER: fWait = RocketLauncherBoring(); break;
-      case WEAPON_GRENADELAUNCHER: fWait = GrenadeLauncherBoring(); break;
-      case WEAPON_FLAMER: fWait = FlamerBoring(); break;
-      case WEAPON_CHAINSAW: fWait = ChainsawBoring(); break;
-      case WEAPON_LASER: fWait = LaserBoring(); break;
-      case WEAPON_IRONCANNON: fWait = CannonBoring(); break;
-      default: ASSERTALWAYS("Unknown weapon.");
+    if (m_iCurrentWeapon == WEAPON_NONE) {
+      return EBegin();
     }
 
-    if (fWait > 0.0f) {
-      autowait(fWait);
+    // [Cecil] Get boring animations
+    SWeaponAnim *pan = GetWeaponAnim("Boring", FALSE);
+
+    if (pan != NULL) {
+      // Pick random animation
+      INDEX iRandomAnim = IRnd() % pan->aiAnims.Count();
+
+      INDEX iAnim = pan->aiAnims[iRandomAnim];
+      FLOAT fWait = pan->atmLengths[iRandomAnim];
+
+      // Play animation if there's enough time for it
+      if (fWait >= _pTimer->TickQuantum) {
+        m_moWeapon.PlayAnim(iAnim, AOF_SMOOTHCHANGE);
+        autowait(fWait);
+      }
     }
 
     return EBegin();
