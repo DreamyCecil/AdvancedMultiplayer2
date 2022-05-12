@@ -3,6 +3,7 @@
 #include "WeaponBase.h"
 #include "WeaponPos.h"
 #include "WeaponModel.h"
+#include "WeaponAnimSet.h"
 
 // List of indices
 typedef CStaticArray<INDEX> CIndexList;
@@ -10,23 +11,30 @@ typedef CStaticArray<INDEX> CIndexList;
 // Weapon properties
 class CWeaponStruct : public CWeaponBase {
   public:
-    SWeaponPos wpsPos; // weapon position
+    SWeaponPos wpsPos; // Weapon position
 
     // Viewmodel
     CWeaponModel wmMain1; // Main model
     CWeaponModel wmMain2; // Second model
-    CWeaponModel wmAlt1; // Alt fire main model
-    CWeaponModel wmAlt2; // Alt fire second model
+    CWeaponModel wmAlt1;  // Alt fire main model
+    CWeaponModel wmAlt2;  // Alt fire second model
 
     // Viewmodel for dual wielding
     CWeaponModel wmDualMain1; // Main model
     CWeaponModel wmDualMain2; // Second model
-    CWeaponModel wmDualAlt1; // Alt fire main model
-    CWeaponModel wmDualAlt2; // Alt fire second model
+    CWeaponModel wmDualAlt1;  // Alt fire main model
+    CWeaponModel wmDualAlt2;  // Alt fire second model
 
     // Item for the player model
     CWeaponModel wmItemMain; // Main model
-    CWeaponModel wmItemAlt; // Alt fire model
+    CWeaponModel wmItemAlt;  // Alt fire model
+
+    // Animation sets
+    CWeaponAnimSet asMain;     // Main animations
+    CWeaponAnimSet asAlt;      // Animations for alt fire
+    CWeaponAnimSet asDualMain; // Main animations while dual wielding
+    CWeaponAnimSet asDualAlt;  // Animations for alt fire while dual wielding
+    CWeaponAnimSet asItem;     // Player body animations
 
     CWeaponAmmo *pwaAmmo; // Ammo
     CWeaponAmmo *pwaAlt; // Alt ammo

@@ -631,6 +631,7 @@ copy vs2013\Debug_110\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Com
     <ClInclude Include="Common\Weapons\PlayerWeapon.h" />
     <ClInclude Include="Common\Weapons\StructHeader.h" />
     <ClInclude Include="Common\Weapons\WeaponAmmo.h" />
+    <ClInclude Include="Common\Weapons\WeaponAnimSet.h" />
     <ClInclude Include="Common\Weapons\WeaponBase.h" />
     <ClInclude Include="Common\Weapons\WeaponModel.h" />
     <ClInclude Include="Common\Weapons\WeaponPos.h" />

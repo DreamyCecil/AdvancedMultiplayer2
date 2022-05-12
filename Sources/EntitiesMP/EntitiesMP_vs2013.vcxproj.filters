@@ -1721,6 +1721,9 @@
     <ClInclude Include="..\Depends\DreamyJSON\DreamyStructures\DataArray.h">
       <Filter>Header Files\DreamyStructures</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Weapons\WeaponAnimSet.h">
+      <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="NavigationMarker.es">
