@@ -4,13 +4,30 @@
 
 // Specific weapon animation
 struct SWeaponAnim {
-  INDEX iAnim; // Animation index
-  TIME tmLength; // Animation length in seconds
+  CStaticArray<INDEX> aiAnims; // Animation indices
+  CStaticArray<TIME> atmLengths; // Animation lengths in seconds
+  
+  // Default constructor
+  SWeaponAnim(void) {};
 
-  // Constructor
-  SWeaponAnim(INDEX iSetAnim = 0, TIME tmSetLength = 0.0f) :
-    iAnim(iSetAnim), tmLength(tmSetLength) {};
+  // Constructor with one animation
+  SWeaponAnim(INDEX iSetAnim, TIME tmSetLength) {
+    aiAnims.New(1);
+    atmLengths.New(1);
+
+    aiAnims[0] = iSetAnim;
+    atmLengths[0] = tmSetLength;
+  };
 };
 
 // List of animations under specific names
-typedef std::map<string, SWeaponAnim> CWeaponAnimSet;
+typedef std::map<string, SWeaponAnim> CWeaponAnims;
+
+// Set of weapon animations under a certain name
+struct SWeaponAnimSet {
+  string strName;
+  CWeaponAnims mapAnims;
+
+  // Constructor
+  SWeaponAnimSet(void) : strName("") {};
+};

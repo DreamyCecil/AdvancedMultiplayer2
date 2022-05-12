@@ -30,11 +30,11 @@ class CWeaponStruct : public CWeaponBase {
     CWeaponModel wmItemAlt;  // Alt fire model
 
     // Animation sets
-    CWeaponAnimSet asMain;     // Main animations
-    CWeaponAnimSet asAlt;      // Animations for alt fire
-    CWeaponAnimSet asDualMain; // Main animations while dual wielding
-    CWeaponAnimSet asDualAlt;  // Animations for alt fire while dual wielding
-    CWeaponAnimSet asItem;     // Player body animations
+    SWeaponAnimSet ansMain;     // Main animations
+    SWeaponAnimSet ansAlt;      // Animations for alt fire
+    SWeaponAnimSet ansDualMain; // Main animations while dual wielding
+    SWeaponAnimSet ansDualAlt;  // Animations for alt fire while dual wielding
+    SWeaponAnimSet ansItem;     // Player body animations
 
     CAmmoStruct *pasAmmo; // Ammo
     CAmmoStruct *pasAlt; // Alt ammo

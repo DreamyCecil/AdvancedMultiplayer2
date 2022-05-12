@@ -56,6 +56,67 @@ static void SetWeaponModels(CConfigBlock &cbModelType, CTString strSet, string *
   }
 };
 
+// Load specific animation set
+static void LoadAnimSet(SWeaponAnimSet &ansAnimSet, DJSON_Block &mapAnims, const CTFileName &fnFile) {
+  for (INDEX iAnim = 0; iAnim < mapAnims.size(); iAnim++) {
+    string &strAnim = mapAnims.GetKey(iAnim);
+    CConfigValue &cv = mapAnims.GetValue(iAnim);
+
+    // Expected animation block
+    if (cv.cv_eType != CVT_BLOCK) {
+      CPrintF("'%s': '%s' animation is not a block!\n", fnFile.str_String, strAnim.c_str());
+      continue;
+    }
+
+    // Animation block
+    CConfigBlock &cbAnim = (CConfigBlock &)cv.cv_mapBlock;
+    CConfigValue &cvIndex = cbAnim["Anim"];
+    CConfigValue &cvTime = cbAnim["Time"];
+          
+    // Specific animations and their lengths
+    CStaticArray<INDEX> aiAnims;
+    CStaticArray<TIME> atmTimes;
+
+    INDEX ctAnims = 1;
+
+    // Get animation indices
+    if (cvIndex.cv_eType == CVT_ARRAY) {
+      ctAnims = cvIndex.cv_aArray.size();
+      aiAnims.New(cvIndex.cv_aArray.size());
+
+      // Copy animation indices
+      for (INDEX iIndex = 0; iIndex < ctAnims; iIndex++) {
+        aiAnims[iIndex] = cvIndex.cv_aArray[iIndex].cv_iValue;
+      }
+
+    } else {
+      aiAnims.New(1);
+      GetConfigInt(cbAnim, "Anim", aiAnims[0]);
+    }
+
+    // Get animation lengths
+    atmTimes.New(ctAnims);
+
+    if (cvTime.cv_eType == CVT_ARRAY) {
+      // Copy times for each animation
+      for (INDEX iTime = 0; iTime < ctAnims; iTime++) {
+        atmTimes[iTime] = cvTime.cv_aArray[iTime].cv_dValue;
+      }
+            
+    } else {
+      // Copy the same time for each animation
+      for (INDEX iTime = 0; iTime < ctAnims; iTime++) {
+        GetConfigFloat(cbAnim, "Time", atmTimes[iTime]);
+      }
+    }
+
+    // Copy animation arrays
+    ansAnimSet.mapAnims[strAnim] = SWeaponAnim();
+    ansAnimSet.mapAnims[strAnim].aiAnims.CopyArray(aiAnims);
+    ansAnimSet.mapAnims[strAnim].atmLengths.CopyArray(atmTimes);
+  }
+};
+
 // Parse weapon config
 static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strConfig) {
   // Parse the config
@@ -259,6 +320,39 @@ static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
 
         // Get weapon offset
         GetConfigPlacement(cbItemModel, "Offset", pws->wpsPos.plThird);
+      }
+    }
+  }
+
+  // Anim sets
+  CConfigBlock cbAnimSets;
+  
+  if (cb.GetValue("AnimSets", cbAnimSets)) {
+    // Viewmodel anim sets
+    static const string astrSets[4] = {
+      "Main", "Dual", "MainAlt", "DualAlt",
+    };
+
+    for (INDEX iSet = 0; iSet < 4; iSet++) {
+      SWeaponAnimSet &ansSet = (&pws->ansMain)[iSet];
+      ansSet.strName = astrSets[iSet];
+
+      CTFileName fnAnimSet;
+
+      if (GetConfigPath(cbAnimSets, astrSets[iSet], fnAnimSet)) {
+        DJSON_Block mapAnims;
+        fnAnimSet = CTFileName(strSet) + fnAnimSet;
+
+        // Load anim set
+        try {
+          LoadJSON(fnAnimSet, mapAnims);
+
+        } catch (char *strError) {
+          ThrowF_t("Cannot load '%s': %s", fnAnimSet.str_String, strError);
+        }
+
+        // Read data into the anim set
+        LoadAnimSet(ansSet, mapAnims, fnAnimSet);
       }
     }
   }
