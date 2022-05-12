@@ -1,0 +1,26 @@
+{
+  "Draw" : {
+    "Anim" : 6,
+    "Time" : 0.5,
+  },
+  
+  "Holster" : {
+    "Anim" : 7,
+    "Time" : 0.3,
+  },
+  
+  "Idle" : {
+    "Anim" : 4,
+    "Time" : 4.0,
+  },
+  
+  "Boring" : {
+    "Anim" : 5,
+    "Time" : 2.5,
+  },
+  
+  "Attack" : {
+    "Anim" : 3,
+    "Time" : 0.67,
+  },
+}

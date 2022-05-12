@@ -31,9 +31,9 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\04_SingleShotgun.json",
-    "Dual" : "AnimSets\04_SingleShotgun.json",
-    "Player" : "AnimSets\04_SingleShotgun_Player.json",
+    "Main" : "AnimSets1\04_SingleShotgun.json",
+    "Dual" : "AnimSets1\04_SingleShotgun.json",
+    "Player" : "AnimSets3\04_SingleShotgun.json",
   },
   
   "FOV" : 41.0,

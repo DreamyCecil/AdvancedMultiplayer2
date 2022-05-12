@@ -28,8 +28,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\09_GrenadeLauncher.json",
-    "Player" : "AnimSets\09_GrenadeLauncher_Player.json",
+    "Main" : "AnimSets1\09_GrenadeLauncher.json",
+    "Player" : "AnimSets3\09_GrenadeLauncher.json",
   },
   
   "FOV" : 44.5,

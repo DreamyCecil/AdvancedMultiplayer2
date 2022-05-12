@@ -36,9 +36,9 @@
   },
   
   "AnimSets" : {
-    "Main"    : "AnimSets\07_Minigun.json",
-    "MainAlt" : "AnimSets\07_Minigun.json",
-    "Player" : "AnimSets\07_Minigun_Player.json",
+    "Main"    : "AnimSets1\07_Minigun.json",
+    "MainAlt" : "AnimSets1\07_Minigun.json",
+    "Player" : "AnimSets3\07_Minigun.json",
   },
   
   "FOV" : 66.9,

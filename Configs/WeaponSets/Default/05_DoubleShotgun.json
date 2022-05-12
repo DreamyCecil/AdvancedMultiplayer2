@@ -36,9 +36,9 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\05_DoubleShotgun.json",
-    "Dual" : "AnimSets\05_DoubleShotgun.json",
-    "Player" : "AnimSets\05_DoubleShotgun_Player.json",
+    "Main" : "AnimSets1\05_DoubleShotgun.json",
+    "Dual" : "AnimSets1\05_DoubleShotgun.json",
+    "Player" : "AnimSets3\05_DoubleShotgun.json",
   },
   
   "FOV" : 52.5,

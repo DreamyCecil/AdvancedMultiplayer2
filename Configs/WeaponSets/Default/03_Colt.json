@@ -32,8 +32,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\03_Colt.json",
-    "Player" : "AnimSets\03_Colt_Player.json",
+    "Main" : "AnimSets1\03_Colt.json",
+    "Player" : "AnimSets3\03_Colt.json",
   },
   
   "FOV" : 57.0,

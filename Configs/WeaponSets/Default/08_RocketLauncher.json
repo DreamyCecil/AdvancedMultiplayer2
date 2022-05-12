@@ -30,9 +30,9 @@
   },
   
   "AnimSets" : {
-    "Main"    : "AnimSets\08_RocketLauncher.json",
-    "MainAlt" : "AnimSets\08_RocketLauncher.json",
-    "Player" : "AnimSets\08_RocketLauncher_Player.json",
+    "Main"    : "AnimSets1\08_RocketLauncher.json",
+    "MainAlt" : "AnimSets1\08_RocketLauncher.json",
+    "Player" : "AnimSets3\08_RocketLauncher.json",
   },
   
   "FOV" : 66.0,

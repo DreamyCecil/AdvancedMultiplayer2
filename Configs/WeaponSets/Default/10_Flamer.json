@@ -30,8 +30,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\10_Flamer.json",
-    "Player" : "AnimSets\10_Flamer_Player.json",
+    "Main" : "AnimSets1\10_Flamer.json",
+    "Player" : "AnimSets3\10_Flamer.json",
   },
   
   "FOV" : 50.0,

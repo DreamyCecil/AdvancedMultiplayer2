@@ -36,8 +36,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\06_Tommygun.json",
-    "Player" : "AnimSets\06_Tommygun_Player.json",
+    "Main" : "AnimSets1\06_Tommygun.json",
+    "Player" : "AnimSets3\06_Tommygun.json",
   },
   
   "FOV" : 49.0,

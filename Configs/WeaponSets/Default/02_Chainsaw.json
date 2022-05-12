@@ -30,8 +30,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\02_Chainsaw.json",
-    "Player" : "AnimSets\02_Chainsaw_Player.json",
+    "Main" : "AnimSets1\02_Chainsaw.json",
+    "Player" : "AnimSets3\02_Chainsaw.json",
   },
   
   "FOV" : 73.5,

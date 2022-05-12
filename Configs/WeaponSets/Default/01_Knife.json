@@ -32,8 +32,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\01_Knife.json",
-    "Player" : "AnimSets\01_Knife_Player.json",
+    "Main" : "AnimSets1\01_Knife.json",
+    "Player" : "AnimSets3\01_Knife.json",
   },
   
   "FOV" : 41.5,

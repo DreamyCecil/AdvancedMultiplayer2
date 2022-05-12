@@ -28,8 +28,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\13_Cannon.json",
-    "Player" : "AnimSets\13_Cannon_Player.json",
+    "Main" : "AnimSets1\13_Cannon.json",
+    "Player" : "AnimSets3\13_Cannon.json",
   },
   
   "FOV" : 50.0,

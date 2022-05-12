@@ -34,8 +34,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\11_Sniper.json",
-    "Player" : "AnimSets\11_Sniper_Player.json",
+    "Main" : "AnimSets1\11_Sniper.json",
+    "Player" : "AnimSets3\11_Sniper.json",
   },
   
   "FOV" : 23.0,

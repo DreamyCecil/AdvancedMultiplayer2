@@ -28,8 +28,8 @@
   },
   
   "AnimSets" : {
-    "Main" : "AnimSets\12_Laser.json",
-    "Player" : "AnimSets\12_Laser_Player.json",
+    "Main" : "AnimSets1\12_Laser.json",
+    "Player" : "AnimSets3\12_Laser.json",
   },
   
   "FOV" : 70.5,
