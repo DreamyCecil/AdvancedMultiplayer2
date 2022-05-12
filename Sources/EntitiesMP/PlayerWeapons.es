@@ -724,6 +724,11 @@ functions:
     return &itAnim->second;
   };
 
+  // [Cecil] Get adjusted attack speed no shorter than one game tick
+  TIME AdjustAttackSpeed(TIME tmSpeed) {
+    return ClampDn(tmSpeed * FireSpeedMul(), _pTimer->TickQuantum);
+  };
+
   // [Cecil] Get predicted weapons
   CPlayerWeapons *PredTail(void) {
     return (CPlayerWeapons*)GetPredictionTail();
@@ -3175,18 +3180,18 @@ procedures:
 
     if (CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetInventory()->GetDamage(WEAPON_KNIFE))) {
       // [Cecil] Multiply speed
-      autowait(m_fAnimWaitTime * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_fAnimWaitTime));
 
     } else if (TRUE) {
       // [Cecil] Multiply speed
-      autowait(m_fAnimWaitTime/2 * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_fAnimWaitTime * 0.5f));
       CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetInventory()->GetDamage(WEAPON_KNIFE));
-      autowait(m_fAnimWaitTime/2 * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_fAnimWaitTime * 0.5f));
     }
 
     if (m_moWeapon.GetAnimLength(m_iAnim)-m_fAnimWaitTime >= _pTimer->TickQuantum) {
       // [Cecil] Multiply speed
-      autowait((m_moWeapon.GetAnimLength(m_iAnim) - m_fAnimWaitTime) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(m_iAnim) - m_fAnimWaitTime));
     }
     return EEnd();
   };
@@ -3219,7 +3224,7 @@ procedures:
 
     m_moWeapon.PlayAnim(iAnim, 0);
     // [Cecil] Multiply speed
-    autowait((m_moWeapon.GetAnimLength(iAnim) - 0.05f) * FireSpeedMul());
+    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(iAnim) - 0.05f));
     m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
 
     // no more bullets in colt -> reload
@@ -3243,7 +3248,7 @@ procedures:
     m_moWeapon.PlayAnim(COLT_ANIM_RELOAD, 0);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_reload");}
     // [Cecil] Multiply speed
-    autowait(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD) * FireSpeedMul());
+    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD)));
 
     // [Cecil] Reload mag
     GET_WEAPON(WEAPON_COLT).Reload(m_bExtraWeapon, TRUE);
@@ -3274,14 +3279,14 @@ procedures:
       SpawnPipeEffect(_vSingleShotgunShellPos, _vSingleShotgunPipe, FLOAT3D(0.3f, 0.0f, 0.0f), FLOAT3D(0, 0.0f, -12.5f), ESL_SHOTGUN_SMOKE);
 
       // [Cecil] Multiply speed
-      autowait((GetSP()->sp_bCooperative ? 0.5f : 0.375f) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(GetSP()->sp_bCooperative ? 0.5f : 0.375f));
 
       // [Cecil] Drop shell
       DropBulletShell(_vSingleShotgunShellPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_SHOTGUN);
 
       // [Cecil] Multiply speed
-      autowait((m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST)
-                - (GetSP()->sp_bCooperative ? 0.5f : 0.375f)) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST)
+                - (GetSP()->sp_bCooperative ? 0.5f : 0.375f)));
 
     } else if (TRUE) {
       m_bFireWeapon = m_bHasAmmo = FALSE;
@@ -3376,15 +3381,15 @@ procedures:
       SpawnPipeEffect(FLOAT3D(-0.11f, 0.1f, -0.3f), _vDoubleShotgunPipe, FLOAT3D( 0.1f, 0.0f, -0.2f), FLOAT3D( 1, 0.0f, -12.5f), ESL_SHOTGUN_SMOKE);
 
       // [Cecil] Multiply speed
-      autowait((GetSP()->sp_bCooperative ? 0.25f : 0.15f) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(GetSP()->sp_bCooperative ? 0.25f : 0.15f));
 
       if (ENOUGH_AMMO) {
         PlaySound(m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
       }
 
       // [Cecil] Multiply speed
-      autowait((m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST)
-                - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST)
+                - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)));
 
       // no ammo -> change weapon
       if (!ENOUGH_AMMO) {
@@ -3428,15 +3433,15 @@ procedures:
       SpawnPipeEffect(FLOAT3D(-0.11f, 0.1f, -0.3f), _vDoubleShotgunPipe, FLOAT3D( 0.1f, 0.0f, -0.2f), FLOAT3D( 1, 0.0f, -12.5f), ESL_SHOTGUN_SMOKE);
 
       // [Cecil] Multiply speed
-      autowait((GetSP()->sp_bCooperative ? 0.25f : 0.15f) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(GetSP()->sp_bCooperative ? 0.25f : 0.15f));
 
       if (ENOUGH_AMMO) {
         PlaySound(m_soWeapon1, SOUND_DOUBLESHOTGUN_RELOAD, SOF_3D|SOF_VOLUMETRIC);
       }
 
       // [Cecil] Multiply speed
-      autowait((m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST)
-                - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST)
+                - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)));
 
       // no ammo -> change weapon
       if (!ENOUGH_AMMO) {
@@ -3632,14 +3637,14 @@ procedures:
       m_moWeapon.PlayAnim(SNIPER_ANIM_FIRE, 0);
       
       // [Cecil] Multiply speed
-      autowait(1.0f * FireSpeedMul());
+      autowait(AdjustAttackSpeed(1.0f));
 
       // [Cecil] Drop bullet
       DropBulletShell(_vSniperShellPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET);
       SpawnBubbleEffect(_vSniperShellPos, FLOAT3D(0.3f, 0.0f, 0.0f));
       
       // [Cecil] Multiply speed
-      autowait(0.35f * FireSpeedMul());
+      autowait(AdjustAttackSpeed(0.35f));
       
       // no ammo -> change weapon
       if (!ENOUGH_AMMO) {
@@ -3685,14 +3690,14 @@ procedures:
       m_moWeapon.PlayAnim(SNIPER_ANIM_FIRE, 0);
       
       // [Cecil] Multiply speed
-      autowait(1.0f * FireSpeedMul());
+      autowait(AdjustAttackSpeed(1.0f));
 
       // [Cecil] Drop bullet
       DropBulletShell(_vSniperShellPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET);
       SpawnBubbleEffect(_vSniperShellPos, FLOAT3D(0.3f, 0.0f, 0.0f));
       
       // [Cecil] Multiply speed
-      autowait(0.7f * FireSpeedMul());
+      autowait(AdjustAttackSpeed(0.7f));
       
       // no ammo -> change weapon
       if (!ENOUGH_AMMO) {
@@ -3925,7 +3930,7 @@ procedures:
       StretchRocket(FLOAT3D(0.0f, 0.0f, 0.0f));
 
       // [Cecil] Multiply speed
-      autowait((m_moWeapon.GetAnimLength(ROCKETLAUNCHER_ANIM_FIRE) - 0.05f) * FireSpeedMul());
+      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(ROCKETLAUNCHER_ANIM_FIRE) - 0.05f));
 
       // [Cecil] Rocket model
       StretchRocket(FLOAT3D((MirrorState() ? -1.0f : 1.0f), 1.0f, 1.0f));
@@ -3981,11 +3986,11 @@ procedures:
     m_tmDrawStartTime = _pTimer->CurrentTick();
 
     // [Cecil] Multiply speed
-    while (HoldingFire() && (_pTimer->CurrentTick() - TM_START) < 0.75f * FireSpeedMul()) {
+    while (HoldingFire() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(0.75f)) {
       autowait(_pTimer->TickQuantum);
 
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeedMul());
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
 
       F_OFFSET_CHG = 0.125f/(iPower+2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
@@ -4030,7 +4035,7 @@ procedures:
 
       } else if (TRUE) {
         // [Cecil] Multiply speed
-        autowait(0.25f * FireSpeedMul());
+        autowait(AdjustAttackSpeed(0.25f));
       }
 
     } else {
@@ -4051,11 +4056,11 @@ procedures:
     m_tmDrawStartTime = _pTimer->CurrentTick();
 
     // [Cecil] Multiply speed
-    while (HoldingAlt() && (_pTimer->CurrentTick() - TM_START) < 0.75f * FireSpeedMul()) {
+    while (HoldingAlt() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(0.75f)) {
       autowait(_pTimer->TickQuantum);
 
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeedMul());
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
 
       F_OFFSET_CHG = 0.125f/(iPower+2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
@@ -4100,7 +4105,7 @@ procedures:
 
       } else if (TRUE) {
         // [Cecil] Multiply speed
-        autowait(0.25f * FireSpeedMul());
+        autowait(AdjustAttackSpeed(0.25f));
       }
     } else {
       ASSERTALWAYS("GrenadeLauncher - Auto weapon change not working.");
@@ -4118,7 +4123,7 @@ procedures:
     m_moWeapon.PlayAnim(FLAMER_ANIM_FIRESTART, 0);
 
     // [Cecil] Multiply speed
-    autowait(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIRESTART) * FireSpeedMul());
+    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIRESTART)));
 
     // play fire sound
     m_soWeapon0.Set3DParameters(50.0f, 5.0f, 2.0f, 0.31f);
@@ -4176,7 +4181,7 @@ procedures:
     m_moWeapon.PlayAnim(FLAMER_ANIM_FIREEND, 0);
 
     // [Cecil] Multiply speed
-    autowait(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIREEND) * FireSpeedMul());
+    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIREEND)));
     
     // select new weapon
     if (!ENOUGH_AMMO) {
@@ -4190,7 +4195,7 @@ procedures:
   FireTeslaGun() {
     if (ENOUGH_ALT) {
       m_moWeapon.PlayAnim(FLAMER_ANIM_FIRESTART, 0);
-      autowait(0.25f * FireSpeedMul());
+      autowait(AdjustAttackSpeed(0.25f));
 
       // create lightning
       CPlacement3D plTesla;
@@ -4229,7 +4234,7 @@ procedures:
       SpawnRangeSound(30.0f);
       DecAmmo(TRUE);
 
-      autowait(0.25f * FireSpeedMul());
+      autowait(AdjustAttackSpeed(0.25f));
 
       m_moWeapon.PlayAnim(FLAMER_ANIM_FIREEND, 0);
     }
@@ -4239,7 +4244,7 @@ procedures:
       SelectNewWeapon();
     }
     
-    autowait(0.25f * FireSpeedMul());
+    autowait(AdjustAttackSpeed(0.25f));
     return EEnd();
   };
   
@@ -4423,10 +4428,10 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon_prepare");}
 
     // [Cecil] Multiply speed
-    while (HoldingFire() && (_pTimer->CurrentTick() - TM_START) < 1.0f * FireSpeedMul()) {
+    while (HoldingFire() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(1.0f)) {
       autowait(_pTimer->TickQuantum);
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeedMul());
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
 
       F_OFFSET_CHG = 0.25f/(iPower+2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
@@ -4479,7 +4484,7 @@ procedures:
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       // [Cecil] Multiply speed
-      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < m_moWeapon.GetAnimLength(CANNON_ANIM_FIRE) * FireSpeedMul()) {
+      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_moWeapon.GetAnimLength(CANNON_ANIM_FIRE))) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
         m_fWeaponDrawPower -= F_OFFSET_CHG;
@@ -4520,10 +4525,10 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon_prepare");}
 
     // [Cecil] Multiply speed
-    while (HoldingAlt() && (_pTimer->CurrentTick() - TM_START) < 1.5f * FireSpeedMul()) {
+    while (HoldingAlt() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(1.5f)) {
       autowait(_pTimer->TickQuantum);
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeedMul());
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
 
       F_OFFSET_CHG = 0.167f/(iPower+2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
@@ -4576,7 +4581,7 @@ procedures:
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       // [Cecil] Multiply speed
-      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < m_moWeapon.GetAnimLength(CANNON_ANIM_FIRE) * FireSpeedMul()) {
+      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_moWeapon.GetAnimLength(CANNON_ANIM_FIRE))) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
         m_fWeaponDrawPower -= F_OFFSET_CHG;
