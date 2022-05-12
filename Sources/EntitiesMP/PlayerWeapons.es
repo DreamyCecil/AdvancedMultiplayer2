@@ -2611,26 +2611,29 @@ functions:
       return;
     }
 
-    // get valid weapon priority list
+    // Get valid weapon priority list
     INDEX iWeapon = ClampDn((INDEX)m_iCurrentWeapon, (INDEX)1);
     SPlayerWeapon &pw = GET_WEAPON(iWeapon);
 
     CIndexList &aiWeapons = pw.pwsWeapon->aiWeaponPriority;
 
-    // no priority list
+    // No priority list
     if (aiWeapons.Count() <= 0) {
-      // pick the first weapon or nothing
+      // Pick the first weapon or nothing
       WeaponSelectOk(1) || WeaponSelectOk(0);
       return;
     }
 
-    // go through weapon list
+    // Go through weapon list
     for (INDEX i = 0; i < aiWeapons.Count(); i++) {
-      // quit if able to select the weapon
+      // Quit if able to select the weapon
       if (WeaponSelectOk(aiWeapons[i])) {
-        break;
+        return;
       }
     }
+
+    // Switch to nothing if couldn't pick anything else
+    WeaponSelectOk(WEAPON_NONE);
   };
 
   // does weapon have ammo
