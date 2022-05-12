@@ -28,4 +28,14 @@
     "Anim" : 2,
     "Time" : 1.05,
   },
+  
+  "Hand" : {
+    "Anim" : 1,
+    "Time" : 0.0,
+  },
+  
+  "HandDM" : {
+    "Anim" : 2,
+    "Time" : 0.0,
+  },
 }

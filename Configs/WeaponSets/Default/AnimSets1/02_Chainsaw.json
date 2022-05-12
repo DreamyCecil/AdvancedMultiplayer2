@@ -24,6 +24,11 @@
     "Time" : 0.2,
   },
   
+  "Attack" : {
+    "Anim" : 3,
+    "Time" : 0.08,
+  },
+  
   "AttackEnd" : {
     "Anim" : 2,
     "Time" : 0.2,
