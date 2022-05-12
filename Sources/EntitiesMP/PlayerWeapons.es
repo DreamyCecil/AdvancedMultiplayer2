@@ -1697,10 +1697,6 @@ functions:
       return;
     }
 
-    // Reset mirroring
-    m_moWeapon.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
-    m_moWeaponSecond.StretchModel(FLOAT3D(1.0f, 1.0f, 1.0f));
-
     BOOL bNewAnimation = FALSE;
 
     // Weapon models
@@ -1724,6 +1720,9 @@ functions:
         // Remove previous model
         m_moWeapon.SetData(NULL);
         m_aAttachments1.clear();
+
+        // Reset stretch
+        m_moWeapon.StretchModel(pwm->moModel.mo_Stretch);
 
         try {
           m_moWeapon.Copy(pwm->moModel);
@@ -1759,6 +1758,9 @@ functions:
         // Remove previous model
         m_moWeaponSecond.SetData(NULL);
         m_aAttachments2.clear();
+
+        // Reset stretch
+        m_moWeaponSecond.StretchModel(pwm->moModel.mo_Stretch);
 
         try {
           m_moWeaponSecond.Copy(pwm->moModel);
