@@ -14,7 +14,7 @@
   "Models" : {
     "View" : {
       "Main1" : "Models1\08_RocketLauncher.json",
-      "Alt1"  : "Models1\08_RocketLauncher.json",
+      "Alt1"  : "Models1\08_RocketLauncher_Alt.json",
       "Offset" : [0.17, -0.325, -0.24, 2.0, 1.0, 0.0],
     },
     
