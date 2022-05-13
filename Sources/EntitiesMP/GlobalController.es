@@ -45,7 +45,7 @@ components:
 functions:
   // Constructor
   void CGlobalController(void) {
-    // set pointer to this entity
+    // Set pointer to this entity
     _penGlobalController = this;
   };
 
@@ -55,6 +55,14 @@ functions:
     
     // Convert TFE map
     ConvertTFE();
+  };
+
+  // Destruction
+  void OnEnd(void) {
+    CRationalEntity::OnEnd();
+
+    // Reset pointer
+    _penGlobalController = NULL;
   };
 
   // Read the controller
