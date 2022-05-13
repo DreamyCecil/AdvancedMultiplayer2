@@ -717,11 +717,55 @@ functions:
 
     // No animation
     if (itAnim == pans->mapAnims.end()) {
-      CPrintF("Weapon %d does not have a '%s' animation in the '%s' anim set!\n", ws.ulID, strAnim, pans->strName.c_str());
+      //CPrintF("Weapon %d does not have a '%s' animation in the '%s' anim set!\n", ws.ulID, strAnim, pans->strName.c_str());
       return NULL;
     }
 
     return &itAnim->second;
+  };
+
+  // [Cecil] Get random animation of a certain type
+  BOOL GetRandomAnim(INDEX &iAnim, TIME &tmTime, const char *strAnim, BOOL bAlt) {
+    SWeaponAnim *pan = GetWeaponAnim(strAnim, bAlt);
+
+    if (pan != NULL) {
+      // Pick random animation
+      INDEX iRandomAnim = IRnd() % pan->aiAnims.Count();
+      iAnim = pan->aiAnims[iRandomAnim];
+      tmTime = pan->atmLengths[iRandomAnim];
+
+      return TRUE;
+    }
+
+    iAnim = 0;
+    tmTime = 0.0f;
+
+    return FALSE;
+  };
+
+  // [Cecil] Get random attack animation
+  BOOL GetAttackAnim(INDEX &iAnim, TIME &tmTime, BOOL bAlt) {
+    // Animations for deathmatch
+    SWeaponAnim *pan = GetWeaponAnim("AttackDM", bAlt);
+
+    // No animations or not deathmatch
+    if (pan == NULL || GetSP()->sp_bCooperative) {
+      pan = GetWeaponAnim("Attack", bAlt);
+    }
+
+    if (pan != NULL) {
+      // Pick random animation
+      INDEX iRandomAnim = IRnd() % pan->aiAnims.Count();
+      iAnim = pan->aiAnims[iRandomAnim];
+      tmTime = pan->atmLengths[iRandomAnim];
+
+      return TRUE;
+    }
+
+    iAnim = 0;
+    tmTime = 0.0f;
+
+    return FALSE;
   };
 
   // [Cecil] Get adjusted attack speed no shorter than one game tick
@@ -3158,41 +3202,30 @@ procedures:
     
   // ***************** SWING KNIFE *****************
   SwingKnife() {
-    // animator swing
+    // Animator swing
     GetAnimator()->FireAnimation(BODY_ANIM_KNIFE_ATTACK, 0, m_bExtraWeapon);
 
-    // [Cecil] Simplified by removing repeating code
-    switch (IRnd() % 2) {
-      case 0:
-        m_iAnim = KNIFE_ANIM_ATTACK01;
-        m_fAnimWaitTime = 0.25f;
-        break;
-
-      case 1:
-        m_iAnim = KNIFE_ANIM_ATTACK02;
-        m_fAnimWaitTime = 0.35f;
-        break;
+    // [Cecil] Play attack animation
+    if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+      m_moWeapon.PlayAnim(m_iAnim, 0);
     }
     
-    m_moWeapon.PlayAnim(m_iAnim, 0);
     PlaySound(m_soWeapon0, SOUND_KNIFE_BACK, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Knife_back");}
 
-    if (CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetInventory()->GetDamage(WEAPON_KNIFE))) {
-      // [Cecil] Multiply speed
-      autowait(AdjustAttackSpeed(m_fAnimWaitTime));
-
-    } else if (TRUE) {
-      // [Cecil] Multiply speed
+    // [Cecil] Couldn't cut in the beginning
+    if (!CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetInventory()->GetDamage(WEAPON_KNIFE))) {
+      // [Cecil] Wait half the time and try again
       autowait(AdjustAttackSpeed(m_fAnimWaitTime * 0.5f));
       CutWithKnife(0, 0, 3.0f, 2.0f, 0.5f, GetInventory()->GetDamage(WEAPON_KNIFE));
       autowait(AdjustAttackSpeed(m_fAnimWaitTime * 0.5f));
+
+      return EEnd();
     }
 
-    if (m_moWeapon.GetAnimLength(m_iAnim)-m_fAnimWaitTime >= _pTimer->TickQuantum) {
-      // [Cecil] Multiply speed
-      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(m_iAnim) - m_fAnimWaitTime));
-    }
+    // [Cecil] Multiply speed
+    autowait(AdjustAttackSpeed(m_fAnimWaitTime));
+
     return EEnd();
   };
   
@@ -3200,7 +3233,7 @@ procedures:
   FireColt() {
     GetAnimator()->FireAnimation(BODY_ANIM_COLT_FIRERIGHT, 0, m_bExtraWeapon);
 
-    // fire bullet
+    // Fire bullet
     FireOneBullet(FirePos(WEAPON_COLT), 500.0f, GetInventory()->GetDamage(WEAPON_COLT));
 
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_fire");}
@@ -3214,18 +3247,15 @@ procedures:
     // sound
     PlaySound(m_soWeapon0, SOUND_COLT_FIRE, SOF_3D|SOF_VOLUMETRIC);
 
-    // random colt fire
-    INDEX iAnim;
-    switch (IRnd() % 3) {
-      case 0: iAnim = COLT_ANIM_FIRE1; break;
-      case 1: iAnim = COLT_ANIM_FIRE2; break;
-      case 2: iAnim = COLT_ANIM_FIRE3; break;
+    // [Cecil] Play attack animation
+    if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+      m_moWeapon.PlayAnim(m_iAnim, 0);
     }
 
-    m_moWeapon.PlayAnim(iAnim, 0);
     // [Cecil] Multiply speed
-    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(iAnim) - 0.05f));
-    m_moWeapon.PlayAnim(COLT_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
+    autowait(AdjustAttackSpeed(m_fAnimWaitTime - 0.05f));
+
+    PlayDefaultAnim(FALSE);
 
     // no more bullets in colt -> reload
     if (!ENOUGH_MAG) {
@@ -3245,10 +3275,14 @@ procedures:
     // sound
     PlaySound(m_soWeapon1, SOUND_COLT_RELOAD, SOF_3D|SOF_VOLUMETRIC);
 
-    m_moWeapon.PlayAnim(COLT_ANIM_RELOAD, 0);
+    // [Cecil] Play reload animation
+    if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, "Reload", FALSE)) {
+      m_moWeapon.PlayAnim(m_iAnim, 0);
+    }
+
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Colt_reload");}
     // [Cecil] Multiply speed
-    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(COLT_ANIM_RELOAD)));
+    autowait(AdjustAttackSpeed(m_fAnimWaitTime));
 
     // [Cecil] Reload mag
     GET_WEAPON(WEAPON_COLT).Reload(m_bExtraWeapon, TRUE);
@@ -3270,7 +3304,11 @@ procedures:
       DecAmmo(FALSE);
       SetFlare(TRUE);
       PlayLightAnim(LIGHT_ANIM_COLT_SHOTGUN, 0);
-      m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST, 0);
+
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
 
       // sound
       PlaySound(m_soWeapon0, SOUND_SINGLESHOTGUN_FIRE, SOF_3D|SOF_VOLUMETRIC);
@@ -3285,8 +3323,7 @@ procedures:
       DropBulletShell(_vSingleShotgunShellPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_SHOTGUN);
 
       // [Cecil] Multiply speed
-      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? SINGLESHOTGUN_ANIM_FIRE1 : SINGLESHOTGUN_ANIM_FIRE1FAST)
-                - (GetSP()->sp_bCooperative ? 0.5f : 0.375f)));
+      autowait(AdjustAttackSpeed(m_fAnimWaitTime - (GetSP()->sp_bCooperative ? 0.5f : 0.375f)));
 
     } else if (TRUE) {
       m_bFireWeapon = m_bHasAmmo = FALSE;
@@ -3369,8 +3406,15 @@ procedures:
       // [Cecil] Show the hand
       m_moWeaponSecond.StretchModel(FLOAT3D((MirrorState() ? -1.0f : 1.0f), 1.0f, 1.0f));
 
-      m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST, 0);
-      m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
+      // [Cecil] Play hand animation
+      if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, GetSP()->sp_bCooperative ? "Hand" : "HandDM", TRUE)) {
+        m_moWeaponSecond.PlayAnim(m_iAnim, 0);
+      }
+
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
 
       // sound
       m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
@@ -3388,8 +3432,7 @@ procedures:
       }
 
       // [Cecil] Multiply speed
-      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST)
-                - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)));
+      autowait(AdjustAttackSpeed(m_fAnimWaitTime - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)));
 
       // no ammo -> change weapon
       if (!ENOUGH_AMMO) {
@@ -3421,8 +3464,15 @@ procedures:
       // [Cecil] Show the hand
       m_moWeaponSecond.StretchModel(FLOAT3D((MirrorState() ? -1.0f : 1.0f), 1.0f, 1.0f));
 
-      m_moWeapon.PlayAnim(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST, 0);
-      m_moWeaponSecond.PlayAnim(GetSP()->sp_bCooperative ? HANDWITHAMMO_ANIM_FIRE : HANDWITHAMMO_ANIM_FIREFAST, 0);
+      // [Cecil] Play hand animation
+      if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, GetSP()->sp_bCooperative ? "Hand" : "HandDM", TRUE)) {
+        m_moWeaponSecond.PlayAnim(m_iAnim, 0);
+      }
+
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, TRUE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
 
       // sound
       m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
@@ -3440,8 +3490,7 @@ procedures:
       }
 
       // [Cecil] Multiply speed
-      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(GetSP()->sp_bCooperative ? DOUBLESHOTGUN_ANIM_FIRE : DOUBLESHOTGUN_ANIM_FIREFAST)
-                - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)));
+      autowait(AdjustAttackSpeed(m_fAnimWaitTime - (GetSP()->sp_bCooperative ? 0.25f : 0.15f)));
 
       // no ammo -> change weapon
       if (!ENOUGH_AMMO) {
@@ -3523,7 +3572,11 @@ procedures:
 
       DecAmmo(FALSE);
       SetFlare(TRUE);
-      m_moWeapon.PlayAnim(TOMMYGUN_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
+
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, AOF_LOOPING|AOF_NORESTART);
+      }
 
       // [Cecil] Drop bullet
       DropBulletShell(_vTommygunShellPos, FLOAT3D(FRnd()+2.0f, FRnd()+5.0f, -FRnd()-2.0f), ESL_BULLET);
@@ -3569,8 +3622,9 @@ procedures:
       SpawnRangeSound(50.0f);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Tommygun_fire");}
       SetFlare(TRUE);
-      m_moWeapon.PlayAnim(TOMMYGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
-      
+
+      PlayDefaultAnim(FALSE);
+
       m_soWeapon0.Set3DParameters(50.0f, 5.0f, 3.0f, 1.0f);
       PlaySound(m_soWeapon0, SOUND_TOMMYGUN_BURST, SOF_3D|SOF_VOLUMETRIC);
 
@@ -3633,8 +3687,10 @@ procedures:
       PlaySound(m_soWeapon0, SOUND_SNIPER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("SniperFire");}
       
-      // animation
-      m_moWeapon.PlayAnim(SNIPER_ANIM_FIRE, 0);
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
       
       // [Cecil] Multiply speed
       autowait(AdjustAttackSpeed(1.0f));
@@ -3686,8 +3742,10 @@ procedures:
       PlaySound(m_soWeapon0, SOUND_ACCURATE_SNIPER, SOF_3D|SOF_VOLUMETRIC);
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("SniperFire");}
       
-      // animation
-      m_moWeapon.PlayAnim(SNIPER_ANIM_FIRE, 0);
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, TRUE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
       
       // [Cecil] Multiply speed
       autowait(AdjustAttackSpeed(1.0f));
@@ -3714,7 +3772,7 @@ procedures:
   // ***************** FIRE MINIGUN *****************
   MiniGunSpinUp() {
     // steady anim
-    m_moWeapon.PlayAnim(MINIGUN_ANIM_WAIT1, AOF_LOOPING|AOF_NORESTART);
+    PlayDefaultAnim(FALSE);
 
     // no boring animation
     ((CPlayerAnimator&)*((CPlayer&)*m_penPlayer).m_penAnimator).m_fLastActionTime = _pTimer->CurrentTick();
@@ -3905,7 +3963,11 @@ procedures:
     // fire one rocket
     if (ENOUGH_AMMO) {
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
-      m_moWeapon.PlayAnim(ROCKETLAUNCHER_ANIM_FIRE, 0);
+
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, m_bChainLauncher)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
 
       // [Cecil] Custom damage
       FLOAT fDamage = GetInventory()->GetWeaponDamage(WEAPON_ROCKETLAUNCHER, m_bChainLauncher);
@@ -3930,7 +3992,7 @@ procedures:
       StretchRocket(FLOAT3D(0.0f, 0.0f, 0.0f));
 
       // [Cecil] Multiply speed
-      autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(ROCKETLAUNCHER_ANIM_FIRE) - 0.05f));
+      autowait(AdjustAttackSpeed(m_fAnimWaitTime) - 0.05f);
 
       // [Cecil] Rocket model
       StretchRocket(FLOAT3D((MirrorState() ? -1.0f : 1.0f), 1.0f, 1.0f));
@@ -4014,6 +4076,11 @@ procedures:
       PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
+
       // release spring
       TM_START = _pTimer->CurrentTick();
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
@@ -4084,6 +4151,11 @@ procedures:
       PlaySound(m_soWeapon0, SOUND_GRENADELAUNCHER_FIRE, SOF_3D|SOF_VOLUMETRIC);
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, TRUE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
+
       // release spring
       TM_START = _pTimer->CurrentTick();
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
@@ -4120,10 +4192,13 @@ procedures:
     m_tmFlamerStart = _pTimer->CurrentTick();
     m_tmFlamerStop = 1e9;
     
-    m_moWeapon.PlayAnim(FLAMER_ANIM_FIRESTART, 0);
+    // [Cecil] Play attack start animation
+    if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, "AttackStart", FALSE)) {
+      m_moWeapon.PlayAnim(m_iAnim, 0);
+    }
 
     // [Cecil] Multiply speed
-    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIRESTART)));
+    autowait(AdjustAttackSpeed(m_fAnimWaitTime));
 
     // play fire sound
     m_soWeapon0.Set3DParameters(50.0f, 5.0f, 2.0f, 0.31f);
@@ -4178,10 +4253,13 @@ procedures:
       m_penFlame = NULL;
     }
 
-    m_moWeapon.PlayAnim(FLAMER_ANIM_FIREEND, 0);
+    // [Cecil] Play attack end animation
+    if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, "AttackEnd", FALSE)) {
+      m_moWeapon.PlayAnim(m_iAnim, 0);
+    }
 
     // [Cecil] Multiply speed
-    autowait(AdjustAttackSpeed(m_moWeapon.GetAnimLength(FLAMER_ANIM_FIREEND)));
+    autowait(AdjustAttackSpeed(m_fAnimWaitTime));
     
     // select new weapon
     if (!ENOUGH_AMMO) {
@@ -4194,7 +4272,11 @@ procedures:
   // [Cecil] Tesla gun
   FireTeslaGun() {
     if (ENOUGH_ALT) {
-      m_moWeapon.PlayAnim(FLAMER_ANIM_FIRESTART, 0);
+      // [Cecil] Play attack start animation
+      if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, "AttackStart", FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
+
       autowait(AdjustAttackSpeed(0.25f));
 
       // create lightning
@@ -4236,7 +4318,10 @@ procedures:
 
       autowait(AdjustAttackSpeed(0.25f));
 
-      m_moWeapon.PlayAnim(FLAMER_ANIM_FIREEND, 0);
+      // [Cecil] Play attack end animation
+      if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, "AttackEnd", FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
     }
 
     // select new weapon
@@ -4254,10 +4339,13 @@ procedures:
     m_soWeapon0.Set3DParameters(50.0f, 5.0f, 1.5f, 1.0f);
     PlaySound(m_soWeapon0, SOUND_CS_BEGINFIRE, SOF_3D|SOF_VOLUMETRIC);
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawBeginFire");}
-  
-    // bring the chainsaw down to cutting height (fire position)
-    m_moWeapon.PlayAnim(CHAINSAW_ANIM_WAIT2FIRE, 0);
-    autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_WAIT2FIRE)-0.05f);
+
+    // [Cecil] Play attack start animation
+    if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, "AttackStart", FALSE)) {
+      m_moWeapon.PlayAnim(m_iAnim, 0);
+    }
+
+    autowait(AdjustAttackSpeed(m_fAnimWaitTime - 0.05f));
 
     GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
@@ -4268,7 +4356,10 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("ChainsawIdle");}
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("ChainsawFire");}
 
-    m_moWeapon.PlayAnim(CHAINSAW_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);  
+    // [Cecil] Play attack animation
+    if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, TRUE)) {
+      m_moWeapon.PlayAnim(m_iAnim, AOF_LOOPING|AOF_NORESTART);
+    }
 
     // start teeth rotation
     CAttachmentModelObject *pamoTeeth = GetModel("teeth", FALSE);
@@ -4299,8 +4390,12 @@ procedures:
     // restore volume to engine sound
     m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
     
-    m_moWeapon.PlayAnim(CHAINSAW_ANIM_FIRE2WAIT, 0);
-    autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_FIRE2WAIT));
+    // [Cecil] Play attack end animation
+    if (GetRandomAnim(m_iAnim, m_fAnimWaitTime, "AttackEnd", FALSE)) {
+      m_moWeapon.PlayAnim(m_iAnim, 0);
+    }
+
+    autowait(AdjustAttackSpeed(m_fAnimWaitTime));
 
     // stop teeth rotation
     CAttachmentModelObject *pamoTeeth = GetModel("teeth", FALSE);
@@ -4318,14 +4413,6 @@ procedures:
     jump Idle();
   };
 
-  ChainsawBringUp() {
-    // bring it back to idle position
-    m_moWeapon.PlayAnim(CHAINSAW_ANIM_FIRE2WAIT, 0);
-    autowait(m_moWeapon.GetAnimLength(CHAINSAW_ANIM_FIRE2WAIT));
-
-    jump Idle();
-  };
-
   // ***************** FIRE LASER *****************
   FireLaser() {
     // fire one cell
@@ -4334,7 +4421,11 @@ procedures:
       autowait(0.05f);
       autowait(0.05f);
 
-      m_moWeapon.PlayAnim(LASER_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, AOF_LOOPING|AOF_NORESTART);
+      }
+
       FireLaserRay(GetInventory()->GetDamage(WEAPON_LASER));
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Laser_fire");}
       DecAmmo(FALSE);
@@ -4376,7 +4467,11 @@ procedures:
       egbr.penOwner = this;
       m_penGhostBusterRay->Initialize(egbr);
 
-      m_moWeapon.PlayAnim(LASER_ANIM_FIRE, AOF_LOOPING|AOF_NORESTART);
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, TRUE)) {
+        m_moWeapon.PlayAnim(m_iAnim, AOF_LOOPING|AOF_NORESTART);
+      }
+
       PlaySound(m_soWeapon0, SOUND_DEATHRAY, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);
 
       // extra tick for the ray rendering
@@ -4472,7 +4567,11 @@ procedures:
         PlaySound(m_soWeapon3, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       }
 
-      m_moWeapon.PlayAnim(CANNON_ANIM_FIRE, 0);
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, FALSE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
+
       FireCannonBall(iPower, FALSE, GetInventory()->GetDamage(WEAPON_IRONCANNON));
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon");}
@@ -4484,7 +4583,7 @@ procedures:
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       // [Cecil] Multiply speed
-      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_moWeapon.GetAnimLength(CANNON_ANIM_FIRE))) {
+      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_fAnimWaitTime)) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
         m_fWeaponDrawPower -= F_OFFSET_CHG;
@@ -4569,7 +4668,11 @@ procedures:
         PlaySound(m_soWeapon3, SOUND_CANNON, SOF_3D|SOF_VOLUMETRIC);
       }
 
-      m_moWeapon.PlayAnim(CANNON_ANIM_FIRE, 0);
+      // [Cecil] Play attack animation
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, TRUE)) {
+        m_moWeapon.PlayAnim(m_iAnim, 0);
+      }
+
       FireCannonBall(iPower, TRUE, GetInventory()->GetDamageAlt(WEAPON_IRONCANNON));
 
       if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon");}
@@ -4581,7 +4684,7 @@ procedures:
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       // [Cecil] Multiply speed
-      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_moWeapon.GetAnimLength(CANNON_ANIM_FIRE))) {
+      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_fAnimWaitTime)) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
         m_fWeaponDrawPower -= F_OFFSET_CHG;
