@@ -4870,11 +4870,14 @@ procedures:
     // [Cecil] Remember last mirrored state
     m_bLastWeaponMirrored = MirrorState();
 
-    // Set weapon model for current weapon
-    SetCurrentWeaponModel(FALSE);
-
     wait() {
       on (EBegin) : {
+        // [Cecil] Reset model flags
+        m_ubModelsSet = 0;
+        
+        // [Cecil] Set weapon model for current weapon
+        SetCurrentWeaponModel(FALSE);
+
         call Idle();
       }
 
