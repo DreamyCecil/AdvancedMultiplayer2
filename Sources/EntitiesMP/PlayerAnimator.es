@@ -979,7 +979,7 @@ functions:
       CPlayerWeapons &plw = *GetWeapon(iWeapon);
 
       if (plw.GetCurrent() == WEAPON_MINIGUN) {
-        ANGLE aAngle = Lerp(plw.m_aMiniGunLast, plw.m_aMiniGun, _pTimer->GetLerpFactor());
+        ANGLE aAngle = Lerp(plw.m_fMoveLast, plw.m_fMoveStart, _pTimer->GetLerpFactor());
 
         // rotate minigun barrels
         INDEX iAttach (plw.m_bExtraWeapon ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);

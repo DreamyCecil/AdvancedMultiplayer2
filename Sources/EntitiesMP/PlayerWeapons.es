@@ -361,10 +361,6 @@ static FLOAT3D _vDoubleShotgunPipe  = FLOAT3D(0.2f, 0.0f, -1.25f);
 static FLOAT3D _vTommygunPipe       = FLOAT3D(-0.06f, 0.1f, -0.6f);
 static FLOAT3D _vMinigunPipe        = FLOAT3D(-0.06f, 0.0f, -0.6f);
 static FLOAT3D _vMinigunPipe3rdView = FLOAT3D(0.25f, 0.3f, -2.5f);
-
-#define TM_START m_aMiniGun
-#define F_OFFSET_CHG m_aMiniGunLast
-#define F_TEMP m_aMiniGunSpeed
 %}
 
 class export CPlayerWeapons : CRationalEntity {
@@ -414,11 +410,10 @@ properties:
  43 CSoundObject m_soWeapon3,
  44 CSoundObject m_soWeaponAmbient,
 
-// weapons specific
-// minigun
-220 FLOAT m_aMiniGun = 0.0f,
-221 FLOAT m_aMiniGunLast = 0.0f,
-222 FLOAT m_aMiniGunSpeed = 0.0f,
+// [Cecil] Renamed Minigun-specific variables for generic usage
+220 FLOAT m_fMoveStart = 0.0f, // Amount at the start (m_aMiniGun)
+221 FLOAT m_fMoveLast  = 0.0f, // Amount last time (m_aMiniGunLast)
+222 FLOAT m_fMovePower = 0.0f, // Power amount (m_aMiniGunSpeed)
 
 // lerped bullets fire
 230 FLOAT3D m_iLastBulletPosition = FLOAT3D(32000.0f, 32000.0f, 32000.0f),
@@ -460,7 +455,7 @@ properties:
   FLOAT3D vBulletDestination;
 
   // [Cecil] Weapon mirroring
-  INDEX m_bLastWeaponMirrored;
+  UBYTE m_ubLastWeaponMirrored;
 
   // [Cecil] Weapon models has been set
   UBYTE m_ubModelsSet;
@@ -550,7 +545,7 @@ functions:
   // [Cecil] Constructor
   void CPlayerWeapons(void) {
     // Weapon mirroring
-    m_bLastWeaponMirrored = FALSE;
+    m_ubLastWeaponMirrored = 0;
 
     // Models have been set
     m_ubModelsSet = 0;
@@ -561,7 +556,7 @@ functions:
     CRationalEntity::Copy(enOther, ulFlags);
     CPlayerWeapons *penOther = (CPlayerWeapons *)(&enOther);
 
-    m_bLastWeaponMirrored = penOther->m_bLastWeaponMirrored;
+    m_ubLastWeaponMirrored = penOther->m_ubLastWeaponMirrored;
   };
   
   // [Cecil] Read weapons
@@ -876,6 +871,11 @@ functions:
     return amp_bWeaponMirrored;
   };
 
+  // [Cecil] Reset last mirror state
+  void ResetMirrorState(void) {
+    m_ubLastWeaponMirrored = (UBYTE)MirrorState();
+  };
+
   // [Cecil] Get weapon position for rendering
   SWeaponPos RenderPos(INDEX iWeapon) {
     SWeaponPos wps = GET_WEAPON(iWeapon).GetPosition();
@@ -1139,9 +1139,11 @@ functions:
     SWeaponPos wps = RenderPos(iWeapon);
 
     // [Cecil] Mirror the weapon
-    if (pen->m_bLastWeaponMirrored != MirrorState()) {
+    UBYTE ubMirrorState = (UBYTE)MirrorState();
+
+    if (pen->m_ubLastWeaponMirrored != ubMirrorState) {
       pen->ApplyMirroring(TRUE);
-      pen->m_bLastWeaponMirrored = MirrorState();
+      pen->m_ubLastWeaponMirrored = ubMirrorState;
     }
 
     // [Cecil] No weapon
@@ -1879,7 +1881,7 @@ functions:
     // [Cecil] Mirroring
     FLOAT fMirror = (MirrorState() ? -1.0f : 1.0f);
 
-    ANGLE aAngle = Lerp(m_aMiniGunLast, m_aMiniGun, _pTimer->GetLerpFactor());
+    ANGLE aAngle = Lerp(m_fMoveLast, m_fMoveStart, _pTimer->GetLerpFactor());
 
     // rotate minigun barrels
     CAttachmentModelObject *pamo = GetModel("rotate", FALSE);
@@ -2968,7 +2970,7 @@ procedures:
         CAttachmentModelObject *pamo = GetModel("rotate", FALSE);
 
         if (pamo != NULL) {
-          m_aMiniGunLast = m_aMiniGun = pamo->amo_plRelative.pl_OrientationAngle(3);
+          m_fMoveLast = m_fMoveStart = pamo->amo_plRelative.pl_OrientationAngle(3);
         }
       } break;
 
@@ -3340,9 +3342,6 @@ procedures:
   FireShotgunGrenade() {
     // release spring and fire one grenade
     if (ENOUGH_ALT) {
-      // remember time for spring release
-      F_TEMP = _pTimer->CurrentTick();
-
       m_fWeaponDrawPowerOld = 10.0f;
       m_fWeaponDrawPower = 10.0f;
       m_tmDrawStartTime = 0.0f;
@@ -3600,9 +3599,6 @@ procedures:
   // [Cecil] Tommygun alt fire
   TommygunBurst() {
     if (ENOUGH_AMMO) {
-      // remember time for spring release
-      F_TEMP = _pTimer->CurrentTick();
-
       m_fWeaponDrawPowerOld = 10.0f;
       m_fWeaponDrawPower = 10.0f;
       m_tmDrawStartTime = 0.0f;
@@ -3794,16 +3790,16 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotateup");}
 
     // while not at full speed and fire is held
-    while (m_aMiniGunSpeed < MINIGUN_FULLSPEED && HoldingFire()) {
+    while (m_fMovePower < MINIGUN_FULLSPEED && HoldingFire()) {
       // every tick
       autowait(MINIGUN_TICKTIME);
       // increase speed
-      m_aMiniGunLast = m_aMiniGun;
-      m_aMiniGun += m_aMiniGunSpeed*MINIGUN_TICKTIME;
-      m_aMiniGunSpeed += MINIGUN_SPINUPACC*MINIGUN_TICKTIME;
+      m_fMoveLast = m_fMoveStart;
+      m_fMoveStart += m_fMovePower * MINIGUN_TICKTIME;
+      m_fMovePower += MINIGUN_SPINUPACC*MINIGUN_TICKTIME;
     }
     // do not go over full speed
-    m_aMiniGunSpeed = ClampUp( m_aMiniGunSpeed, MINIGUN_FULLSPEED);
+    m_fMovePower = ClampUp(m_fMovePower, MINIGUN_FULLSPEED);
 
     // if not holding fire anymore
     if (!HoldingFire()) {
@@ -3878,8 +3874,8 @@ procedures:
       autowait(MINIGUN_TICKTIME);
 
       // spin
-      m_aMiniGunLast = m_aMiniGun;
-      m_aMiniGun+=m_aMiniGunSpeed*MINIGUN_TICKTIME;
+      m_fMoveLast = m_fMoveStart;
+      m_fMoveStart += m_fMovePower * MINIGUN_TICKTIME;
     }
 
     if (m_bHasAmmo) {
@@ -3905,13 +3901,13 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Minigun_rotatedown");}
 
     // while still spinning and should not fire
-    while (m_aMiniGunSpeed > 0 && (!HoldingFire() || !ENOUGH_AMMO)) {
+    while (m_fMovePower > 0 && (!HoldingFire() || !ENOUGH_AMMO)) {
       autowait(MINIGUN_TICKTIME);
 
       // spin
-      m_aMiniGunLast = m_aMiniGun;
-      m_aMiniGun += m_aMiniGunSpeed*MINIGUN_TICKTIME;
-      m_aMiniGunSpeed-=MINIGUN_SPINDNACC*MINIGUN_TICKTIME;
+      m_fMoveLast = m_fMoveStart;
+      m_fMoveStart += m_fMovePower * MINIGUN_TICKTIME;
+      m_fMovePower -= MINIGUN_SPINDNACC*MINIGUN_TICKTIME;
 
       if (!ENOUGH_AMMO) {
         SelectNewWeapon();
@@ -3920,16 +3916,16 @@ procedures:
       // if weapon should be changed
       if (m_bChangeWeapon) {
         // stop spinning immediately
-        m_aMiniGunSpeed = 0.0f;
-        m_aMiniGunLast = m_aMiniGun;
+        m_fMovePower = 0.0f;
+        m_fMoveLast = m_fMoveStart;
         GetAnimator()->FireAnimationOff();
         jump Idle();
       }
     }
 
     // clamp some
-    m_aMiniGunSpeed = ClampDn(m_aMiniGunSpeed, 0.0f);
-    m_aMiniGunLast = m_aMiniGun;
+    m_fMovePower = ClampDn(m_fMovePower, 0.0f);
+    m_fMoveLast = m_fMoveStart;
 
     // if should fire
     if (HoldingFire() && ENOUGH_AMMO) {
@@ -4039,31 +4035,29 @@ procedures:
 
   // ***************** FIRE GRENADELAUNCHER *****************
   FireGrenadeLauncher() {
-    TM_START = _pTimer->CurrentTick();
-    // remember time for spring release
-    F_TEMP = _pTimer->CurrentTick();
+    m_fMoveStart = _pTimer->CurrentTick();
+    m_fMovePower = 0.0f;
 
-    F_OFFSET_CHG = 0.0f;
     m_fWeaponDrawPower = 0.0f;
     m_tmDrawStartTime = _pTimer->CurrentTick();
 
     // [Cecil] Multiply speed
-    while (HoldingFire() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(0.75f)) {
+    while (HoldingFire() && (_pTimer->CurrentTick() - m_fMoveStart) < AdjustAttackSpeed(0.75f)) {
       autowait(_pTimer->TickQuantum);
 
       // [Cecil] Multiply power
-      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum);
 
-      F_OFFSET_CHG = 0.125f/(iPower+2);
+      m_fMovePower = 0.125f / (iPower + 2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-      m_fWeaponDrawPower += F_OFFSET_CHG;
+      m_fWeaponDrawPower += m_fMovePower;
     }
     m_tmDrawStartTime = 0.0f;
 
     // release spring and fire one grenade
     if (ENOUGH_AMMO) {
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - F_TEMP) / _pTimer->TickQuantum * FireSpeed());
+      INDEX iPower = INDEX((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum * FireSpeed());
 
       // fire grenade
       FireGrenade(iPower, FALSE, GetInventory()->GetDamage(WEAPON_GRENADELAUNCHER));
@@ -4082,15 +4076,14 @@ procedures:
       }
 
       // release spring
-      TM_START = _pTimer->CurrentTick();
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       while (m_fWeaponDrawPower > 0.0f) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-        m_fWeaponDrawPower -= F_OFFSET_CHG;
+        m_fWeaponDrawPower -= m_fMovePower;
         m_fWeaponDrawPower = ClampDn( m_fWeaponDrawPower, 0.0f);
-        F_OFFSET_CHG = F_OFFSET_CHG*10;
+        m_fMovePower *= 10.0f;
       }
 
       // reset moving part's offset
@@ -4114,31 +4107,29 @@ procedures:
   };
 
   FirePoisonGrenade() {
-    TM_START = _pTimer->CurrentTick();
-    // remember time for spring release
-    F_TEMP = _pTimer->CurrentTick();
+    m_fMoveStart = _pTimer->CurrentTick();
+    m_fMovePower = 0.0f;
 
-    F_OFFSET_CHG = 0.0f;
     m_fWeaponDrawPower = 0.0f;
     m_tmDrawStartTime = _pTimer->CurrentTick();
 
     // [Cecil] Multiply speed
-    while (HoldingAlt() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(0.75f)) {
+    while (HoldingAlt() && (_pTimer->CurrentTick() - m_fMoveStart) < AdjustAttackSpeed(0.75f)) {
       autowait(_pTimer->TickQuantum);
 
       // [Cecil] Multiply power
-      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum);
 
-      F_OFFSET_CHG = 0.125f/(iPower+2);
+      m_fMovePower = 0.125f / (iPower + 2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-      m_fWeaponDrawPower += F_OFFSET_CHG;
+      m_fWeaponDrawPower += m_fMovePower;
     }
     m_tmDrawStartTime = 0.0f;
 
     // release spring and fire one grenade
     if (ENOUGH_AMMO) {
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - F_TEMP) / _pTimer->TickQuantum * FireSpeed());
+      INDEX iPower = INDEX((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum * FireSpeed());
 
       // fire grenade
       FireGrenade(iPower, TRUE, GetInventory()->GetDamageAlt(WEAPON_GRENADELAUNCHER));
@@ -4157,15 +4148,14 @@ procedures:
       }
 
       // release spring
-      TM_START = _pTimer->CurrentTick();
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       while (m_fWeaponDrawPower > 0.0f) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-        m_fWeaponDrawPower -= F_OFFSET_CHG;
+        m_fWeaponDrawPower -= m_fMovePower;
         m_fWeaponDrawPower = ClampDn( m_fWeaponDrawPower, 0.0f);
-        F_OFFSET_CHG = F_OFFSET_CHG*10;
+        m_fMovePower *= 10.0f;
       }
 
       // reset moving part's offset
@@ -4508,8 +4498,8 @@ procedures:
   // ***************** FIRE CANNON *****************
   CannonFireStart() {
     m_tmDrawStartTime = _pTimer->CurrentTick();
-    TM_START = _pTimer->CurrentTick();
-    F_OFFSET_CHG = 0.0f;
+    m_fMoveStart = _pTimer->CurrentTick();
+    m_fMovePower = 0.0f;
     m_fWeaponDrawPower = 0.0f;
 
     if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
@@ -4523,14 +4513,14 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon_prepare");}
 
     // [Cecil] Multiply speed
-    while (HoldingFire() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(1.0f)) {
+    while (HoldingFire() && (_pTimer->CurrentTick() - m_fMoveStart) < AdjustAttackSpeed(1.0f)) {
       autowait(_pTimer->TickQuantum);
       // [Cecil] Multiply power
-      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum);
 
-      F_OFFSET_CHG = 0.25f/(iPower+2);
+      m_fMovePower = 0.25f / (iPower + 2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-      m_fWeaponDrawPower += F_OFFSET_CHG;
+      m_fWeaponDrawPower += m_fMovePower;
     }
 
     m_tmDrawStartTime = 0.0f;
@@ -4546,7 +4536,7 @@ procedures:
     // fire one ball
     if (ENOUGH_AMMO) {
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeed());
+      INDEX iPower = INDEX((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum * FireSpeed());
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
       FLOAT fRange, fFalloff;
@@ -4579,16 +4569,16 @@ procedures:
       DecAmmo(FALSE);
       SpawnRangeSound(30.0f);
 
-      TM_START = _pTimer->CurrentTick();
+      m_fMoveStart = _pTimer->CurrentTick();
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       // [Cecil] Multiply speed
-      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_fAnimWaitTime)) {
+      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - m_fMoveStart < AdjustAttackSpeed(m_fAnimWaitTime)) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-        m_fWeaponDrawPower -= F_OFFSET_CHG;
+        m_fWeaponDrawPower -= m_fMovePower;
         m_fWeaponDrawPower = ClampDn(m_fWeaponDrawPower, 0.0f);
-        F_OFFSET_CHG = F_OFFSET_CHG*2;
+        m_fMovePower *= 2.0f;
       }
 
       // reset moving part's offset
@@ -4609,8 +4599,8 @@ procedures:
   // [Cecil] Nuke cannon
   NukeCannonFire() {
     m_tmDrawStartTime = _pTimer->CurrentTick();
-    TM_START = _pTimer->CurrentTick();
-    F_OFFSET_CHG = 0.0f;
+    m_fMoveStart = _pTimer->CurrentTick();
+    m_fMovePower = 0.0f;
     m_fWeaponDrawPower = 0.0f;
 
     if (GetInventory()->CurrentAmmo(m_iCurrentWeapon) & 1) {
@@ -4624,14 +4614,14 @@ procedures:
     if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_PlayEffect("Canon_prepare");}
 
     // [Cecil] Multiply speed
-    while (HoldingAlt() && (_pTimer->CurrentTick() - TM_START) < AdjustAttackSpeed(1.5f)) {
+    while (HoldingAlt() && (_pTimer->CurrentTick() - m_fMoveStart) < AdjustAttackSpeed(1.5f)) {
       autowait(_pTimer->TickQuantum);
       // [Cecil] Multiply power
-      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum);
+      INDEX iPower = (INDEX)AdjustAttackSpeed((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum);
 
-      F_OFFSET_CHG = 0.167f/(iPower+2);
+      m_fMovePower = 0.167f / (iPower + 2);
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-      m_fWeaponDrawPower += F_OFFSET_CHG;
+      m_fWeaponDrawPower += m_fMovePower;
     }
 
     m_tmDrawStartTime = 0.0f;
@@ -4647,7 +4637,7 @@ procedures:
     // fire one ball
     if (ENOUGH_AMMO) {
       // [Cecil] Multiply power
-      INDEX iPower = INDEX((_pTimer->CurrentTick() - TM_START) / _pTimer->TickQuantum * FireSpeed());
+      INDEX iPower = INDEX((_pTimer->CurrentTick() - m_fMoveStart) / _pTimer->TickQuantum * FireSpeed());
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
       FLOAT fRange, fFalloff;
@@ -4680,16 +4670,16 @@ procedures:
       DecAmmo(FALSE);
       SpawnRangeSound(30.0f);
 
-      TM_START = _pTimer->CurrentTick();
+      m_fMoveStart = _pTimer->CurrentTick();
       m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
 
       // [Cecil] Multiply speed
-      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - TM_START < AdjustAttackSpeed(m_fAnimWaitTime)) {
+      while (m_fWeaponDrawPower > 0.0f || _pTimer->CurrentTick() - m_fMoveStart < AdjustAttackSpeed(m_fAnimWaitTime)) {
         autowait(_pTimer->TickQuantum);
         m_fWeaponDrawPowerOld = m_fWeaponDrawPower;
-        m_fWeaponDrawPower -= F_OFFSET_CHG;
+        m_fWeaponDrawPower -= m_fMovePower;
         m_fWeaponDrawPower = ClampDn(m_fWeaponDrawPower, 0.0f);
-        F_OFFSET_CHG = F_OFFSET_CHG*2;
+        m_fMovePower *= 2.0f;
       }
 
       // reset moving part's offset
@@ -4868,7 +4858,7 @@ procedures:
     SetCollisionFlags(ECF_IMMATERIAL);
 
     // [Cecil] Remember last mirrored state
-    m_bLastWeaponMirrored = MirrorState();
+    ResetMirrorState();
 
     wait() {
       on (EBegin) : {

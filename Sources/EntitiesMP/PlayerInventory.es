@@ -661,9 +661,9 @@ functions:
       CPlayerWeapons &plw = *GetWeapon(iWeapons);
 
       // clear temp variables for some weapons
-      plw.m_aMiniGun = 0;
-      plw.m_aMiniGunLast = 0;
-      plw.m_aMiniGunSpeed = 0;
+      plw.m_fMoveStart = 0.0f;
+      plw.m_fMoveLast = 0.0f;
+      plw.m_fMovePower = 0.0f;
 
       // remember last weapon
       plw.m_iPreviousWeapon = plw.m_iCurrentWeapon;

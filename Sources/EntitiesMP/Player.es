@@ -2323,7 +2323,7 @@ functions:
         GetPlayerAnimator()->ResetAttachmentList(GetWeapon(iWeapon)->GetCurrent(), iWeapon);
 
         // Weapon mirroring
-        GetWeapon(iWeapon)->m_bLastWeaponMirrored = GetWeapon(iWeapon)->MirrorState();
+        GetWeapon(iWeapon)->ResetMirrorState();
 
         // Weapon models
         GetWeapon(iWeapon)->SetCurrentWeaponModel(GetInventory()->UsingDualWeapons());
@@ -6101,8 +6101,8 @@ procedures:
     GetInventory()->MuteWeaponAmbient();
 
     // stop rotating minigun
-    GetWeapon(0)->m_aMiniGunLast = GetWeapon(0)->m_aMiniGun;
-    GetWeapon(1)->m_aMiniGunLast = GetWeapon(1)->m_aMiniGun;
+    GetWeapon(0)->m_fMoveLast = GetWeapon(0)->m_fMoveStart;
+    GetWeapon(1)->m_fMoveLast = GetWeapon(1)->m_fMoveStart;
 
     // [Cecil] Destroy death ray
     GetWeapon(0)->DestroyRay();
