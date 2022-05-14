@@ -258,7 +258,7 @@ functions:
   };
 
   // [Cecil] Set third person model
-  void SetWeapon(BOOL bExtra) {
+  void SetWeapon(BOOL bExtra, BOOL bAlt) {
     // Remove old weapon
     RemoveWeapon(bExtra);
     
@@ -273,18 +273,21 @@ functions:
 
     // Set custom model
     SWeaponModelSet &wms = _apWeaponStructs[iWeapon].wmsItem;
+    CWeaponModel *pwm = &wms.wm2;
 
-    // [Cecil] TEMP: Just use the main model
-    CWeaponModel &wm = wms.wm1;
+    // Not alt or no model
+    if (!bAlt || pwm->moModel.GetData() == NULL) {
+      pwm = &wms.wm1;
+    }
 
-    if (wm.moModel.GetData() != NULL) {
+    if (pwm->moModel.GetData() != NULL) {
       // Add weapon attachment
       INDEX iAttach = (bExtra ? BODY_ATTACHMENT_COLT_LEFT : BODY_ATTACHMENT_COLT_RIGHT);
       CAttachmentModelObject *pamoWeapon = m_pmoModel->AddAttachmentModel(iAttach);
 
       try {
         // Copy loaded model
-        pamoWeapon->amo_moModelObject.Copy(wm.moModel);
+        pamoWeapon->amo_moModelObject.Copy(pwm->moModel);
         ModelChangeNotify();
 
       } catch (char *strError) {
@@ -302,7 +305,7 @@ functions:
     }
 
     // Gather attachments
-    ResetAttachmentList(iWeapon, bExtra);
+    ResetAttachmentList(iWeapon, bExtra, bAlt);
 
     // Remove flares
     WeaponFlare(FALSE, FALSE);
@@ -313,14 +316,17 @@ functions:
   };
 
   // [Cecil] Reset weapon attachments
-  void ResetAttachmentList(INDEX iWeapon, BOOL bExtra) {
+  void ResetAttachmentList(INDEX iWeapon, BOOL bExtra, BOOL bAlt) {
     // Get weapon model set
     SWeaponModelSet &wms = _apWeaponStructs[iWeapon].wmsItem;
+    CWeaponModel *pwm = &wms.wm2;
 
-    // [Cecil] TEMP: Just use the main model
-    CWeaponModel &wm = wms.wm1;
+    // Not alt or no model
+    if (!bAlt || pwm->moModel.GetData() == NULL) {
+      pwm = &wms.wm1;
+    }
 
-    if (wm.cbModel.Count() <= 0) {
+    if (pwm->cbModel.Count() <= 0) {
       return;
     }
     
@@ -336,7 +342,7 @@ functions:
 
     // Reset attachments
     try {
-      ParseModelAttachments(wm.cbModel, &pamoWeapon->amo_moModelObject, NULL, (bExtra ? m_aAttachments2 : m_aAttachments1));
+      ParseModelAttachments(pwm->cbModel, &pamoWeapon->amo_moModelObject, NULL, (bExtra ? m_aAttachments2 : m_aAttachments1));
 
     } catch (char *strError) {
       FatalError("Cannot load third person weapon model config '%s':\n%s", wms.strConfig, strError);
@@ -403,8 +409,8 @@ functions:
     m_fSidestepBanking = 0.0f;
 
     // weapon
-    SetWeapon(FALSE);
-    SetWeapon(TRUE);
+    SetWeapon(FALSE, FALSE);
+    SetWeapon(TRUE, FALSE);
     SetBodyAnimation(BODY_ANIM_COLT_STAND, AOF_LOOPING|AOF_NORESTART);
   };
 
@@ -911,9 +917,9 @@ functions:
   }
 
   // pull weapon
-  void BodyPullAnimation(BOOL bExtra) {
+  void BodyPullAnimation(BOOL bExtra, BOOL bAlt) {
     // set new weapon
-    SetWeapon(bExtra);
+    SetWeapon(bExtra, bAlt);
 
     // pull weapon
     m_bChangeWeapon = FALSE;

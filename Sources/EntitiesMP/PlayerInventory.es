@@ -682,7 +682,7 @@ functions:
       plw.SetCurrentWeaponModel(FALSE);
 
       // add weapon attachment
-      GetAnimator()->SetWeapon(plw.m_bExtraWeapon);
+      GetAnimator()->SetWeapon(plw.m_bExtraWeapon, FALSE);
     }
 
     // precache new weapons

@@ -2960,7 +2960,7 @@ procedures:
     }
 
     // Start animator
-    GetAnimator()->BodyPullAnimation(m_bExtraWeapon);
+    GetAnimator()->BodyPullAnimation(m_bExtraWeapon, m_bAltMode);
 
     if (m_iCurrentWeapon == WEAPON_NONE) {
       return EEnd();
@@ -3993,6 +3993,7 @@ procedures:
 
       // Reset model
       SetCurrentWeaponModel(m_bExtraWeapon || GetInventory()->UsingDualWeapons());
+      GetAnimator()->SetWeapon(m_bExtraWeapon, m_bAltMode);
     }
 
     jump RocketLauncherFire();
@@ -4007,6 +4008,7 @@ procedures:
 
       // Reset model
       SetCurrentWeaponModel(m_bExtraWeapon || GetInventory()->UsingDualWeapons());
+      GetAnimator()->SetWeapon(m_bExtraWeapon, m_bAltMode);
     }
 
     jump RocketLauncherFire();

@@ -2320,7 +2320,7 @@ functions:
       
       for (INDEX iWeapon = 0; iWeapon < 2; iWeapon++) {
         // Attachment lists
-        GetPlayerAnimator()->ResetAttachmentList(GetWeapon(iWeapon)->GetCurrent(), iWeapon);
+        GetPlayerAnimator()->ResetAttachmentList(GetWeapon(iWeapon)->GetCurrent(), iWeapon, FALSE);
 
         // Weapon mirroring
         GetWeapon(iWeapon)->ResetMirrorState();
@@ -5839,8 +5839,9 @@ functions:
     SetPlayerAppearance(&m_moRender, &en_pcCharacter, strDummy, /*bPreview=*/FALSE);
     ParseGender(strDummy);
 
-    GetPlayerAnimator()->SetWeapon(FALSE);
-    GetPlayerAnimator()->SetWeapon(TRUE);
+    for (INDEX iExtra = 0; iExtra < 2; iExtra++) {
+      GetPlayerAnimator()->SetWeapon(iExtra, GetWeapon(iExtra)->m_bAltMode);
+    }
     m_ulFlags |= PLF_SYNCWEAPON;
 
     // spawn teleport effect
