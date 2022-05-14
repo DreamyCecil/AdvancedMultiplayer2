@@ -27,7 +27,6 @@ typedef std::map<string, SListModel> CAttachList;
 // Custom weapon model
 class CWeaponModel {
   public:
-    CTString strConfig; // Path to the model config
     CConfigBlock cbModel; // Loaded model config
     CModelObject moModel; // Precached and constructed model
 
@@ -37,16 +36,37 @@ class CWeaponModel {
     // Copy constructor
     CWeaponModel(CWeaponModel &wmOther);
 
-    // Destructor
-    ~CWeaponModel(void);
-
     // Assignment
     CWeaponModel &operator=(CWeaponModel &wmOther);
+};
 
-    // Set model from a config
-    BOOL SetWeaponModel(const CTString &strConfigFile);
+// Weapon model set
+struct SWeaponModelSet {
+  CTString strType; // Model type
+  CTString strConfig; // Path to the config
 
-    // Write and read weapon model
-    void Write(CTStream *strm);
-    void Read(CTStream *strm);
+  CWeaponModel wm1; // Main model  / First viewmodel
+  CWeaponModel wm2; // Alt variant / Second viewmodel
+
+  // Constructor
+  SWeaponModelSet(void);
+
+  // Copy constructor
+  SWeaponModelSet(SWeaponModelSet &wmsOther);
+
+  // Assignment
+  SWeaponModelSet &operator=(SWeaponModelSet &wmsOther);
+
+  // Clear weapon models
+  void ClearModels(void);
+
+  // Set model from a config
+  BOOL SetWeaponModel(const CTString &strSetType, const CTString &strConfigFile);
+
+  // Check if there are any models
+  BOOL HasModels(void);
+
+  // Write and read weapon viewmodel
+  void Write(CTStream *strm);
+  void Read(CTStream *strm);
 };

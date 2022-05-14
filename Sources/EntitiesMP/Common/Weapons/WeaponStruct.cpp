@@ -139,3 +139,21 @@ void CWeaponStruct::Read(CTStream *strm) {
     *strm >> aiWeaponPriority[iPriority];
   }
 };
+
+// Get specific weapon model set
+SWeaponModelSet *CWeaponStruct::GetModelSet(BOOL bDual, BOOL bAlt) {
+  // Start with dual alt
+  SWeaponModelSet *pwms = &wmsDualAlt;
+
+  // Not dual or no model
+  if (!bDual || !pwms->HasModels()) {
+    pwms = &wmsAlt;
+  }
+
+  // Not alt
+  if (!bAlt || !pwms->HasModels()) {
+    pwms--;
+  }
+
+  return pwms;
+};

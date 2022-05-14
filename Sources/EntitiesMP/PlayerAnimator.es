@@ -272,7 +272,10 @@ functions:
     m_pmoModel = GetBody();
 
     // Set custom model
-    CWeaponModel &wm = _apWeaponStructs[iWeapon].wmItemMain;
+    SWeaponModelSet &wms = _apWeaponStructs[iWeapon].wmsItem;
+
+    // [Cecil] TEMP: Just use the main model
+    CWeaponModel &wm = wms.wm1;
 
     if (wm.moModel.GetData() != NULL) {
       // Add weapon attachment
@@ -285,7 +288,7 @@ functions:
         ModelChangeNotify();
 
       } catch (char *strError) {
-        FatalError("Cannot setup third person weapon model:\n%s", wm.strConfig, strError);
+        FatalError("Cannot setup third person weapon model:\n%s", wms.strConfig, strError);
       }
 
       // Apply third person offset
@@ -311,8 +314,11 @@ functions:
 
   // [Cecil] Reset weapon attachments
   void ResetAttachmentList(INDEX iWeapon, BOOL bExtra) {
-    // Get weapon model
-    CWeaponModel &wm = _apWeaponStructs[iWeapon].wmItemMain;
+    // Get weapon model set
+    SWeaponModelSet &wms = _apWeaponStructs[iWeapon].wmsItem;
+
+    // [Cecil] TEMP: Just use the main model
+    CWeaponModel &wm = wms.wm1;
 
     if (wm.cbModel.Count() <= 0) {
       return;
@@ -333,7 +339,7 @@ functions:
       ParseModelAttachments(wm.cbModel, &pamoWeapon->amo_moModelObject, NULL, (bExtra ? m_aAttachments2 : m_aAttachments1));
 
     } catch (char *strError) {
-      FatalError("Cannot load third person weapon model config '%s':\n%s", wm.strConfig, strError);
+      FatalError("Cannot load third person weapon model config '%s':\n%s", wms.strConfig, strError);
     }
   };
 

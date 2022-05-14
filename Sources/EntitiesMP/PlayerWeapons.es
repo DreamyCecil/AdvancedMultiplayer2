@@ -100,15 +100,6 @@ void ResetWeaponPosition(void) {
 #define WPC_RESETY (1 << 3) // reset Y position
 #define WPC_RESETZ (1 << 4) // reset Z position
 #define WPC_DUAL   (1 << 5) // mirror position based on dual weapons
-
-// [Cecil] Flags of set weapon models
-#define SMF_WEAPON_1      (1 << 0)
-#define SMF_DUAL_WEAPON_1 (1 << 1)
-#define SMF_WEAPON_2      (1 << 4)
-#define SMF_DUAL_WEAPON_2 (1 << 5)
-
-#define SMF_MASK_1 (SMF_WEAPON_1 | SMF_DUAL_WEAPON_1)
-#define SMF_MASK_2 (SMF_WEAPON_2 | SMF_DUAL_WEAPON_2)
 %}
 
 uses "EntitiesMP/Player";
@@ -442,10 +433,10 @@ properties:
 272 FLOAT m_tmLastChainsawSpray = 0.0f,
 
 // [Cecil] Advanced Multiplayer
-300 BOOL m_bAltFire = FALSE, // using alt fire
-301 BOOL m_bChainLauncher = FALSE, // chainsaw launcher mode
-302 INDEX m_iAmmoLeft = 1, // how much ammo is left
-303 BOOL m_bExtraWeapon = FALSE, // this is an extra weapon
+300 BOOL m_bAltFire = FALSE, // Using alt fire (like m_bFireWeapon)
+301 BOOL m_bAltMode = FALSE, // Alt fire mode is active
+302 INDEX m_iAmmoLeft = 1, // How much ammo is left
+303 BOOL m_bExtraWeapon = FALSE, // This is an extra weapon
 
 310 CEntityPointer m_penTesla,
 
@@ -656,25 +647,8 @@ functions:
 
     CModelObject &mo = pamoRocket->amo_moModelObject;
 
-    FLOAT fScale = (m_bChainLauncher ? 0.5f : 1.0f);
+    FLOAT fScale = (m_bAltMode ? 0.5f : 1.0f);
     mo.StretchModel(vSize * fScale);
-  };
-
-  // [Cecil] Stretch all rocket models
-  void StretchAllRockets(FLOAT3D vSize) {
-    FLOAT fScale = (m_bChainLauncher ? 0.5f : 1.0f);
-
-    for (INDEX i = 1; i <= 3; i++) {
-      // Get rocket attachment under a certain index
-      CAttachmentModelObject *pamoRocket = GetModel(CTString(0, "rocket%d", i), FALSE);
-
-      if (pamoRocket == NULL) {
-        continue;
-      }
-
-      CModelObject &mo = pamoRocket->amo_moModelObject;
-      mo.StretchModel(vSize * fScale);
-    }
   };
 
   // [Cecil] Rotate all rocket models
@@ -1218,7 +1192,7 @@ functions:
     }
     
     // [Cecil] Draw second weapon model
-    if (pen->m_ubModelsSet & SMF_WEAPON_2) {
+    if (pen->m_ubModelsSet & 2) {
       // prepare render model structure and projection
       CRenderModel rmMain;
 
@@ -1267,7 +1241,7 @@ functions:
     }
     
     // [Cecil] Draw main weapon model
-    if (pen->m_ubModelsSet & SMF_WEAPON_1) {
+    if (pen->m_ubModelsSet & 1) {
       // minigun specific (update rotation)
       if (iWeapon == WEAPON_MINIGUN) {
         pen->RotateMinigun();
@@ -1767,103 +1741,62 @@ functions:
 
   // [Cecil] Set weapon model for the current weapon
   void SetCurrentWeaponModel(BOOL bDualVariant) {
+    m_ubModelsSet = 0;
+
+    m_moWeapon.SetData(NULL);
+    m_moWeaponSecond.SetData(NULL);
+
+    m_aAttachments1.clear();
+    m_aAttachments2.clear();
+
     // No weapon
     if (m_iCurrentWeapon == WEAPON_NONE) {
-      m_moWeapon.SetData(NULL);
-      m_moWeaponSecond.SetData(NULL);
-
-      m_aAttachments1.clear();
-      m_aAttachments2.clear();
       return;
     }
 
     BOOL bNewAnimation = FALSE;
 
-    // Weapon models
+    // Get weapon model set
     CWeaponStruct &ws = _apWeaponStructs[m_iCurrentWeapon];
-    CWeaponModel *pwm;
-
-    // Set all model flags
-    UBYTE ubSetModels = (SMF_MASK_1 | SMF_MASK_2);
-    
-    pwm = &ws.wmDualMain1;
-
-    // Not dual or it doesn't exist
-    if (!bDualVariant || pwm->moModel.GetData() == NULL) {
-      pwm = &ws.wmMain1;
-      ubSetModels &= ~SMF_DUAL_WEAPON_1;
-    }
+    SWeaponModelSet *pwms = ws.GetModelSet(bDualVariant, m_bAltMode);
 
     // Set main model if it differs
-    if (pwm->moModel.GetData() != NULL) {
-      if ((m_ubModelsSet & SMF_MASK_1) != (ubSetModels & SMF_MASK_1)) {
-        // Remove previous model
-        m_moWeapon.SetData(NULL);
-        m_aAttachments1.clear();
+    if (pwms->wm1.moModel.GetData() != NULL) {
+      // Reset stretch
+      m_moWeapon.StretchModel(pwms->wm1.moModel.mo_Stretch);
 
-        // Reset stretch
-        m_moWeapon.StretchModel(pwm->moModel.mo_Stretch);
+      try {
+        m_moWeapon.Copy(pwms->wm1.moModel);
+        ParseModelAttachments(pwms->wm1.cbModel, &m_moWeapon, NULL, m_aAttachments1);
 
-        try {
-          m_moWeapon.Copy(pwm->moModel);
-          ParseModelAttachments(pwm->cbModel, &m_moWeapon, NULL, m_aAttachments1);
-
-        } catch (char *strError) {
-          FatalError("Cannot load first weapon model config '%s':\n%s", pwm->strConfig, strError);
-        }
-
-        // Start new animation
-        bNewAnimation = TRUE;
+      } catch (char *strError) {
+        FatalError("Cannot load first weapon model config '%s':\n%s", pwms->strConfig, strError);
       }
-      
-    // Remove main model
-    } else {
-      ubSetModels &= ~SMF_WEAPON_1;
 
-      m_moWeapon.SetData(NULL);
-      m_aAttachments1.clear();
-    }
+      // Start new animation
+      bNewAnimation = TRUE;
 
-    pwm = &ws.wmDualMain2;
-
-    // Not dual or it doesn't exist
-    if (!bDualVariant || pwm->moModel.GetData() == NULL) {
-      pwm = &ws.wmMain2;
-      ubSetModels &= ~SMF_DUAL_WEAPON_2;
+      m_ubModelsSet |= 1;
     }
 
     // Set second model if it differs
-    if (pwm->moModel.GetData() != NULL) {
-      if ((m_ubModelsSet & SMF_MASK_2) != (ubSetModels & SMF_MASK_2)) {
-        // Remove previous model
-        m_moWeaponSecond.SetData(NULL);
-        m_aAttachments2.clear();
+    if (pwms->wm2.moModel.GetData() != NULL) {
+      // Reset stretch
+      m_moWeaponSecond.StretchModel(pwms->wm2.moModel.mo_Stretch);
 
-        // Reset stretch
-        m_moWeaponSecond.StretchModel(pwm->moModel.mo_Stretch);
+      try {
+        m_moWeaponSecond.Copy(pwms->wm2.moModel);
+        ParseModelAttachments(pwms->wm2.cbModel, &m_moWeaponSecond, NULL, m_aAttachments2);
 
-        try {
-          m_moWeaponSecond.Copy(pwm->moModel);
-          ParseModelAttachments(pwm->cbModel, &m_moWeaponSecond, NULL, m_aAttachments2);
-
-        } catch (char *strError) {
-          FatalError("Cannot load second weapon model config '%s':\n%s", pwm->strConfig, strError);
-        }
-
-        // Start new animation
-        bNewAnimation = TRUE;
+      } catch (char *strError) {
+        FatalError("Cannot load second weapon model config '%s':\n%s", pwms->strConfig, strError);
       }
 
-    // Remove second model
-    } else {
-      ubSetModels &= ~SMF_WEAPON_2;
+      // Start new animation
+      bNewAnimation = TRUE;
 
-      m_moWeaponSecond.SetData(NULL);
-      m_aAttachments2.clear();
+      m_ubModelsSet |= 2;
     }
-
-    // Set model flags
-    m_ubModelsSet = ubSetModels;
 
     // Remove flare by default
     WeaponFlare(FALSE);
@@ -2366,11 +2299,11 @@ functions:
     // init and launch rocket
     ELaunchProjectile eLaunch;
     eLaunch.penLauncher = m_penPlayer;
-    eLaunch.prtType = (m_bChainLauncher ? PRT_CHAINSAW_ROCKET : PRT_ROCKET);
+    eLaunch.prtType = (m_bAltMode ? PRT_CHAINSAW_ROCKET : PRT_ROCKET);
     eLaunch.fDamage = fDamage;
     
     // [Cecil] Range damage only for normal rockets
-    if (!m_bChainLauncher) {
+    if (!m_bAltMode) {
       eLaunch.fRangeDamage = fDamage * (GetSP()->sp_bCooperative ? 0.5f : 1.0f);
     }
 
@@ -3961,12 +3894,12 @@ procedures:
       GetAnimator()->FireAnimation(BODY_ANIM_MINIGUN_FIRELONG, 0, m_bExtraWeapon);
 
       // [Cecil] Play attack animation
-      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, m_bChainLauncher)) {
+      if (GetAttackAnim(m_iAnim, m_fAnimWaitTime, m_bAltMode)) {
         m_moWeapon.PlayAnim(m_iAnim, 0);
       }
 
       // [Cecil] Custom damage
-      FLOAT fDamage = GetInventory()->GetWeaponDamage(WEAPON_ROCKETLAUNCHER, m_bChainLauncher);
+      FLOAT fDamage = GetInventory()->GetWeaponDamage(WEAPON_ROCKETLAUNCHER, m_bAltMode);
       FireRocket(fDamage);
       DoRecoil();
       SpawnRangeSound(20.0f);
@@ -4008,12 +3941,12 @@ procedures:
   // [Cecil] Normal Rocket Launcher
   FireRocketLauncher() {
     // Turn off chainsaw launcher
-    if (m_bChainLauncher) {
-      m_bChainLauncher = FALSE;
+    if (m_bAltMode) {
+      m_bAltMode = FALSE;
       PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
 
       // Reset model
-      SetCurrentWeaponModel(FALSE);
+      SetCurrentWeaponModel(m_bExtraWeapon || GetInventory()->UsingDualWeapons());
     }
 
     jump RocketLauncherFire();
@@ -4022,12 +3955,12 @@ procedures:
   // [Cecil] Chainsaw Launcher
   FireChainsawLauncher() {
     // Turn on chainsaw launcher
-    if (!m_bChainLauncher) {
-      m_bChainLauncher = TRUE;
+    if (!m_bAltMode) {
+      m_bAltMode = TRUE;
       PlaySound(m_soWeapon2, SOUND_LAUNCHERMODE, SOF_3D|SOF_VOLUMETRIC);
 
       // Reset model
-      SetCurrentWeaponModel(FALSE);
+      SetCurrentWeaponModel(m_bExtraWeapon || GetInventory()->UsingDualWeapons());
     }
 
     jump RocketLauncherFire();

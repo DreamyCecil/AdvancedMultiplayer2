@@ -13,21 +13,12 @@ class CWeaponStruct : public CWeaponBase {
   public:
     SWeaponPos wpsPos; // Weapon position
 
-    // Viewmodel
-    CWeaponModel wmMain1; // Main model
-    CWeaponModel wmMain2; // Second model
-    CWeaponModel wmAlt1;  // Alt fire main model
-    CWeaponModel wmAlt2;  // Alt fire second model
-
-    // Viewmodel for dual wielding
-    CWeaponModel wmDualMain1; // Main model
-    CWeaponModel wmDualMain2; // Second model
-    CWeaponModel wmDualAlt1;  // Alt fire main model
-    CWeaponModel wmDualAlt2;  // Alt fire second model
-
-    // Item for the player model
-    CWeaponModel wmItemMain; // Main model
-    CWeaponModel wmItemAlt;  // Alt fire model
+    // Weapon model sets
+    SWeaponModelSet wmsMain;     // Main viewmodel
+    SWeaponModelSet wmsAlt;      // Viewmodel for alt fire
+    SWeaponModelSet wmsDualMain; // Main viewmodel while dual wielding
+    SWeaponModelSet wmsDualAlt;  // Viewmodel for alt fire while dual wielding
+    SWeaponModelSet wmsItem;     // Player body models
 
     // Animation sets
     SWeaponAnimSet ansMain;     // Main animations
@@ -77,6 +68,9 @@ class CWeaponStruct : public CWeaponBase {
     // Write and read weapon properties
     void Write(CTStream *strm);
     void Read(CTStream *strm);
+
+    // Get specific weapon model set
+    SWeaponModelSet *GetModelSet(BOOL bDual, BOOL bAlt);
 };
 
 // Weapon structures and icons

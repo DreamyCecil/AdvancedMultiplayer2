@@ -23,36 +23,30 @@ static void AddWeapon(CWeaponStruct *pws) {
 };
 
 // Set weapon models from certain keys
-static void SetWeaponModels(CConfigBlock &cbModelType, CTString strSet, string *astrKeys, CStaticArray<CWeaponModel *> &awmModels) {
+static void SetWeaponModels(CConfigBlock &cbModelType, CTString strSet, string strKey, SWeaponModelSet &wmsModelSet) {
   CTString strModelConfig;
 
-  // Go through models of a certain type
-  for (INDEX iModel = 0; iModel < awmModels.Count(); iModel++)
-  {
-    // Get model config path
-    if (!GetConfigString(cbModelType, astrKeys[iModel], strModelConfig)) {
-      // No key or path string, doesn't matter
-      continue;
-    }
+  // Get model config path
+  if (!GetConfigString(cbModelType, strKey, strModelConfig)) {
+    // No key or path string, doesn't matter
+    return;
+  }
 
-    // Absolute path
+  // Absolute path
+  if (!FileExists(strModelConfig)) {
+    // Relative to the weapon set
+    strModelConfig = strSet + strModelConfig;
+
     if (!FileExists(strModelConfig)) {
-      // Relative to the weapon set
-      strModelConfig = strSet + strModelConfig;
-
-      if (!FileExists(strModelConfig)) {
-        // No model config
-        continue;
-      }
+      // No model config
+      return;
     }
+  }
 
-    // Set model from the config
-    CWeaponModel &wm = *awmModels[iModel];
-
-    if (!wm.SetWeaponModel(strModelConfig)) {
-      // Couldn't set the model
-      ThrowF_t("Couldn't set model \"%s\"!", astrKeys[iModel].c_str());
-    }
+  // Set model from the config
+  if (!wmsModelSet.SetWeaponModel(strKey.c_str(), strModelConfig)) {
+    // Couldn't set the model
+    ThrowF_t("Couldn't set model \"%s\"!", strKey.c_str());
   }
 };
 
@@ -271,44 +265,31 @@ static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
 
   if (cb.GetValue("Models", cbModels)) {
     // First person view models
-    static const string astrTypes[2] = {
-      "View", "ViewDual",
-    };
-
-    CWeaponModel *apWeaponModels[2] = {
-      &pws->wmMain1, &pws->wmDualMain1,
-    };
-
     CPlacement3D *aOffsets[2] = {
       &pws->wpsPos.plPos, &pws->wpsPos.plPos2,
     };
 
-    for (INDEX iType = 0; iType < 2; iType++) {
+    for (INDEX iDual = 0; iDual < 2; iDual++) {
       CConfigBlock cbViewModel;
       
       // Get model type
-      if (!cbModels.GetValue(astrTypes[iType], cbViewModel)) {
+      if (!cbModels.GetValue(iDual ? "ViewDual" : "View", cbViewModel)) {
         // No key, doesn't matter
         continue;
       }
 
-      // Different models
-      static string astrTypeModels[4] = {
-        "Main1", "Main2", "Alt1", "Alt2",
-      };
-
       // Different structures
-      CStaticArray<CWeaponModel *> awmModels;
-      awmModels.New(4);
-
-      for (INDEX iWeaponModel = 0; iWeaponModel < 4; iWeaponModel++) {
-        awmModels[iWeaponModel] = apWeaponModels[iType] + iWeaponModel;
+      SWeaponModelSet *awmsModels[2] = {
+        (iDual ? &pws->wmsDualMain : &pws->wmsMain),
+        (iDual ? &pws->wmsDualAlt : &pws->wmsAlt),
+      };
+      
+      for (INDEX iModel = 0; iModel < 2; iModel++) {
+        SetWeaponModels(cbViewModel, strSet, (iModel ? "Alt" : "Main"), *awmsModels[iModel]);
       }
 
-      SetWeaponModels(cbViewModel, strSet, astrTypeModels, awmModels);
-
       // Get weapon offset
-      GetConfigPlacement(cbViewModel, "Offset", *aOffsets[iType]);
+      GetConfigPlacement(cbViewModel, "Offset", *aOffsets[iDual]);
     }
 
     // Third person view models
@@ -317,19 +298,7 @@ static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
 
       // Get model type
       if (cbModels.GetValue("Item", cbItemModel)) {
-        // Different models
-        static string astrTypeModels[2] = {
-          "Main", "Alt",
-        };
-
-        // Different structures
-        CStaticArray<CWeaponModel *> awmModels;
-        awmModels.New(2);
-
-        awmModels[0] = &pws->wmItemMain;
-        awmModels[1] = &pws->wmItemAlt;
-
-        SetWeaponModels(cbItemModel, strSet, astrTypeModels, awmModels);
+        SetWeaponModels(cbItemModel, strSet, "Model", pws->wmsItem);
 
         // Get weapon offset
         GetConfigPlacement(cbItemModel, "Offset", pws->wpsPos.plThird);
