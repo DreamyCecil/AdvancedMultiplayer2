@@ -42,14 +42,14 @@ class CWeaponModel {
 
 // Weapon model set
 struct SWeaponModelSet {
-  CTString strType; // Model type
+  ULONG ulID; // Unique model set ID
   CTString strConfig; // Path to the config
 
   CWeaponModel wm1; // Main model  / First viewmodel
   CWeaponModel wm2; // Alt variant / Second viewmodel
 
   // Constructor
-  SWeaponModelSet(void);
+  SWeaponModelSet(ULONG ulSetID);
 
   // Copy constructor
   SWeaponModelSet(SWeaponModelSet &wmsOther);
@@ -61,7 +61,7 @@ struct SWeaponModelSet {
   void ClearModels(void);
 
   // Set model from a config
-  BOOL SetWeaponModel(const CTString &strSetType, const CTString &strConfigFile);
+  BOOL SetWeaponModel(const CTString &strConfigFile);
 
   // Check if there are any models
   BOOL HasModels(void);

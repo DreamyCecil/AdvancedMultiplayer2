@@ -44,7 +44,7 @@ static void SetWeaponModels(CConfigBlock &cbModelType, CTString strSet, string s
   }
 
   // Set model from the config
-  if (!wmsModelSet.SetWeaponModel(strKey.c_str(), strModelConfig)) {
+  if (!wmsModelSet.SetWeaponModel(strModelConfig)) {
     // Couldn't set the model
     ThrowF_t("Couldn't set model \"%s\"!", strKey.c_str());
   }
@@ -346,7 +346,7 @@ extern void LoadWeaponSet(void) {
   CDynamicStackArray<CTFileName> aList;
   
   // Add empty weapon
-  AddWeapon(new CWeaponStruct(NULL, NULL, "", ""));
+  AddWeapon(new CWeaponStruct());
   
   // Go through weapon configs
   CTString strWeaponSet = "Configs\\WeaponSets\\" + _strCurrentWeaponSet + "\\";

@@ -55,9 +55,8 @@ class CWeaponStruct : public CWeaponBase {
 
     CTString strMessage; // Computer message about the weapon
 
-    // Constructors
+    // Constructor
     CWeaponStruct(void);
-    CWeaponStruct(CAmmoStruct *pSetAmmo, CAmmoStruct *pSetAlt, CTString strSetIcon, CTString strSetPickup);
 
     // Get main weapon bit
     INDEX GetBit(void);

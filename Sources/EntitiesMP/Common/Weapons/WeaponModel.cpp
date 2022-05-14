@@ -23,7 +23,7 @@ CWeaponModel &CWeaponModel::operator=(CWeaponModel &wmOther) {
 };
 
 // Constructor
-SWeaponModelSet::SWeaponModelSet(void) : strType(""), strConfig("") {};
+SWeaponModelSet::SWeaponModelSet(ULONG ulSetID) : ulID(ulSetID), strConfig("") {};
 
 // Copy constructor
 SWeaponModelSet::SWeaponModelSet(SWeaponModelSet &wmsOther) {
@@ -36,7 +36,7 @@ SWeaponModelSet &SWeaponModelSet::operator=(SWeaponModelSet &wmsOther) {
     return *this;
   }
 
-  strType = wmsOther.strType;
+  ulID = wmsOther.ulID;
   strConfig = wmsOther.strConfig;
   
   wm1 = wmsOther.wm1;
@@ -55,9 +55,7 @@ void SWeaponModelSet::ClearModels(void) {
 };
 
 // Set model from a config
-BOOL SWeaponModelSet::SetWeaponModel(const CTString &strSetType, const CTString &strConfigFile) {
-  strType = strSetType;
-
+BOOL SWeaponModelSet::SetWeaponModel(const CTString &strConfigFile) {
   // Remember config file
   strConfig = strConfigFile;
 
@@ -98,15 +96,15 @@ BOOL SWeaponModelSet::HasModels(void) {
 
 // Write weapon model
 void SWeaponModelSet::Write(CTStream *strm) {
-  *strm << strType;
+  *strm << ulID;
   *strm << strConfig;
 };
   
 // Read weapon model
 void SWeaponModelSet::Read(CTStream *strm) {
-  *strm >> strType;
+  *strm >> ulID;
   *strm >> strConfig;
 
   // reset the model
-  SetWeaponModel(strType, strConfig);
+  SetWeaponModel(strConfig);
 };

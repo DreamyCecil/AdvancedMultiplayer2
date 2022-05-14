@@ -9,17 +9,8 @@ extern CWeaponIcons _aWeaponIcons = CWeaponIcons();
 // Constructors
 CWeaponStruct::CWeaponStruct(void) :
   CWeaponBase(0, "", 0.0f, ""), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
+  wmsMain(1), wmsAlt(2), wmsDualMain(3), wmsDualAlt(4), wmsItem(5),
   pasAmmo(NULL), pasAlt(NULL), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
-  fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f), strMessage("")
-{
-  aiDecAmmo[DWA_AMMO] = 1;
-  aiDecAmmo[DWA_ALT]  = 1;
-  aiDecAmmo[DWA_MAG]  = 1;
-};
-
-CWeaponStruct::CWeaponStruct(CAmmoStruct *pSetAmmo, CAmmoStruct *pSetAlt, CTString strSetIcon, CTString strSetPickup) :
-  CWeaponBase(0, strSetIcon, 0.0f, strSetPickup), wpsPos(DEF_PLACE, DEF_PLACE, DEF_PLACE, DEF_WPOS, DEF_FOV),
-  pasAmmo(pSetAmmo), pasAlt(pSetAlt), ubGroup(0), bDualWeapon(TRUE), iMaxMag(0), iPickup(0), iPickupAlt(0),
   fDamage(0.0f), fDamageDM(0.0f), fDamageAlt(0.0f), fDamageAltDM(0.0f), strMessage("")
 {
   aiDecAmmo[DWA_AMMO] = 1;
