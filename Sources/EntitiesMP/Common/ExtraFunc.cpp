@@ -376,7 +376,7 @@ void ParseModelConfig(DJSON_Block &mapBlock, CModelObject *pmo, CAttachmentModel
       }
 
       // Set model
-      ParseModelConfig(cbInclude, pmo, NULL, paAttachments);
+      ParseModelConfig(cbInclude, pmo, pamoAttachment, paAttachments);
 
     // Attachment position
     } else if (strName == "Pos" || strName == "PosAdd") {
@@ -508,7 +508,7 @@ void ParseModelAttachments(DJSON_Block &mapBlock, CModelObject *pmo, CAttachment
       }
 
       // Parse attachments
-      ParseModelAttachments(cbInclude, pmo, NULL, aAttachments);
+      ParseModelAttachments(cbInclude, pmo, pamoAttachment, aAttachments);
 
     // Attachments
     } else if (strName == "Attachments") {
