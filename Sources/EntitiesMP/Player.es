@@ -2326,6 +2326,7 @@ functions:
         GetWeapon(iWeapon)->ResetMirrorState();
 
         // Weapon models
+        GetWeapon(iWeapon)->m_ubModelsSet = 0;
         GetWeapon(iWeapon)->SetCurrentWeaponModel(GetInventory()->UsingDualWeapons());
       }
     }

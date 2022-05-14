@@ -100,6 +100,10 @@ void ResetWeaponPosition(void) {
 #define WPC_RESETY (1 << 3) // reset Y position
 #define WPC_RESETZ (1 << 4) // reset Z position
 #define WPC_DUAL   (1 << 5) // mirror position based on dual weapons
+
+// [Cecil] Set models mask offsets
+#define WMS_FIRST  INDEX(0) // 00001111 bits for the type
+#define WMS_SECOND INDEX(4) // 11110000 bits for the type
 %}
 
 uses "EntitiesMP/Player";
@@ -448,7 +452,7 @@ properties:
   // [Cecil] Weapon mirroring
   UBYTE m_ubLastWeaponMirrored;
 
-  // [Cecil] Weapon models has been set
+  // [Cecil] Weapon model types that have been set
   UBYTE m_ubModelsSet;
 
   // [Cecil] Weapon attachments lists
@@ -538,7 +542,7 @@ functions:
     // Weapon mirroring
     m_ubLastWeaponMirrored = 0;
 
-    // Models have been set
+    // Reset model types
     m_ubModelsSet = 0;
   };
 
@@ -549,13 +553,24 @@ functions:
 
     m_ubLastWeaponMirrored = penOther->m_ubLastWeaponMirrored;
   };
+
+  // [Cecil] Write weapons
+  void Write_t(CTStream *ostr) {
+    CRationalEntity::Write_t(ostr);
+
+    // Write set models
+    *ostr << m_ubModelsSet;
+  };
   
   // [Cecil] Read weapons
   void Read_t(CTStream *istr) {
     CRationalEntity::Read_t(istr);
 
-    // [Cecil] Reset sound owner
+    // Reset sound owner
     SetSoundOwner(m_penPlayer->GetPredictionTail());
+
+    // Read set models
+    *istr >> m_ubModelsSet;
   };
 
   // [Cecil] Destroy ghostbuster ray
@@ -1192,7 +1207,7 @@ functions:
     }
     
     // [Cecil] Draw second weapon model
-    if (pen->m_ubModelsSet & 2) {
+    if (pen->m_ubModelsSet & (0xF << WMS_SECOND)) {
       // prepare render model structure and projection
       CRenderModel rmMain;
 
@@ -1241,7 +1256,7 @@ functions:
     }
     
     // [Cecil] Draw main weapon model
-    if (pen->m_ubModelsSet & 1) {
+    if (pen->m_ubModelsSet & (0xF << WMS_FIRST)) {
       // minigun specific (update rotation)
       if (iWeapon == WEAPON_MINIGUN) {
         pen->RotateMinigun();
@@ -1741,16 +1756,13 @@ functions:
 
   // [Cecil] Set weapon model for the current weapon
   void SetCurrentWeaponModel(BOOL bDualVariant) {
-    m_ubModelsSet = 0;
-
-    m_moWeapon.SetData(NULL);
-    m_moWeaponSecond.SetData(NULL);
-
-    m_aAttachments1.clear();
-    m_aAttachments2.clear();
-
     // No weapon
     if (m_iCurrentWeapon == WEAPON_NONE) {
+      m_moWeapon.SetData(NULL);
+      m_moWeaponSecond.SetData(NULL);
+
+      m_aAttachments1.clear();
+      m_aAttachments2.clear();
       return;
     }
 
@@ -1760,43 +1772,79 @@ functions:
     CWeaponStruct &ws = _apWeaponStructs[m_iCurrentWeapon];
     SWeaponModelSet *pwms = ws.GetModelSet(bDualVariant, m_bAltMode);
 
-    // Set main model if it differs
+    // Model type
+    UBYTE ubModelType = pwms->ulID;
+
+    // Set main model
     if (pwms->wm1.moModel.GetData() != NULL) {
-      // Reset stretch
-      m_moWeapon.StretchModel(pwms->wm1.moModel.mo_Stretch);
+      // Set if it differs from the last one
+      if (((m_ubModelsSet >> WMS_FIRST) & 0xF) != ubModelType) {
+        m_moWeapon.SetData(NULL);
+        m_aAttachments1.clear();
 
-      try {
-        m_moWeapon.Copy(pwms->wm1.moModel);
-        ParseModelAttachments(pwms->wm1.cbModel, &m_moWeapon, NULL, m_aAttachments1);
+        // Reset stretch
+        m_moWeapon.StretchModel(pwms->wm1.moModel.mo_Stretch);
 
-      } catch (char *strError) {
-        FatalError("Cannot load first weapon model config '%s':\n%s", pwms->strConfig, strError);
+        try {
+          m_moWeapon.Copy(pwms->wm1.moModel);
+          ParseModelAttachments(pwms->wm1.cbModel, &m_moWeapon, NULL, m_aAttachments1);
+
+        } catch (char *strError) {
+          FatalError("Cannot load first weapon model config '%s':\n%s", pwms->strConfig, strError);
+        }
+
+        // Start new animation
+        bNewAnimation = TRUE;
       }
 
-      // Start new animation
-      bNewAnimation = TRUE;
+    // No model
+    } else {
+      ubModelType = 0;
 
-      m_ubModelsSet |= 1;
+      m_moWeapon.SetData(NULL);
+      m_aAttachments1.clear();
     }
 
-    // Set second model if it differs
+    // Set model 1
+    m_ubModelsSet &= ~(0xF << WMS_FIRST);
+    m_ubModelsSet |= (ubModelType << WMS_FIRST);
+
+    // Model type
+    ubModelType = pwms->ulID;
+
+    // Set second model
     if (pwms->wm2.moModel.GetData() != NULL) {
-      // Reset stretch
-      m_moWeaponSecond.StretchModel(pwms->wm2.moModel.mo_Stretch);
+      // Set if it differs from the last one
+      if (((m_ubModelsSet >> WMS_SECOND) & 0xF) != ubModelType) {
+        m_moWeaponSecond.SetData(NULL);
+        m_aAttachments2.clear();
 
-      try {
-        m_moWeaponSecond.Copy(pwms->wm2.moModel);
-        ParseModelAttachments(pwms->wm2.cbModel, &m_moWeaponSecond, NULL, m_aAttachments2);
+        // Reset stretch
+        m_moWeaponSecond.StretchModel(pwms->wm2.moModel.mo_Stretch);
 
-      } catch (char *strError) {
-        FatalError("Cannot load second weapon model config '%s':\n%s", pwms->strConfig, strError);
+        try {
+          m_moWeaponSecond.Copy(pwms->wm2.moModel);
+          ParseModelAttachments(pwms->wm2.cbModel, &m_moWeaponSecond, NULL, m_aAttachments2);
+
+        } catch (char *strError) {
+          FatalError("Cannot load second weapon model config '%s':\n%s", pwms->strConfig, strError);
+        }
+
+        // Start new animation
+        bNewAnimation = TRUE;
       }
 
-      // Start new animation
-      bNewAnimation = TRUE;
+    // No model
+    } else {
+      ubModelType = 0;
 
-      m_ubModelsSet |= 2;
+      m_moWeaponSecond.SetData(NULL);
+      m_aAttachments2.clear();
     }
+
+    // Set model 2
+    m_ubModelsSet &= ~(0xF << WMS_SECOND);
+    m_ubModelsSet |= (ubModelType << WMS_SECOND);
 
     // Remove flare by default
     WeaponFlare(FALSE);
@@ -2891,10 +2939,8 @@ procedures:
     // reset weapon draw offset
     ResetWeaponMovingOffset();
 
-    // Reset model flags
-    m_ubModelsSet = 0;
-
     // Set weapon model for current weapon
+    m_ubModelsSet = 0;
     SetCurrentWeaponModel(m_bExtraWeapon || GetInventory()->UsingDualWeapons());
 
     // [Cecil] TEMP: Special resets
@@ -4795,10 +4841,8 @@ procedures:
 
     wait() {
       on (EBegin) : {
-        // [Cecil] Reset model flags
-        m_ubModelsSet = 0;
-        
         // [Cecil] Set weapon model for current weapon
+        m_ubModelsSet = 0;
         SetCurrentWeaponModel(FALSE);
 
         call Idle();
