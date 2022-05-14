@@ -13,7 +13,7 @@
   
   "Models" : {
     "View" : {
-      "Main1" : "Models1\12_Laser.json",
+      "Main" : "Models1\12_Laser.json",
       "Offset" : [0.141, -0.174, -0.175, 1.0, 3.0, 0.0],
     },
     
@@ -22,7 +22,7 @@
     },
   
     "Item" : {
-      "Main" : "Models3\12_Laser.json",
+      "Model" : "Models3\12_Laser.json",
       "Offset" : [0.0, -0.03, -0.49, 0.0, 0.0, 0.0],
     },
   },

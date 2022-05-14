@@ -15,17 +15,17 @@
   
   "Models" : {
     "View" : {
-      "Main1" : "Models1\04_SingleShotgun.json",
+      "Main" : "Models1\04_SingleShotgun.json",
       "Offset" : [0.12, -0.22, -0.34, 2.0, 2.0, 0.0],
     },
     
     "ViewDual" : {
-      "Main1" : "Models1\04_SingleShotgun.json",
+      "Main" : "Models1\04_SingleShotgun.json",
       "Offset" : [0.16, -0.22, -0.34, 2.0, 2.0, 0.0],
     },
   
     "Item" : {
-      "Main" : "Models3\04_SingleShotgun.json",
+      "Model" : "Models3\04_SingleShotgun.json",
       "Offset" : [-0.01, -0.03, -0.47, 0.0, 0.0, 0.0],
     },
   },

@@ -15,7 +15,7 @@
   
   "Models" : {
     "View" : {
-      "Main1" : "Models1\10_Flamer.json",
+      "Main" : "Models1\10_Flamer.json",
       "Offset" : [0.204, -0.306, -0.57, 4.6, 2.8, 0.0],
     },
     
@@ -24,7 +24,7 @@
     },
   
     "Item" : {
-      "Main" : "Models3\10_Flamer.json",
+      "Model" : "Models3\10_Flamer.json",
       "Offset" : [0.0, -0.008, -0.1, 0.0, 0.0, 0.0],
     },
   },

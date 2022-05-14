@@ -1,43 +1,53 @@
 {
-  "Model"   : "Models\Weapons\RocketLauncher\RocketLauncherItem.mdl",
-  "Texture" : "Models\Weapons\RocketLauncher\Body.tex",
-  
-  "Attachments" : {
-    "0" : {
-      "Model"   : "Models\Weapons\RocketLauncher\Body.mdl",
-      "Texture" : "Models\Weapons\RocketLauncher\Body.tex",
+  "Model1" : {
+    "Include" : "Configs\WeaponSets\Default\Models3\08_RocketLauncher_Base.json",
+    
+    "Attachments" : {
+      "2" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+        "Flag" : "rocket1",
+      },
       
-      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-      "Specular"   : "Models\SpecularTextures\Medium.tex",
-    },
-    
-    "1" : {
-      "Model"   : "Models\Weapons\RocketLauncher\RotatingPart.mdl",
-      "Texture" : "Models\Weapons\RocketLauncher\RotatingPart.tex",
+      "3" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+        "Flag" : "rocket2",
+      },
       
-      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
-      "Specular"   : "Models\SpecularTextures\Medium.tex",
+      "4" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+        "Flag" : "rocket3",
+      },
+      
+      "5" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
+        "Flag" : "rocket4",
+      },
     },
+  },
+
+  "Model2" : {
+    "Include" : "Configs\WeaponSets\Default\Models3\08_RocketLauncher_Base.json",
     
-    // Rockets
-    "2" : {
-      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
-      "Flag" : "rocket1",
-    },
-    
-    "3" : {
-      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
-      "Flag" : "rocket2",
-    },
-    
-    "4" : {
-      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
-      "Flag" : "rocket3",
-    },
-    
-    "5" : {
-      "Include" : "Configs\WeaponSets\Default\Models1\Rocket.json",
-      "Flag" : "rocket4",
+    "Attachments" : {
+      "2" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\RocketSaw.json",
+        "Flag" : "rocket1",
+      },
+      
+      "3" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\RocketSaw.json",
+        "Flag" : "rocket2",
+      },
+      
+      "4" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\RocketSaw.json",
+        "Flag" : "rocket3",
+      },
+      
+      "5" : {
+        "Include" : "Configs\WeaponSets\Default\Models1\RocketSaw.json",
+        "Flag" : "rocket4",
+      },
     },
   },
 }

@@ -1,0 +1,22 @@
+{
+  "Model"   : "Models\Weapons\RocketLauncher\RocketLauncherItem.mdl",
+  "Texture" : "Models\Weapons\RocketLauncher\Body.tex",
+  
+  "Attachments" : {
+    "0" : {
+      "Model"   : "Models\Weapons\RocketLauncher\Body.mdl",
+      "Texture" : "Models\Weapons\RocketLauncher\Body.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
+    
+    "1" : {
+      "Model"   : "Models\Weapons\RocketLauncher\RotatingPart.mdl",
+      "Texture" : "Models\Weapons\RocketLauncher\RotatingPart.tex",
+      
+      "Reflection" : "Models\ReflectionTextures\LightMetal01.tex",
+      "Specular"   : "Models\SpecularTextures\Medium.tex",
+    },
+  },
+}

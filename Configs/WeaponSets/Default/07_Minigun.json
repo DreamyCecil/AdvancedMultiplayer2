@@ -19,8 +19,8 @@
   
   "Models" : {
     "View" : {
-      "Main1" : "Models1\07_Minigun.json",
-      "Alt1"  : "Models1\07_Minigun.json",
+      "Main" : "Models1\07_Minigun.json",
+      "Alt"  : "Models1\07_Minigun.json",
       "Offset" : [0.137, -0.24, -0.328, 2.0, 0.0, 0.0],
     },
     
@@ -29,8 +29,7 @@
     },
   
     "Item" : {
-      "Main" : "Models3\07_Minigun.json",
-      "Alt"  : "Models3\07_Minigun.json",
+      "Model" : "Models3\07_Minigun.json",
       "Offset" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
     },
   },

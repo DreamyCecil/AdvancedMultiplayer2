@@ -19,7 +19,7 @@
   
   "Models" : {
     "View" : {
-      "Main1" : "Models1\11_Sniper.json",
+      "Main" : "Models1\11_Sniper.json",
       "Offset" : [0.095, -0.26, -0.85, 4.0, 2.5, -0.5],
     },
     
@@ -28,7 +28,7 @@
     },
   
     "Item" : {
-      "Main" : "Models3\11_Sniper.json",
+      "Model" : "Models3\11_Sniper.json",
       "Offset" : [0.0, -0.008, -0.1, 0.0, 0.0, 0.0],
     },
   },

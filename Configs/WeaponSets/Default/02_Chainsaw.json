@@ -15,7 +15,7 @@
   
   "Models" : {
     "View" : {
-      "Main1" : "Models1\02_Chainsaw.json",
+      "Main" : "Models1\02_Chainsaw.json",
       "Offset" : [0.125, -0.29, -0.405, 5.0, 6.0, 0.0],
     },
     
@@ -24,7 +24,7 @@
     },
   
     "Item" : {
-      "Main" : "Models3\02_Chainsaw.json",
+      "Model" : "Models3\02_Chainsaw.json",
       "Offset" : [0.0, -0.3, -0.97, 0.0, 0.0, 0.0],
     },
   },

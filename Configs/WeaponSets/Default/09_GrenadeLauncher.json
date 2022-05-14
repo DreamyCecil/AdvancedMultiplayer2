@@ -13,7 +13,7 @@
   
   "Models" : {
     "View" : {
-      "Main1" : "Models1\09_GrenadeLauncher.json",
+      "Main" : "Models1\09_GrenadeLauncher.json",
       "Offset" : [0.14, -0.41, -0.335, 2.0, 6.0, 0.0],
     },
     
@@ -22,7 +22,7 @@
     },
   
     "Item" : {
-      "Main" : "Models3\09_GrenadeLauncher.json",
+      "Model" : "Models3\09_GrenadeLauncher.json",
       "Offset" : [0.0, -0.14, -0.61, 0.0, 2.0, 0.0],
     },
   },
