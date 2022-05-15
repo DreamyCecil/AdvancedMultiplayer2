@@ -3,7 +3,6 @@
 #include "WeaponBase.h"
 #include "WeaponPos.h"
 #include "WeaponModel.h"
-#include "WeaponAnimSet.h"
 
 // List of indices
 typedef CStaticArray<INDEX> CIndexList;
@@ -19,13 +18,6 @@ class CWeaponStruct : public CWeaponBase {
     SWeaponModelSet wmsDualMain; // Main viewmodel while dual wielding
     SWeaponModelSet wmsDualAlt;  // Viewmodel for alt fire while dual wielding
     SWeaponModelSet wmsItem;     // Player body models
-
-    // Animation sets
-    SWeaponAnimSet ansMain;     // Main animations
-    SWeaponAnimSet ansAlt;      // Animations for alt fire
-    SWeaponAnimSet ansDualMain; // Main animations while dual wielding
-    SWeaponAnimSet ansDualAlt;  // Animations for alt fire while dual wielding
-    SWeaponAnimSet ansItem;     // Player body animations
 
     CAmmoStruct *pasAmmo; // Ammo
     CAmmoStruct *pasAlt; // Alt ammo

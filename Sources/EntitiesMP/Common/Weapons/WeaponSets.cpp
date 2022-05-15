@@ -124,6 +124,23 @@ static void LoadAnimSet(SWeaponAnimSet &ansAnimSet, DJSON_Block &mapAnims, const
   }
 };
 
+// Load player item animation set
+static void LoadItemAnimSet(SWeaponAnimSet &ansAnimSet, DJSON_Block &mapAnims, const CTFileName &fnFile) {
+  for (INDEX iAnim = 0; iAnim < mapAnims.size(); iAnim++) {
+    string &strAnim = mapAnims.GetKey(iAnim);
+    CConfigValue &cv = mapAnims.GetValue(iAnim);
+
+    // Expected animation index
+    if (cv.cv_eType != CVT_INDEX) {
+      CPrintF("'%s': '%s' animation is not an index!\n", fnFile.str_String, strAnim.c_str());
+      continue;
+    }
+
+    // Set animation
+    ansAnimSet.mapAnims[strAnim] = SWeaponAnim(cv.cv_iValue, 0.0f);
+  }
+};
+
 // Parse weapon config
 static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strConfig) {
   // Parse the config
@@ -309,6 +326,7 @@ static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
   // Anim sets
   CConfigBlock cbAnimSets;
   
+  // [Cecil] TODO: Parse anim sets for each model set instead of accessing them separately from model sets
   if (cb.GetValue("AnimSets", cbAnimSets)) {
     // Viewmodel anim sets
     static const string astrSets[4] = {
@@ -316,7 +334,7 @@ static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
     };
 
     for (INDEX iSet = 0; iSet < 4; iSet++) {
-      SWeaponAnimSet &ansSet = (&pws->ansMain)[iSet];
+      SWeaponAnimSet &ansSet = (&pws->wmsMain)[iSet].ans;
       ansSet.strName = astrSets[iSet];
 
       CTFileName fnAnimSet;
@@ -336,6 +354,25 @@ static void ParseWeaponConfig(CWeaponStruct *pws, CTString strSet, CTString strC
         // Read data into the anim set
         LoadAnimSet(ansSet, mapAnims, fnAnimSet);
       }
+    }
+
+    // Item anim set
+    CTFileName fnItemAnimSet;
+
+    if (GetConfigPath(cbAnimSets, "Player", fnItemAnimSet)) {
+      DJSON_Block mapAnims;
+      fnItemAnimSet = CTFileName(strSet) + fnItemAnimSet;
+
+      // Load anim set
+      try {
+        LoadJSON(fnItemAnimSet, mapAnims);
+
+      } catch (char *strError) {
+        ThrowF_t("Cannot load '%s': %s", fnItemAnimSet.str_String, strError);
+      }
+
+      // Read data into the anim set
+      LoadItemAnimSet(pws->wmsItem.ans, mapAnims, fnItemAnimSet);
     }
   }
 };

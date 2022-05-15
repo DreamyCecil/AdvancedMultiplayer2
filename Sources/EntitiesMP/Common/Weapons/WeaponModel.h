@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include "WeaponAnimSet.h"
 
 #define WM_NOCONFIG  -1
 #define WM_MODELERROR 0
@@ -47,6 +48,8 @@ struct SWeaponModelSet {
 
   CWeaponModel wm1; // Main model  / First viewmodel
   CWeaponModel wm2; // Alt variant / Second viewmodel
+
+  SWeaponAnimSet ans; // Animation set for these models
 
   // Constructor
   SWeaponModelSet(ULONG ulSetID);

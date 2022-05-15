@@ -684,23 +684,31 @@ functions:
     CWeaponStruct &ws = _apWeaponStructs[m_iCurrentWeapon];
     BOOL bDual = GetInventory()->UsingDualWeapons();
 
+    // [Cecil] TODO: Replace anim set checks from model sets with the commented block below.
+    // The reason why it's not like this yet is because right now you can just load a single anim set
+    // for all models if you wish. And even if there's a model, it might not have an anim set assigned to it.
+    /*
+    SWeaponModelSet *pwms = ws.GetWeaponModel(bDual, bAlt);
+    SWeaponAnimSet &ans = pwms.ans;
+    */
+
     // Start with alt
-    SWeaponAnimSet *pans = (bDual ? &ws.ansDualAlt : &ws.ansAlt);
+    SWeaponModelSet *pwms = (bDual ? &ws.wmsDualAlt : &ws.wmsAlt);
 
     // Select main set if no anims or not alt
-    if (pans->mapAnims.size() <= 0 || !bAlt) {
-      pans--;
+    if (pwms->ans.mapAnims.size() <= 0 || !bAlt) {
+      pwms--;
 
       // Select just singular main set if still nothing
-      if (bDual && pans->mapAnims.size() <= 0) {
-        pans = &ws.ansMain;
+      if (bDual && pwms->ans.mapAnims.size() <= 0) {
+        pwms = &ws.wmsMain;
       }
     }
 
-    CWeaponAnims::iterator itAnim = pans->mapAnims.find(strAnim);
+    CWeaponAnims::iterator itAnim = pwms->ans.mapAnims.find(strAnim);
 
     // No animation
-    if (itAnim == pans->mapAnims.end()) {
+    if (itAnim == pwms->ans.mapAnims.end()) {
       //CPrintF("Weapon %d does not have a '%s' animation in the '%s' anim set!\n", ws.ulID, strAnim, pans->strName.c_str());
       return NULL;
     }
