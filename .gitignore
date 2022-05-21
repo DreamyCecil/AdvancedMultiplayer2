@@ -55,7 +55,6 @@ Debug/
 *.exp
 *.res
 *.lastbuildstate
-*.user
 *.idb
 
 # Generated configuration files

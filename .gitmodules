@@ -1,3 +1,7 @@
 [submodule "Sources/DreamyJSON"]
 	path = Sources/Depends/DreamyJSON
 	url = https://github.com/DreamyCecil/DreamyJSON.git
+[submodule "Sources/Includes"]
+	path = Sources/Includes
+	url = https://github.com/DreamyCecil/SeriousSam_SDK107.git
+	branch = includes
