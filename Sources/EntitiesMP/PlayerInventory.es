@@ -618,7 +618,7 @@ functions:
     GetWeapon(0)->ResetWeaponMovingOffset();
     GetWeapon(1)->ResetWeaponMovingOffset();
 
-    // remember old weapons
+    // Remember old weapons
     ULONG ulOldWeapons = GetCurrentWeaponMask();
 
     // [Cecil] Keep all weapons in coop
@@ -628,17 +628,17 @@ functions:
       ulOldWeapons = 0;
     }
     
-    // don't take ammo if it's infinite
+    // Don't take ammo if it's infinite
     if (GetSP()->sp_bInfiniteAmmo) {
       iTakeWeapons = 0;
     } else {
       iTakeWeapons &= ~iGiveWeapons;
     }
 
-    // take weapons
+    // Take weapons
     TakeWeaponMask(iTakeWeapons);
 
-    // only give new weapons
+    // Only give new weapons
     iGiveWeapons = (GetSP()->sp_iWeaponGiver | iGiveWeapons) & ~GetCurrentWeaponMask();
     GiveWeaponMask(iGiveWeapons);
 
@@ -650,7 +650,7 @@ functions:
     
     TakeWeaponMask(~WEAPONS_ALLAVAILABLEMASK);
 
-    // find which weapons are new
+    // Find which weapons are new
     ULONG ulNewWeapons = GetCurrentWeaponMask() & ~ulOldWeapons;
 
     // [Cecil] Prepare weapons
@@ -660,15 +660,15 @@ functions:
     for (INDEX iWeapons = 0; iWeapons < 2; iWeapons++) {
       CPlayerWeapons &plw = *GetWeapon(iWeapons);
 
-      // clear temp variables for some weapons
+      // Clear temp variables for some weapons
       plw.m_fMoveStart = 0.0f;
       plw.m_fMoveLast = 0.0f;
       plw.m_fMovePower = 0.0f;
 
-      // remember last weapon
+      // Remember last weapon
       plw.m_iPreviousWeapon = plw.m_iCurrentWeapon;
 
-      // select best weapon
+      // Select best weapon
       plw.SelectNewWeapon();
 
       plw.m_iCurrentWeapon = plw.m_iWantedWeapon;
@@ -678,14 +678,15 @@ functions:
         wpn_iCurrent = plw.m_iCurrentWeapon;
       }
 
-      // set weapon model for current weapon
+      // Set weapon model for current weapon
+      plw.m_ubModelsSet = 0;
       plw.SetCurrentWeaponModel(FALSE);
 
-      // add weapon attachment
+      // Add weapon attachment
       GetAnimator()->SetWeapon(plw.m_bExtraWeapon, FALSE);
     }
 
-    // precache new weapons
+    // Precache new weapons
     GetWeapon(0)->Precache();
   };
 
