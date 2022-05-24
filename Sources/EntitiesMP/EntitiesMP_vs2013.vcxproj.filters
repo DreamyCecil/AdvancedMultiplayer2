@@ -88,6 +88,12 @@
     <Filter Include="Header Files\DreamyJSON headers">
       <UniqueIdentifier>{ea04760c-def6-47a6-87d7-df658bf7d62c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Addons headers">
+      <UniqueIdentifier>{d4c86292-9987-4b71-bb90-c70c00467d40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Addons">
+      <UniqueIdentifier>{d7fb2b17-bdfb-44e2-95eb-a4d5623cd29a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\Common.cpp">
@@ -644,6 +650,15 @@
     </ClCompile>
     <ClCompile Include="Common\Weapons\WeaponSets.cpp">
       <Filter>Source Files\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Addons\AddonPack.cpp">
+      <Filter>Source Files\Addons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Addons\AddonSystem.cpp">
+      <Filter>Source Files\Addons</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Addons\Addon.cpp">
+      <Filter>Source Files\Addons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1723,6 +1738,15 @@
     </ClInclude>
     <ClInclude Include="Common\Weapons\WeaponAnimSet.h">
       <Filter>Header Files\Weapons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Addons\Addon.h">
+      <Filter>Header Files\Addons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Addons\AddonPack.h">
+      <Filter>Header Files\Addons headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Addons\AddonSystem.h">
+      <Filter>Header Files\Addons headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

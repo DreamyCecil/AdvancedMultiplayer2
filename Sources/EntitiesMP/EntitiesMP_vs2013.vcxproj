@@ -76,7 +76,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Includes;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine107;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine107;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Includes\Engine107;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)</TargetName>
     <OutDir>vs2013\$(Configuration)\</OutDir>
@@ -86,7 +86,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Includes;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine110;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine110;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Includes\Engine110;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
@@ -95,7 +95,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Includes;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine107;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine107;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Includes\Engine107;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)D</TargetName>
   </PropertyGroup>
@@ -104,7 +104,7 @@
     <IntDir>vs2013\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir)Includes;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine110;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)StdH;$(SolutionDir);$(SolutionDir)Includes;$(SolutionDir)Includes\Engine110;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Includes\Engine110;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)D</TargetName>
   </PropertyGroup>
@@ -331,6 +331,9 @@ copy vs2013\Debug_110\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Com
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Depends\Patcher\patcher.cpp" />
+    <ClCompile Include="Common\Addons\Addon.cpp" />
+    <ClCompile Include="Common\Addons\AddonPack.cpp" />
+    <ClCompile Include="Common\Addons\AddonSystem.cpp" />
     <ClCompile Include="Common\Common.cpp" />
     <ClCompile Include="Common\ConfigFunc.cpp" />
     <ClCompile Include="Common\EmanatingParticles.cpp" />
@@ -617,6 +620,9 @@ copy vs2013\Debug_110\$(TargetName).lib $(SolutionDir)..\Bin\Debug\ &gt;nul</Com
     <ClInclude Include="..\Depends\Patcher\patcher_defines.h" />
     <ClInclude Include="Beast_tables.h" />
     <ClInclude Include="BloodSpray_tables.h" />
+    <ClInclude Include="Common\Addons\Addon.h" />
+    <ClInclude Include="Common\Addons\AddonPack.h" />
+    <ClInclude Include="Common\Addons\AddonSystem.h" />
     <ClInclude Include="Common\Common.h" />
     <ClInclude Include="Common\ConfigFunc.h" />
     <ClInclude Include="Common\ExtraFunc.h" />

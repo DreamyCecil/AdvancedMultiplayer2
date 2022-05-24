@@ -1093,6 +1093,9 @@ void CGame::InitInternal(void) {
 
   // [Cecil] Set custom patches
   SetCustomPatches();
+
+  // [Cecil] Start addon system
+  InitAddons();
 };
 
 // internal cleanup
@@ -1141,6 +1144,9 @@ void CGame::EndInternal(void) {
   
   // [Cecil] Unset custom patches
   UnsetCustomPatches();
+
+  // [Cecil] Clear addon system
+  ClearAddons();
 };
 
 BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld, CSessionProperties &sp) {
