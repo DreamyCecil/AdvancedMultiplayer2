@@ -186,7 +186,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_CROSSWOODEN:
         // set appearance
@@ -194,7 +193,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_CROSSMETAL:
         // set appearance
@@ -202,7 +200,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_CROSSGOLD:
         // set appearance
@@ -210,7 +207,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_JAGUARGOLDDUMMY:
         // set appearance
@@ -218,7 +214,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.5f,0), FLOAT3D(2,2,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_HAWKWINGS01DUMMY:
         // set appearance
@@ -226,7 +221,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_HAWKWINGS02DUMMY:
         // set appearance
@@ -234,7 +228,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_HOLYGRAIL:
         // set appearance
@@ -242,7 +235,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_TABLESDUMMY:
         // set appearance
@@ -250,7 +242,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_WINGEDLION:
         // set appearance
@@ -258,7 +249,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_ELEPHANTGOLD:
         // set appearance
@@ -266,7 +256,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.5f,0), FLOAT3D(2,2,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;      
       case KIT_STATUEHEAD01:
         // set appearance
@@ -274,7 +263,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_STATUEHEAD02:
         // set appearance
@@ -282,7 +270,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;      
       case KIT_STATUEHEAD03:
         // set appearance
@@ -290,7 +277,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_KINGSTATUE:
         // set appearance
@@ -298,7 +284,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
       case KIT_CRYSTALSKULL:
         // set appearance
@@ -306,7 +291,6 @@ functions:
         // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );
         StretchItem(FLOAT3D(1.0f, 1.0f, 1.0f));
-        m_iSoundComponent = SOUND_KEY;
         break;
     }
     GetModelObject()->StretchModel(FLOAT3D(m_fSize, m_fSize, m_fSize));
@@ -322,6 +306,10 @@ procedures:
     // if health is received
     if (epass.penOther->ReceiveItem(eKey)) {
       if(_pNetwork->IsPlayerLocal(epass.penOther)) {IFeel_PlayEffect("PU_Key");}
+
+      // [Cecil] Set key sound upon pickup
+      m_iSoundComponent = SOUND_KEY;
+
       // play the pickup sound
       m_soPick.Set3DParameters(50.0f, 1.0f, 1.0f, 1.0f);
       PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
