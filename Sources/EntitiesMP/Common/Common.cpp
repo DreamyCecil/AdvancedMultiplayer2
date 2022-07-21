@@ -20,6 +20,9 @@ extern INDEX ent_bReportBrokenChains;
 #include "EntitiesMP/GlobalController.h"
 extern CEntity *_penGlobalController;
 
+// [Cecil] Not playing with a Classics patch by default
+BOOL _bClassicsPatch = FALSE;
+
 void CCompMessageID::Clear(void)
 {
   cmi_fnmFileName.Clear();

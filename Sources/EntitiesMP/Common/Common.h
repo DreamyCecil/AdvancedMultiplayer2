@@ -462,3 +462,6 @@ enum EBloodType {
 
 // [Cecil] Get blood type
 DECL_DLL EBloodType GetBloodType(void);
+
+// [Cecil] Playing with a Classics patch
+DECL_DLL extern BOOL _bClassicsPatch;
