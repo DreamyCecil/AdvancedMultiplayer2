@@ -76,6 +76,7 @@ static CDrawPort *_pDP;
 static PIX   _pixDPWidth, _pixDPHeight;
 static FLOAT _fScalingX; // [Cecil] Renamed from _fResolutionScaling
 static FLOAT _fScalingY; // [Cecil] Vertical scaling
+static FLOAT _fWideAdjustment; // [Cecil] Aspect ratio multiplier (4:3 = 1.0)
 static FLOAT _fCustomScaling;
 static ULONG _ulAlphaHUD;
 static COLOR _colHUD;
@@ -341,7 +342,7 @@ static void HUD_DrawBorder(FLOAT fCenterX, FLOAT fCenterY, FLOAT fSizeX, FLOAT f
 {
   // Determine location
   const PIX iCenterX = fCenterX * _pixDPWidth  / 640.0f;
-  const PIX iCenterY = fCenterY * _pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment);
+  const PIX iCenterY = fCenterY * _pixDPHeight / (480.0f * _fWideAdjustment);
   const PIX iSizeX = (fSizeX + 1) * _fScalingX;
   const PIX iSizeY = (fSizeY + 1) * _fScalingX;
 
@@ -381,7 +382,7 @@ static void HUD_DrawIcon(FLOAT fCenterX, FLOAT fCenterY, CTextureObject &toIcon,
 
   // determine location
   const FLOAT fCenterI = fCenterX*_pixDPWidth  / 640.0f;
-  const FLOAT fCenterJ = fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment);
+  const FLOAT fCenterJ = fCenterY*_pixDPHeight / (480.0f * _fWideAdjustment);
   // determine dimensions
   CTextureData *ptd = (CTextureData*)toIcon.GetData();
 
@@ -408,7 +409,7 @@ static void HUD_DrawText(FLOAT fCenterX, FLOAT fCenterY, const CTString &strText
 
   // determine location
   PIX pixCenterI = (PIX)(fCenterX*_pixDPWidth  / 640.0f);
-  PIX pixCenterJ = (PIX)(fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment));
+  PIX pixCenterJ = (PIX)(fCenterY*_pixDPHeight / (480.0f * _fWideAdjustment));
 
   // done
   _pDP->SetTextScaling(_fScalingX*_fCustomScaling);
@@ -424,7 +425,7 @@ static void HUD_DrawBar( FLOAT fCenterX, FLOAT fCenterY, PIX pixSizeX, PIX pixSi
   if( col==NONE) col = GetCurrentColor( fNormValue);
   // determine location and size
   PIX pixCenterI = (PIX)(fCenterX*_pixDPWidth  / 640.0f);
-  PIX pixCenterJ = (PIX)(fCenterY*_pixDPHeight / (480.0f * _pDP->dp_fWideAdjustment));
+  PIX pixCenterJ = (PIX)(fCenterY*_pixDPHeight / (480.0f * _fWideAdjustment));
   PIX pixSizeI   = (PIX)(_fScalingX*pixSizeX);
   PIX pixSizeJ   = (PIX)(_fScalingX*pixSizeY);
   // fill bar background area
@@ -662,7 +663,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   // cache local variables
   hud_fOpacity = Clamp(hud_fOpacity, 0.1f, 1.0f);
-  hud_fScaling = Clamp(hud_fScaling, 0.5f, 1.2f);
+  hud_fScaling = Clamp(hud_fScaling, 0.5f, 1.5f);
   
   // [Cecil] Player
   _penPlayer = penPlayerCurrent;
@@ -675,9 +676,15 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   _pDP        = pdpCurrent;
   _pixDPWidth   = _pDP->GetWidth();
   _pixDPHeight  = _pDP->GetHeight();
-  _fCustomScaling     = hud_fScaling;
   _fScalingX = (FLOAT)_pixDPWidth / 640.0f;
+
+  // [Cecil]
   _fScalingY = (FLOAT)_pixDPHeight / 480.0f;
+  _fWideAdjustment = ((FLOAT)_pixDPHeight / (FLOAT)_pixDPWidth) * (4.0f / 3.0f);
+
+  // [Cecil] Adjust scaling based on aspect ratio
+  _fCustomScaling = hud_fScaling * _fWideAdjustment;
+
   _colHUD     = 0x4C80BB00;
   _colHUDText = SE_COL_ORANGE_LIGHT;
   _ulAlphaHUD = NormFloatToByte(hud_fOpacity);
@@ -715,7 +722,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
 
   const PIX pixTopBound    = 6;
   const PIX pixLeftBound   = 6;
-  const PIX pixBottomBound = (480 * _pDP->dp_fWideAdjustment) -pixTopBound;
+  const PIX pixBottomBound = (480 * _fWideAdjustment) -pixTopBound;
   const PIX pixRightBound  = 640-pixLeftBound;
   FLOAT fOneUnit  = (32+0) * _fCustomScaling;  // unit size
   FLOAT fAdvUnit  = (32+4) * _fCustomScaling;  // unit advancer
@@ -1081,8 +1088,10 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
     fCol -= fAdvUnitS;
   }
 
+  // [Cecil] Readjust scaling based on aspect ratio
+  _fCustomScaling = hud_fScaling * _fWideAdjustment;
+
   // if weapon change is in progress
-  _fCustomScaling = hud_fScaling;
   hud_tmWeaponsOnScreen = Clamp( hud_tmWeaponsOnScreen, 0.0f, 10.0f);   
 
   if (_tmNow - _penWeapons[0]->m_tmWeaponChangeRequired < hud_tmWeaponsOnScreen) {
