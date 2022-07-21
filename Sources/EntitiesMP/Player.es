@@ -2597,9 +2597,22 @@ functions:
     CPerspectiveProjection3D prPerspectiveProjection;
     plr_fFOV = Clamp(plr_fFOV, 1.0f, 160.0f);
 
+    ANGLE aFOV = 90.0f;
+
     // [Cecil] Steam patch workaround
-    BOOL bWidescreen = (FLOAT(pdp->GetHeight()) / FLOAT(pdp->GetWidth()) < 0.75f);
-    ANGLE aFOV = (bWidescreen ? 110.0f : 90.0f);
+    if (!_bClassicsPatch) {
+      // Get aspect ratio of the current resolution
+      FLOAT fAspectRatio = FLOAT(pdp->GetWidth()) / FLOAT(pdp->GetHeight());
+
+      // 4:3 resolution = 1.0 ratio; 16:9 = 1.333 etc.
+      FLOAT fSquareRatio = fAspectRatio * (3.0f / 4.0f);
+
+      // Take current FOV angle and apply square ratio to it
+      FLOAT fVerticalAngle = Tan(aFOV * 0.5f) * fSquareRatio;
+
+      // 90 FOV on 16:9 resolution will become 106.26...
+      aFOV = 2.0f * ATan(fVerticalAngle);
+    }
 
     // [Cecil] Sniper zoom multiplier
     aFOV *= Lerp(m_fLastSniperFOV, m_fSniperFOV, _pTimer->GetLerpFactor()) / 90.0f;
