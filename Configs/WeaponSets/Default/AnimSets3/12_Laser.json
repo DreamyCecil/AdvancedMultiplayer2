@@ -1,0 +1,11 @@
+{
+  "Draw"    : 15,
+  "Holster" : 14,
+  "Idle"    : 13,
+  "Attack"  : 17,
+  "SwimDraw"    : 20,
+  "SwimHolster" : 19,
+  "SwimIdle"    : 18,
+  "SwimAttack"  : 22,
+  "DualAttack" : false,
+}
