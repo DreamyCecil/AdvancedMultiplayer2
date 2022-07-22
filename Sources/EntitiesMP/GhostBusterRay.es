@@ -4,7 +4,6 @@
 %}
 
 uses "EntitiesMP/Light";
-uses "EntitiesMP/Bullet";
 uses "EntitiesMP/PlayerWeapons";
 
 // input parameter for ghost buster ray
@@ -17,7 +16,6 @@ event EGhostBusterRay {
 
 void CGhostBusterRay_OnPrecache(CDLLEntityClass *pdec, INDEX iUser) 
 {
-  pdec->PrecacheClass(CLASS_BULLET);
   pdec->PrecacheModel(MODEL_RAY);
   pdec->PrecacheTexture(TEXTURE_RAY);
 }
@@ -41,13 +39,11 @@ properties:
 
 {
   CLightSource m_lsLightSource;
-  CEntity *penBullet;
   const CPlacement3D *pplSource;
 }
 
 components:
   1 class   CLASS_LIGHT  "Classes\\Light.ecl",
-  2 class   CLASS_BULLET "Classes\\Bullet.ecl",
 
  // [Cecil] Dummy model
  10 model   MODEL_RAY   "Models\\Editor\\Axis.mdl",
@@ -134,6 +130,7 @@ functions:
     if (crRay.cr_penHit != NULL) {
       vDesired = crRay.cr_vHit;
     }
+
     vDesired -= vDirection/10.0f;
 
     // [Cecil] Get last position offset
@@ -156,6 +153,7 @@ functions:
     FLOAT fStretch = (plSource.pl_PositionVector - vDesired).Length();
     //GetModelObject()->mo_Stretch(3) = fStretch;
     GetModelObject()->mo_Stretch(3) = 0.001f;
+
     // set your new placement
     CPlacement3D plSet;
     plSet.pl_PositionVector = vDesired;
@@ -164,22 +162,38 @@ functions:
     m_ctPasses++;
   };
 
-  // [Cecil] Added ray power and custom damage
-  void PrepareBullet(const CPlacement3D &plBullet, FLOAT fPower, FLOAT fDamage) {
-    // create bullet
-    penBullet = CreateEntity(plBullet, CLASS_BULLET);
-    // init bullet
-    EBulletInit eInit;
-    eInit.penOwner = ((CPlayerWeapons&)*m_penOwner).m_penPlayer;
+  // [Cecil] Fire the beam once
+  void FireBeam(const CPlacement3D &plBeam, FLOAT fPower, FLOAT fDamage) {
+    CEntity *penOwner = ((CPlayerWeapons &)*m_penOwner).m_penPlayer;
+
+    // Cast a ray to find beam target
+    CCastRay crRay(penOwner, plBeam, HIT_DISTANCE);
+    crRay.cr_bHitPortals = FALSE;
+    crRay.cr_bHitTranslucentPortals = TRUE;
+    crRay.cr_ttHitModels = CCastRay::TT_COLLISIONBOX;
+    crRay.cr_bPhysical = FALSE;
+    crRay.cr_fTestR = 0.5f;
+
+    GetWorld()->CastRay(crRay);
+
+    // Nothing has been hit
+    if (crRay.cr_penHit == NULL) {
+      return;
+    }
+
+    // Apply damage
+    FLOAT3D vHitDirection;
+    AnglesToDirectionVector(plBeam.pl_OrientationAngle, vHitDirection);
+
+    FLOAT3D vHitPoint = crRay.cr_vHit;
 
     // [Cecil] Custom damage
-    FLOAT fSetDamage = (fDamage > 0.0f ? fDamage : 100.0f);
+    FLOAT fSetDamage = (fDamage > 0.0f ? fDamage : 100.0f) * GetSeriousDamageMultiplier(penOwner);
 
     // [Cecil] Multiply damage
-    eInit.fDamage = fSetDamage*fPower * FireSpeed();
+    fSetDamage *= fPower * FireSpeed();
 
-    penBullet->Initialize(eInit);
-    ((CBullet&)*penBullet).m_EdtDamage = DMT_BULLET;
+    InflictDirectDamage(crRay.cr_penHit, penOwner, DMT_BULLET, fSetDamage, vHitPoint, vHitDirection);
   };
 
   // [Cecil] Added ray power and custom damage
@@ -188,15 +202,8 @@ functions:
       return;
     }
 
-    // fire lerped bullets
-    PrepareBullet(plSource, fPower, fDamage);
-
-    ((CBullet&)*penBullet).CalcTarget(HIT_DISTANCE);
-    ((CBullet&)*penBullet).m_fBulletSize = 0.5f;
-    ((CBullet&)*penBullet).CalcJitterTarget(0.02f*HIT_DISTANCE);
-    // [Cecil] Disabled sound and effect
-    ((CBullet&)*penBullet).LaunchBullet(FALSE, FALSE, FALSE);
-    ((CBullet&)*penBullet).DestroyBullet();
+    // Fire beam from the source placement
+    FireBeam(plSource, fPower, fDamage);
   };
 
 procedures:
