@@ -723,7 +723,7 @@ functions:
   };
 
   // Pull out extra weapon
-  void WeaponSelectionModifier(void) {
+  void ToggleDualWielding(void) {
     INDEX iCurrent = GetWeapon(0)->GetCurrent();
 
     // Pick the same weapon

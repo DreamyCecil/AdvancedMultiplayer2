@@ -883,6 +883,7 @@ properties:
  212 BOOL m_bPlayerInit = FALSE,
 
  220 FLOAT m_fVoiceCommands = -100.0f,
+ 221 BOOL m_bToggleDualWield = FALSE,
 
 {
   ShellLaunchData ShellLaunchData_array; // array of data describing flying empty shells
@@ -4823,10 +4824,17 @@ functions:
       GetWeapon(0)->SendEvent(eSelect);
     }
 
-    // [Cecil] Pull out extra weapon
+    // [Cecil] Mark for dual wielding toggling
     if (ulNewButtons & PLACT_SELECT_MODIFIER) {
-      GetInventory()->WeaponSelectionModifier();
+      m_bToggleDualWield = TRUE;
     }
+
+    // [Cecil] Holding weapon selection modifier
+    const BOOL bModifier = (ulButtonsNow & PLACT_SELECT_MODIFIER) != 0;
+
+    // [Cecil] For potential weapon selection
+    ESelectWeapon eSelect;
+    eSelect.iWeapon = 0;
 
     // next weapon zooms out when in sniping mode
     if (ulNewButtons & PLACT_WEAPON_NEXT) {
@@ -4834,10 +4842,7 @@ functions:
         ApplySniperZoom(0);
 
       } else {
-        ESelectWeapon eSelect;
         eSelect.iWeapon = -1;
-        
-        GetWeapon(0)->SendEvent(eSelect);
       }
     }
     
@@ -4847,18 +4852,27 @@ functions:
         ApplySniperZoom(1);
 
       } else {
-        ESelectWeapon eSelect;
         eSelect.iWeapon = -2;
-
-        GetWeapon(0)->SendEvent(eSelect);
       }
     }
 
     if (ulNewButtons & PLACT_WEAPON_FLIP) {
-      ESelectWeapon eSelect;
       eSelect.iWeapon = -3;
+    }
 
-      GetWeapon(0)->SendEvent(eSelect);
+    // [Cecil] Change weapon
+    if (eSelect.iWeapon != 0) {
+      // Select weapon hand based on modifier
+      GetWeapon(bModifier)->SendEvent(eSelect);
+
+      // Don't queue dual wielding
+      m_bToggleDualWield = FALSE;
+    }
+
+    // [Cecil] Pull out extra weapon
+    if (m_bToggleDualWield && ulReleasedButtons & PLACT_SELECT_MODIFIER) {
+      GetInventory()->ToggleDualWielding();
+      m_bToggleDualWield = FALSE;
     }
 
     // [Cecil] Extra weapon is selected
