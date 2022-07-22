@@ -98,6 +98,7 @@ properties:
 
  10 FLOAT m_tmFlare1 = -1.0f, // when main weapon flare will expire
  11 FLOAT m_tmFlare2 = -1.0f, // when extra weapon flare will expire
+ 12 FLOAT m_tmWeaponChange = 0.0f, // time when weapon change was required
 
  20 INDEX m_iKeys = 0, // mask for all taken keys
 

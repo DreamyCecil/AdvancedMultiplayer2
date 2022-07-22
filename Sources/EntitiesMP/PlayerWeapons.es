@@ -388,7 +388,6 @@ properties:
  
  25 CModelObject m_moWeapon,               // current weapon model
  26 CModelObject m_moWeaponSecond,         // current weapon second (additional) model
- 27 FLOAT m_tmWeaponChangeRequired = 0.0f, // time when weapon change was required
 
  30 CEntityPointer m_penRayHit,         // entity hit by ray
  31 FLOAT m_fRayHitDistance = 100.0f,   // distance from hit point
@@ -2755,7 +2754,7 @@ functions:
     INDEX iSelectWeapon;
 
     // mark that weapon change is required
-    m_tmWeaponChangeRequired = _pTimer->CurrentTick();
+    GetInventory()->m_tmWeaponChange = _pTimer->CurrentTick();
 
     // if storing current weapon
     if (iSelect == 0) {
@@ -3001,7 +3000,7 @@ procedures:
     }
 
     // mark that weapon change has ended
-    m_tmWeaponChangeRequired -= hud_tmWeaponsOnScreen/2;
+    GetInventory()->m_tmWeaponChange -= hud_tmWeaponsOnScreen/2;
 
     return EEnd();
   };
@@ -3011,7 +3010,7 @@ procedures:
     PlaySound(m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
 
     // force ending of weapon change
-    m_tmWeaponChangeRequired = 0;
+    GetInventory()->m_tmWeaponChange = 0;
 
     // [Cecil] Reload mag if needed
     if (CURRENT_WEAPON.EmptyMag(m_bExtraWeapon)) {
@@ -3108,7 +3107,7 @@ procedures:
     PlaySound(m_soWeapon0, SOUND_SILENCE, SOF_3D|SOF_VOLUMETRIC); // stop possible sounds
 
     // force ending of weapon change
-    m_tmWeaponChangeRequired = 0;
+    GetInventory()->m_tmWeaponChange = 0;
 
     // [Cecil] Reload mag if needed
     if (CURRENT_WEAPON.EmptyMag(m_bExtraWeapon)) {
@@ -4766,7 +4765,7 @@ procedures:
       on (ESelectWeapon eSelect) : {
         // try to change weapon
         if (eSelect.bAbsolute) {
-          m_tmWeaponChangeRequired = _pTimer->CurrentTick();
+          GetInventory()->m_tmWeaponChange = _pTimer->CurrentTick();
           ForceWeaponChange(eSelect.iWeapon);
 
         } else {
@@ -4861,7 +4860,7 @@ procedures:
       on (ESelectWeapon eSelect) : {
         // try to change weapon
         if (eSelect.bAbsolute) {
-          m_tmWeaponChangeRequired = _pTimer->CurrentTick();
+          GetInventory()->m_tmWeaponChange = _pTimer->CurrentTick();
           ForceWeaponChange(eSelect.iWeapon);
 
         } else {

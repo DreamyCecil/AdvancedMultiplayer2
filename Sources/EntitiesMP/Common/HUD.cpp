@@ -1094,7 +1094,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent, BOO
   // if weapon change is in progress
   hud_tmWeaponsOnScreen = Clamp( hud_tmWeaponsOnScreen, 0.0f, 10.0f);   
 
-  if (_tmNow - _penWeapons[0]->m_tmWeaponChangeRequired < hud_tmWeaponsOnScreen) {
+  if (_tmNow - _penInventory->m_tmWeaponChange < hud_tmWeaponsOnScreen) {
     // determine number of weapons that player has
     INDEX ctWeapons = 0;
     
