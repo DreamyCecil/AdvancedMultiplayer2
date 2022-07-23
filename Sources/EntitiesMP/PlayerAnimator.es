@@ -349,6 +349,71 @@ functions:
     }
   };
 
+  // [Cecil] Get specific weapon animation
+  INDEX GetWeaponAnim(const char *strAnim) {
+    const INDEX iWeapon = GetWeapon(0)->GetCurrent();
+
+    // Player item anim set
+    SWeaponModelSet &wms = _apWeaponStructs[iWeapon].wmsItem;
+
+    // Find weapon animation
+    CWeaponAnims::const_iterator itAnim = wms.ans.mapAnims.find(strAnim);
+
+    // No animation
+    if (itAnim == wms.ans.mapAnims.end()) {
+      return BODY_ANIM_DEFAULT_ANIMATION;
+    }
+
+    // Pick the first and only animation
+    return itAnim->second.aiAnims[0];
+  };
+
+  // [Cecil] Get weapon attack animation
+  INDEX GetAttackAnim(BOOL bExtra) {
+    const INDEX iWeapon = GetWeapon(bExtra)->GetCurrent();
+    const BOOL bDual = IsExtraWeaponActive();
+
+    // Cannot be extra weapon attack without dual weapons
+    ASSERTMSG(!bExtra || bDual, "Trying to retrieve attack animation for extra weapon despite not using dual weapons!");
+
+    // Player item anim set
+    SWeaponModelSet &wms = _apWeaponStructs[iWeapon].wmsItem;
+
+    CWeaponAnims::const_iterator itAnim;
+    CWeaponAnims::const_iterator itEnd = wms.ans.mapAnims.end();
+
+    // Attack animation for dual weapons
+    if (bDual) {
+      // Find dual attack state
+      itAnim = wms.ans.mapAnims.find("DualAttack");
+
+      if (itAnim != itEnd) {
+        // Pick fire animation
+        const INDEX iLeft  = (m_bSwim ? BODY_ANIM_COLT_SWIM_FIRELEFT  : BODY_ANIM_COLT_FIRELEFT);
+        const INDEX iRight = (m_bSwim ? BODY_ANIM_COLT_SWIM_FIRERIGHT : BODY_ANIM_COLT_FIRERIGHT);
+
+        // Play attack animation if the value is non-false
+        if (itAnim->second.aiAnims[0] != 0) {
+          return (bExtra ? iLeft : iRight);
+        }
+      }
+
+      // No attack animation
+      return BODY_ANIM_COLT_STAND;
+    }
+
+    // Find attack animation
+    itAnim = wms.ans.mapAnims.find(m_bSwim ? "SwimAttack" : "Attack");
+
+    // No animation
+    if (itAnim == itEnd) {
+      return BODY_ANIM_DEFAULT_ANIMATION;
+    }
+
+    // Pick the first and only animation
+    return itAnim->second.aiAnims[0];
+  };
+
   // set item
   void SetItem(CModelObject *pmo) {
     m_pmoModel = GetBody();
@@ -786,37 +851,9 @@ functions:
   };
 
   // fire/attack
-  void FireAnimation(INDEX iAnim, ULONG ulFlags, BOOL bExtra) {
-    // [Cecil] Force Colt animations for dual weapons
-    if (IsExtraWeaponActive()) {
-      iAnim = BODY_ANIM_COLT_STAND; //(bExtra ? BODY_ANIM_COLT_FIRELEFT : BODY_ANIM_COLT_FIRERIGHT);
-
-      if (m_bSwim) {
-        iAnim += BODY_ANIM_COLT_SWIM_STAND - BODY_ANIM_COLT_STAND;
-      }
-
-    } else if (m_bSwim) {
-      INDEX iWeapon = GetWeapon(0)->GetCurrent();
-
-      switch (iWeapon) {
-        case WEAPON_NONE:
-          break;
-
-        case WEAPON_KNIFE: case WEAPON_COLT:
-          iAnim += BODY_ANIM_COLT_SWIM_STAND-BODY_ANIM_COLT_STAND;
-          break;
-
-        case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN: case WEAPON_TOMMYGUN:
-        case WEAPON_SNIPER: case WEAPON_LASER: case WEAPON_FLAMER:
-          iAnim += BODY_ANIM_SHOTGUN_SWIM_STAND-BODY_ANIM_SHOTGUN_STAND;
-          break;
-
-        case WEAPON_MINIGUN: case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
-        case WEAPON_IRONCANNON: case WEAPON_CHAINSAW:
-          iAnim += BODY_ANIM_MINIGUN_SWIM_STAND-BODY_ANIM_MINIGUN_STAND;
-          break;
-      }
-    }
+  void FireAnimation(ULONG ulFlags, BOOL bExtra) {
+    // [Cecil] Pick attack animation for the current weapon
+    INDEX iAnim = GetAttackAnim(bExtra);
 
     m_bAttacking = FALSE;
     m_bChangeWeapon = FALSE;
@@ -838,9 +875,7 @@ functions:
   void BodyAnimationTemplate(INDEX iNone, INDEX iColt, INDEX iShotgun, INDEX iMinigun, ULONG ulFlags) {
     // [Cecil] Force Colt animations for dual weapons
     if (IsExtraWeaponActive()) {
-      if (m_bSwim) {
-        iColt += BODY_ANIM_COLT_SWIM_STAND - BODY_ANIM_COLT_STAND;
-      }
+      iColt = (m_bSwim ? BODY_ANIM_COLT_SWIM_STAND : BODY_ANIM_COLT_STAND);
 
       SetBodyAnimation(iColt, ulFlags);
       return;
