@@ -8,4 +8,7 @@
   "SwimIdle"    : 28,
   "SwimAttack"  : 31,
   "DualAttack" : false,
+
+  "HolsterSlow"   : 44,
+  "HolsterToWalk" : 45,
 }
