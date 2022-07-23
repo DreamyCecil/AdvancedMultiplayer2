@@ -58,6 +58,7 @@ static FLOAT amp_afWeaponRot[3] = { 1.0f, 1.0f, 1.0f };
 static FLOAT amp_fWeaponFOV = 1.0f;
 
 extern INDEX amp_bWeaponMirrored = FALSE;
+static FLOAT amp_fMuzzleFlash = 0.05f;
 
 // [Cecil] Reset weapon position
 void ResetWeaponPosition(void) {
@@ -336,6 +337,7 @@ void CPlayerWeapons_Init(void) {
   _pShell->DeclareSymbol("user void ResetWeaponPosition(void);", &ResetWeaponPosition);
 
   _pShell->DeclareSymbol("persistent user INDEX amp_bWeaponMirrored;", &amp_bWeaponMirrored);
+  _pShell->DeclareSymbol("persistent user FLOAT amp_fMuzzleFlash;", &amp_fMuzzleFlash);
 
   // precache base weapons
   CPlayerWeapons_Precache();
@@ -1744,9 +1746,14 @@ functions:
   };
 
   void SetFlare(BOOL bSet) {
+    // [Cecil] Disable by force
+    if (amp_fMuzzleFlash <= 0.0f) {
+      bSet = FALSE;
+    }
+
     // [Cecil] Set flare time
     if (bSet) {
-      (&GetInventory()->m_tmFlare1)[m_bExtraWeapon] = _pTimer->CurrentTick() + _pTimer->TickQuantum;
+      (&GetInventory()->m_tmFlare1)[m_bExtraWeapon] = _pTimer->CurrentTick() + amp_fMuzzleFlash;
     }
 
     WeaponFlare(bSet);
