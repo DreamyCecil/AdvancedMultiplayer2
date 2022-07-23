@@ -783,6 +783,10 @@ functions:
 
   // [Cecil] Enough of current ammo
   BOOL EnoughAmmo(INDEX iType) {
+    if (GetSP()->sp_bInfiniteAmmo) {
+      return TRUE;
+    }
+
     INDEX iAmmo = 0;
     SPlayerWeapon &pw = PredTail()->CURRENT_WEAPON;
 

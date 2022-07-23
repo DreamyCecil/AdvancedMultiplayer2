@@ -693,20 +693,20 @@ functions:
 
   // Prepare weapons (moved from InitializeWeapons)
   void PrepareWeapons(const ULONG &ulNewWeapons, const INDEX &iTakeAmmo, const FLOAT &fAmmoRatio) {
-    // starting ammo
+    // Starting ammo
     const BOOL bStartAmmo = (GetSP()->sp_iAMPOptions & AMP_STARTAMMO);
 
-    // for each new weapon
+    // For each new weapon
     for (INDEX iWeapon = WEAPON_KNIFE; iWeapon < WEAPON_LAST; iWeapon++) {
       if (ulNewWeapons & GetWeaponMask(iWeapon)) {
-        // add default amount of ammo
+        // Add default amount of ammo
         AddDefaultAmmoForWeapon(iWeapon, (bStartAmmo ? 1.0f : fAmmoRatio));
       }
     }
 
-    // don't take starting ammo
-    if (!bStartAmmo) {
-      // take away first 8 ammo types
+    // Don't take starting ammo or infinite ammo
+    if (!bStartAmmo && !GetSP()->sp_bInfiniteAmmo) {
+      // Take away first 8 ammo types
       for (INDEX iTake = 1; iTake <= 8; iTake++) {
         INDEX iAmmoBit = (1 << _aiTakeAmmoBits[iTake-1]);
 
@@ -716,7 +716,7 @@ functions:
       }
     }
     
-    // reload weapons
+    // Reload weapons
     for (INDEX iReload = 0; iReload < m_aWeapons.Count(); iReload++) {
       m_aWeapons[iReload].Reload(0);
       m_aWeapons[iReload].Reload(1);
@@ -1158,7 +1158,19 @@ functions:
   // Get current ammo
   INDEX CurrentAmmo(const INDEX &iWeapon) {
     SPlayerAmmo *ppaAmmo = PredTail()->m_aWeapons[iWeapon].ppaAmmo;
-    return (ppaAmmo == NULL ? 0 : ppaAmmo->iAmount);
+
+    if (ppaAmmo != NULL) {
+      // Max ammo if infinite
+      if (GetSP()->sp_bInfiniteAmmo) {
+        return ppaAmmo->pasAmmoStruct->iMaxAmount;
+      }
+
+      // Get current amount
+      return ppaAmmo->iAmount;
+    }
+
+    // No ammo
+    return 0;
   };
 
   /*INDEX CurrentAlt(void) {

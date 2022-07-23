@@ -60,8 +60,8 @@ ULONG *SPlayerWeapon::GetAltID(void) {
 
 // Check for ammo
 BOOL SPlayerWeapon::HasAmmo(BOOL bCheckAlt) {
-  // infinite ammo
-  if (ppaAmmo == NULL && ppaAlt == NULL) {
+  // Infinite ammo
+  if (GetSP()->sp_bInfiniteAmmo || (ppaAmmo == NULL && ppaAlt == NULL)) {
     return TRUE;
   }
 
