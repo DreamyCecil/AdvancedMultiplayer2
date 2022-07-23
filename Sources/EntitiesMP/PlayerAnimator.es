@@ -361,7 +361,7 @@ functions:
 
     // No animation
     if (itAnim == wms.ans.mapAnims.end()) {
-      return BODY_ANIM_DEFAULT_ANIMATION;
+      return -1;
     }
 
     // Pick the first and only animation
@@ -872,63 +872,47 @@ functions:
   };
 
   // body animation template
-  void BodyAnimationTemplate(INDEX iNone, INDEX iColt, INDEX iShotgun, INDEX iMinigun, ULONG ulFlags) {
+  void BodyAnimationTemplate(CTString strAnim, INDEX iDefault, ULONG ulFlags) {
+    INDEX iAnim;
+
     // [Cecil] Force Colt animations for dual weapons
     if (IsExtraWeaponActive()) {
-      iColt = (m_bSwim ? BODY_ANIM_COLT_SWIM_STAND : BODY_ANIM_COLT_STAND);
+      iAnim = (m_bSwim ? BODY_ANIM_COLT_SWIM_STAND : BODY_ANIM_COLT_STAND);
 
-      SetBodyAnimation(iColt, ulFlags);
-      return;
+    } else {
+      // Swim animation variation
+      if (m_bSwim) {
+        strAnim = "Swim" + strAnim;
+      }
+
+      iAnim = GetWeaponAnim(strAnim);
     }
 
-    INDEX iWeapon = GetWeapon(0)->GetCurrent();
-
-    switch (iWeapon) {
-      case WEAPON_NONE:
-        SetBodyAnimation(iNone, ulFlags);
-        break;
-
-      case WEAPON_KNIFE: case WEAPON_COLT:
-        if (m_bSwim) { iColt += BODY_ANIM_COLT_SWIM_STAND-BODY_ANIM_COLT_STAND; }
-        SetBodyAnimation(iColt, ulFlags);
-        break;
-
-      case WEAPON_SINGLESHOTGUN: case WEAPON_DOUBLESHOTGUN: case WEAPON_TOMMYGUN:
-      case WEAPON_SNIPER: case WEAPON_LASER: case WEAPON_FLAMER:
-        if (m_bSwim) { iShotgun += BODY_ANIM_SHOTGUN_SWIM_STAND-BODY_ANIM_SHOTGUN_STAND; }
-        SetBodyAnimation(iShotgun, ulFlags);
-        break;
-
-      case WEAPON_MINIGUN: case WEAPON_ROCKETLAUNCHER: case WEAPON_GRENADELAUNCHER:
-      case WEAPON_IRONCANNON: case WEAPON_CHAINSAW:
-        if (m_bSwim) { iMinigun+=BODY_ANIM_MINIGUN_SWIM_STAND-BODY_ANIM_MINIGUN_STAND; }
-        SetBodyAnimation(iMinigun, ulFlags);
-        break;
-
-      default: ASSERTALWAYS("Player Animator - Unknown weapon");
+    // Pick default animation if none selected
+    if (iAnim == -1) {
+      iAnim = iDefault;
     }
+
+    // Set specific animation
+    SetBodyAnimation(iAnim, ulFlags);
   };
 
   // walk
   void BodyWalkAnimation() {
-    BodyAnimationTemplate(BODY_ANIM_NORMALWALK, 
-      BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
-      AOF_LOOPING|AOF_NORESTART);
+    BodyAnimationTemplate("Idle", BODY_ANIM_NORMALWALK, AOF_LOOPING|AOF_NORESTART);
   };
 
   // stand
   void BodyStillAnimation() {
-    BodyAnimationTemplate(BODY_ANIM_WAIT, 
-      BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
-      AOF_LOOPING|AOF_NORESTART);
+    BodyAnimationTemplate("Idle", BODY_ANIM_WAIT, AOF_LOOPING|AOF_NORESTART);
   };
 
   // push weapon
   void BodyPushAnimation() {
     m_bAttacking = FALSE;
     m_bChangeWeapon = FALSE;
-    BodyAnimationTemplate(BODY_ANIM_WAIT, 
-      BODY_ANIM_COLT_REDRAW, BODY_ANIM_SHOTGUN_REDRAW, BODY_ANIM_MINIGUN_REDRAW, 0);
+
+    BodyAnimationTemplate("Holster", BODY_ANIM_WAIT, 0);
     m_bChangeWeapon = TRUE;
   };
 
@@ -959,8 +943,7 @@ functions:
     // pull weapon
     m_bChangeWeapon = FALSE;
 
-    BodyAnimationTemplate(BODY_ANIM_WAIT, 
-      BODY_ANIM_COLT_DRAW, BODY_ANIM_SHOTGUN_DRAW, BODY_ANIM_MINIGUN_DRAW, 0);
+    BodyAnimationTemplate("Draw", BODY_ANIM_WAIT, 0);
 
     INDEX iWeapon = GetWeapon(0)->GetCurrent();
 

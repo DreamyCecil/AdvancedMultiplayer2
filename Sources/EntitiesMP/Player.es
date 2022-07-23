@@ -3110,9 +3110,7 @@ functions:
 
     PlayLegsAnim(PLAYER_ANIM_STAND, 0);
 
-    GetPlayerAnimator()->BodyAnimationTemplate(
-      BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
-      AOF_LOOPING|AOF_NORESTART);
+    GetPlayerAnimator()->BodyAnimationTemplate("Idle", BODY_ANIM_NORMALWALK, AOF_LOOPING|AOF_NORESTART);
   };
 
   // Set player parameters for connected state
@@ -6417,9 +6415,7 @@ procedures:
 
     // look straight
     PlayLegsAnim(PLAYER_ANIM_STAND, 0);
-    GetPlayerAnimator()->BodyAnimationTemplate(
-      BODY_ANIM_NORMALWALK, BODY_ANIM_COLT_STAND, BODY_ANIM_SHOTGUN_STAND, BODY_ANIM_MINIGUN_STAND, 
-      AOF_LOOPING|AOF_NORESTART);
+    GetPlayerAnimator()->BodyAnimationTemplate("Idle", BODY_ANIM_NORMALWALK, AOF_LOOPING|AOF_NORESTART);
 
     en_plViewpoint.pl_OrientationAngle = ANGLE3D(0.0f, 0.0f, 0.0f);
 
@@ -6841,8 +6837,7 @@ procedures:
 
   AutoStoreWeapon(EVoid) {
     // store current weapon slowly
-    GetPlayerAnimator()->BodyAnimationTemplate(BODY_ANIM_WAIT, 
-      BODY_ANIM_COLT_REDRAWSLOW, BODY_ANIM_SHOTGUN_REDRAWSLOW, BODY_ANIM_MINIGUN_REDRAWSLOW, 0);
+    GetPlayerAnimator()->BodyAnimationTemplate("HolsterSlow", BODY_ANIM_WAIT, 0);
 
     autowait(GetPlayerAnimator()->m_fBodyAnimTime);
 
@@ -6866,8 +6861,7 @@ procedures:
 
     GetWeapon(0)->m_iCurrentWeapon = m_iAutoOrgWeapon;
 
-    GetPlayerAnimator()->BodyAnimationTemplate(BODY_ANIM_WAIT, BODY_ANIM_COLT_DEACTIVATETOWALK,
-      BODY_ANIM_SHOTGUN_DEACTIVATETOWALK, BODY_ANIM_MINIGUN_DEACTIVATETOWALK, AOF_SMOOTHCHANGE);
+    GetPlayerAnimator()->BodyAnimationTemplate("HolsterToWalk", BODY_ANIM_WAIT, AOF_SMOOTHCHANGE);
 
     GetWeapon(0)->m_iCurrentWeapon = WEAPON_NONE;
 
