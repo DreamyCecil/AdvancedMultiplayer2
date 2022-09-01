@@ -2598,7 +2598,7 @@ functions:
     CPerspectiveProjection3D prPerspectiveProjection;
     plr_fFOV = Clamp(plr_fFOV, 1.0f, 160.0f);
 
-    ANGLE aFOV = 90.0f;
+    ANGLE aFOV = plr_fFOV;
 
     // [Cecil] Steam patch workaround
     if (!_bClassicsPatch) {
