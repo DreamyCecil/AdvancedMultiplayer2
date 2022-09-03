@@ -60,6 +60,11 @@ functions:
   // Destruction
   void OnEnd(void) {
     CRationalEntity::OnEnd();
+
+    // Reset pointer from itself
+    if (_penGlobalController == this) {
+      _penGlobalController = NULL;
+    }
   };
 
   // Read the controller
