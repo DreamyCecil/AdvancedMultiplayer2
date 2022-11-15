@@ -783,7 +783,7 @@ functions:
 
   // [Cecil] Enough of current ammo
   BOOL EnoughAmmo(INDEX iType) {
-    if (GetSP()->sp_bInfiniteAmmo) {
+    if (GetSP()->sp_bInfiniteAmmo && iType != CWeaponStruct::DWA_MAG) {
       return TRUE;
     }
 
