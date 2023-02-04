@@ -25,7 +25,4 @@
 // [Cecil] Addons
 #include "EntitiesMP/Common/Addons/AddonSystem.h"
 
-// [Cecil] For initializing world patching
-DECL_DLL void ResetWorldPatching(BOOL bJoining);
-
 #undef DECL_DLL

@@ -28,14 +28,6 @@ components:
   2 texture TEXTURE_MARKER   "Models\\Editor\\EnvironmentMarker.tex"
 
 functions:
-  // [Cecil] Check for TSE maps on load
-  void Read_t(CTStream *istr) {
-    CMarker::Read_t(istr);
-
-    // Definitely a TSE map
-    SetSecondEncounterMap(this);
-  };
-
   /* Check if entity is moved on a route set up by its targets. */
   BOOL MovesByTargetedRoute(CTString &strTargetProperty) const {
     strTargetProperty = "Target";

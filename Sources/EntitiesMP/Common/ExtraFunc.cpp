@@ -61,7 +61,7 @@ void ConvertWeaponTSE(INDEX &iFlags, const INDEX &iWeapon) {
 };
 
 // [Cecil] Convert world if needed
-extern void ConvertWorld(CWorld *pwo) {
+void ConvertWorld(CWorld *pwo) {
   INDEX ctPatched = 0;
   CPrintF("- Converting TFE level into TSE level -\n");
 
@@ -633,77 +633,6 @@ void PrecacheResource(EntityComponentType eType, const CTFileName &fnFile) {
   if (pser != NULL) {
     pser->AddToCRCTable();
   }
-};
-
-// --- TFE map patching
-
-// World patching flags
-extern ULONG _ulWorldPatching = 0;
-
-// [Cecil] Set to skip world patching
-void ResetWorldPatching(BOOL bJoining) {
-  _ulWorldPatching = WLDPF_IGNORE;
-
-  if (bJoining) {
-    _ulWorldPatching |= WLDPF_JOIN;
-  }
-};
-
-// [Cecil] Mark current map as a First Encounter map
-void SetFirstEncounterMap(void) {
-  #if REPORT_WORLD_PATCHING
-    if (!(_ulWorldPatching & WLDPF_PATCHED)) {
-      CPrintF("- Patched the first entity state\n");
-    }
-  #endif
-  
-  _ulWorldPatching |= WLDPF_PATCHED;
-};
-
-// [Cecil] Mark current map as a Second Encounter map
-void SetSecondEncounterMap(CEntity *pen) {
-  #if REPORT_WORLD_PATCHING
-    if (pen != NULL && !(_ulWorldPatching & WLDPF_TSE)) {
-      CPrintF("- Current map is from The Second Encounter (%s)\n", pen->en_pecClass->ec_pdecDLLClass->dec_strName);
-    }
-  #endif
-
-  _ulWorldPatching |= (WLDPF_IGNORE | WLDPF_TSE);
-};
-
-// [Cecil] Check for an entity state
-BOOL CheckEntityState(CRationalEntity *pen, const SLONG &slDesiredState) {
-  // No states at all, doesn't matter
-  if (pen->en_stslStateStack.Count() <= 0) {
-    return TRUE;
-  }
-
-  return pen->en_stslStateStack[0] == slDesiredState;
-};
-
-// [Cecil] Patch entity state and return TRUE if it's been patched
-BOOL PatchEntityState(CRationalEntity *pen, const SLONG &slDesiredState) {
-  // Same state
-  if (CheckEntityState(pen, slDesiredState)) {
-    return FALSE;
-  }
-
-  // Patch the state
-  ENTITY_STATE_OUTPUT(pen);
-  pen->en_stslStateStack[0] = slDesiredState;
-
-  return TRUE;
-};
-
-// [Cecil] Check if can patch entity states
-BOOL CanPatchStates(void) {
-  // Don't patch anything on a TSE map or upon joining the game (as a client or in the demo)
-  if (_ulWorldPatching & (WLDPF_JOIN | WLDPF_TSE)) {
-    return FALSE;
-  }
-
-  // Don't skip patching
-  return !(_ulWorldPatching & WLDPF_IGNORE);
 };
 
 // [Cecil] Check if playing a TFE map

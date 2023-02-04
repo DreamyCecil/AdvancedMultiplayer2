@@ -71,14 +71,6 @@ components:
 305 sound   SOUND_BOMB     "SoundsMP\\Items\\SeriousBomb.wav",
 
 functions:
-  // [Cecil] Check for TSE maps on load
-  void Read_t(CTStream *istr) {
-    CItem::Read_t(istr);
-
-    // Definitely a TSE map
-    SetSecondEncounterMap(this);
-  };
-
   void Precache(void) {
     switch (m_puitType) {
       case PUIT_INVISIB:

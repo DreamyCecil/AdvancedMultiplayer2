@@ -53,14 +53,6 @@ components:
   3 class CLASS_CANNONBALL    "Classes\\CannonBall.ecl",
 
 functions:
-  // [Cecil] Check for TSE maps on load
-  void Read_t(CTStream *istr) {
-    CModelHolder2::Read_t(istr);
-
-    // Definitely a TSE map
-    SetSecondEncounterMap(this);
-  };
-  
   void Precache(void) {
     CModelHolder2::Precache();
     PrecacheClass(CLASS_PROJECTILE, PRT_SHOOTER_WOODEN_DART);

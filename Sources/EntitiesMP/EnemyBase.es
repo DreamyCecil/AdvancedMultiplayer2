@@ -609,36 +609,6 @@ functions:
     if (m_penMainMusicHolder!=NULL) {
       ((CMusicHolder&)*m_penMainMusicHolder).m_cenFussMakers.Add(this);
     }
-
-    // [Cecil] TFE -> TSE state patch
-    if (CanPatchStates() && en_stslStateStack.Count() > 0)
-    {
-      BOOL bPatchTFE = FALSE;
-
-      // TFE Ugh-zan
-      if (IsOfClass(this, "Devil")) {
-        bPatchTFE = PatchEntityState(this, 0x014C013B);
-
-      // TFE harpy
-      } else if (IsOfClass(this, "Woman")) {
-        bPatchTFE = PatchEntityState(this, 0x0140001B);
-
-      // Other TFE enemies
-      } else if (!IsOfClass(this, "AirElemental") && !IsOfClass(this, "CannonRotating") && !IsOfClass(this, "CannonStatic")
-              && !IsOfClass(this, "ChainsawFreak") && !IsOfClass(this, "Demon") && !IsOfClass(this, "ExotechLarva")
-              && !IsOfClass(this, "Grunt") && !IsOfClass(this, "Guffy") && !IsOfClass(this, "Santa") && !IsOfClass(this, "Summoner")) {
-        bPatchTFE = PatchEntityState(this, 0x01360070);
-
-      // No more patching if discovered TSE entities
-      } else {
-        SetSecondEncounterMap(this);
-      }
-
-      // Mark as TFE map
-      if (bPatchTFE) {
-        SetFirstEncounterMap();
-      }
-    }
   };
 
   /* Fill in entity statistics - for AI purposes only */

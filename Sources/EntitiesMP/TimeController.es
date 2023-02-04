@@ -24,13 +24,6 @@ components:
   2 texture TEXTURE_TIME_CONTROLLER   "ModelsMP\\Editor\\TimeController.tex"
 
 functions:
-  // [Cecil] Check for TSE maps on load
-  void Read_t(CTStream *istr) {
-    CRationalEntity::Read_t(istr);
-
-    // Definitely a TSE map
-    SetSecondEncounterMap(this);
-  };
 
 procedures:
   ChangeTimeStretch(EVoid)

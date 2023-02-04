@@ -64,14 +64,6 @@ components:
 
 
 functions:
-  // [Cecil] Check for TSE maps on load
-  void Read_t(CTStream *istr) {
-    CRationalEntity::Read_t(istr);
-
-    // Definitely a TSE map
-    SetSecondEncounterMap(this);
-  };
-
   void Precache(void)
   {
     CTextureData *ptdHeightMap = (CTextureData *) m_moHeightMapHolder.mo_toTexture.GetData();

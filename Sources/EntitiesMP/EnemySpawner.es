@@ -60,16 +60,6 @@ components:
 
 
 functions:
-  // [Cecil] TFE -> TSE state patch
-  void Read_t(CTStream *istr) {
-    CRationalEntity::Read_t(istr);
-
-    if (CanPatchStates() && PatchEntityState(this, 0x01300043)) {
-      // Mark as TFE map
-      SetFirstEncounterMap();
-    }
-  };
-
   void Precache(void)
   {
     PrecacheClass(CLASS_BASIC_EFFECT, BET_TELEPORT);

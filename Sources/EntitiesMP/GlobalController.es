@@ -7,6 +7,17 @@
 extern CEntity *_penGlobalController = NULL;
 
 extern void ConvertWorld(CWorld *pwo);
+
+// Check if the entity state doesn't match
+static BOOL CheckEntityState(CRationalEntity *pen, SLONG slState, const char *strClass) {
+  // Wrong entity class
+  if (!IsOfClass(pen, strClass)) return FALSE;
+
+  // No states at all, doesn't matter
+  if (pen->en_stslStateStack.Count() <= 0) return FALSE;
+
+  return pen->en_stslStateStack[0] != slState;
+};
 %}
 
 // Remove certain player from the stop mask
@@ -49,14 +60,6 @@ functions:
     _penGlobalController = this;
   };
 
-  // Initialization
-  void OnInitialize(const CEntityEvent &eeInput) {
-    CRationalEntity::OnInitialize(eeInput);
-    
-    // Convert TFE map
-    ConvertTFE();
-  };
-
   // Destruction
   void OnEnd(void) {
     CRationalEntity::OnEnd();
@@ -65,14 +68,6 @@ functions:
     if (_penGlobalController == this) {
       _penGlobalController = NULL;
     }
-  };
-
-  // Read the controller
-  void Read_t(CTStream *istr) {
-    CRationalEntity::Read_t(istr);
-
-    // Don't patch states after loading in
-    ResetWorldPatching(TRUE);
   };
 
   // Count memory used by this object
@@ -99,21 +94,57 @@ functions:
 
   // Convert TFE maps if needed
   void ConvertTFE(void) {
-    // Definitely a TSE map, so no patching
-    if (_ulWorldPatching & WLDPF_TSE) {
-      m_bFirstEncounter = FALSE;
+    CDynamicContainer<CEntity> cEntities;
+    m_bFirstEncounter = FALSE;
 
-      // Set constant flags
-      SetSecondEncounterMap(NULL);
-      return;
+    FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
+      CEntity *pen = iten;
+
+      if (!ASSERT_ENTITY(pen)) {
+        continue;
+      }
+
+      // Abort conversion if found TSE entities
+      if (IsOfClass(pen, "CreditsHolder") || IsOfClass(pen, "EnvironmentParticlesHolder") || IsOfClass(pen, "Fireworks")
+       || IsOfClass(pen, "HudPicHolder") || IsOfClass(pen, "MeteorShower") || IsOfClass(pen, "ModelHolder3")
+       || IsOfClass(pen, "PhotoAlbum") || IsOfClass(pen, "PowerUp Item") || IsOfClass(pen, "Shooter")
+       || IsOfClass(pen, "TacticsChanger") || IsOfClass(pen, "TacticsHolder") || IsOfClass(pen, "TimeController")
+       // TSE enemies
+       || IsOfClass(pen, "AirElemental") || IsOfClass(pen, "CannonRotating") || IsOfClass(pen, "CannonStatic")
+       || IsOfClass(pen, "ChainsawFreak") || IsOfClass(pen, "Demon") || IsOfClass(pen, "ExotechLarva")
+       || IsOfClass(pen, "Grunt") || IsOfClass(pen, "Guffy") || IsOfClass(pen, "Santa") || IsOfClass(pen, "Summoner"))
+      {
+        return;
+      }
+
+      CRationalEntity *penRE = (CRationalEntity *)pen;
+
+      // Check for TFE states
+      if (CheckEntityState(penRE, 0x00DC000A, "Camera")
+       || CheckEntityState(penRE, 0x00DC000D, "Camera")
+       || CheckEntityState(penRE, 0x01300043, "Enemy Spawner")
+       || CheckEntityState(penRE, 0x025F0009, "Lightning")
+       || CheckEntityState(penRE, 0x00650014, "Moving Brush")
+       || CheckEntityState(penRE, 0x0261002E, "PyramidSpaceShip")
+       || CheckEntityState(penRE, 0x025E000C, "Storm controller")
+       || CheckEntityState(penRE, 0x014C013B, "Devil")
+       || CheckEntityState(penRE, 0x0140001B, "Woman")) {
+        cEntities.Add(pen);
+
+      // Other TFE enemies
+      } else if (IsDerivedFromClass(pen, "Enemy Base") && penRE->en_stslStateStack.Count() > 0) {
+        if (penRE->en_stslStateStack[0] != 0x01360070) {
+          cEntities.Add(pen);
+        }
+      }
     }
 
-    // Mark as a TFE map
-    m_bFirstEncounter = (_ulWorldPatching & WLDPF_PATCHED);
+    if (cEntities.Count() > 0) {
+      FOREACHINDYNAMICCONTAINER(cEntities, CEntity, itenReinit) {
+        itenReinit->Reinitialize();
+      }
 
-    // Convert from TFE to TSE
-    if (m_bFirstEncounter) {
-      _ulWorldPatching |= WLDPF_IGNORE;
+      m_bFirstEncounter = TRUE;
       ConvertWorld(GetWorld());
     }
   };
@@ -124,11 +155,15 @@ procedures:
     SetPhysicsFlags(EPF_MODEL_IMMATERIAL);
     SetCollisionFlags(ECF_IMMATERIAL);
 
-    // travel between levels
-    SetFlags(GetFlags()|ENF_CROSSESLEVELS|ENF_NOTIFYLEVELCHANGE);
+    // Travel between levels
+    SetFlags(GetFlags() | ENF_CROSSESLEVELS | ENF_NOTIFYLEVELCHANGE);
 
     wait() {
-      on (EBegin) : { resume; }
+      on (EBegin) : {
+        // Convert TFE maps
+        ConvertTFE();
+        resume;
+      }
 
       // retrieve center message
       on (ECenterMessage eMsg) : {
@@ -186,13 +221,11 @@ procedures:
       }
 
       on (EPreLevelChange) : {
-        // Reset world patching
-        ResetWorldPatching(FALSE);
         resume;
       }
 
       on (EPostLevelChange) : {
-        // Convert TFE map
+        // Convert TFE maps
         ConvertTFE();
         resume;
       }

@@ -77,18 +77,6 @@ components:
 
 
 functions:
-  // [Cecil] TFE -> TSE state patch
-  void Read_t(CTStream *istr) {
-    CMovableModelEntity::Read_t(istr);
-
-    if (CanPatchStates() && !CheckEntityState(this, 0x00DC000A) && !CheckEntityState(this, 0x00DC000D)) {
-      PatchEntityState(this, 0x00DC000D);
-
-      // Mark as TFE map
-      SetFirstEncounterMap();
-    }
-  };
-
   // render particles
   void RenderParticles(void)
   {

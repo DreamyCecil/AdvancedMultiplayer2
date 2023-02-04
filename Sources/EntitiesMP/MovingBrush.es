@@ -137,16 +137,6 @@ components:
   4 class   CLASS_BASIC_EFFECT "Classes\\BasicEffect.ecl",
 
 functions:
-  // [Cecil] TFE -> TSE state patch
-  void Read_t(CTStream *istr) {
-    CMovableBrushEntity::Read_t(istr);
-
-    if (CanPatchStates() && PatchEntityState(this, 0x00650014)) {
-      // Mark as TFE map
-      SetFirstEncounterMap();
-    }
-  };
-
   // Get visibility tweaking bits
   ULONG GetVisTweaks(void) {
     return m_cbClassificationBits|m_vbVisibilityBits;

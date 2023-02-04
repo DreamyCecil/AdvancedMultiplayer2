@@ -55,16 +55,6 @@ components:
   2 texture TEXTURE_STORM_CONTROLLER   "Models\\Editor\\StormController.tex"
 
 functions:
-  // [Cecil] TFE -> TSE state patch
-  void Read_t(CTStream *istr) {
-    CRationalEntity::Read_t(istr);
-
-    if (CanPatchStates() && PatchEntityState(this, 0x025E000C)) {
-      // Mark as TFE map
-      SetFirstEncounterMap();
-    }
-  };
-
   // check if one lightning target is valid 
   void CheckOneLightningTarget(CEntityPointer &pen)
   {

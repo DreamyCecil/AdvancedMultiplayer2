@@ -120,16 +120,6 @@ components:
  23 sound   SOUND_WARMUP        "Sounds\\CutSequences\\SpaceShip\\Warmup.wav",
 
 functions:
-  // [Cecil] TFE -> TSE state patch
-  void Read_t(CTStream *istr) {
-    CMovableModelEntity::Read_t(istr);
-
-    if (CanPatchStates() && PatchEntityState(this, 0x0261002E)) {
-      // Mark as TFE map
-      SetFirstEncounterMap();
-    }
-  };
-
   void Precache(void) {
     PrecacheModel   (MODEL_SPACESHIP     );
     PrecacheModel   (MODEL_BODY          );

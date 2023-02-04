@@ -703,10 +703,6 @@ void CWorldBase_OnWorldInit(CWorld *pwo) {
 
 // [Cecil] Individual world cleanup
 void CWorldBase_OnWorldEnd(CWorld *pwo) {
-  // Prepare for state patching after MakeDefaultState for the server
-  if (!(_ulWorldPatching & WLDPF_JOIN)) {
-    _ulWorldPatching = 0;
-  }
 };
 
 void CWorldBase_OnWorldRender(CWorld *pwo) {

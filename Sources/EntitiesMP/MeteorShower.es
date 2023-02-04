@@ -36,14 +36,6 @@ components:
  5 class   CLASS_PROJECTILE  "Classes\\Projectile.ecl",
 
 functions:
-  // [Cecil] Check for TSE maps on load
-  void Read_t(CTStream *istr) {
-    CRationalEntity::Read_t(istr);
-
-    // Definitely a TSE map
-    SetSecondEncounterMap(this);
-  };
-
   void Precache(void) {
     PrecacheClass(CLASS_PROJECTILE, PRT_METEOR);
   }

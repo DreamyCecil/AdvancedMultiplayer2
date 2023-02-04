@@ -52,14 +52,6 @@ components:
   1 class   CLASS_WATCHPLAYERS    "Classes\\WatchPlayers.ecl",
 
 functions:
-  // [Cecil] Check for TSE maps on load
-  void Read_t(CTStream *istr) {
-    CMovableEntity::Read_t(istr);
-
-    // Definitely a TSE map
-    SetSecondEncounterMap(this);
-  };
-
   /* Check if entity is moved on a route set up by its targets. */
   BOOL MovesByTargetedRoute(CTString &strTargetProperty) const {
     strTargetProperty = "Target";
