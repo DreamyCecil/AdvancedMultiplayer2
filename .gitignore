@@ -87,8 +87,8 @@ Demos/*
 Levels/*
 LevelPatches/*
 !LevelPatches/GlobalClasses.json
-Models/*
-ModelsMP/*
+Models/**/*.ini
+ModelsMP/**/*.ini
 Players/*
 !Players/empty
 Sounds/*

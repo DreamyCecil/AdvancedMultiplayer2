@@ -1019,7 +1019,7 @@ components:
 211 model MODEL_FLESH_APPLE  "Models\\Effects\\Debris\\Fruits\\Apple.mdl",
 212 model MODEL_FLESH_BANANA "Models\\Effects\\Debris\\Fruits\\Banana.mdl",
 213 model MODEL_FLESH_BURGER "Models\\Effects\\Debris\\Fruits\\CheeseBurger.mdl",
-214 model MODEL_FLESH_LOLLY  "Models\\Effects\\Debris\\Fruits\\LollyPop.mdl",
+214 model MODEL_FLESH_LOLLY  "Models\\Effects\\LollipopFixed.mdl",
 215 model MODEL_FLESH_ORANGE "Models\\Effects\\Debris\\Fruits\\Orange.mdl",
 
 220 texture TEXTURE_FLESH_RED    "Models\\Effects\\Debris\\Flesh\\FleshRed.tex",
