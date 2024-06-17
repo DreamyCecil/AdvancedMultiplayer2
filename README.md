@@ -1,18 +1,13 @@
 # Advanced Multiplayer 2 Mod
+
 This is the source code of a mod for classic Serious Sam: The Second Encounter v1.07 that adds a lot of options for multiplayer games including coop mode support for singleplayer maps.
 Based on [Serious Engine 1 Mod SDK](https://github.com/DreamyCecil/SE1-ModSDK)
 
-Download Advanced Multiplayer Mod v1.9: https://dreamycecil.github.io/sam/files/advanced-mp
+# Building
 
-Building
---------
+Building instructions are available here: https://github.com/DreamyCecil/SE1-ModSDK/wiki/Building
 
-To compile the source code, you'll need to use a compiler from Microsoft Visual C++ 6.0.
-
-Full guide: https://github.com/DreamyCecil/SE1-ModSDK#building
-
-Running
--------
+# Running
 
 Once the project is compiled, there should be three libraries in the Bin folder: `EntitiesMP.dll`, `GameGUIMP.dll` and `GameMP.dll`.
 
@@ -22,8 +17,7 @@ There are two ways to start the mod:
 
 When running a selected project, make sure the mod in project properties **Debugging** -> **Command Arguments** is set to your mod name instead of `AMP2` (example: `+game AMP2_Mod`).
 
-License
--------
+# License
 
 Just like Croteam's [Serious Engine 1.10](https://github.com/Croteam-official/Serious-Engine) source code, Serious Sam SDK is licensed under the GNU GPL v2 (see LICENSE file).
 
